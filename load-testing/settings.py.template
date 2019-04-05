@@ -1,0 +1,2 @@
+REALM = ''
+TEST_USERS = ['alice', 'bob', 'john']

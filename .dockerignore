@@ -1,0 +1,27 @@
+.git/
+
+apps/brokerservice/tests/**
+connector/**
+deploy/**
+img/**
+init-action/**
+load-testing/**
+terraform/**
+
+# Documentation
+*.md
+
+# Python artefacts
+.pytest_cache
+__pycache__
+*.pyc
+
+# Redis artefacts
+dump.rdb
+
+# Secrets
+client_secret*.json
+*.keytab
+*.crt
+*.key
+*.csr

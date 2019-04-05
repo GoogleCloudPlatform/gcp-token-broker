@@ -1,0 +1,33 @@
+# Terraform artefacts:
+terraform/terraform.tfstate*
+terraform/.terraform*
+terraform/*.tfvars
+
+# Helm values
+deploy/values_override*.yaml
+
+# Skaffold config
+deploy/skaffold.yaml
+
+# Load testing artefacts
+load-testing/settings.py
+
+# Java artefacts
+connector/target/**
+connector/dependency-reduced-pom.xml
+
+# Python artefacts
+.pytest_cache
+__pycache__
+*.pyc
+
+# Redis artefacts
+dump.rdb
+
+# Secrets
+client_secret*.json
+*.keytab
+*.crt
+*.key
+*.csr
+*.pem
