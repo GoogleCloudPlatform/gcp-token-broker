@@ -8,6 +8,4 @@ RUN /base/apps/authorizer/install.sh
 
 COPY ./apps/authorizer /base/apps/authorizer
 
-COPY ./apps/common /base/apps/common
-
 WORKDIR /base/apps/authorizer

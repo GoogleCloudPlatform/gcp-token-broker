@@ -25,14 +25,17 @@ set -xeuo pipefail
 #####################################################################
 
 
-HADOOP_CONF_DIR="/etc/hadoop/conf"
-HADOOP_LIB_DIR="/usr/lib/hadoop/lib"
+BROKER_VERSION="0.2.0"
+GCS_CONN_VERSION="2.0.0-SNAPSHOT-shaded"
 
 NEW_JARS_BUCKET="gs://gcp-token-broker"
-GCS_CONN_JAR="gcs-connector-hadoop2-2.0.0-SNAPSHOT-shaded.jar"
-BROKER_CONN_JAR="broker-connector-hadoop2-0.1.0.jar"
+GCS_CONN_JAR="gcs-connector-hadoop2-${GCS_CONN_VERSION}.jar"
+BROKER_CONN_JAR="broker-connector-hadoop2-${BROKER_VERSION}-SNAPSHOT.jar"
 ROLE="$(/usr/share/google/get_metadata_value attributes/dataproc-role)"
 WORKER_COUNT="$(/usr/share/google/get_metadata_value attributes/dataproc-worker-count)"
+HADOOP_CONF_DIR="/etc/hadoop/conf"
+HADOOP_LIB_DIR="/usr/lib/hadoop/lib"
+DATAPROC_LIB_DIR="/usr/local/share/google/dataproc/lib"
 
 # Flag checking whether init actions will run early.
 # This will affect whether nodemanager should be restarted
@@ -69,11 +72,27 @@ set_property_core_site "gcp.token.broker.uri.hostname" "$broker_uri_hostname"
 set_property_core_site "gcp.token.broker.uri.port" "$broker_uri_port"
 set_property_core_site "gcp.token.broker.realm" "$broker_realm"
 
-# Download the JARs
-gsutil cp "$NEW_JARS_BUCKET/$BROKER_CONN_JAR" "$HADOOP_LIB_DIR/"
-OLD_GCS_CONN_JAR=$(ls /usr/lib/hadoop/lib/gcs-connector-*)
-gsutil cp "$NEW_JARS_BUCKET/$GCS_CONN_JAR" .
-mv $GCS_CONN_JAR $OLD_GCS_CONN_JAR
+# Get connector's lib directory
+if [[ -d ${DATAPROC_LIB_DIR} ]]; then
+    # For Dataproc 1.4
+    local lib_dir=${DATAPROC_LIB_DIR}
+else
+    # For Dataproc < 1.4
+    local lib_dir=${HADOOP_LIB_DIR}
+fi
+
+# Remove the old GCS connector
+rm -f "${lib_dir}/gcs-connector-"*
+
+# Download the new JARs
+gsutil cp "$NEW_JARS_BUCKET/$BROKER_CONN_JAR" "${lib_dir}/"
+gsutil cp "$NEW_JARS_BUCKET/$GCS_CONN_JAR" "${lib_dir}/"
+
+# Update version-less connector link if present
+if [[ -L ${lib_dir}/gcs-connector.jar ]]; then
+    ln -s -f "${lib_dir}/${GCS_CONN_JAR}" "${lib_dir}/gcs-connector.jar"
+fi
+
 
 # Kerberos config
 DATAPROC_REALM=$(sudo cat /etc/krb5.conf | grep "default_realm" | awk '{print $NF}')
@@ -130,3 +149,27 @@ if [[ "${ROLE}" == 'Worker' || "${WORKER_COUNT}" == '0' ]]; then
     systemctl restart hadoop-yarn-nodemanager || err 'Cannot restart node manager'
   fi
 fi
+
+
+# Restarts Dataproc Agent after successful initialization
+# WARNING: this function relies on undocumented and not officially supported Dataproc Agent
+# "sentinel" files to determine successful Agent initialization and not guaranteed
+# to work in the future. Use at your own risk!
+restart_dataproc_agent() {
+  # Because Dataproc Agent should be restarted after initialization, we need to wait until
+  # it will create a sentinel file that signals initialization competition (success or failure)
+  while [[ ! -f /var/lib/google/dataproc/has_run_before ]]; do
+    sleep 1
+  done
+  # If Dataproc Agent didn't create a sentinel file that signals initialization
+  # failure then it means that initialization succeded and it should be restarted
+  if [[ ! -f /var/lib/google/dataproc/has_failed_before ]]; then
+    pkill -f com.google.cloud.hadoop.services.agent.AgentMain
+  fi
+}
+export -f restart_dataproc_agent
+
+# Schedule asynchronous Dataproc Agent restart so it will use updated connectors.
+# It could not be restarted sycnhronously because Dataproc Agent should be restarted
+# after its initialization, including init actions execution, has been completed.
+bash -c restart_dataproc_agent & disown

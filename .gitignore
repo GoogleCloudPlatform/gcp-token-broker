@@ -11,8 +11,12 @@ deploy/skaffold.yaml
 
 # Load testing artefacts
 load-testing/settings.py
+load-testing/brokerservice/protobuf/broker_pb2_grpc.py
+load-testing/brokerservice/protobuf/broker_pb2.py
 
 # Java artefacts
+apps/broker/target/**
+apps/broker/dependency-reduced-pom.xml
 connector/target/**
 connector/dependency-reduced-pom.xml
 

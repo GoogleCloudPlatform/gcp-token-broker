@@ -27,7 +27,7 @@ CLIENT_SECRET_PATH = '/secrets/client_secret.json'
 FLASK_SECRET_PATH = '/secrets/authorizer-flask-secret.key'
 
 # Database backend class
-DATABASE_BACKEND = 'common.database.CloudDatastoreDatabaseBackend'
+DATABASE_BACKEND = 'database.CloudDatastoreDatabaseBackend'
 
 # Comma-separated whitelist API scopes
 SCOPE_WHITELIST = 'https://www.googleapis.com/auth/devstorage.read_write'

@@ -9,9 +9,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-sys.path.append('..')  # Make 'common' package discoverable
-
 import json
 
 from flask import Flask, request, session, render_template
@@ -20,10 +17,10 @@ from authlib.flask.client import OAuth
 from loginpass import create_flask_blueprint
 from loginpass.google import Google, GOOGLE_AUTH_URL
 
-from common.conf import settings
-from common.authorization import RefreshToken
-from common.utils import validate_domain
-from common.encryption import encrypt
+from conf import settings
+from authorization import RefreshToken
+from utils import validate_domain
+from encryption import encrypt
 
 
 app = Flask(__name__)

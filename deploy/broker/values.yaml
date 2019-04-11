@@ -12,6 +12,7 @@
 broker:
 
   app:
+    javaOpts: ''
     port: 5000
     settings: {}
 

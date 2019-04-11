@@ -1,1 +1,1 @@
-../../../../apps/brokerservice/protobuf/broker.proto
+../../../../apps/broker/src/main/proto/broker.proto
