@@ -75,8 +75,7 @@ This repository contains:
 
 - `apps`: Server applications, including:
   - `authorizer`: Web UI for the OAuth flow that users must go through to authorize the broker service.
-  - `brokerservice`: The broker service itself.
-  - `common`: Common libraries shared by the server applications.
+  - `broker`: The broker service itself.
 - `deploy`: Helm charts for deploying the broker service and the authorizer app to a Kubernetes cluster.
 - `connector`: Extension for the GCS Connector to allow Hadoop to communicate with the broker.
 - `init-action`: Initialization action to install the broker dependencies in
@@ -382,6 +381,7 @@ Run from the following commands from the root of the repository:
   openssl genrsa -out broker-tls.key 2048
   openssl req -new -key broker-tls.key -out broker-tls.csr -subj "/CN=${BROKER_DOMAIN}"
   openssl x509 -req -days 365 -in broker-tls.csr -signkey broker-tls.key -out broker-tls.crt
+  openssl pkcs8 -topk8 -nocrypt -in broker-tls.key -out broker-tls.pem
   ```
 * Create authorizer certificate (Replace `[your.authorizer.hostname]` with your authorizer
   app's host name):
@@ -427,9 +427,9 @@ To deploy the broker service, run the following commands from the root of the re
      -- "sudo cat /etc/broker.keytab" | perl -pne 's/\r$//g' > broker.keytab
 
    kubectl create secret generic broker-secrets \
-     --from-file=broker.keytab \
+     --from-file=broker.keytab=broker.keytab \
      --from-file=client_secret.json \
-     --from-file=tls.key=broker-tls.key \
+     --from-file=tls.pem=broker-tls.pem \
      --from-file=tls.crt=broker-tls.crt
    ```
 6. Create the Authorizer secrets
@@ -524,7 +524,7 @@ Run the following commands from the root of the repository:
      --no-address \
      --zone $ZONE \
      --subnet client-subnet \
-     --image-version 1.3 \
+     --image-version 1.4 \
      --bucket ${PROJECT}-staging \
      --scopes cloud-platform \
      --service-account "dataproc@${PROJECT}.iam.gserviceaccount.com" \
@@ -588,7 +588,7 @@ To build the containers:
 
 ```shell
 # Broker service
-docker build -f ./apps/brokerservice/Dockerfile -t gcr.io/$PROJECT/broker .
+docker build -f ./apps/broker/Dockerfile -t gcr.io/$PROJECT/broker .
 docker push gcr.io/$PROJECT/broker
 
 # Authorizer
@@ -653,7 +653,7 @@ The broker application uses two types of caching:
 
 The two settings can be adjusted to tune up performance depending on the profile of the Hadoop cluster's workloads.
 
-You can also select a different cache backend (e.g. Memcached) with the `CACHE_BACKEND` setting.
+You can also select a different remote cache backend (e.g. Memcached) with the `REMOTE_CACHE` setting.
 
 #### Scalable database
 
@@ -891,39 +891,23 @@ further testing.
 
 This section contains some tips if you're interested in making code contributions to this project.
 
-Follow the steps below to create a development environment and be able to run the tests or
-update the gRPC stubs.
-
 Start a development container:
 
 ```shell
 docker run -it -v $PWD:/base -w /base --detach --name broker-dev ubuntu:18.04
-docker exec -it broker-dev bash -- apps/brokerservice/install-dev.sh
+docker exec -it broker-dev bash -- apps/broker/install-dev.sh
 ```
 
-To Run all server tests:
+To compile the broker service app:
 
 ```shell
-docker exec -it broker-dev pytest -- apps/brokerservice/tests/tests.py
-```
-
-To run an individual server test, e.g:
-
-```shell
-docker exec -it broker-dev pytest -- apps/brokerservice/tests/tests.py::test_get_session_token
-```
-
-To re-create the Python gRPC stubs:
-
-```shell
-docker exec -it broker-dev bash -c 'cd apps; python3 -m grpc_tools.protoc --proto_path=. --python_out=. --grpc_python_out=. brokerservice/protobuf/broker.proto'
+docker exec -it broker-dev bash -c 'cd apps/broker; mvn package'
 ```
 
 To compile the broker connector:
 
 ```shell
-cd connector
-mvn package
+docker exec -it broker-dev bash -c 'cd connector; mvn package -Phadoop2'
 ```
 
 ## Interacting with Redis
@@ -996,26 +980,29 @@ You can run the load tests from the sample Dataproc cluster that you created for
    ```shell
    gcloud beta compute ssh test-cluster-m --tunnel-through-iap
    ```
-2. Install some dependencies:
-
-   ```shell
-   sudo apt-get install -y python3-pip
-   sudo apt-get install -y libkrb5-dev
-   pip3 install locustio==0.11.0 grpcio==1.19.0 gssapi==1.5.1 protobuf==3.6.1
-   ```
-3. Clone the project's repository:
+2. Clone the project's repository:
 
    ```shell
    git clone https://github.com/GoogleCloudPlatform/gcp-token-broker
    cd gcp-token-broker/load-testing
    ```
-4. Create a `settings.py` file using the provided template.
+3. Install some dependencies:
+
+   ```shell
+   ./install.sh
+   ```
+4. Create the Python gRPC stubs:
+
+   ``shell
+   python3 -m grpc_tools.protoc --proto_path=. --python_out=. --grpc_python_out=. brokerservice/protobuf/broker.proto
+   ```
+5. Create a `settings.py` file using the provided template.
 
    ```shell
    cp settings.py.template settings.py
    ```
-5. Edit the `settings.py` to set appropriate values for your setup.
-6. To run the load tests in headless mode:
+6. Edit the `settings.py` to set appropriate values for your setup.
+7. To run the load tests in headless mode:
 
    ```shell
    ~/.local/bin/locust --no-web -c 1000 -r 10
@@ -1023,7 +1010,7 @@ You can run the load tests from the sample Dataproc cluster that you created for
    The `-c` corresponds to the total number of users, and `-r` the hatch rate
    (i.e. the number of new users spawned each passing second). To stop the tests,
    press `ctrl-c`.
-7. To run the tests using the Web UI, start the Locust server:
+8. To run the tests using the Web UI, start the Locust server:
 
    ```shell
    ~/.local/bin/locust

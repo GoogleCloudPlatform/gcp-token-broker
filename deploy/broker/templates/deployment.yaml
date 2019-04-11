@@ -31,7 +31,10 @@ spec:
       containers:
       - name: {{ .Chart.Name }}-container
         image: {{ .Values.broker.image }}
-        command: ['python3', 'run_server.py']
+        env:
+        - name: JAVA_OPTS
+          value: {{ .Values.broker.app.javaOpts }}
+        command: ['java', '-jar', 'target/broker.jar']
         ports:
         - containerPort: {{ .Values.broker.app.port }}
         envFrom:

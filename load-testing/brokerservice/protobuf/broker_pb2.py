@@ -1,1 +1,0 @@
-../../../apps/brokerservice/protobuf/broker_pb2.py

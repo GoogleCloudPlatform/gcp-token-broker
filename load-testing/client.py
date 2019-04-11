@@ -9,7 +9,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import subprocess
 from base64 import b64encode, b64decode
 import time
 
@@ -24,19 +23,12 @@ BROKER_PORT = 443
 BROKER_USER = 'broker'
 BROKER_REALM = 'BROKER'
 
-# Retrieve the TLS certificate from the VM metadata
-out = subprocess.Popen(
-    ['/usr/share/google/get_metadata_value', 'attributes/gcp-token-broker-tls-certificate'],
-    stdout=subprocess.PIPE,
-    stderr=subprocess.STDOUT)
-certificate, _ = out.communicate()
-
-
 class BrokerClient:
 
-    def __init__(self, host, credentials):
+    def __init__(self, host, credentials, certificate):
         self.host = host
         self.credentials = credentials
+        self.certificate = certificate
 
     def get_metadata(self):
         """
@@ -54,7 +46,7 @@ class BrokerClient:
         return metadata
 
     def get_stub(self):
-        credentials = grpc.ssl_channel_credentials(certificate)
+        credentials = grpc.ssl_channel_credentials(self.certificate)
         channel = grpc.secure_channel('{}:{}'.format(self.host, BROKER_PORT), credentials)
         return BrokerStub(channel)
 
@@ -62,7 +54,6 @@ class BrokerClient:
         start_time = time.time()
         try:
             stub = self.get_stub()
-            metadata = self.get_metadata()
 
             # Get the request object
             request_name = '{}Request'.format(endpoint)
@@ -72,6 +63,9 @@ class BrokerClient:
             if parameters is not None:
                 for key, value in parameters.items():
                     setattr(request, key, value)
+
+            # Set SPNEGO token in the metadata
+            metadata = self.get_metadata()
 
             # Call the gRPC endpoint
             endpoint_func = getattr(stub, endpoint)

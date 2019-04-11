@@ -18,9 +18,55 @@ limitations under the License.
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.google.cloud</groupId>
+    <groupId>com.google.cloud.broker</groupId>
     <artifactId>broker-connector</artifactId>
-    <version>${hadoop.identifier}-0.1.0</version>
+    <version>${hadoop.identifier}-0.2.0-SNAPSHOT</version>
+
+    <name>GCP Token Broker Hadoop Connector</name>
+    <description>
+        Hadoop connector for the GCP Token Broker.
+    </description>
+
+    <url>https://github.com/GoogleCloudPlatform/gcp-token-broker</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <organization>Google Inc.</organization>
+            <organizationUrl>http://www.google.com</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git@github.com:GoogleCloudPlatform/gcp-token-broker.git</connection>
+        <developerConnection>
+            scm:git:git@github.com:GoogleCloudPlatform/gcp-token-broker.git
+        </developerConnection>
+        <url>git@github.com:GoogleCloudPlatform/gcp-token-broker.git</url>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/GoogleCloudPlatform/gcp-token-broker/issues</url>
+    </issueManagement>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -46,6 +92,17 @@ limitations under the License.
         </properties>
       </profile>
     </profiles>
+
+    <!-- TODO: Remove after the GCS Connector 2.0.0 has been publicly released -->
+    <repositories>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/groups/public</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
 
     <dependencies>

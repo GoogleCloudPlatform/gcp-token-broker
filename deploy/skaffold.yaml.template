@@ -9,14 +9,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: skaffold/v1beta2
+apiVersion: skaffold/v1beta7
 kind: Config
 build:
   artifacts:
   - image: gcr.io/PROJECT/broker
     context: ../
     docker:
-      dockerfile: ./apps/brokerservice/Dockerfile
+      dockerfile: ./apps/broker/Dockerfile
   - image: gcr.io/PROJECT/authorizer
     context: ../
     docker:
