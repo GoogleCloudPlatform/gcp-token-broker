@@ -64,7 +64,7 @@ This project aims to achieve the following goals:
 This project also strives to address the following requirements, which many enterprise customers have when
 they're looking to migrate on-premise workloads to the cloud:
 
-* All access to GCP resources (Cloud Storage, Google Bigquery, Cloud Bigtable, etc) should be attributable
+* All access to GCP resources (Cloud Storage, Google BigQuery, Cloud Bigtable, etc) should be attributable
   to the individual users who initiated the requests.
 * No long-lived credentials should be stored on client machines or worker nodes.
 * Cause as few changes as possible to existing on-premise security systems and user workflows.
