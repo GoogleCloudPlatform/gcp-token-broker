@@ -48,10 +48,6 @@ variable broker_service_port {
     default = 443
 }
 
-variable broker_realm {
-    default = "BROKER"
-}
-
 variable broker_initial_node_count {
     default = 4
 }
@@ -72,14 +68,6 @@ variable broker_service_cidr {
     default = "10.8.0.0/20"
 }
 
-# FIXME: Could this IP clash with GKE nodes in ?
-variable broker_kdc_ip {
-    default = "10.2.22.0"
-}
-
-variable broker_kdc_hostname {
-    default = "10.2.22.0.xip.io"
-}
 
 // Authorizer --------------------------------------
 

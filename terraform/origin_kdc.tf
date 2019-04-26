@@ -93,19 +93,15 @@ data "template_file" "startup_script_origin_kdc" {
     realm = "${var.origin_realm}"
     project = "${var.gcp_project}"
     zone = "${var.gcp_zone}"
-    cross_realm_trust_conf = <<EOT
-${var.broker_realm} = {
-        kdc = ${var.broker_kdc_hostname}
-    }
-    EOT
     extra_commands = <<EOT
         # Create user principals
         kadmin.local -q "addprinc -pw ${var.test_users[0]} ${var.test_users[0]}"
         kadmin.local -q "addprinc -pw ${var.test_users[1]} ${var.test_users[1]}"
         kadmin.local -q "addprinc -pw ${var.test_users[2]} ${var.test_users[2]}"
 
-        # Create cross-realm principal
-        kadmin.local -q "addprinc -pw ${var.cross_realm_password} krbtgt/${var.broker_realm}@${var.origin_realm}"
+        # Create broker principal and keytab
+        kadmin.local -q "addprinc broker/${var.broker_service_hostname}"
+        kadmin.local -q "ktadd -k /etc/broker.keytab broker/${var.broker_service_hostname}"
     EOT
   }
 }

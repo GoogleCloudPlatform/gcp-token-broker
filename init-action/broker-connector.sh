@@ -75,10 +75,10 @@ set_property_core_site "gcp.token.broker.realm" "$broker_realm"
 # Get connector's lib directory
 if [[ -d ${DATAPROC_LIB_DIR} ]]; then
     # For Dataproc 1.4
-    local lib_dir=${DATAPROC_LIB_DIR}
+    lib_dir=${DATAPROC_LIB_DIR}
 else
     # For Dataproc < 1.4
-    local lib_dir=${HADOOP_LIB_DIR}
+    lib_dir=${HADOOP_LIB_DIR}
 fi
 
 # Remove the old GCS connector
@@ -93,15 +93,10 @@ if [[ -L ${lib_dir}/gcs-connector.jar ]]; then
     ln -s -f "${lib_dir}/${GCS_CONN_JAR}" "${lib_dir}/gcs-connector.jar"
 fi
 
-
-# Kerberos config
-DATAPROC_REALM=$(sudo cat /etc/krb5.conf | grep "default_realm" | awk '{print $NF}')
-sed -i "1s/^/[capaths]\n\t$origin_realm = {\n\t\t$broker_realm = .\n\t\t$DATAPROC_REALM = $broker_realm\n\t}\n\n/" "/etc/krb5.conf"
-sed -i "/\[realms\]/a\ \t$origin_realm = {\n\t\tkdc = $origin_kdc_hostname\n\t}\n" "/etc/krb5.conf"
-
 # Setup some useful env vars
 PROJECT=$(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
 ZONE=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/zone" -H "Metadata-Flavor: Google" | awk -F/ '{print $NF}')
+DATAPROC_REALM=$(sudo cat /etc/krb5.conf | grep "default_realm" | awk '{print $NF}')
 cat > /etc/profile.d/extra_env_vars.sh << EOL
 export PROJECT=$PROJECT
 export ZONE=$ZONE
@@ -118,20 +113,6 @@ for i in $(echo $USERS | sed "s/,/ /g")
 do
     adduser --disabled-password --gecos "" $i
 done
-
-if [[ "${ROLE}" == 'Master' ]]; then
-  # Add cross-realm trust user
-  CROSS_REALM_TRUST_PASSWORD_URI=$(cat /tmp/cluster/properties/dataproc.properties | grep "kerberos.cross-realm-trust.shared-password.uri" | awk -F= '{print $NF}' | tr -d '\\')
-  KMS_KEY_URI=$(cat /tmp/cluster/properties/dataproc.properties | grep "kerberos.kms.key.uri" | awk -F= '{print $NF}')
-  set +x
-  CROSS_REALM_TRUST_PASSWORD=$(gsutil cat "${CROSS_REALM_TRUST_PASSWORD_URI}" | \
-    gcloud kms decrypt \
-    --ciphertext-file - \
-    --plaintext-file - \
-    --key "${KMS_KEY_URI}")
-  kadmin.local -q "addprinc -pw $CROSS_REALM_TRUST_PASSWORD krbtgt/$broker_realm@$DATAPROC_REALM"
-  set -x
-fi
 
 
 # Restart services ---------------------------------------------------------------
