@@ -256,60 +256,6 @@ resource "google_kms_key_ring_iam_binding" "key_ring" {
 }
 
 
-// Broker KDC ----------------------------------------------------------------
-
-data "template_file" "startup_script_broker_kdc" {
-  template = "${file("startup-script-kdc.tpl")}"
-
-  vars {
-    realm = "${var.broker_realm}"
-    project = "${var.gcp_project}"
-    zone = "${var.gcp_zone}"
-    cross_realm_trust_conf = <<EOT
-    ${local.dataproc_realm} = {
-        kdc = DATAPROC_KDC_IP
-    }
-    ${var.origin_realm} = {
-        kdc = ${var.origin_kdc_hostname}
-    }
-    EOT
-    extra_commands = <<EOT
-        # Create broker principal and keytab
-        kadmin.local -q "addprinc -randkey broker/${var.broker_service_hostname}"
-        kadmin.local -q "ktadd -k /etc/broker.keytab broker/${var.broker_service_hostname}"
-
-        # One-way trust with origin realm
-        kadmin.local -q "addprinc -pw ${var.cross_realm_password} krbtgt/${var.broker_realm}@${var.origin_realm}"
-
-        # Two-way trust with Dataproc realm
-        kadmin.local -q "addprinc -pw ${var.cross_realm_password} krbtgt/${var.broker_realm}@${local.dataproc_realm}"
-        kadmin.local -q "addprinc -pw ${var.cross_realm_password} krbtgt/${local.dataproc_realm}@${var.broker_realm}"
-    EOT
-  }
-}
-
-resource "google_compute_instance" "broker_kdc" {
-    name = "broker-kdc"
-    machine_type = "n1-standard-1"
-    boot_disk {
-      initialize_params {
-        image = "debian-cloud/debian-9"
-      }
-    }
-    network_interface {
-        subnetwork = "${google_compute_subnetwork.broker_cluster_subnet.self_link}"
-        network_ip = "${var.broker_kdc_ip}"
-    }
-    metadata {
-      startup-script = "${data.template_file.startup_script_broker_kdc.rendered}"
-    }
-    service_account {
-      scopes = ["cloud-platform"]
-    }
-    depends_on = ["google_project_service.service_compute"]
-}
-
-
 // Authorizer application ---------------------------------------------------
 
 resource "google_compute_global_address" "authorizer" {
@@ -335,6 +281,7 @@ broker:
       GCP_PROJECT: '${var.gcp_project}'
       GCP_REGION: '${var.gcp_region}'
       PROXY_USER_WHITELIST: 'hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}'
+      BROKER_REALM: '${var.origin_realm}'
       ORIGIN_REALM: '${var.origin_realm}'
       DOMAIN_NAME: '${var.domain}'
       BROKER_SERVICE_HOSTNAME: '${var.broker_service_hostname}'

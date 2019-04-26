@@ -120,8 +120,9 @@ direct authentication, delegated authentication, and proxy-user impersonation.
 
 ### Direct authentication
 
-With this mode of authentication, a user directly obtains an access token from the broker by authenticating
-with Kerberos. This is performed for simple use cases, for example to list the contents of a bucket:
+With this mode of authentication, a user directly obtains an access token from the broker by
+authenticating with Kerberos. The broker can authenticate the user by using a Kerberos keytab.
+This mode of authentication is used for simple use cases, for example to list the contents of a bucket:
 
 ```shell
 hadoop fs -ls gs://[my-bucket]
@@ -242,7 +243,7 @@ Notes about the architecture:
 * Interactions between clients and the broker is done with gRPC and protocol buffers.
 * The Origin KDC is the source of truth for Kerberos users. Alternatively it could be replaced with
   an Active Directory or Open LDAP instance.
-* All machines for the broker, KDCs, and clients are deployed in private networks with RFC 1918 IP addresses.
+* All machines for the broker, KDC, and clients are deployed in private networks with RFC 1918 IP addresses.
   [Cloud NAT](https://cloud.google.com/nat/docs/overview) gateways are deployed for cases where machines need
   to access the internet. Connectivity between Hadoop client machines (e.g. on [Compute Engine](https://cloud.google.com/compute/)
   or [Cloud Dataproc](https://cloud.google.com/dataproc/)), the broker service, and the Origin KDC is
@@ -422,12 +423,12 @@ To deploy the broker service, run the following commands from the root of the re
 5. Create the Broker secrets:
 
    ```shell
-   gcloud beta compute ssh broker-kdc \
+   gcloud beta compute ssh origin-kdc \
      --tunnel-through-iap \
      -- "sudo cat /etc/broker.keytab" | perl -pne 's/\r$//g' > broker.keytab
 
    kubectl create secret generic broker-secrets \
-     --from-file=broker.keytab=broker.keytab \
+     --from-file=broker.keytab \
      --from-file=client_secret.json \
      --from-file=tls.pem=broker-tls.pem \
      --from-file=tls.crt=broker-tls.crt
@@ -511,7 +512,6 @@ Run the following commands from the root of the repository:
    export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
    export REGION=${ZONE%-*}
    export ORIGIN_KDC_HOSTNAME=$(gcloud compute instances describe origin-kdc --format="value(networkInterfaces[0].networkIP)").xip.io
-   export BROKER_KDC_HOSTNAME=$(gcloud compute instances describe broker-kdc --format="value(networkInterfaces[0].networkIP)").xip.io
    export BROKER_SERVICE_HOSTNAME="10.2.1.255.xip.io"
    export BROKER_VERSION=$(cat VERSION)
    ```
@@ -529,12 +529,12 @@ Run the following commands from the root of the repository:
      --scopes cloud-platform \
      --service-account "dataproc@${PROJECT}.iam.gserviceaccount.com" \
      --initialization-actions gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh \
-     --properties "dataproc:kerberos.root.principal.password.uri=gs://${PROJECT}-secrets/root-password.encrypted,dataproc:kerberos.kms.key.uri=projects/$PROJECT/locations/$REGION/keyRings/dataproc-key-ring/cryptoKeys/dataproc-key,dataproc:kerberos.cross-realm-trust.realm=BROKER,dataproc:kerberos.cross-realm-trust.kdc=$BROKER_KDC_HOSTNAME,dataproc:kerberos.cross-realm-trust.admin-server=$BROKER_KDC_HOSTNAME,dataproc:kerberos.cross-realm-trust.shared-password.uri=gs://$PROJECT-secrets/shared-password.encrypted" \
+     --properties "dataproc:kerberos.root.principal.password.uri=gs://${PROJECT}-secrets/root-password.encrypted,dataproc:kerberos.kms.key.uri=projects/$PROJECT/locations/$REGION/keyRings/dataproc-key-ring/cryptoKeys/dataproc-key,dataproc:kerberos.cross-realm-trust.realm=$REALM,dataproc:kerberos.cross-realm-trust.kdc=$ORIGIN_KDC_HOSTNAME,dataproc:kerberos.cross-realm-trust.admin-server=$ORIGIN_KDC_HOSTNAME,dataproc:kerberos.cross-realm-trust.shared-password.uri=gs://$PROJECT-secrets/shared-password.encrypted" \
      --metadata "gcp-token-broker-tls-enabled=true" \
      --metadata "gcp-token-broker-tls-certificate=$(cat broker-tls.crt)" \
      --metadata "gcp-token-broker-uri-hostname=$BROKER_SERVICE_HOSTNAME" \
      --metadata "gcp-token-broker-uri-port=443" \
-     --metadata "gcp-token-broker-realm=BROKER" \
+     --metadata "gcp-token-broker-realm=$REALM" \
      --metadata "origin-realm=$REALM" \
      --metadata "origin-kdc-hostname=$ORIGIN_KDC_HOSTNAME"
    ```
@@ -543,25 +543,8 @@ Run the following commands from the root of the repository:
    ```shell
    gcloud compute instances describe test-cluster-m --format="value(networkInterfaces[0].networkIP)"
    ```
-5. Follow these steps to set the IP address in the broker KDC's Kerberos configuration file:
-   * SSH into the broker KDC VM:
 
-     ```shell
-     gcloud beta compute ssh broker-kdc --tunnel-through-iap
-     ```
-   * Run the following command to set the correct IP address in `/etc/krb5.conf`
-     (Replace `[your.dataproc.cluster.ip]` with the IP address you noted in the previous step):
-
-     ```shell
-     DATAPROC_KDC_IP=[your.dataproc.cluster.ip]
-     sudo sed -i.bak -e "s/DATAPROC_KDC_IP/$DATAPROC_KDC_IP/" /etc/krb5.conf
-     ```
-   * Exit the SSH session:
-
-     ```shell
-     exit
-     ```
-6. Refer to the [Test scenarios](#test-scenarios) section to run some sample Hadoop jobs
+5. Refer to the [Test scenarios](#test-scenarios) section to run some sample Hadoop jobs
    and try out the broker's functionality.
 
 ## Production considerations
