@@ -11,6 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sudo apt-get install -y python3-pip
+sudo apt-get install -y python3
 sudo apt-get install -y libkrb5-dev
-pip3 install locustio==0.11.0 grpcio==1.19.0 grpcio-tools==1.19.0 gssapi==1.5.1 protobuf==3.6.1
+python3 -m pip install --user locustio==0.11.0 grpcio==1.19.0 grpcio-tools==1.19.0 gssapi==1.5.1 protobuf==3.6.1
