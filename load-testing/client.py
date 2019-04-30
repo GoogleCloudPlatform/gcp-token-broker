@@ -21,10 +21,10 @@ from locust import Locust, TaskSet, events, task
 
 from brokerservice.protobuf import broker_pb2
 from brokerservice.protobuf.broker_pb2_grpc import BrokerStub
+from settings import REALM
 
 BROKER_PORT = 443
 BROKER_USER = 'broker'
-BROKER_REALM = 'BROKER'
 
 class BrokerClient:
 
@@ -55,7 +55,7 @@ class BrokerClient:
         Obtain a SPNEGO token for the broker service and set the token to
         the 'authorization' metadata header.
         """
-        service_name_string = '{}/{}@{}'.format(BROKER_USER, self.host, BROKER_REALM)
+        service_name_string = '{}/{}@{}'.format(BROKER_USER, self.host, REALM)
         service_name = gssapi.Name(service_name_string, gssapi.NameType.kerberos_principal)
         spnego_mech_oid = gssapi.raw.OID.from_int_seq('1.3.6.1.5.5.2')
         context = gssapi.SecurityContext(
