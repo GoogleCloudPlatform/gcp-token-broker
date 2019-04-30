@@ -11,50 +11,32 @@
 
 package com.google.cloud.broker.caching.local;
 
-import com.google.api.client.util.Clock;
+import net.jodah.expiringmap.ExpirationPolicy;
+import net.jodah.expiringmap.ExpiringMap;
 
-import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
+
 
 public class LocalCache {
 
-    // TODO: Add process to prune expired records from memory
-
-    private static HashMap<String, Object> CACHE = new HashMap<String, Object>();
-    private static HashMap<String, Long> EXPIRY_TIMES = new HashMap<String, Long>();
-
-    private static final Long NEVER = -1L;
+    private static ExpiringMap<String, Object> cache = ExpiringMap.builder()
+            .variableExpiration()
+            .build();
 
     public static Object get(String key) {
-        Object value = CACHE.get(key);
-        if (value == null) {
-            return null;
-        }
-        else {
-            long expiryTime = EXPIRY_TIMES.get(key);
-            long now = Clock.SYSTEM.currentTimeMillis();
-            if ((expiryTime == NEVER) || (expiryTime > now)) {
-                return value;
-            }
-            else {
-                return null;
-            }
-        }
+        return cache.get(key);
     }
 
     public static void set(String key, Object value) {
-        CACHE.put(key, value);
-        EXPIRY_TIMES.put(key, NEVER);
+        cache.put(key, value);
     }
 
     public static void set(String key, Object value, int expireIn) {
-        long now = Clock.SYSTEM.currentTimeMillis();
-        CACHE.put(key, value);
-        EXPIRY_TIMES.put(key, now + 1000 * expireIn);
+        cache.put(key, value, ExpirationPolicy.CREATED, expireIn, TimeUnit.SECONDS);
     }
 
     public static void delete(String key) {
-        CACHE.remove(key);
-        EXPIRY_TIMES.remove(key);
+        cache.remove(key);
     }
 
 }

@@ -79,6 +79,7 @@ limitations under the License.
         <logback.version>1.2.3</logback.version>
         <logback.contrib.version>0.1.5</logback.contrib.version>
         <jackson.databind.version>2.9.3</jackson.databind.version>
+        <expiringmap.version>0.5.9</expiringmap.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.assembly.plugin.version>3.1.1</maven.assembly.plugin.version>
@@ -132,6 +133,11 @@ limitations under the License.
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-iam</artifactId>
             <version>${cloud.iam.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.jodah</groupId>
+            <artifactId>expiringmap</artifactId>
+            <version>${expiringmap.version}</version>
         </dependency>
 
         <!-- Logging dependencies -->
