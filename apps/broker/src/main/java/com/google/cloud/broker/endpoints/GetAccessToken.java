@@ -11,25 +11,19 @@
 
 package com.google.cloud.broker.endpoints;
 
+import com.google.cloud.broker.accesstokens.AccessTokenCacheFetcher;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
 
 import com.google.cloud.broker.logging.LoggingUtils;
 import com.google.cloud.broker.validation.Validation;
-import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.authentication.SessionAuthenticator;
-import com.google.cloud.broker.caching.AbstractRemoteCache;
-import com.google.cloud.broker.caching.LocalCache;
-import com.google.cloud.broker.encryption.EncryptionUtils;
 import com.google.cloud.broker.sessions.Session;
-import com.google.cloud.broker.providers.AccessToken;
+import com.google.cloud.broker.accesstokens.AccessToken;
 import com.google.cloud.broker.authentication.SpnegoAuthenticator;
 import com.google.cloud.broker.protobuf.GetAccessTokenRequest;
 import com.google.cloud.broker.protobuf.GetAccessTokenResponse;
-import com.google.cloud.broker.providers.AbstractProvider;
-
-import java.util.concurrent.locks.Lock;
 
 
 public class GetAccessToken {
@@ -44,9 +38,7 @@ public class GetAccessToken {
             // So let's authenticate the user.
             SpnegoAuthenticator spnegoAuthenticator = new SpnegoAuthenticator();
             String authenticatedUser = spnegoAuthenticator.authenticateUser();
-            Validation.validateNotEmpty("owner", request.getOwner());
-            Validation.validateNotEmpty("scope", request.getScope());
-            Validation.validateScope(request.getScope());
+
             Validation.validateImpersonator(authenticatedUser, request.getOwner());
         }
         else {
@@ -73,55 +65,7 @@ public class GetAccessToken {
             }
         }
 
-        // Create cache key to look up access token from cache
-        String cacheKey = String.format("access-token-%s-%s", request.getOwner(), request.getScope());
-
-        // First check in local cache
-        AccessToken accessToken = (AccessToken) LocalCache.get(cacheKey);
-
-        AppSettings settings = AppSettings.getInstance();
-        if (accessToken == null) {
-            // Not found in local cache, so look in remote cache.
-            AbstractRemoteCache cache = AbstractRemoteCache.getInstance();
-            byte[] encryptedAccessToken = cache.get(cacheKey);
-            if (encryptedAccessToken != null) {
-                // Cache hit... Let's load the value.
-                String cryptoKey = settings.getProperty("ENCRYPTION_ACCESS_TOKEN_CACHE_CRYPTO_KEY");
-                String json = new String(EncryptionUtils.decrypt(cryptoKey, encryptedAccessToken));
-                accessToken = AccessToken.fromJSON(json);
-            }
-            else {
-                // Cache miss... Let's generate a new access token.
-                // Start by acquiring a lock to avoid cache stampede
-                Lock lock = cache.acquireLock(cacheKey + "_lock");
-
-                // Check again if there's still no value
-                encryptedAccessToken = cache.get(cacheKey);
-                if (encryptedAccessToken != null) {
-                    // This time it's a cache hit. The token must have been generated
-                    // by a competing thread. So we just load the value.
-                    String cryptoKey = settings.getProperty("ENCRYPTION_ACCESS_TOKEN_CACHE_CRYPTO_KEY");
-                    String json = new String(EncryptionUtils.decrypt(cryptoKey, encryptedAccessToken));
-                    accessToken = AccessToken.fromJSON(json);
-                }
-                else {
-                    accessToken = AbstractProvider.getInstance().getAccessToken(request.getOwner(), request.getScope());
-                    // Encrypt and cache token for possible future requests
-                    String json = accessToken.toJSON();
-                    encryptedAccessToken = EncryptionUtils.encrypt(
-                            settings.getProperty("ENCRYPTION_ACCESS_TOKEN_CACHE_CRYPTO_KEY"),
-                            json.getBytes()
-                    );
-                    cache.set(cacheKey, encryptedAccessToken, Integer.parseInt(settings.getProperty("ACCESS_TOKEN_REMOTE_CACHE_TIME")));
-                }
-
-                // Release the lock
-                lock.unlock();
-            }
-
-            // Add unencrypted token to local cache
-            LocalCache.set(new String(cacheKey), accessToken, Integer.parseInt(settings.getProperty("ACCESS_TOKEN_LOCAL_CACHE_TIME")));
-        }
+        AccessToken accessToken = (AccessToken) new AccessTokenCacheFetcher(request.getOwner(), request.getScope()).fetch();
 
         // Log success message
         MDC.put("owner", request.getOwner());

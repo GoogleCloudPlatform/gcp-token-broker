@@ -15,6 +15,10 @@ import java.security.SecureRandom;
 import java.util.Random;
 import java.util.HashMap;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 import com.google.api.client.util.Clock;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.database.models.CreationTimeModel;
@@ -22,8 +26,8 @@ import com.google.cloud.broker.database.models.CreationTimeModel;
 
 public class Session extends CreationTimeModel {
 
-
-    public Session(HashMap<String, Object> values) {
+    @JsonCreator
+    public Session(@JsonProperty("values") HashMap<String, Object> values) {
         super(values);
         if (!this.values.containsKey("password")) {
             generateRandomPassword();
@@ -54,6 +58,7 @@ public class Session extends CreationTimeModel {
         ));
     }
 
+    @JsonIgnore
     public boolean isExpired() {
         long now = Clock.SYSTEM.currentTimeMillis();
         long expiresAt = (long) values.get("expires_at");

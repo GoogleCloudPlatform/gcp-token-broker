@@ -11,7 +11,7 @@
 
 package com.google.cloud.broker.endpoints;
 
-import com.google.cloud.broker.logging.LoggingUtils;
+import com.google.cloud.broker.sessions.SessionTokenUtils;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
@@ -21,7 +21,8 @@ import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.protobuf.RenewSessionTokenRequest;
 import com.google.cloud.broker.protobuf.RenewSessionTokenResponse;
 import com.google.cloud.broker.sessions.Session;
-import com.google.cloud.broker.sessions.SessionTokenUtils;
+import com.google.cloud.broker.sessions.SessionCacheFetcher;
+import com.google.cloud.broker.logging.LoggingUtils;
 import com.google.cloud.broker.validation.Validation;
 
 
@@ -34,7 +35,7 @@ public class RenewSessionToken {
         Validation.validateNotEmpty("session_token", request.getSessionToken());
 
         // Retrieve the session details from the database
-        Session session = SessionTokenUtils.getSessionFromToken(request.getSessionToken());
+        Session session = SessionTokenUtils.getSessionFromRawToken(request.getSessionToken());
 
         // Verify that the caller is the authorized renewer for the toke
         if (!session.getValue("renewer").equals(authenticatedUser)) {

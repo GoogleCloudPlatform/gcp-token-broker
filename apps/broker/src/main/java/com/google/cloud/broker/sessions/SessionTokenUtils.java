@@ -11,9 +11,9 @@
 
 package com.google.cloud.broker.sessions;
 
-import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.models.Model;
+import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.encryption.EncryptionUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -48,8 +48,8 @@ public class SessionTokenUtils {
     }
 
 
-    public static Session getSessionFromToken(String token) {
-        SessionToken sessionToken = unmarshallSessionToken(token);
+    public static Session getSessionFromRawToken(String rawToken) {
+        SessionToken sessionToken = unmarshallSessionToken(rawToken);
 
         // Fetch session from the database
         Session session = null;

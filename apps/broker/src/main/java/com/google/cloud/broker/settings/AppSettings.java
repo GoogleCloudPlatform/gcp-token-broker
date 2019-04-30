@@ -66,7 +66,7 @@ public class AppSettings extends Properties {
         this.setProperty("SCOPE_WHITELIST", "https://www.googleapis.com/auth/devstorage.read_write");
 
         // Cache backend
-        this.setProperty("REMOTE_CACHE", "com.google.cloud.broker.caching.RedisCache");
+        this.setProperty("REMOTE_CACHE", "com.google.cloud.broker.caching.remote.RedisCache");
 
         // Redis cache backend settings
         this.setProperty("REDIS_CACHE_HOST", "localhost");
@@ -79,8 +79,11 @@ public class AppSettings extends Properties {
         // Local cache lifetime for access tokens
         this.setProperty("ACCESS_TOKEN_LOCAL_CACHE_TIME", "30");  // in seconds
 
+        // Local cache lifetime for session details
+        this.setProperty("SESSION_LOCAL_CACHE_TIME", "30");  // in seconds
+
         // Access token provider backend
-        this.setProperty("PROVIDER", "com.google.cloud.broker.providers.RefreshTokenProvider");
+        this.setProperty("PROVIDER", "com.google.cloud.broker.accesstokens.providers.RefreshTokenProvider");
 
         // Database backend class
         this.setProperty("DATABASE_BACKEND", "com.google.cloud.broker.database.backends.CloudDatastoreBackend");
