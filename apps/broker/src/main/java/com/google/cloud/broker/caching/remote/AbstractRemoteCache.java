@@ -9,7 +9,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.caching;
+package com.google.cloud.broker.caching.remote;
 
 import com.google.cloud.broker.settings.AppSettings;
 

@@ -9,7 +9,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.providers;
+package com.google.cloud.broker.accesstokens.providers;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -28,6 +28,8 @@ import com.google.api.services.iam.v1.Iam;
 import com.google.api.services.iam.v1.model.SignJwtRequest;
 import com.google.api.services.iam.v1.model.SignJwtResponse;
 import com.google.auth.oauth2.ComputeEngineCredentials;
+
+import com.google.cloud.broker.accesstokens.AccessToken;
 import com.google.cloud.broker.settings.AppSettings;
 
 

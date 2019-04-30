@@ -13,8 +13,8 @@ package com.google.cloud.broker.authentication;
 
 import io.grpc.Status;
 
+import com.google.cloud.broker.sessions.SessionCacheFetcher;
 import com.google.cloud.broker.sessions.Session;
-import com.google.cloud.broker.sessions.SessionTokenUtils;
 
 
 public class SessionAuthenticator {
@@ -28,7 +28,7 @@ public class SessionAuthenticator {
 
         String token = authorizationHeader.split("\\s")[1];
 
-        Session session = SessionTokenUtils.getSessionFromToken(token);
+        Session session = (Session) new SessionCacheFetcher(token).fetch();
 
         if (session.isExpired()) {
             throw Status.UNAUTHENTICATED.withDescription("Expired session ID: " + session.getValue("id")).asRuntimeException();
