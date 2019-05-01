@@ -100,7 +100,7 @@ data "template_file" "startup_script_origin_kdc" {
         kadmin.local -q "addprinc -pw ${var.test_users[2]} ${var.test_users[2]}"
 
         # Create broker principal and keytab
-        kadmin.local -q "addprinc broker/${var.broker_service_hostname}"
+        kadmin.local -q "addprinc -randkey broker/${var.broker_service_hostname}"
         kadmin.local -q "ktadd -k /etc/broker.keytab broker/${var.broker_service_hostname}"
     EOT
   }
