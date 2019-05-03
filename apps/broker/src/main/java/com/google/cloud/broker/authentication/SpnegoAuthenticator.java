@@ -11,9 +11,11 @@
 
 package com.google.cloud.broker.authentication;
 
-import java.util.Base64;
-import java.util.HashMap;
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.Base64;
 import java.security.PrivilegedAction;
 import javax.security.auth.Subject;
 import javax.security.auth.login.AppConfigurationEntry;
@@ -28,36 +30,81 @@ import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.Oid;
+import sun.security.krb5.internal.ktab.KeyTab;
+import sun.security.krb5.internal.ktab.KeyTabEntry;
 
 
 public class SpnegoAuthenticator  {
 
-    private Subject subject;
+    private static SpnegoAuthenticator instance = null;
 
-    public SpnegoAuthenticator() {
+    private ArrayList<Subject> logins = new ArrayList<Subject>();
+
+    private static AppSettings settings = AppSettings.getInstance();
+
+
+    private SpnegoAuthenticator() {
+        // Load and validate keytabs
+        File keytabsPath = new File(settings.getProperty("KEYTABS_PATH"));
+        File[] keytabFiles = keytabsPath.listFiles();
+        for (File keytabFile : keytabFiles) {
+            if (keytabFile.isFile()) {
+                KeyTab keytab = KeyTab.getInstance(keytabFile);
+                KeyTabEntry[] entries = keytab.getEntries();
+                if (!keytab.isValid() || entries.length < 1) {
+                    throw new RuntimeException(String.format("Invalid keytab: %s", keytabFile.getPath()));
+                }
+
+                String serviceName = settings.getProperty("BROKER_SERVICE_NAME");
+                String hostname = settings.getProperty("BROKER_SERVICE_HOSTNAME");
+                String realm = null;
+
+                // Perform further validation of entries in the keytab
+                for (KeyTabEntry entry : entries) {
+                    String[] nameStrings = entry.getService().getNameStrings();
+
+                    // Ensure that the entries' service name and hostname must match the whitelisted values
+                    if (!nameStrings[0].equals(serviceName) || !nameStrings[1].equals(hostname)) {
+                        throw new RuntimeException(String.format("Invalid service name or hostname in keytab: %s", keytabFile.getPath()));
+                    }
+
+                    // Ensure that all entries share the same realm
+                    String entryRealm = entry.getService().getRealmAsString();
+                    if (realm == null) {
+                        realm = entryRealm;
+                    } else if (!entryRealm.equals(realm)) {
+                        throw new RuntimeException(String.format("Keytab `%s` contains multiple realms: %s, %s", keytabFile.getPath(), realm, entryRealm));
+                    }
+                }
+
+                String principal = serviceName + "/" + hostname + "@" + realm;
+                Subject subject = login(principal, keytabFile);
+                logins.add(subject);
+            }
+        }
+    }
+
+
+    private Subject login(String principal, File keytabFile) {
         try {
             LoginContext loginContext = new LoginContext(
-                "", new Subject(), null, getConfiguration());
+                    "", new Subject(), null, getConfiguration(principal, keytabFile));
             loginContext.login();
-            subject = loginContext.getSubject();
+            Subject subject = loginContext.getSubject();
+            return subject;
         } catch (LoginException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static Configuration getConfiguration() {
-        AppSettings settings = AppSettings.getInstance();
-        String principal =
-            settings.getProperty("BROKER_SERVICE_NAME") + "/" +
-            settings.getProperty("BROKER_SERVICE_HOSTNAME") + "@" +
-            settings.getProperty("BROKER_REALM");
-        String keyTab = settings.getProperty("KEYTAB_PATH");
+
+    private static Configuration getConfiguration(String principal, File keytabFile) { ;
         return new Configuration() {
             @Override
             public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
             Map<String, String> options = new HashMap<String, String>();
             options.put("principal", principal);
-            options.put("keyTab", keyTab);
+            options.put("keyTab", keytabFile.getPath());
             options.put("doNotPrompt", "true");
             options.put("useKeyTab", "true");
             options.put("storeKey", "true");
@@ -71,6 +118,15 @@ public class SpnegoAuthenticator  {
         };
     }
 
+
+    public static SpnegoAuthenticator getInstance() {
+        if (instance == null) {
+            instance = new SpnegoAuthenticator();
+        }
+        return instance;
+    }
+
+
     public String authenticateUser() {
         String authorizationHeader = AuthorizationHeaderServerInterceptor.AUTHORIZATION_CONTEXT_KEY.get();
         if (! authorizationHeader.startsWith("Negotiate ")) {
@@ -78,26 +134,33 @@ public class SpnegoAuthenticator  {
         }
         String spnegoToken = authorizationHeader.split("\\s")[1];
 
-        String authenticatedUser = Subject.doAs(subject, new PrivilegedAction<String>() {
-            public String run() {
-                try {
-                    GSSManager manager = GSSManager.getInstance();
-                    Oid spnegoOid = new Oid("1.3.6.1.5.5.2");
-                    GSSCredential serverCredential = manager.createCredential(null,
-                        GSSCredential.DEFAULT_LIFETIME,
-                        spnegoOid,
-                        GSSCredential.ACCEPT_ONLY);
-                    GSSContext context = manager.createContext((GSSCredential) serverCredential);
-                    byte[] tokenBytes = Base64.getDecoder().decode(spnegoToken.getBytes());
-                    context.acceptSecContext(tokenBytes, 0, tokenBytes.length);
-                    return context.getSrcName().toString();
-                } catch (GSSException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
+        String authenticatedUser = null;
 
-        return authenticatedUser;
+        for (Subject login : logins) {
+            authenticatedUser = Subject.doAs(login, new PrivilegedAction<String>() {
+                public String run() {
+                    try {
+                        GSSManager manager = GSSManager.getInstance();
+                        Oid spnegoOid = new Oid("1.3.6.1.5.5.2");
+                        GSSCredential serverCredential = manager.createCredential(null,
+                            GSSCredential.DEFAULT_LIFETIME,
+                            spnegoOid,
+                            GSSCredential.ACCEPT_ONLY);
+                        GSSContext context = manager.createContext((GSSCredential) serverCredential);
+                        byte[] tokenBytes = Base64.getDecoder().decode(spnegoToken.getBytes());
+                        context.acceptSecContext(tokenBytes, 0, tokenBytes.length);
+                        return context.getSrcName().toString();
+                    } catch (GSSException e) {
+                        return null;
+                    }
+                }
+            });
+            if (authenticatedUser != null) {
+                return authenticatedUser;
+            }
+        }
+
+        throw Status.UNAUTHENTICATED.withDescription("SPNEGO authentication failed").asRuntimeException();
     }
 
 }

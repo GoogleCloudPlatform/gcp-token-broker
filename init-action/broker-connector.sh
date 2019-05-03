@@ -45,7 +45,6 @@ readonly broker_tls_enabled="$(/usr/share/google/get_metadata_value attributes/g
 readonly broker_tls_certificate="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-tls-certificate)"
 readonly broker_uri_hostname="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-uri-hostname)"
 readonly broker_uri_port="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-uri-port)"
-readonly broker_realm="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-realm)"
 readonly origin_kdc_hostname="$(/usr/share/google/get_metadata_value attributes/origin-kdc-hostname)"
 readonly origin_realm="$(/usr/share/google/get_metadata_value attributes/origin-realm)"
 readonly test_users="$(/usr/share/google/get_metadata_value attributes/test-users)"
@@ -70,7 +69,6 @@ set_property_core_site "gcp.token.broker.tls.enabled" "$broker_tls_enabled"
 set_property_core_site "gcp.token.broker.tls.certificate" "$broker_tls_certificate"
 set_property_core_site "gcp.token.broker.uri.hostname" "$broker_uri_hostname"
 set_property_core_site "gcp.token.broker.uri.port" "$broker_uri_port"
-set_property_core_site "gcp.token.broker.realm" "$broker_realm"
 
 # Get connector's lib directory
 if [[ -d ${DATAPROC_LIB_DIR} ]]; then
@@ -114,6 +112,9 @@ do
     adduser --disabled-password --gecos "" $i
 done
 
+
+kadmin.local -q "addprinc -randkey broker/${broker_uri_hostname}"
+kadmin.local -q "ktadd -k /etc/security/keytab/broker.keytab broker/${broker_uri_hostname}"
 
 # Restart services ---------------------------------------------------------------
 if [[ "${ROLE}" == 'Master' ]]; then

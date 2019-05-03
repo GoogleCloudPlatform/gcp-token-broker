@@ -36,7 +36,7 @@ public class GetAccessToken {
         if (session == null) {
             // No session token was provided. The client is using direct authentication.
             // So let's authenticate the user.
-            SpnegoAuthenticator spnegoAuthenticator = new SpnegoAuthenticator();
+            SpnegoAuthenticator spnegoAuthenticator = SpnegoAuthenticator.getInstance();
             String authenticatedUser = spnegoAuthenticator.authenticateUser();
 
             Validation.validateImpersonator(authenticatedUser, request.getOwner());

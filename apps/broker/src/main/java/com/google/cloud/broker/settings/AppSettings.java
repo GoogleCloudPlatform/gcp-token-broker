@@ -32,8 +32,8 @@ public class AppSettings extends Properties {
         this.setProperty("SERVER_HOST", "0.0.0.0");
         this.setProperty("SERVER_PORT", "5000");
 
-        // Path to the broker principal's keytab
-        this.setProperty("KEYTAB_PATH", "/secrets/broker.keytab");
+        // Path to the broker principals' keytabs
+        this.setProperty("KEYTABS_PATH", "/keytabs");
 
         // Path to the broker Oauth client ID for user login
         this.setProperty("CLIENT_SECRET_PATH", "/secrets/client_secret.json");

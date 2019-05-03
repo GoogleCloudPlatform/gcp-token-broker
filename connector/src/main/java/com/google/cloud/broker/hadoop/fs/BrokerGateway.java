@@ -19,6 +19,7 @@ import javax.net.ssl.SSLException;
 
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
@@ -51,11 +52,11 @@ public final class BrokerGateway {
     // Timeout for RPC calls
     private static int DEADLINE_MILLISECONDS = 20*1000;
 
-    public BrokerGateway(Configuration config) throws GSSException {
-        this(config, null);
+    public BrokerGateway(Configuration config, UserGroupInformation loginUser) throws GSSException {
+        this(config, loginUser,null);
     }
 
-    public BrokerGateway(Configuration config, String sessionToken) throws GSSException {
+    public BrokerGateway(Configuration config, UserGroupInformation loginUser, String sessionToken) throws GSSException {
         this.config = config;
 
         boolean tlsEnabled = config.getBoolean("gcp.token.broker.tls.enabled", true);
@@ -89,7 +90,9 @@ public final class BrokerGateway {
             setDelegationToken(sessionToken);
         }
         else {
-            setSPNEGOToken();
+            String username = loginUser.getUserName();
+            String realm = username.substring(username.indexOf("@") + 1);
+            setSPNEGOToken(realm);
         }
     }
 
@@ -101,17 +104,16 @@ public final class BrokerGateway {
         return managedChannel;
     }
 
-    private void setSPNEGOToken() throws GSSException {
+    private void setSPNEGOToken(String realm) throws GSSException {
         String brokerHostname = config.get("gcp.token.broker.uri.hostname");
         String brokerServiceName = config.get("gcp.token.broker.servicename", "broker");
-        String brokerRealm = config.get("gcp.token.broker.realm");
 
         // Create GSS context for the broker service and the logged-in user
         Oid krb5Mechanism = new Oid(KRB5_MECHANISM_OID);
         Oid krb5PrincipalNameType = new Oid(KRB5_PRINCIPAL_NAME_OID);
         Oid spnegoOid = new Oid(SPNEGO_OID);
         GSSManager manager = GSSManager.getInstance();
-        String servicePrincipal = brokerServiceName + "/" + brokerHostname + "@" + brokerRealm;
+        String servicePrincipal = brokerServiceName + "/" + brokerHostname + "@" + realm;
         GSSName gssServerName = manager.createName(servicePrincipal , krb5PrincipalNameType, krb5Mechanism);
         GSSContext gssContext = manager.createContext(
             gssServerName, spnegoOid, null, GSSCredential.DEFAULT_LIFETIME);

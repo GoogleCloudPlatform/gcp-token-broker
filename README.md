@@ -21,6 +21,7 @@ backward-incompatible ways and is not subject to any SLA or deprecation policy._
   - [Deploying the broker service](#deploying-the-broker-service)
   - [Using the authorizer](#using-the-authorizer)
   - [Creating a Dataproc cluster](#creating-a-dataproc-cluster)
+  - [Uploading keytabs](#uploading-keytabs)
 - [Production considerations](#production-considerations)
   - [Deployment process](#deployment-process)
     - [Configuration management](#configuration-management)
@@ -423,12 +424,7 @@ To deploy the broker service, run the following commands from the root of the re
 5. Create the Broker secrets:
 
    ```shell
-   gcloud beta compute ssh origin-kdc \
-     --tunnel-through-iap \
-     -- "sudo cat /etc/broker.keytab" | perl -pne 's/\r$//g' > broker.keytab
-
    kubectl create secret generic broker-secrets \
-     --from-file=broker.keytab \
      --from-file=client_secret.json \
      --from-file=tls.pem=broker-tls.pem \
      --from-file=tls.crt=broker-tls.crt
@@ -534,18 +530,35 @@ Run the following commands from the root of the repository:
      --metadata "gcp-token-broker-tls-certificate=$(cat broker-tls.crt)" \
      --metadata "gcp-token-broker-uri-hostname=$BROKER_SERVICE_HOSTNAME" \
      --metadata "gcp-token-broker-uri-port=443" \
-     --metadata "gcp-token-broker-realm=$REALM" \
      --metadata "origin-realm=$REALM" \
      --metadata "origin-kdc-hostname=$ORIGIN_KDC_HOSTNAME"
    ```
-4. Display and take note of the Dataproc master VM's IP address:
+
+### Uploading keytabs
+
+The broker service needs keytabs to authenticate incoming requests.
+
+1. Download keytabs from the origin and Dataproc KDCs:
 
    ```shell
-   gcloud compute instances describe test-cluster-m --format="value(networkInterfaces[0].networkIP)"
+   gcloud beta compute ssh origin-kdc \
+     --tunnel-through-iap \
+     -- "sudo cat /etc/security/keytab/broker.keytab" | perl -pne 's/\r$//g' > origin.keytab
+
+   gcloud beta compute ssh test-cluster-m \
+     --tunnel-through-iap \
+     -- "sudo cat /etc/security/keytab/broker.keytab" | perl -pne 's/\r$//g' > dataproc.keytab
+
+2. Upload the keytabs to the broker cluster:
+
+   ```shell
+   kubectl create secret generic broker-keytabs \
+     --from-file=origin.keytab \
+     --from-file=dataproc.keytab
    ```
 
-5. Refer to the [Test scenarios](#test-scenarios) section to run some sample Hadoop jobs
-   and try out the broker's functionality.
+3. You are now ready to do some testing. Refer to the [Test scenarios](#test-scenarios) section to run
+   some sample Hadoop jobs and try out the broker's functionality.
 
 ## Production considerations
 

@@ -29,7 +29,7 @@ import com.google.cloud.broker.validation.Validation;
 public class RenewSessionToken {
 
     public static void run(RenewSessionTokenRequest request, StreamObserver<RenewSessionTokenResponse> responseObserver) {
-        SpnegoAuthenticator authenticator = new SpnegoAuthenticator();
+        SpnegoAuthenticator authenticator = SpnegoAuthenticator.getInstance();
         String authenticatedUser = authenticator.authenticateUser();
 
         Validation.validateNotEmpty("session_token", request.getSessionToken());
