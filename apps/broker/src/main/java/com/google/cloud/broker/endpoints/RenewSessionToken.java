@@ -21,7 +21,6 @@ import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.protobuf.RenewSessionTokenRequest;
 import com.google.cloud.broker.protobuf.RenewSessionTokenResponse;
 import com.google.cloud.broker.sessions.Session;
-import com.google.cloud.broker.sessions.SessionCacheFetcher;
 import com.google.cloud.broker.logging.LoggingUtils;
 import com.google.cloud.broker.validation.Validation;
 

@@ -22,7 +22,6 @@ import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.protobuf.CancelSessionTokenRequest;
 import com.google.cloud.broker.protobuf.CancelSessionTokenResponse;
 import com.google.cloud.broker.sessions.Session;
-import com.google.cloud.broker.sessions.SessionCacheFetcher;
 import com.google.cloud.broker.validation.Validation;
 
 
