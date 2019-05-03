@@ -446,7 +446,7 @@ To deploy the broker service, run the following commands from the root of the re
    cd deploy
    sed -e "s/PROJECT/$PROJECT/" skaffold.yaml.template > skaffold.yaml
    ```
-8. Deploy to GKE:
+8. Deploy to Kubernetes Engine:
 
    ```shell
    skaffold dev -v info

@@ -120,7 +120,6 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
             throw new RuntimeException(e);
         }
 
-        System.out.println(response);
         return response.getSignedJwt();
     }
 
