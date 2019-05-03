@@ -29,7 +29,7 @@ import com.google.cloud.broker.validation.Validation;
 public class CancelSessionToken {
 
     public static void run(CancelSessionTokenRequest request, StreamObserver<CancelSessionTokenResponse> responseObserver) {
-        SpnegoAuthenticator authenticator = new SpnegoAuthenticator();
+        SpnegoAuthenticator authenticator = SpnegoAuthenticator.getInstance();
         String authenticatedUser = authenticator.authenticateUser();
 
         Validation.validateNotEmpty("session_token", request.getSessionToken());

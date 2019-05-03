@@ -29,7 +29,7 @@ import com.google.cloud.broker.protobuf.GetSessionTokenResponse;
 public class GetSessionToken {
 
     public static void run(GetSessionTokenRequest request, StreamObserver<GetSessionTokenResponse> responseObserver) {
-        SpnegoAuthenticator authenticator = new SpnegoAuthenticator();
+        SpnegoAuthenticator authenticator = SpnegoAuthenticator.getInstance();
         String authenticatedUser = authenticator.authenticateUser();
 
         Validation.validateNotEmpty("owner", request.getOwner());

@@ -45,7 +45,14 @@ spec:
           mountPath: '/secrets'
           readOnly: true
           volumes:
+        - name: {{ .Chart.Name }}-keytabs-volume
+          mountPath: '/keytabs'
+          readOnly: true
+          volumes:
       volumes:
       - name: {{ .Chart.Name }}-secrets-volume
         secret:
           secretName: {{ .Chart.Name }}-secrets
+      - name: {{ .Chart.Name }}-keytabs-volume
+        secret:
+          secretName: {{ .Chart.Name }}-keytabs
