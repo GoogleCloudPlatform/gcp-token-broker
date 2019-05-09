@@ -109,7 +109,7 @@ if [[ -z "${USERS}" ]] ; then
 fi
 for i in $(echo $USERS | sed "s/,/ /g")
 do
-    adduser --disabled-password --gecos "" $i
+  adduser --disabled-password --gecos "" $i
 done
 
 

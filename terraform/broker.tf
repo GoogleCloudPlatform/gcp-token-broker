@@ -9,10 +9,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-locals {
-  dataproc_realm = "${upper(var.gcp_zone)}.C.${upper(var.gcp_project)}.INTERNAL"
-}
-
 
 resource "google_service_account" "broker" {
   account_id = "broker"

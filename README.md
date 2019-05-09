@@ -265,7 +265,7 @@ Before you start, you must set up some prerequisites for the demo:
    * [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v0.11.13
    * [Helm](https://docs.helm.sh/using_helm/#installing-helm) v2.13.1
    * [Skaffold](https://github.com/GoogleContainerTools/skaffold#install) v0.26.0
-   * [Google Cloud SDK](https://cloud.google.com/sdk/install) v240.0.0
+   * [Google Cloud SDK](https://cloud.google.com/sdk/install) v242.0.0
 
 ### Deploying the demo architecture
 
@@ -338,7 +338,8 @@ Follow these steps to deploy the demo environment to GCP:
    * For "Scopes for Google APIs", click "Add scope", then search for
      "Google Cloud Storage JSON API", then tick the checkbox for
      "auth/devstorage.read_write", then click "Add".
-   * For "Authorized domains", add your domain name.
+   * For "Authorized domains", type your domain name then press `Enter` on your keyboard
+     to add it to the list.
    * Click "Save".
 3. Create a new OAuth client ID:
    * Go to: https://console.cloud.google.com/apis/credentials
@@ -534,6 +535,30 @@ Run the following commands from the root of the repository:
      --metadata "origin-kdc-hostname=$ORIGIN_KDC_HOSTNAME"
    ```
 
+4. Display and take note of the Dataproc master VM's IP address:
+
+   ```shell
+   gcloud compute instances describe test-cluster-m --format="value(networkInterfaces[0].networkIP)"
+   ```
+5. Follow these steps to set the IP address in the broker KDC's Kerberos configuration file:
+   * SSH into the broker KDC VM:
+
+     ```shell
+     gcloud beta compute ssh origin-kdc --tunnel-through-iap
+     ```
+   * Run the following command to set the correct IP address in `/etc/krb5.conf`
+     (Replace `[your.dataproc.cluster.ip]` with the IP address you noted in the previous step):
+
+     ```shell
+     DATAPROC_KDC_IP=[your.dataproc.cluster.ip]
+     sudo sed -i.bak -e "s/DATAPROC_KDC_IP/$DATAPROC_KDC_IP/" /etc/krb5.conf
+     ```
+   * Exit the SSH session:
+
+     ```shell
+     exit
+     ```
+
 ### Uploading keytabs
 
 The broker service needs keytabs to authenticate incoming requests.
@@ -557,7 +582,12 @@ The broker service needs keytabs to authenticate incoming requests.
      --from-file=dataproc.keytab
    ```
 
-3. You are now ready to do some testing. Refer to the [Test scenarios](#test-scenarios) section to run
+3. Restart the broker Kubernetes pods:
+
+   ```shell
+   helm upgrade --recreate-pods -f deploy/values_override.yaml broker deploy/broker
+   ```
+4. You are now ready to do some testing. Refer to the [Test scenarios](#test-scenarios) section to run
    some sample Hadoop jobs and try out the broker's functionality.
 
 ## Production considerations

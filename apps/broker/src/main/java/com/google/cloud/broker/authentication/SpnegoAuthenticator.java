@@ -63,7 +63,7 @@ public class SpnegoAuthenticator  {
                 for (KeyTabEntry entry : entries) {
                     String[] nameStrings = entry.getService().getNameStrings();
 
-                    // Ensure that the entries' service name and hostname must match the whitelisted values
+                    // Ensure that the entries' service name and hostname match the whitelisted values
                     if (!nameStrings[0].equals(serviceName) || !nameStrings[1].equals(hostname)) {
                         throw new RuntimeException(String.format("Invalid service name or hostname in keytab: %s", keytabFile.getPath()));
                     }

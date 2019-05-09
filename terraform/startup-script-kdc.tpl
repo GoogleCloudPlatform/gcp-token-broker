@@ -19,6 +19,7 @@ cat << EOF > /etc/krb5.conf
         kdc = localhost:88
         admin_server = localhost:749
     }
+    ${cross_realm_trust_conf}
 [libdefaults]
     default_realm = ${realm}
     dns_lookup_realm = false
