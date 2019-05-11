@@ -9,7 +9,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.encryption;
+package com.google.cloud.broker.encryption.backends;
 
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.kms.v1.CryptoKeyName;
@@ -20,9 +20,10 @@ import com.google.protobuf.ByteString;
 
 import java.io.IOException;
 
-public class EncryptionUtils {
+public class CloudKMSBackend extends AbstractEncryptionBackend {
 
-    public static byte[] decrypt(String cryptoKey, byte[] cipherText) {
+
+    public byte[] decrypt(String cryptoKey, byte[] cipherText) {
         AppSettings settings = AppSettings.getInstance();
         String projectId = settings.getProperty("GCP_PROJECT");
         String region = settings.getProperty("GCP_REGION");
@@ -41,7 +42,7 @@ public class EncryptionUtils {
     }
 
 
-    public static byte[] encrypt(String cryptoKey, byte[] plainText) {
+    public byte[] encrypt(String cryptoKey, byte[] plainText) {
         AppSettings settings = AppSettings.getInstance();
         String projectId = settings.getProperty("GCP_PROJECT");
         String region = settings.getProperty("GCP_REGION");

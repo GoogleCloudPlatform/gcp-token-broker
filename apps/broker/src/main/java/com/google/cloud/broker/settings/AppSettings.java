@@ -85,6 +85,9 @@ public class AppSettings extends Properties {
         // Access token provider backend
         this.setProperty("PROVIDER", "com.google.cloud.broker.accesstokens.providers.RefreshTokenProvider");
 
+        // Encryption backend
+        this.setProperty("ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.CloudKMSBackend");
+
         // Database backend class
         this.setProperty("DATABASE_BACKEND", "com.google.cloud.broker.database.backends.CloudDatastoreBackend");
 
