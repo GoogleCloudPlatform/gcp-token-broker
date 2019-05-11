@@ -15,7 +15,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.broker.caching.local.LocalCache;
 import com.google.cloud.broker.caching.remote.AbstractRemoteCache;
-import com.google.cloud.broker.encryption.EncryptionUtils;
+import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
 
 
 import java.io.IOException;
@@ -47,7 +47,7 @@ public abstract class CacheFetcher {
             byte[] encryptedValue = cache.get(cacheKey);
             if (encryptedValue != null) {
                 // Cache hit... Let's load the value.
-                String json = new String(EncryptionUtils.decrypt(getRemoteCacheCryptoKey(), encryptedValue));
+                String json = new String(AbstractEncryptionBackend.getInstance().decrypt(getRemoteCacheCryptoKey(), encryptedValue));
                 try {
                     result = fromJson(json);
                 } catch (IOException e) {
@@ -64,7 +64,7 @@ public abstract class CacheFetcher {
                 if (encryptedValue != null) {
                     // This time it's a cache hit. The token must have been generated
                     // by a competing thread. So we just load the value.
-                    String json = new String(EncryptionUtils.decrypt(getRemoteCacheCryptoKey(), encryptedValue));
+                    String json = new String(AbstractEncryptionBackend.getInstance().decrypt(getRemoteCacheCryptoKey(), encryptedValue));
                     try {
                         result = fromJson(json);
                     } catch (IOException e) {
@@ -82,7 +82,7 @@ public abstract class CacheFetcher {
                     } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);
                     }
-                    encryptedValue = EncryptionUtils.encrypt(getRemoteCacheCryptoKey(), json.getBytes());
+                    encryptedValue = AbstractEncryptionBackend.getInstance().encrypt(getRemoteCacheCryptoKey(), json.getBytes());
                     cache.set(cacheKey, encryptedValue, getRemoteCacheTime());
                 }
 

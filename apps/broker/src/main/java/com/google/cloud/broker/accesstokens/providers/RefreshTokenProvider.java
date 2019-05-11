@@ -24,6 +24,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.util.Clock;
+import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
 import com.google.cloud.datastore.Blob;
 import io.grpc.Status;
 
@@ -32,7 +33,6 @@ import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.authorization.RefreshToken;
-import com.google.cloud.broker.encryption.EncryptionUtils;
 
 
 public class RefreshTokenProvider extends AbstractProvider {
@@ -62,7 +62,7 @@ public class RefreshTokenProvider extends AbstractProvider {
         AppSettings settings = AppSettings.getInstance();
         String cryptoKey = settings.getProperty("ENCRYPTION_REFRESH_TOKEN_CRYPTO_KEY");
         byte[] encryptedValue = ((Blob) refreshToken.getValue("value")).toByteArray();
-        String decryptedValue = new String(EncryptionUtils.decrypt(cryptoKey, encryptedValue));
+        String decryptedValue = new String(AbstractEncryptionBackend.getInstance().decrypt(cryptoKey, encryptedValue));
 
         // Load OAuth client secret
         File secretJson = new java.io.File(settings.getProperty("CLIENT_SECRET_PATH"));
