@@ -78,7 +78,7 @@ limitations under the License.
         <cloud.iam.version>v1-rev247-1.23.0</cloud.iam.version>
         <logback.version>1.2.3</logback.version>
         <logback.contrib.version>0.1.5</logback.contrib.version>
-        <jackson.databind.version>2.9.3</jackson.databind.version>
+        <jackson.databind.version>2.9.9</jackson.databind.version>
         <expiringmap.version>0.5.9</expiringmap.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
