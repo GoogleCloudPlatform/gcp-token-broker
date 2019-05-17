@@ -30,8 +30,6 @@ import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.Oid;
-import sun.security.krb5.internal.ktab.KeyTab;
-import sun.security.krb5.internal.ktab.KeyTabEntry;
 
 
 public class SpnegoAuthenticator  {
@@ -49,8 +47,8 @@ public class SpnegoAuthenticator  {
         File[] keytabFiles = keytabsPath.listFiles();
         for (File keytabFile : keytabFiles) {
             if (keytabFile.isFile()) {
-                KeyTab keytab = KeyTab.getInstance(keytabFile);
-                KeyTabEntry[] entries = keytab.getEntries();
+                sun.security.krb5.internal.ktab.KeyTab keytab = sun.security.krb5.internal.ktab.KeyTab.getInstance(keytabFile);
+                sun.security.krb5.internal.ktab.KeyTabEntry[] entries = keytab.getEntries();
                 if (!keytab.isValid() || entries.length < 1) {
                     throw new RuntimeException(String.format("Invalid keytab: %s", keytabFile.getPath()));
                 }
@@ -60,7 +58,7 @@ public class SpnegoAuthenticator  {
                 String realm = null;
 
                 // Perform further validation of entries in the keytab
-                for (KeyTabEntry entry : entries) {
+                for (sun.security.krb5.internal.ktab.KeyTabEntry entry : entries) {
                     String[] nameStrings = entry.getService().getNameStrings();
 
                     // Ensure that the entries' service name and hostname match the whitelisted values

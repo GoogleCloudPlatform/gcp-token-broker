@@ -20,7 +20,7 @@ limitations under the License.
 
     <groupId>com.google.cloud.broker</groupId>
     <artifactId>broker-connector</artifactId>
-    <version>${hadoop.identifier}-0.2.0-SNAPSHOT</version>
+    <version>${hadoop.identifier}-0.2.0</version>
 
     <name>GCP Token Broker Hadoop Connector</name>
     <description>
@@ -90,6 +90,57 @@ limitations under the License.
           <hadoop.version>3.1.1</hadoop.version>
           <gcs.connector.version>hadoop3-2.0.0-SNAPSHOT</gcs.connector.version>
         </properties>
+      </profile>
+      <profile>
+        <id>release</id>
+        <build>
+          <plugins>
+            <plugin>
+              <artifactId>maven-gpg-plugin</artifactId>
+              <executions>
+                <execution>
+                  <id>sign-artifacts</id>
+                  <phase>verify</phase>
+                  <goals>
+                    <goal>sign</goal>
+                  </goals>
+                  <configuration>
+                    <gpgArguments>
+                      <arg>--pinentry-mode</arg>
+                      <arg>loopback</arg>
+                    </gpgArguments>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
+            <plugin>
+              <artifactId>maven-source-plugin</artifactId>
+              <executions>
+                <execution>
+                  <id>attach-sources</id>
+                  <goals>
+                    <goal>jar-no-fork</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+            <plugin>
+              <artifactId>maven-javadoc-plugin</artifactId>
+              <configuration>
+                <additionalOptions>-Xdoclint:none</additionalOptions>
+                <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+              </configuration>
+              <executions>
+                <execution>
+                  <id>attach-javadocs</id>
+                  <goals>
+                    <goal>jar</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </build>
       </profile>
     </profiles>
 

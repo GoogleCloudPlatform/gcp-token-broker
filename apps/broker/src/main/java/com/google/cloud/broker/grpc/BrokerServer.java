@@ -29,7 +29,6 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslProvider;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
 import com.google.cloud.broker.endpoints.GetAccessToken;

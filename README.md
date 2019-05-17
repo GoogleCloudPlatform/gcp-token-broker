@@ -400,29 +400,36 @@ Run from the following commands from the root of the repository:
 
 To deploy the broker service, run the following commands from the root of the repository:
 
-1. Set some environment variables:
+1. Download the broker app's JAR:
+
+   ```
+   export BROKER_VERSION=$(cat VERSION)
+   mkdir -p apps/broker/target
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker/$BROKER_VERSION/broker-$BROKER_VERSION-jar-with-dependencies.jar > apps/broker/target/broker-$BROKER_VERSION-jar-with-dependencies.jar
+   ```
+2. Set some environment variables:
 
    ```shell
    export PROJECT=$(gcloud info --format='value(config.project)')
    export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
    ```
-2. Configure credentials for the cluster:
+3. Configure credentials for the cluster:
 
    ```shell
    gcloud container clusters get-credentials broker
    ```
-3. Create a Kubernetes service account with the cluster admin role for Tiller, the Helm server:
+4. Create a Kubernetes service account with the cluster admin role for Tiller, the Helm server:
 
    ```shell
    kubectl create serviceaccount --namespace kube-system tiller
    kubectl create clusterrolebinding tiller --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
    ```
-4. Install Helm tiller in the cluster:
+5. Install Helm tiller in the cluster:
 
    ```shell
    helm init --service-account tiller
    ```
-5. Create the Broker secrets:
+6. Create the Broker secrets:
 
    ```shell
    kubectl create secret generic broker-secrets \
@@ -430,7 +437,7 @@ To deploy the broker service, run the following commands from the root of the re
      --from-file=tls.pem=broker-tls.pem \
      --from-file=tls.crt=broker-tls.crt
    ```
-6. Create the Authorizer secrets
+7. Create the Authorizer secrets
 
    ```shell
    openssl rand -base64 32 > authorizer-flask-secret.key
@@ -441,13 +448,13 @@ To deploy the broker service, run the following commands from the root of the re
      --from-file=tls.key=authorizer-tls.key \
      --from-file=tls.crt=authorizer-tls.crt
    ```
-7. Create the `skaffold.yaml` configuration file:
+8. Create the `skaffold.yaml` configuration file:
 
    ```shell
    cd deploy
    sed -e "s/PROJECT/$PROJECT/" skaffold.yaml.template > skaffold.yaml
    ```
-8. Deploy to Kubernetes Engine:
+9.  Deploy to Kubernetes Engine:
 
    ```shell
    skaffold dev -v info
@@ -457,7 +464,7 @@ To deploy the broker service, run the following commands from the root of the re
    minutes for the container images to build and get uploaded to the
    container registry.
 
-9. Wait until an external IP has been assigned to the broker service. You can
+11. Wait until an external IP has been assigned to the broker service. You can
    check the status by running the following command in a different terminal,
    and by looking up the `EXTERNAL-IP` value:
 
@@ -561,15 +568,17 @@ Run the following commands from the root of the repository:
 
 ### Uploading keytabs
 
-The broker service needs keytabs to authenticate incoming requests.
+The broker service needs keytabs (one for each realm) to authenticate incoming requests.
 
-1. Download keytabs from the origin and Dataproc KDCs:
+1. Download keytabs for the origin and Dataproc realms:
 
    ```shell
+   # Download keytab for the origin realm
    gcloud beta compute ssh origin-kdc \
      --tunnel-through-iap \
      -- "sudo cat /etc/security/keytab/broker.keytab" | perl -pne 's/\r$//g' > origin.keytab
 
+   # Download keytab for the Dataproc cluster's realm
    gcloud beta compute ssh test-cluster-m \
      --tunnel-through-iap \
      -- "sudo cat /etc/security/keytab/broker.keytab" | perl -pne 's/\r$//g' > dataproc.keytab

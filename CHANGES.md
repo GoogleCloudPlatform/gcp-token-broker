@@ -1,4 +1,4 @@
-## 0.2.0 (Pending)
+## 0.2.0 (May 17, 2019)
 
 - Rewrote server application from Python to Java.
 - Simplified KDC trust topology. Now the Broker service does not
