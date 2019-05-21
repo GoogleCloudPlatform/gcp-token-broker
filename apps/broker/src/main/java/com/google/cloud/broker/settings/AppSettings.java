@@ -38,9 +38,6 @@ public class AppSettings extends Properties {
         // Path to the broker Oauth client ID for user login
         this.setProperty("CLIENT_SECRET_PATH", "/secrets/client_secret.json");
 
-        // Path to the broker Oauth client ID for user login
-        this.setProperty("CLIENT_SECRET_PATH", "/secrets/client_secret.json");
-
         // Path to the TLS private key
         this.setProperty("TLS_KEY_PATH", "/secrets/tls.pem");
 

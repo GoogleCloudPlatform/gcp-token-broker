@@ -85,6 +85,7 @@ limitations under the License.
         <maven.assembly.plugin.version>3.1.1</maven.assembly.plugin.version>
         <maven.os.plugin.version>1.6.1</maven.os.plugin.version>
         <maven.protobuf.plugin.version>0.5.1</maven.protobuf.plugin.version>
+        <maven.javadoc.plugin.version>3.1.0</maven.javadoc.plugin.version>
     </properties>
 
     <profiles>
@@ -123,6 +124,7 @@ limitations under the License.
                     </plugin>
                     <plugin>
                         <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${maven.javadoc.plugin.version}</version>
                         <configuration>
                             <additionalOptions>-Xdoclint:none</additionalOptions>
                             <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
@@ -269,3 +271,4 @@ limitations under the License.
         </plugins>
     </build>
 </project>
+
