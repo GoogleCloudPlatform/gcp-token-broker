@@ -1,4 +1,4 @@
-# Terraform artefacts:
+# Terraform artifacts:
 terraform/terraform.tfstate*
 terraform/.terraform*
 terraform/*.tfvars
@@ -9,23 +9,23 @@ deploy/values_override*.yaml
 # Skaffold config
 deploy/skaffold.yaml
 
-# Load testing artefacts
+# Load testing artifacts
 load-testing/settings.py
 load-testing/brokerservice/protobuf/broker_pb2_grpc.py
 load-testing/brokerservice/protobuf/broker_pb2.py
 
-# Java artefacts
+# Java artifacts
 apps/broker/target/**
 apps/broker/dependency-reduced-pom.xml
 connector/target/**
 connector/dependency-reduced-pom.xml
 
-# Python artefacts
+# Python artifacts
 .pytest_cache
 __pycache__
 *.pyc
 
-# Redis artefacts
+# Redis artifacts
 dump.rdb
 
 # Secrets
@@ -35,3 +35,11 @@ client_secret*.json
 *.key
 *.csr
 *.pem
+
+# Ignore .DS_Store (folder metadata file in OS X)
+*.DS_Store
+
+# Ignore IDE specific files
+.idea
+*.iml
+
