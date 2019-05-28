@@ -40,27 +40,6 @@ resource "google_compute_subnetwork" "broker_cluster_subnet" {
   private_ip_google_access = true
 }
 
-resource "google_compute_firewall" "broker_allow_external_kdcs" {
-  name    = "broker-allow-external-kdcs"
-  network = "${google_compute_network.broker.name}"
-
-  allow {
-    protocol = "icmp"
-  }
-  allow {
-    protocol = "tcp"
-    ports    = ["88"]
-  }
-  allow {
-    protocol = "udp"
-    ports    = ["88"]
-  }
-  source_ranges = [
-    "${var.origin_subnet_cidr}",
-    "${var.client_subnet_cidr}"
-  ]
-}
-
 resource "google_compute_firewall" "broker_allow_ssh" {
   name    = "broker-allow-ssh"
   network = "${google_compute_network.broker.name}"
