@@ -246,10 +246,12 @@ Notes about the architecture:
   an Active Directory or Open LDAP instance.
 * All machines for the broker, KDC, and clients are deployed in private networks with RFC 1918 IP addresses.
   [Cloud NAT](https://cloud.google.com/nat/docs/overview) gateways are deployed for cases where machines need
-  to access the internet. Connectivity between Hadoop client machines (e.g. on [Compute Engine](https://cloud.google.com/compute/)
+  to access the internet. Private connectivity between Hadoop client machines (e.g. on [Compute Engine](https://cloud.google.com/compute/)
   or [Cloud Dataproc](https://cloud.google.com/dataproc/)), the broker service, and the Origin KDC is
-  established over [VPC peering](https://cloud.google.com/vpc/docs/vpc-peering). Alternatively it could be
+  established over [VPC peering](https://cloud.google.com/vpc/docs/vpc-peering). Alternatively, private connectivity could also be
   established with [Cloud VPN](https://cloud.google.com/vpn/docs/concepts/overview) or [Shared VPC](https://cloud.google.com/vpc/docs/shared-vpc).
+  [Google Private Access](https://cloud.google.com/vpc/docs/private-access-options#pga) is enabled on the VPC subnets to allow machines to access
+  Google services like Cloud Datastore, Cloud Storage or Cloud KMS.
 
 ### Prerequisites
 
