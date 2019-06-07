@@ -28,9 +28,9 @@ public class SessionCacheFetcher extends CacheFetcher {
 
     public SessionCacheFetcher(String rawToken) {
         this.rawToken = rawToken;
-        // Disable remote cache because the cache key contains sensitive information
+        // Disallow remote cache because the cache key contains sensitive information
         // (i.e. the session tokens)
-        this.remoteCacheEnabled = false;
+        this.allowRemoteCache = false;
     }
 
     @Override
