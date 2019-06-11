@@ -30,17 +30,15 @@ public abstract class CacheFetcher {
     public Object fetch() {
         String cacheKey = getCacheKey();
 
-        Object result = null;
-
         // First check in local cache
-        result = LocalCache.get(cacheKey);
+        Object result = LocalCache.get(cacheKey);
         if (result != null) {
             return result;
         }
 
         // Not found in local cache, so look in remote cache.
-        AbstractRemoteCache cache = AbstractRemoteCache.getInstance();
-        if (allowRemoteCache && (cache != null)) {
+        if (allowRemoteCache) {
+            AbstractRemoteCache cache = AbstractRemoteCache.getInstance();
             byte[] encryptedValue = cache.get(cacheKey);
             if (encryptedValue != null) {
                 // Cache hit... Let's load the value.
