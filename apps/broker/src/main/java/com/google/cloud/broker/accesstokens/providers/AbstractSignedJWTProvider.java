@@ -90,7 +90,7 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         jwtPayload.put("iat", iat);
         jwtPayload.put("exp", exp);
         String serviceAccount;
-        String googleIdentity = getGoogleIdentify(owner);
+        String googleIdentity = getGoogleIdentity(owner);
         if (isBrokerIssuer()) {
             jwtPayload.put("sub", googleIdentity);
             jwtPayload.put("iss", details.serviceAccount);

@@ -39,7 +39,7 @@ public class RefreshTokenProvider extends AbstractProvider {
 
     private static String AUTHZ_ERROR_MESSAGE = "GCP Token Broker authorization is invalid or has expired for user: %s";
 
-    public String getGoogleIdentify(String owner) {
+    public String getGoogleIdentity(String owner) {
         AppSettings settings = AppSettings.getInstance();
         String username = owner.split("@")[0];
         return String.format("%s@%s", username, settings.getProperty("DOMAIN_NAME"));
@@ -47,7 +47,7 @@ public class RefreshTokenProvider extends AbstractProvider {
 
     @Override
     public AccessToken getAccessToken(String owner, String scope) {
-        String googleIdentity = getGoogleIdentify(owner);
+        String googleIdentity = getGoogleIdentity(owner);
 
         // Fetch refresh token from the database
         RefreshToken refreshToken = null;

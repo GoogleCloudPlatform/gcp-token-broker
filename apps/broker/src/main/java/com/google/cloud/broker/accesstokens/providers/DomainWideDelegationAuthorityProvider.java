@@ -20,7 +20,7 @@ public class DomainWideDelegationAuthorityProvider extends AbstractSignedJWTProv
         super(true);
     }
 
-    public String getGoogleIdentify(String owner) {
+    public String getGoogleIdentity(String owner) {
         AppSettings settings = AppSettings.getInstance();
         String username = owner.split("@")[0];
         return String.format("%s@%s", username, settings.getProperty("DOMAIN_NAME"));
