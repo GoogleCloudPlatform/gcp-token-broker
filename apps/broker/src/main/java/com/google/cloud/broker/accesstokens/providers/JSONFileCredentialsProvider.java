@@ -48,7 +48,7 @@ public class JSONFileCredentialsProvider extends AbstractProvider {
     }
 
     @Override
-    public String getGoogleIdentify(String owner) {
+    public String getGoogleIdentity(String owner) {
         return owner;
     }
 
