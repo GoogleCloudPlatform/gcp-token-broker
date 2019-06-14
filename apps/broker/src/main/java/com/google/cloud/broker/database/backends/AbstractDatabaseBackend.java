@@ -12,6 +12,7 @@
 package com.google.cloud.broker.database.backends;
 
 import java.lang.reflect.Constructor;
+import java.util.UUID;
 
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
@@ -23,9 +24,10 @@ public abstract class AbstractDatabaseBackend {
     private static AbstractDatabaseBackend instance;
 
     public abstract Model get(Class modelClass, String objectId)  throws DatabaseObjectNotFound;
-    public abstract void save(Model object);
+    public abstract void insert(Model object);
+    public abstract void update(Model object);
     public abstract void delete(Model Object);
-
+    public abstract void initializeDatabase();
 
     public static AbstractDatabaseBackend getInstance() {
         AppSettings settings = AppSettings.getInstance();

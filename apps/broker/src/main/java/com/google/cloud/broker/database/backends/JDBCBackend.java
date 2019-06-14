@@ -14,6 +14,8 @@ package com.google.cloud.broker.database.backends;
 import java.lang.reflect.Constructor;
 import java.sql.*;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.models.Model;
@@ -27,10 +29,12 @@ public class JDBCBackend extends AbstractDatabaseBackend {
     @Override
     public Model get(Class modelClass, String objectId) throws DatabaseObjectNotFound {
         try {
+            String table = modelClass.getSimpleName();
+            String query = "SELECT * FROM " + table + " WHERE id = '" + objectId + "'";
+
             Connection connection = DriverManager.getConnection(settings.getProperty("DATABASE_JDBC_URL"));
-            Statement stmt = connection.createStatement();
-            String query = String.format("SELECT * FROM %s WHERE id = %s", modelClass.getSimpleName(), objectId);
-            ResultSet rs = stmt.executeQuery(query);
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(query);
 
             // No object found
             if (rs.next() == false) {
@@ -62,10 +66,68 @@ public class JDBCBackend extends AbstractDatabaseBackend {
     }
 
     @Override
-    public void save(Model model) {
+    public void insert(Model model) {
         try {
+            // Assemble the columns and values
+            String columns = "";
+            String values = "";
+            Iterator<Map.Entry<String, Object>> iterator = model.getValues().entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<String, Object> entry = iterator.next();
+                String column = entry.getKey();
+                Object value = entry.getValue().toString();
+                columns += column;
+                values += "'" + value + "'";
+                if (iterator.hasNext()) {
+                    columns += ", ";
+                    values += ", ";
+                }
+            }
+
+            // Assemble the query
+            String table = model.getClass().getSimpleName();
+            String query = "INSERT INTO " + table + " (" + columns + ") VALUES (" + values + ");";
+
+            // Run the query
             Connection connection = DriverManager.getConnection(settings.getProperty("DATABASE_JDBC_URL"));
-            // TODO: If object doesn't exist, insert. Otherwise, update.
+            PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+            statement.executeUpdate();
+
+            // Retrieve the auto-generated id
+            ResultSet rs = statement.getGeneratedKeys();
+            rs.next();
+            int id = rs.getInt(1);
+            model.setValue("id", id);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void update(Model model) {
+        try {
+            // Assemble the columns and values
+            String pairs = "";
+            Iterator<Map.Entry<String, Object>> iterator = model.getValues().entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<String, Object> entry = iterator.next();
+                String column = entry.getKey();
+                Object value = entry.getValue().toString();
+                pairs += column + " = '" + value + "'";
+                if (iterator.hasNext()) {
+                    pairs += ", ";
+                }
+            }
+
+            // Assemble the query
+            String table = model.getClass().getSimpleName();
+            String objectId = (String) model.getValue("id");
+            String query = "UPDATE " + table + " SET " + pairs + " WHERE id = '" + objectId + "'";
+
+            // Run the query
+            Connection connection = DriverManager.getConnection(settings.getProperty("DATABASE_JDBC_URL"));
+            Statement statement = connection.createStatement();
+            statement.executeUpdate(query);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -74,10 +136,42 @@ public class JDBCBackend extends AbstractDatabaseBackend {
     @Override
     public void delete(Model model) {
         try {
+            // Assemble the query
+            String table = model.getClass().getSimpleName();
+            String id = (String) model.getValue("id");
+            String query = "DELETE FROM " + table + " WHERE id = '" + id + "'";
+
+            // Run the query
             Connection connection = DriverManager.getConnection(settings.getProperty("DATABASE_JDBC_URL"));
-            Statement stmt = connection.createStatement();
-            String query = String.format("DELETE FROM %s WHERE id = %s", model.getClass().getSimpleName(), model.getValue("id"));
-            stmt.executeQuery(query);
+            Statement statement = connection.createStatement();
+            statement.executeUpdate(query);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void initializeDatabase() {
+        try {
+            String query =
+                "CREATE TABLE session (" +
+                    "id INTEGER NOT NULL AUTO_INCREMENT," +
+                    "owner VARCHAR(255)," +
+                    "renewer VARCHAR(255)," +
+                    "target VARCHAR(255)," +
+                    "scope VARCHAR(255)," +
+                    "password VARCHAR(255)," +
+                    "expires_at INTEGER," +
+                    "creation_time INTEGER," +
+                    "PRIMARY KEY(id));" +
+                "CREATE TABLE refreshtoken (" +
+                    "id INTEGER NOT NULL AUTO_INCREMENT," +
+                    "value BLOB," +
+                    "creation_time INTEGER," +
+                    "PRIMARY KEY(id));";
+            Connection connection = DriverManager.getConnection(settings.getProperty("DATABASE_JDBC_URL"));
+            Statement statement = connection.createStatement();
+            statement.executeUpdate(query);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

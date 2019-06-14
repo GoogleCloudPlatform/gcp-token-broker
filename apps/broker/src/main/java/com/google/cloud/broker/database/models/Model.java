@@ -28,13 +28,18 @@ public abstract class Model {
             Object value = values.get(key);
             this.values.put(key, value);
         }
-        if (!this.values.containsKey("id")) {
-            this.values.put("id", UUID.randomUUID().toString());
-        }
     }
 
     public Object getValue(String key) {
         return values.get(key);
+    }
+
+    public void setValue(String key, Object value) {
+        values.put(key, value);
+    }
+
+    public boolean hasValue(String key) {
+        return values.containsKey(key);
     }
 
     public HashMap<String, Object> getValues() {
@@ -46,7 +51,12 @@ public abstract class Model {
     }
 
     public static void save(Model model) {
-        AbstractDatabaseBackend.getInstance().save(model);
+        if (model.hasValue("id")) {
+            AbstractDatabaseBackend.getInstance().update(model);
+        }
+        else {
+            AbstractDatabaseBackend.getInstance().insert(model);
+        }
     }
 
     public static void delete(Model model) {
