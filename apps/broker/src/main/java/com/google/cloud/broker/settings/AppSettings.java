@@ -88,6 +88,9 @@ public class AppSettings extends Properties {
         // Database backend class
         this.setProperty("DATABASE_BACKEND", "com.google.cloud.broker.database.backends.CloudDatastoreBackend");
 
+        // JDBC database backend's url
+        this.setProperty("DATABASE_JDBC_URL", "");
+
         // Life duration for JWT tokens (the shorter the better)
         this.setProperty("JWT_LIFE", "30");  // in seconds
 

@@ -152,23 +152,37 @@ public class JDBCBackend extends AbstractDatabaseBackend {
 
     @Override
     public void initializeDatabase() {
+        String url = settings.getProperty("DATABASE_JDBC_URL");
+        String dialect = url.split(":")[1];
+        String autoincrement = "";
+        switch (dialect) {
+            case "sqlite":
+                autoincrement = "";
+                break;
+            case "mysql":
+                autoincrement = "AUTO_INCREMENT";
+                break;
+            case "postgresql":
+                autoincrement = "SERIAL";
+                break;
+        }
         try {
             String query =
                 "CREATE TABLE session (" +
-                    "id INTEGER NOT NULL AUTO_INCREMENT," +
+                    "id INTEGER NOT NULL PRIMARY KEY " + autoincrement + "," +
                     "owner VARCHAR(255)," +
                     "renewer VARCHAR(255)," +
                     "target VARCHAR(255)," +
                     "scope VARCHAR(255)," +
                     "password VARCHAR(255)," +
                     "expires_at INTEGER," +
-                    "creation_time INTEGER," +
-                    "PRIMARY KEY(id));" +
+                    "creation_time INTEGER" +
+                ");" +
                 "CREATE TABLE refreshtoken (" +
-                    "id INTEGER NOT NULL AUTO_INCREMENT," +
+                    "id INTEGER NOT NULL PRIMARY KEY " + autoincrement + "," +
                     "value BLOB," +
-                    "creation_time INTEGER," +
-                    "PRIMARY KEY(id));";
+                    "creation_time INTEGER" +
+                ");";
             Connection connection = DriverManager.getConnection(settings.getProperty("DATABASE_JDBC_URL"));
             Statement statement = connection.createStatement();
             statement.executeUpdate(query);
