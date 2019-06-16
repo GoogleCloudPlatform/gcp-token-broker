@@ -256,8 +256,6 @@ broker:
       GCP_PROJECT: '${var.gcp_project}'
       GCP_REGION: '${var.gcp_region}'
       PROXY_USER_WHITELIST: 'hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}'
-      BROKER_REALM: '${var.origin_realm}'
-      ORIGIN_REALM: '${var.origin_realm}'
       DOMAIN_NAME: '${var.domain}'
       BROKER_SERVICE_HOSTNAME: '${var.broker_service_hostname}'
       REDIS_CACHE_HOST: '${google_redis_instance.cache.host}'
