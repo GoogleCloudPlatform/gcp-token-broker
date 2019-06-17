@@ -56,7 +56,7 @@ public class GetAccessToken {
                     .withDescription("Scope mismatch")
                     .asRuntimeException();
             }
-            String sessionOwner = (String) session.getValue("owner");
+            String sessionOwner = session.getValue("owner").toString();
             String sessionOwnerUsername = sessionOwner.split("@")[0];
             if (!request.getOwner().equals(sessionOwner) && !request.getOwner().equals(sessionOwnerUsername)) {
                 throw Status.PERMISSION_DENIED
@@ -75,7 +75,7 @@ public class GetAccessToken {
         }
         else {
             MDC.put("auth_mode", "delegated");
-            MDC.put("session_id", (String) session.getValue("id"));
+            MDC.put("session_id", session.getValue("id").toString());
         }
         LoggingUtils.logSuccess(GetAccessToken.class.getSimpleName());
 

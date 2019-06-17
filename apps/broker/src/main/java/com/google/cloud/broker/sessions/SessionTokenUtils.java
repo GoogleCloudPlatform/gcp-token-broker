@@ -80,13 +80,13 @@ public class SessionTokenUtils {
 
     public static String marshallSessionToken(Session session) {
         AppSettings settings = AppSettings.getInstance();
-        String password = (String) session.getValue("password");
+        String password = session.getValue("password").toString();
         byte[] encryptedPassword = AbstractEncryptionBackend.getInstance().encrypt(
             settings.getProperty("ENCRYPTION_DELEGATION_TOKEN_CRYPTO_KEY"),
             password.getBytes()
         );
         JsonObject header = new JsonObject();
-        header.addProperty("session_id", (String) session.getValue("id"));
+        header.addProperty("session_id", session.getValue("id").toString());
         String encodedHeader = Base64.getUrlEncoder().encodeToString(new Gson().toJson(header).getBytes());
         String encodedPassword = Base64.getUrlEncoder().encodeToString(encryptedPassword);
         return encodedHeader + TOKEN_SEPARATOR + encodedPassword;

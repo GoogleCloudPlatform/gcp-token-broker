@@ -46,9 +46,9 @@ public class RenewSessionToken {
         Model.save(session);
 
         // Log success message
-        MDC.put("owner", (String) session.getValue("owner"));
-        MDC.put("renewer", (String) session.getValue("renewer"));
-        MDC.put("session_id", (String) session.getValue("id"));
+        MDC.put("owner", session.getValue("owner").toString());
+        MDC.put("renewer", session.getValue("renewer").toString());
+        MDC.put("session_id", session.getValue("id").toString());
         LoggingUtils.logSuccess(RenewSessionToken.class.getSimpleName());
 
         // Return response

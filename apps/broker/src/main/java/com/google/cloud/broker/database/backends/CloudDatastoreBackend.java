@@ -88,7 +88,7 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
     public void update(Model model) {
         Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
         KeyFactory keyFactory = datastore.newKeyFactory().setKind(model.getClass().getSimpleName());
-        Key key = keyFactory.newKey((String) model.getValue("id"));
+        Key key = keyFactory.newKey(model.getValue("id").toString());
         Entity.Builder builder = Entity.newBuilder(key);
 
         for(Map.Entry<String, Object> entry : model.getValues().entrySet()) {
@@ -114,7 +114,7 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
     public void delete(Model model) {
         Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
         KeyFactory keyFactory = datastore.newKeyFactory().setKind(model.getClass().getSimpleName());
-        Key key = keyFactory.newKey((String) model.getValue("id"));
+        Key key = keyFactory.newKey(model.getValue("id").toString());
         datastore.delete(key);
     }
 
