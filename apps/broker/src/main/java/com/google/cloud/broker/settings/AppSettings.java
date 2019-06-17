@@ -82,6 +82,9 @@ public class AppSettings extends Properties {
         // Access token provider backend
         this.setProperty("PROVIDER", "com.google.cloud.broker.accesstokens.providers.RefreshTokenProvider");
 
+        // JSON file credentials provider's base directory
+        this.setProperty("JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR", "");
+
         // Encryption backend
         this.setProperty("ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.CloudKMSBackend");
 
