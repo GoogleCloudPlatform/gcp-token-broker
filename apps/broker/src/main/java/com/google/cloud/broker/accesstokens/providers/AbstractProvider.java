@@ -36,5 +36,4 @@ public abstract class AbstractProvider {
 
     public abstract AccessToken getAccessToken(String owner, String scope);
 
-    public abstract String getGoogleIdentity(String owner);
 }
