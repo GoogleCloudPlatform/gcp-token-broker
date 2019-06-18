@@ -180,22 +180,22 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         Statement statement = null;
         String url = settings.getProperty("DATABASE_JDBC_URL");
         String dialect = url.split(":")[1];
-        String autoincrement = "";
+        String primaryKey = "";
+        String blobType = "";
         switch (dialect) {
             case "sqlite":
-                autoincrement = "";
-                break;
-            case "mysql":
-                autoincrement = "AUTO_INCREMENT";
+                primaryKey = "id NOT NULL PRIMARY KEY";
+                blobType = "BLOB";
                 break;
             case "postgresql":
-                autoincrement = "SERIAL";
+                primaryKey = "id SERIAL PRIMARY KEY";
+                blobType = "BYTEA";
                 break;
         }
         try {
             String query =
-                "CREATE TABLE session (" +
-                    "id INTEGER NOT NULL PRIMARY KEY " + autoincrement + "," +
+                "CREATE TABLE IF NOT EXISTS session (" +
+                    primaryKey + "," +
                     "owner VARCHAR(255)," +
                     "renewer VARCHAR(255)," +
                     "target VARCHAR(255)," +
@@ -204,9 +204,9 @@ public class JDBCBackend extends AbstractDatabaseBackend {
                     "expires_at INTEGER," +
                     "creation_time INTEGER" +
                 ");" +
-                "CREATE TABLE refreshtoken (" +
-                    "id INTEGER NOT NULL PRIMARY KEY " + autoincrement + "," +
-                    "value BLOB," +
+                "CREATE TABLE IF NOT EXISTS refreshtoken (" +
+                    primaryKey + "," +
+                    "value " + blobType + "," +
                     "creation_time INTEGER" +
                 ");";
             connection = DriverManager.getConnection(settings.getProperty("DATABASE_JDBC_URL"));
