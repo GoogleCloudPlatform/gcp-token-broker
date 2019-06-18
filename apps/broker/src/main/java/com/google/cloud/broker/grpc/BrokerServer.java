@@ -49,11 +49,13 @@ public class BrokerServer {
     private final int port;
     private final String certChainFilePath;
     private final String privateKeyFilePath;
+    private final boolean tlsEnabled;
 
     public BrokerServer() {
         AppSettings settings = AppSettings.getInstance();
         this.host = settings.getProperty("SERVER_HOST");
         this.port = Integer.parseInt(settings.getProperty("SERVER_PORT"));
+        this.tlsEnabled = Boolean.parseBoolean(settings.getProperty("TLS_ENABLED"));
         this.certChainFilePath = settings.getProperty("TLS_CRT_PATH");
         this.privateKeyFilePath = settings.getProperty("TLS_KEY_PATH");
     }
@@ -68,11 +70,12 @@ public class BrokerServer {
     }
 
     private void start() throws IOException {
-        server = NettyServerBuilder.forAddress(new InetSocketAddress(host, port))
-            .addService(ServerInterceptors.intercept(new BrokerImpl(), new AuthorizationHeaderServerInterceptor(), new ClientAddressServerInterceptor()))
-            .sslContext(getSslContextBuilder().build())
-            .build()
-            .start();
+        NettyServerBuilder builder = NettyServerBuilder.forAddress(new InetSocketAddress(host, port))
+            .addService(ServerInterceptors.intercept(new BrokerImpl(), new AuthorizationHeaderServerInterceptor(), new ClientAddressServerInterceptor()));
+        if (tlsEnabled) {
+            builder = builder.sslContext(getSslContextBuilder().build());
+        }
+        server =  builder.build().start();
         logger.info("Server listening on " + port + "...");
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
