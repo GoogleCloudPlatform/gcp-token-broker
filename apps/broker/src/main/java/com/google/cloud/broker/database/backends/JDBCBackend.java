@@ -180,34 +180,36 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         Statement statement = null;
         String url = settings.getProperty("DATABASE_JDBC_URL");
         String dialect = url.split(":")[1];
-        String primaryKey = "";
+        String autoincrementKey = "";
         String blobType = "";
         switch (dialect) {
             case "sqlite":
-                primaryKey = "id NOT NULL PRIMARY KEY";
+                autoincrementKey = "id NOT NULL PRIMARY KEY";
                 blobType = "BLOB";
                 break;
             case "postgresql":
-                primaryKey = "id SERIAL PRIMARY KEY";
+                autoincrementKey = "id SERIAL PRIMARY KEY";
                 blobType = "BYTEA";
                 break;
+            default:
+                throw new RuntimeException("Dialect `" + dialect + "` is not currently supported by the JDBCDatabaseBackend.");
         }
         try {
             String query =
                 "CREATE TABLE IF NOT EXISTS session (" +
-                    primaryKey + "," +
+                    autoincrementKey + "," +
                     "owner VARCHAR(255)," +
                     "renewer VARCHAR(255)," +
                     "target VARCHAR(255)," +
                     "scope VARCHAR(255)," +
                     "password VARCHAR(255)," +
-                    "expires_at INTEGER," +
-                    "creation_time INTEGER" +
+                    "expires_at BIGINT," +
+                    "creation_time BIGINT" +
                 ");" +
                 "CREATE TABLE IF NOT EXISTS refreshtoken (" +
-                    primaryKey + "," +
+                    "id VARCHAR(255) PRIMARY KEY," +
                     "value " + blobType + "," +
-                    "creation_time INTEGER" +
+                    "creation_time BIGINT" +
                 ");";
             connection = DriverManager.getConnection(settings.getProperty("DATABASE_JDBC_URL"));
             statement = connection.createStatement();
