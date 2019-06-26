@@ -156,4 +156,6 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
 
         return accessToken;
     }
+
+    public abstract String getGoogleIdentity(String owner);
 }

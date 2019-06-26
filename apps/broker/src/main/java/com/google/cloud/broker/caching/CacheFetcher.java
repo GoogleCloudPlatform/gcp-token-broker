@@ -24,25 +24,20 @@ import java.util.concurrent.locks.Lock;
 
 public abstract class CacheFetcher {
 
-    protected boolean localCacheEnabled = true;
-    protected boolean remoteCacheEnabled = true;
+    protected boolean allowRemoteCache = true;
 
 
     public Object fetch() {
         String cacheKey = getCacheKey();
 
-        Object result = null;
-
         // First check in local cache
-        if (localCacheEnabled) {
-            result = LocalCache.get(cacheKey);
-            if (result != null) {
-                return result;
-            }
+        Object result = LocalCache.get(cacheKey);
+        if (result != null) {
+            return result;
         }
 
         // Not found in local cache, so look in remote cache.
-        if (remoteCacheEnabled) {
+        if (allowRemoteCache) {
             AbstractRemoteCache cache = AbstractRemoteCache.getInstance();
             byte[] encryptedValue = cache.get(cacheKey);
             if (encryptedValue != null) {
@@ -96,9 +91,7 @@ public abstract class CacheFetcher {
         }
 
         // Add unencrypted token to local cache
-        if (localCacheEnabled) {
-            LocalCache.set(cacheKey, result, getLocalCacheTime());
-        }
+        LocalCache.set(cacheKey, result, getLocalCacheTime());
 
         return result;
     }
