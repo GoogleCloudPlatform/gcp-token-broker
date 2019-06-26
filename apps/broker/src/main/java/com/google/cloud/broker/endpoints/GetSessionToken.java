@@ -51,7 +51,7 @@ public class GetSessionToken {
         // Log success message
         MDC.put("owner", request.getOwner());
         MDC.put("renewer", request.getRenewer());
-        MDC.put("session_id", (String) session.getValue("id"));
+        MDC.put("session_id", session.getValue("id").toString());
         LoggingUtils.logSuccess(GetSessionToken.class.getSimpleName());
 
         // Return response

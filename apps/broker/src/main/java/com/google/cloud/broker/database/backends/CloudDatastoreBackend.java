@@ -11,14 +11,14 @@
 
 package com.google.cloud.broker.database.backends;
 
-import com.google.cloud.broker.database.DatabaseObjectNotFound;
-import com.google.cloud.broker.database.models.Model;
-
-import com.google.cloud.datastore.*;
-
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.google.cloud.datastore.*;
+
+import com.google.cloud.broker.database.DatabaseObjectNotFound;
+import com.google.cloud.broker.database.models.Model;
 
 
 public class CloudDatastoreBackend extends AbstractDatabaseBackend {
@@ -59,11 +59,11 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
     }
 
     @Override
-    public void save(Model model) {
+    public void insert(Model model) {
         Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
         KeyFactory keyFactory = datastore.newKeyFactory().setKind(model.getClass().getSimpleName());
-        Key key = keyFactory.newKey((String) model.getValue("id"));
-        Entity.Builder builder = Entity.newBuilder(key);
+        FullEntity.Builder builder = FullEntity.newBuilder(keyFactory.newKey());
+
         for(Map.Entry<String, Object> entry : model.getValues().entrySet()) {
             String name = entry.getKey();
             Object value = entry.getValue();
@@ -78,15 +78,49 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
                 throw new RuntimeException("Unsupported type");
             }
         }
+
+        FullEntity<IncompleteKey> entity = builder.build();
+        Key key = datastore.add(entity).getKey();
+        model.setValue("id", key.getName());
+    }
+
+    @Override
+    public void update(Model model) {
+        Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
+        KeyFactory keyFactory = datastore.newKeyFactory().setKind(model.getClass().getSimpleName());
+        Key key = keyFactory.newKey(model.getValue("id").toString());
+        Entity.Builder builder = Entity.newBuilder(key);
+
+        for(Map.Entry<String, Object> entry : model.getValues().entrySet()) {
+            String name = entry.getKey();
+            Object value = entry.getValue();
+            if (value instanceof String) {
+                builder.set(name, (String) value);
+            }
+            else if (value instanceof Long) {
+                builder.set(name, (long) value);
+            }
+            else {
+                // TODO extend to other supported types
+                throw new RuntimeException("Unsupported type");
+            }
+        }
+
         Entity entity = builder.build();
-        datastore.put(entity);
+        datastore.update(entity);
     }
 
     @Override
     public void delete(Model model) {
         Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
         KeyFactory keyFactory = datastore.newKeyFactory().setKind(model.getClass().getSimpleName());
-        Key key = keyFactory.newKey((String) model.getValue("id"));
+        Key key = keyFactory.newKey(model.getValue("id").toString());
         datastore.delete(key);
+    }
+
+    @Override
+    public void initializeDatabase() {
+        // Cloud Datastore doesn't need any initialization. A table is automatically be created
+        // when the first object is inserted.
     }
 }

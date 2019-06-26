@@ -85,11 +85,17 @@ public class AppSettings extends Properties {
         // Access token provider backend
         this.setProperty("PROVIDER", "com.google.cloud.broker.accesstokens.providers.RefreshTokenProvider");
 
+        // JSON file credentials provider's base directory
+        this.setProperty("JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR", "");
+
         // Encryption backend
         this.setProperty("ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.CloudKMSBackend");
 
         // Database backend class
         this.setProperty("DATABASE_BACKEND", "com.google.cloud.broker.database.backends.CloudDatastoreBackend");
+
+        // JDBC database backend's url
+        this.setProperty("DATABASE_JDBC_URL", "");
 
         // Life duration for JWT tokens (the shorter the better)
         this.setProperty("JWT_LIFE", "30");  // in seconds
