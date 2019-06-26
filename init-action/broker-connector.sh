@@ -45,7 +45,6 @@ readonly broker_tls_enabled="$(/usr/share/google/get_metadata_value attributes/g
 readonly broker_tls_certificate="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-tls-certificate)"
 readonly broker_uri_hostname="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-uri-hostname)"
 readonly broker_uri_port="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-uri-port)"
-readonly origin_kdc_hostname="$(/usr/share/google/get_metadata_value attributes/origin-kdc-hostname)"
 readonly origin_realm="$(/usr/share/google/get_metadata_value attributes/origin-realm)"
 readonly test_users="$(/usr/share/google/get_metadata_value attributes/test-users)"
 
@@ -112,7 +111,7 @@ do
   adduser --disabled-password --gecos "" $i
 done
 
-
+# Create broker principal and keytab
 kadmin.local -q "addprinc -randkey broker/${broker_uri_hostname}"
 kadmin.local -q "ktadd -k /etc/security/keytab/broker.keytab broker/${broker_uri_hostname}"
 

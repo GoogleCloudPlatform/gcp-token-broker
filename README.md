@@ -540,8 +540,7 @@ Run the following commands from the root of the repository:
      --metadata "gcp-token-broker-tls-certificate=$(cat broker-tls.crt)" \
      --metadata "gcp-token-broker-uri-hostname=$BROKER_SERVICE_HOSTNAME" \
      --metadata "gcp-token-broker-uri-port=443" \
-     --metadata "origin-realm=$REALM" \
-     --metadata "origin-kdc-hostname=$ORIGIN_KDC_HOSTNAME"
+     --metadata "origin-realm=$REALM"
    ```
 
 4. Display and take note of the Dataproc master VM's IP address:
