@@ -1,3 +1,11 @@
+## 0.3.0 (June 28, 2019)
+
+- Added JDBCDatabaseBackend to enable storing state in relational databases.
+- Added DummyCache, DummyEncryptionBackend, and an experimental
+  JSONFileCredentialsProvider to make simple deployments easier.
+  These backends are for development and testing only, and should *not*
+  be used in production.
+
 ## 0.2.0 (May 17, 2019)
 
 - Rewrote server application from Python to Java.
