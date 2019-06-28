@@ -30,7 +30,7 @@ GCS_CONN_VERSION="2.0.0-SNAPSHOT-shaded"
 
 NEW_JARS_BUCKET="gs://gcp-token-broker"
 GCS_CONN_JAR="gcs-connector-hadoop2-${GCS_CONN_VERSION}.jar"
-BROKER_CONN_JAR="broker-connector-hadoop2-${BROKER_VERSION}-SNAPSHOT.jar"
+BROKER_CONN_JAR="broker-connector-hadoop2-${BROKER_VERSION}.jar"
 ROLE="$(/usr/share/google/get_metadata_value attributes/dataproc-role)"
 WORKER_COUNT="$(/usr/share/google/get_metadata_value attributes/dataproc-worker-count)"
 HADOOP_CONF_DIR="/etc/hadoop/conf"
@@ -104,9 +104,9 @@ EOL
 # Create POSIX users (which need to exist on all nodes for Yarn to work)
 USERS=${test_users}
 if [[ -z "${USERS}" ]] ; then
-  USERS=alice,bob,john
+  USERS=alice;bob;john
 fi
-for i in $(echo $USERS | sed "s/,/ /g")
+for i in $(echo $USERS | sed "s/;/ /g")
 do
   adduser --disabled-password --gecos "" $i
 done
@@ -117,7 +117,7 @@ kadmin.local -q "ktadd -k /etc/security/keytab/broker.keytab broker/${broker_uri
 
 # Restart services ---------------------------------------------------------------
 if [[ "${ROLE}" == 'Master' ]]; then
-  master_services=('hadoop-hdfs-namenode' 'hadoop-hdfs-secondarynamenode' 'hadoop-yarn-resourcemanager' 'hive-server2' 'hive-metastore' 'hadoop-yarn-timelineserver' 'hadoop-mapreduce-historyserver' 'spark-history-server' )
+  master_services=('hadoop-hdfs-namenode' 'hadoop-hdfs-secondarynamenode' 'hadoop-hdfs-datanode' 'hadoop-yarn-resourcemanager' 'hive-server2' 'hive-metastore' 'hadoop-yarn-timelineserver' 'hadoop-mapreduce-historyserver' 'spark-history-server' )
   for master_service in "${master_services[@]}"; do
     if ( systemctl is-enabled --quiet "${master_service}" ); then
       systemctl restart "${master_service}" || err "Cannot restart service: ${master_service}"
