@@ -116,6 +116,36 @@ The broker's role is two-fold:
 - Map Kerberos identities to [Google Cloud Identities](https://cloud.google.com/identity/).
 - Generate access tokens to enable authenticated Kerberos principals to access GCP resources.
 
+
+The broker service relies on [SPNEGO](https://en.wikipedia.org/wiki/SPNEGO) tokens to authenticate users.
+A SPNEGO token is basically a service ticket that contains the requester principal's username and that is
+encrypted with the requested service principal's key. Only the service principal can decrypt that token to
+reveal the encrypted username.
+
+The broker service does not communicate directly with the KDC to decrypt SPNEGO tokens. Instead, it uses
+[keytabs](https://web.mit.edu/kerberos/krb5-latest/doc/basic/keytab_def.html) to do the decryption offline.
+You can use either one of the following two approaches to manage principals and keytabs for the broker service:
+
+- Create a "broker/<broker-hostname>" principal in each realm (for example "broker/<broker-hostname>@USER_REALM"
+  in your users realm and "broker/<broker-hostname>@HADOOP_CLUSTER" in your Hadoop cluster's realm).
+  Then create a separate keytab for each one of the broker principals (i.e. one keytab per realm) and upload the
+  keytabs to the broker service.
+- Create a single "broker/<broker-hostname>" principal in one of your realms — either a separate realm dedicated
+  to the broker, or a realm that already hosts principals for other services. Then set up uni-directional trust
+  from your broker's realm to the realms that host the users who need to access the broker service.
+  Then create a keytab for the broker principal and upload it to the broker service.
+
+Once the broker service has the appropriate keytab(s), it is able to authenticate users.
+
+When a client wants to call the broker service, the [GCS Connector](https://cloud.google.com/dataproc/docs/concepts/connectors/cloud-storage)
+calls the KDC associated with the broker's realm. The KDC then creates a new SPNEGO token for the user and encrypts
+it with the broker principal's key. Once the GCS Connector receives the new SPNEGO token, it sends the request to
+the broker and passes the SPNEGO token inside a request header.
+
+When the broker receives the request, it uses its available keytab(s) to attempt to decrypt the provided SPNEGO token.
+If the decryption succeeds, then the broker can retrieve the full username from the encrypted SPNEGO token and
+trust that it is a legitimate authenticated user.
+
 The following sub-sections describe how the broker enables different modes of authentication:
 direct authentication, delegated authentication, and proxy-user impersonation.
 
