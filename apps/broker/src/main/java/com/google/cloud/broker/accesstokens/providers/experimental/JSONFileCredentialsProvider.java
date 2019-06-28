@@ -9,7 +9,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.accesstokens.providers;
+package com.google.cloud.broker.accesstokens.providers.experimental;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import com.google.auth.oauth2.GoogleCredentials;
 
 import com.google.cloud.broker.accesstokens.AccessToken;
+import com.google.cloud.broker.accesstokens.providers.AbstractProvider;
 import com.google.cloud.broker.settings.AppSettings;
 import io.grpc.Status;
 
@@ -30,6 +31,7 @@ import io.grpc.Status;
  * The JSON file can contain a Service Account key file in JSON format from
  * the Google Developers Console or a stored user credential using the format
  * supported by the Cloud SDK.
+ * This is an experimental backend that might be removed or modified in a future release.
  * This is NOT recommended for production.
  */
 public class JSONFileCredentialsProvider extends AbstractProvider {
