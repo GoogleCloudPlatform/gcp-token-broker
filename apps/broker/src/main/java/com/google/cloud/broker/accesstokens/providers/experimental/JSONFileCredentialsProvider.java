@@ -9,18 +9,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.accesstokens.providers;
+package com.google.cloud.broker.accesstokens.providers.experimental;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 
 import com.google.auth.oauth2.GoogleCredentials;
 
 import com.google.cloud.broker.accesstokens.AccessToken;
+import com.google.cloud.broker.accesstokens.providers.AbstractProvider;
 import com.google.cloud.broker.settings.AppSettings;
+import io.grpc.Status;
 
 
 /**
@@ -28,11 +31,13 @@ import com.google.cloud.broker.settings.AppSettings;
  * The JSON file can contain a Service Account key file in JSON format from
  * the Google Developers Console or a stored user credential using the format
  * supported by the Cloud SDK.
+ * This is an experimental backend that might be removed or modified in a future release.
  * This is NOT recommended for production.
  */
 public class JSONFileCredentialsProvider extends AbstractProvider {
 
     private AppSettings settings = AppSettings.getInstance();
+    private static String AUTHZ_ERROR_MESSAGE = "GCP Token Broker authorization is invalid or has expired for user: %s";
 
     @Override
     public AccessToken getAccessToken(String owner, String scope) {
@@ -44,6 +49,8 @@ public class JSONFileCredentialsProvider extends AbstractProvider {
                     .createScoped(scope)
                     .refreshAccessToken();
             return new AccessToken(token.getTokenValue(), token.getExpirationTime().getTime());
+        } catch (NoSuchFileException e) {
+            throw Status.PERMISSION_DENIED.withDescription(String.format(AUTHZ_ERROR_MESSAGE, owner)).asRuntimeException();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
