@@ -90,9 +90,12 @@ public final class BrokerGateway {
             setDelegationToken(sessionToken);
         }
         else {
-            String username = loginUser.getUserName();
-            String realm = username.substring(username.indexOf("@") + 1);
-            setSPNEGOToken(realm);
+            String brokerRealm = config.get("gcp.token.broker.broker-realm");
+            if (brokerRealm == null) {
+                String username = loginUser.getUserName();
+                brokerRealm = username.substring(username.indexOf("@") + 1);
+            }
+            setSPNEGOToken(brokerRealm);
         }
     }
 
@@ -104,7 +107,7 @@ public final class BrokerGateway {
         return managedChannel;
     }
 
-    private void setSPNEGOToken(String realm) throws GSSException {
+    private void setSPNEGOToken(String brokerRealm) throws GSSException {
         String brokerHostname = config.get("gcp.token.broker.uri.hostname");
         String brokerServiceName = config.get("gcp.token.broker.servicename", "broker");
 
@@ -113,7 +116,7 @@ public final class BrokerGateway {
         Oid krb5PrincipalNameType = new Oid(KRB5_PRINCIPAL_NAME_OID);
         Oid spnegoOid = new Oid(SPNEGO_OID);
         GSSManager manager = GSSManager.getInstance();
-        String servicePrincipal = brokerServiceName + "/" + brokerHostname + "@" + realm;
+        String servicePrincipal = brokerServiceName + "/" + brokerHostname + "@" + brokerRealm;
         GSSName gssServerName = manager.createName(servicePrincipal , krb5PrincipalNameType, krb5Mechanism);
         GSSContext gssContext = manager.createContext(
             gssServerName, spnegoOid, null, GSSCredential.DEFAULT_LIFETIME);
