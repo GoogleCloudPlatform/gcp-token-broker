@@ -12,7 +12,11 @@
 package com.google.cloud.broker.hadoop.fs;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLException;
@@ -52,15 +56,23 @@ public final class BrokerGateway {
     // Timeout for RPC calls
     private static int DEADLINE_MILLISECONDS = 20*1000;
 
-    public BrokerGateway(Configuration config, UserGroupInformation loginUser) throws GSSException {
+    public BrokerGateway(Configuration config, UserGroupInformation loginUser) throws GSSException, IOException {
         this(config, loginUser,null);
     }
 
-    public BrokerGateway(Configuration config, UserGroupInformation loginUser, String sessionToken) throws GSSException {
+    public BrokerGateway(Configuration config, UserGroupInformation loginUser, String sessionToken) throws GSSException, IOException {
         this.config = config;
 
         boolean tlsEnabled = config.getBoolean("gcp.token.broker.tls.enabled", true);
-        String tlsCertificate = config.get("gcp.token.broker.tls.certificate", "");
+        String tlsCertificate = config.get("gcp.token.broker.tls.certificate");
+        if (tlsCertificate == null) {
+          String tlsFile = config.get("gcp.token.broker.tls.certificate.path");
+          if (tlsFile != null) {
+            tlsCertificate = new String(Files.readAllBytes(Paths.get(tlsFile)), StandardCharsets.US_ASCII);
+          } else {
+            tlsCertificate = "";
+          }
+        }
         String brokerHostname = config.get("gcp.token.broker.uri.hostname");
         int brokerPort = config.getInt("gcp.token.broker.uri.port", 443);
 
