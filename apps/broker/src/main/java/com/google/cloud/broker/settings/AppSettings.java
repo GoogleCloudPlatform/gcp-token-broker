@@ -53,9 +53,6 @@ public class AppSettings extends Properties {
         // Broker principal's host
         this.setProperty("BROKER_SERVICE_HOSTNAME", "");
 
-        // Broker's Kerberos realm
-        this.setProperty("BROKER_REALM", "BROKER");
-
         // Base level for logging
         this.setProperty("LOGGING_LEVEL", "INFO");
 
