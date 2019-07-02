@@ -93,7 +93,7 @@ Included in the current **alpha** release:
 * Support for Hadoop-style proxy users.
 * Authentication backend: Kerberos.
 * Target GCP service: Cloud Storage.
-* Database backend: Cloud Datastore.
+* Database backends: Cloud Datastore, JDBC.
 * Cache backend: Redis on Cloud Memorystore.
 
 Plans for the **beta** & **stable** releases:
@@ -105,7 +105,7 @@ Plans for the **beta** & **stable** releases:
 Plans for **future** releases:
 
 * Target GCP services: BigQuery, Cloud Bigtable, Cloud PubSub.
-* Database backends: Cloud Firestore, Cloud Bigtable, MySQL, PostgreSQL.
+* Database backends: Cloud Firestore, Cloud Bigtable.
 * Cache backends: Memcached, Cloud Bigtable.
 * Support for more authentication backends: TBD.
 
@@ -551,11 +551,24 @@ Run the following commands from the root of the repository:
    export BROKER_SERVICE_HOSTNAME="10.2.1.255.xip.io"
    export BROKER_VERSION=$(cat VERSION)
    ```
-3. Create the Dataproc cluster:
+
+3. Create the Kerberos configuration file for Dataproc:
+
+   ```shell
+   cat > kerberos-config.yaml << EOL
+   root_principal_password_uri: gs://${PROJECT}-secrets/root-password.encrypted
+   kms_key_uri: projects/$PROJECT/locations/$REGION/keyRings/dataproc-key-ring/cryptoKeys/dataproc-key
+   cross_realm_trust:
+     kdc: $ORIGIN_KDC_HOSTNAME
+     realm: $REALM
+     shared_password_uri: gs://$PROJECT-secrets/shared-password.encrypted
+   EOL
+   ```
+
+4. Create the Dataproc cluster:
 
    ```shell
    gcloud beta dataproc clusters create test-cluster \
-     --optional-components KERBEROS \
      --single-node \
      --no-address \
      --zone $ZONE \
@@ -565,7 +578,7 @@ Run the following commands from the root of the repository:
      --scopes cloud-platform \
      --service-account "dataproc@${PROJECT}.iam.gserviceaccount.com" \
      --initialization-actions gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh \
-     --properties "dataproc:kerberos.root.principal.password.uri=gs://${PROJECT}-secrets/root-password.encrypted,dataproc:kerberos.kms.key.uri=projects/$PROJECT/locations/$REGION/keyRings/dataproc-key-ring/cryptoKeys/dataproc-key,dataproc:kerberos.cross-realm-trust.realm=$REALM,dataproc:kerberos.cross-realm-trust.kdc=$ORIGIN_KDC_HOSTNAME,dataproc:kerberos.cross-realm-trust.admin-server=$ORIGIN_KDC_HOSTNAME,dataproc:kerberos.cross-realm-trust.shared-password.uri=gs://$PROJECT-secrets/shared-password.encrypted" \
+     --kerberos-config-file=kerberos-config.yaml \
      --metadata "gcp-token-broker-tls-enabled=true" \
      --metadata "gcp-token-broker-tls-certificate=$(cat broker-tls.crt)" \
      --metadata "gcp-token-broker-uri-hostname=$BROKER_SERVICE_HOSTNAME" \
