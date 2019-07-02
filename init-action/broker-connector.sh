@@ -36,6 +36,7 @@ WORKER_COUNT="$(/usr/share/google/get_metadata_value attributes/dataproc-worker-
 HADOOP_CONF_DIR="/etc/hadoop/conf"
 HADOOP_LIB_DIR="/usr/lib/hadoop/lib"
 DATAPROC_LIB_DIR="/usr/local/share/google/dataproc/lib"
+DATAPROC_REALM=$(sudo cat /etc/krb5.conf | grep "default_realm" | awk '{print $NF}')
 
 # Flag checking whether init actions will run early.
 # This will affect whether nodemanager should be restarted
@@ -68,6 +69,7 @@ set_property_core_site "gcp.token.broker.tls.enabled" "$broker_tls_enabled"
 set_property_core_site "gcp.token.broker.tls.certificate" "$broker_tls_certificate"
 set_property_core_site "gcp.token.broker.uri.hostname" "$broker_uri_hostname"
 set_property_core_site "gcp.token.broker.uri.port" "$broker_uri_port"
+set_property_core_site "gcp.token.broker.realm" "$DATAPROC_REALM"
 
 # Get connector's lib directory
 if [[ -d ${DATAPROC_LIB_DIR} ]]; then
@@ -93,7 +95,6 @@ fi
 # Setup some useful env vars
 PROJECT=$(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
 ZONE=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/zone" -H "Metadata-Flavor: Google" | awk -F/ '{print $NF}')
-DATAPROC_REALM=$(sudo cat /etc/krb5.conf | grep "default_realm" | awk '{print $NF}')
 cat > /etc/profile.d/extra_env_vars.sh << EOL
 export PROJECT=$PROJECT
 export ZONE=$ZONE

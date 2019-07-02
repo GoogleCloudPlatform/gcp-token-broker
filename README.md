@@ -573,53 +573,23 @@ Run the following commands from the root of the repository:
      --metadata "origin-realm=$REALM"
    ```
 
-4. Display and take note of the Dataproc master VM's IP address:
-
-   ```shell
-   gcloud compute instances describe test-cluster-m --format="value(networkInterfaces[0].networkIP)"
-   ```
-5. Follow these steps to set the IP address in the broker KDC's Kerberos configuration file:
-   * SSH into the broker KDC VM:
-
-     ```shell
-     gcloud beta compute ssh origin-kdc --tunnel-through-iap
-     ```
-   * Run the following command to set the correct IP address in `/etc/krb5.conf`
-     (Replace `[your.dataproc.cluster.ip]` with the IP address you noted in the previous step):
-
-     ```shell
-     DATAPROC_KDC_IP=[your.dataproc.cluster.ip]
-     sudo sed -i.bak -e "s/DATAPROC_KDC_IP/$DATAPROC_KDC_IP/" /etc/krb5.conf
-     ```
-   * Exit the SSH session:
-
-     ```shell
-     exit
-     ```
 
 ### Uploading keytabs
 
-The broker service needs keytabs (one for each realm) to authenticate incoming requests.
+The broker service needs a keytab to authenticate incoming requests.
 
-1. Download keytabs for the origin and Dataproc realms:
+1. Download the keytab from the Dataproc cluster's realm:
 
    ```shell
-   # Download keytab for the origin realm
-   gcloud beta compute ssh origin-kdc \
-     --tunnel-through-iap \
-     -- "sudo cat /etc/security/keytab/broker.keytab" | perl -pne 's/\r$//g' > origin.keytab
-
-   # Download keytab for the Dataproc cluster's realm
    gcloud beta compute ssh test-cluster-m \
      --tunnel-through-iap \
-     -- "sudo cat /etc/security/keytab/broker.keytab" | perl -pne 's/\r$//g' > dataproc.keytab
+     -- "sudo cat /etc/security/keytab/broker.keytab" | perl -pne 's/\r$//g' > broker.keytab
 
-2. Upload the keytabs to the broker cluster:
+2. Upload the keytab to the broker cluster:
 
    ```shell
    kubectl create secret generic broker-keytabs \
-     --from-file=origin.keytab \
-     --from-file=dataproc.keytab
+     --from-file=broker.keytab
    ```
 
 3. Restart the broker Kubernetes pods:

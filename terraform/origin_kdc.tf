@@ -92,11 +92,6 @@ data "template_file" "startup_script_origin_kdc" {
     realm = "${var.origin_realm}"
     project = "${var.gcp_project}"
     zone = "${var.gcp_zone}"
-    cross_realm_trust_conf = <<EOT
-    ${local.dataproc_realm} = {
-        kdc = DATAPROC_KDC_IP
-    }
-    EOT
     extra_commands = <<EOT
         # Create user principals
         kadmin.local -q "addprinc -pw ${var.test_users[0]} ${var.test_users[0]}"
@@ -105,11 +100,6 @@ data "template_file" "startup_script_origin_kdc" {
 
         # One-way trust with Dataproc realm
         kadmin.local -q "addprinc -pw ${var.cross_realm_password} krbtgt/${local.dataproc_realm}@${var.origin_realm}"
-
-        # Create broker principal and keytab
-        kadmin.local -q "addprinc -randkey broker/${var.broker_service_hostname}"
-        mkdir -p /etc/security/keytab
-        kadmin.local -q "ktadd -k /etc/security/keytab/broker.keytab broker/${var.broker_service_hostname}"
     EOT
   }
 }
