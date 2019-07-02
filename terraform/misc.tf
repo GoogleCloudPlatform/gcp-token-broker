@@ -10,14 +10,14 @@
 # limitations under the License.
 
 provider "google" {
-  version = "1.20.0"
+  version = "2.9.1"
   project = "${var.gcp_project}"
   region = "${var.gcp_region}"
   zone = "${var.gcp_zone}"
 }
 
 provider "google-beta" {
-  version = "1.20.0"
+  version = "2.9.1"
   project = "${var.gcp_project}"
   region = "${var.gcp_region}"
   zone = "${var.gcp_zone}"
