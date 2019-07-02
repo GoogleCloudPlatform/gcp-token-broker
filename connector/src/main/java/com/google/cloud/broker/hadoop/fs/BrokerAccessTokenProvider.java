@@ -13,6 +13,7 @@ package com.google.cloud.broker.hadoop.fs;
 
 import java.io.IOException;
 import java.security.PrivilegedAction;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.ietf.jgss.GSSException;
 import org.apache.hadoop.conf.Configuration;
@@ -71,12 +72,15 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
             sessionToken = null;
         }
 
+        AtomicReference<String> errorMessage = new AtomicReference<>();
+
         GetAccessTokenResponse response = loginUser.doAs((PrivilegedAction<GetAccessTokenResponse>) () -> {
             BrokerGateway gateway;
             try {
                 gateway = new BrokerGateway(config, loginUser, sessionToken);
             } catch (GSSException e) {
                 // Kerberos authentication failed
+                errorMessage.set(e.getMessage());
                 return null;
             }
 
@@ -96,7 +100,7 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
             accessToken = new AccessToken(tokenString, expiresAt);
         }
         else {
-            throw new RuntimeException("User is not logged-in with Kerberos or cannot authenticate with the broker.");
+            throw new RuntimeException("User is not logged-in with Kerberos or cannot authenticate with the broker. Kerberos error message: " + errorMessage.get());
         }
     }
 
