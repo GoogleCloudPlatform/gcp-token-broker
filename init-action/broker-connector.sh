@@ -25,7 +25,7 @@ set -xeuo pipefail
 #####################################################################
 
 
-BROKER_VERSION="0.3.0"
+BROKER_VERSION="0.3.1"
 GCS_CONN_VERSION="2.0.0-SNAPSHOT-shaded"
 
 NEW_JARS_BUCKET="gs://gcp-token-broker"
