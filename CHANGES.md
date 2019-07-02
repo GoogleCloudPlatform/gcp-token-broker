@@ -1,3 +1,9 @@
+## 0.3.1 (July 1, 2019)
+
+- Added `gcp.token.broker.realm` setting in the broker connector to control
+  the broker principal's realm.
+- Fixed a bug in the Cloud Datastore database backend.
+
 ## 0.3.0 (June 28, 2019)
 
 - Added JDBCDatabaseBackend to enable storing state in relational databases.
