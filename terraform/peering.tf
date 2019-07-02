@@ -9,6 +9,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+# Create the peerings in sequence, as you can't set up multiple peerings
+# with the same VPC at the same time. See https://github.com/terraform-providers/terraform-provider-google/issues/3034
+
 // Origin <--> Broker ---------------------------------------------------------------
 
 resource "google_compute_network_peering" "origin_broker_peering1" {
@@ -26,15 +30,8 @@ resource "google_compute_network_peering" "origin_broker_peering2" {
   network = "${google_compute_network.broker.self_link}"
   peer_network = "${google_compute_network.origin.self_link}"
   depends_on = [
-    "null_resource.force_networks_in_order_1",
+    "google_compute_network_peering.origin_broker_peering1",
   ]
-}
-
-// Workaround for ordering issue. See: https://github.com/terraform-providers/terraform-provider-google/issues/3034
-resource "null_resource" "force_networks_in_order_1" {
-  provisioner "local-exec" {
-    command = "echo ${google_compute_network_peering.origin_broker_peering1.id}"
-  }
 }
 
 
@@ -47,6 +44,7 @@ resource "google_compute_network_peering" "client_broker_peering1" {
   depends_on = [
     "google_compute_subnetwork.broker_cluster_subnet",
     "google_compute_subnetwork.client_subnet",
+    "google_compute_network_peering.origin_broker_peering2",
   ]
 }
 
@@ -55,16 +53,10 @@ resource "google_compute_network_peering" "client_broker_peering2" {
   network = "${google_compute_network.broker.self_link}"
   peer_network = "${google_compute_network.client.self_link}"
   depends_on = [
-    "null_resource.force_networks_in_order_2",
+    "google_compute_network_peering.client_broker_peering1",
   ]
 }
 
-// Workaround for ordering issue. See: https://github.com/terraform-providers/terraform-provider-google/issues/3034
-resource "null_resource" "force_networks_in_order_2" {
-  provisioner "local-exec" {
-    command = "echo ${google_compute_network_peering.client_broker_peering1.id}"
-  }
-}
 
 // Client <--> Origin ---------------------------------------------------------------
 
@@ -75,6 +67,7 @@ resource "google_compute_network_peering" "client_origin_peering1" {
   depends_on = [
     "google_compute_subnetwork.origin_subnet",
     "google_compute_subnetwork.client_subnet",
+    "google_compute_network_peering.client_broker_peering2",
   ]
 }
 
@@ -83,13 +76,6 @@ resource "google_compute_network_peering" "client_origin_peering2" {
   network = "${google_compute_network.origin.self_link}"
   peer_network = "${google_compute_network.client.self_link}"
   depends_on = [
-    "null_resource.force_networks_in_order_3",
+    "google_compute_network_peering.client_origin_peering1",
   ]
-}
-
-// Workaround for ordering issue. See: https://github.com/terraform-providers/terraform-provider-google/issues/3034
-resource "null_resource" "force_networks_in_order_3" {
-  provisioner "local-exec" {
-    command = "echo ${google_compute_network_peering.client_origin_peering1.id}"
-  }
 }
