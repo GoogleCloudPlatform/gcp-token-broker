@@ -14,6 +14,9 @@ load-testing/settings.py
 load-testing/brokerservice/protobuf/broker_pb2_grpc.py
 load-testing/brokerservice/protobuf/broker_pb2.py
 
+# Kerberos configuration file for Dataproc
+kerberos-config.yaml
+
 # Java artifacts
 apps/broker/target/**
 apps/broker/dependency-reduced-pom.xml
