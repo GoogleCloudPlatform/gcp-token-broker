@@ -105,7 +105,7 @@ EOL
 # Create POSIX users (which need to exist on all nodes for Yarn to work)
 USERS=${test_users}
 if [[ -z "${USERS}" ]] ; then
-  USERS=alice;bob;john
+  USERS="alice;bob;john"
 fi
 for i in $(echo $USERS | sed "s/;/ /g")
 do
