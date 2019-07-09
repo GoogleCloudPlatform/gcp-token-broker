@@ -113,8 +113,10 @@ do
 done
 
 # Create broker principal and keytab
-kadmin.local -q "addprinc -randkey broker/${broker_uri_hostname}"
-kadmin.local -q "ktadd -k /etc/security/keytab/broker.keytab broker/${broker_uri_hostname}"
+if [[ "${ROLE}" == 'Master' ]];
+  kadmin.local -q "addprinc -randkey broker/${broker_uri_hostname}"
+  kadmin.local -q "ktadd -k /etc/security/keytab/broker.keytab broker/${broker_uri_hostname}"
+fi
 
 # Restart services ---------------------------------------------------------------
 if [[ "${ROLE}" == 'Master' ]]; then
