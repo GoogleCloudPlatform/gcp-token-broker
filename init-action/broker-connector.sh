@@ -120,15 +120,16 @@ fi
 
 # Restart services ---------------------------------------------------------------
 if [[ "${ROLE}" == 'Master' ]]; then
-  master_services=('hadoop-hdfs-namenode' 'hadoop-hdfs-secondarynamenode' 'hadoop-hdfs-datanode' 'hadoop-yarn-resourcemanager' 'hive-server2' 'hive-metastore' 'hadoop-yarn-timelineserver' 'hadoop-mapreduce-historyserver' 'spark-history-server' )
-  for master_service in "${master_services[@]}"; do
-    if ( systemctl is-enabled --quiet "${master_service}" ); then
-      systemctl restart "${master_service}" || err "Cannot restart service: ${master_service}"
+  services=('hadoop-hdfs-namenode' 'hadoop-hdfs-secondarynamenode' 'hadoop-yarn-resourcemanager' 'hive-server2' 'hive-metastore' 'hadoop-yarn-timelineserver' 'hadoop-mapreduce-historyserver' 'spark-history-server')
+  for service in "${services[@]}"; do
+    if ( systemctl is-enabled --quiet "${service}" ); then
+      systemctl restart "${service}" || err "Cannot restart service: ${service}"
     fi
   done
 fi
 # In single node mode, we run datanode and nodemanager on the master.
 if [[ "${ROLE}" == 'Worker' || "${WORKER_COUNT}" == '0' ]]; then
+  systemctl restart hadoop-hdfs-datanode || err 'Cannot restart datanode'
   if [[ "${early_init}" == 'false' ]]; then
     systemctl restart hadoop-yarn-nodemanager || err 'Cannot restart node manager'
   fi
