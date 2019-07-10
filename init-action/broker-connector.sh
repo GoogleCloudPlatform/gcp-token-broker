@@ -62,6 +62,22 @@ function set_property_core_site() {
   set_property_in_xml "${HADOOP_CONF_DIR}/core-site.xml" "$1" "$2"
 }
 
+function restart_master_services() {
+  services=('hadoop-hdfs-namenode' 'hadoop-hdfs-secondarynamenode' 'hadoop-yarn-resourcemanager' 'hive-server2' 'hive-metastore' 'hadoop-yarn-timelineserver' 'hadoop-mapreduce-historyserver' 'spark-history-server')
+  for service in "${services[@]}"; do
+    if ( systemctl is-enabled --quiet "${service}" ); then
+      systemctl restart "${service}" || err "Cannot restart service: ${service}"
+    fi
+  done
+}
+
+function restart_worker_services() {
+  systemctl restart hadoop-hdfs-datanode || err 'Cannot restart datanode'
+  if [[ "${early_init}" == 'false' ]]; then
+    systemctl restart hadoop-yarn-nodemanager || err 'Cannot restart node manager'
+  fi
+}
+
 # Set some hadoop config properties
 set_property_core_site "fs.gs.system.bucket" ""
 set_property_core_site "fs.gs.delegation.token.binding" "com.google.cloud.broker.hadoop.fs.BrokerDelegationTokenBinding"
@@ -120,19 +136,15 @@ fi
 
 # Restart services ---------------------------------------------------------------
 if [[ "${ROLE}" == 'Master' ]]; then
-  services=('hadoop-hdfs-namenode' 'hadoop-hdfs-secondarynamenode' 'hadoop-yarn-resourcemanager' 'hive-server2' 'hive-metastore' 'hadoop-yarn-timelineserver' 'hadoop-mapreduce-historyserver' 'spark-history-server')
-  for service in "${services[@]}"; do
-    if ( systemctl is-enabled --quiet "${service}" ); then
-      systemctl restart "${service}" || err "Cannot restart service: ${service}"
-    fi
-  done
-fi
-# In single node mode, we run datanode and nodemanager on the master.
-if [[ "${ROLE}" == 'Worker' || "${WORKER_COUNT}" == '0' ]]; then
-  systemctl restart hadoop-hdfs-datanode || err 'Cannot restart datanode'
-  if [[ "${early_init}" == 'false' ]]; then
-    systemctl restart hadoop-yarn-nodemanager || err 'Cannot restart node manager'
+  # In single node mode, we run worker services on the master.
+  if [[ "${WORKER_COUNT}" == '0' ]]; then
+    restart_worker_services
   fi
+  restart_master_services
+fi
+
+if [[ "${ROLE}" == 'Worker' ]]; then
+  restart_worker_services
 fi
 
 
