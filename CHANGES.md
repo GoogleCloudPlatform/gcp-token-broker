@@ -1,3 +1,7 @@
+## 0.3.2 (July 25, 2019)
+
+- Made `RefreshTokenProvider` work with all database backends instead of just Cloud Datastore.
+
 ## 0.3.1 (July 1, 2019)
 
 - Added `gcp.token.broker.realm` setting in the broker connector to control
@@ -6,9 +10,9 @@
 
 ## 0.3.0 (June 28, 2019)
 
-- Added JDBCDatabaseBackend to enable storing state in relational databases.
-- Added DummyCache, DummyEncryptionBackend, and an experimental
-  JSONFileCredentialsProvider to make simple deployments easier.
+- Added `JDBCDatabaseBackend` to enable storing state in relational databases.
+- Added `DummyCache`, `DummyEncryptionBackend`, and an experimental
+  `JSONFileCredentialsProvider` to make simple deployments easier.
   These backends are for development and testing only, and should *not*
   be used in production.
 
