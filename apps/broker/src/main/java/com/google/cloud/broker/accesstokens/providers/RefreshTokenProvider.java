@@ -25,7 +25,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.util.Clock;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
-import com.google.cloud.datastore.Blob;
 import io.grpc.Status;
 
 import com.google.cloud.broker.accesstokens.AccessToken;
@@ -59,7 +58,7 @@ public class RefreshTokenProvider extends AbstractProvider {
 
         // Decrypt the refresh token's value
         String cryptoKey = settings.getProperty("ENCRYPTION_REFRESH_TOKEN_CRYPTO_KEY");
-        byte[] encryptedValue = ((Blob) refreshToken.getValue("value")).toByteArray();
+        byte[] encryptedValue = (byte[]) refreshToken.getValue("value");
         String decryptedValue = new String(AbstractEncryptionBackend.getInstance().decrypt(cryptoKey, encryptedValue));
 
         // Load OAuth client secret

@@ -43,7 +43,13 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
         for (String name : entity.getNames()) {
             Value<?> value = entity.getValue(name);
             if (value != null) {
-                values.put(name, value.get());
+                if (value.get() instanceof Blob) {
+                    values.put(name, ((Blob) value.get()).toByteArray());
+                }
+                else {
+                    values.put(name, value.get());
+                }
+
             }
         }
 
@@ -83,6 +89,9 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
             }
             else if (value instanceof Long) {
                 builder.set(name, (long) value);
+            }
+            else if (value instanceof byte[]) {
+                builder.set(name, Blob.copyFrom((byte[]) value));
             }
             else {
                 // TODO extend to other supported types
