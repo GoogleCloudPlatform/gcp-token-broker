@@ -96,7 +96,7 @@ public class SpnegoAuthenticator  {
     }
 
 
-    private static Configuration getConfiguration(String principal, File keytabFile) { ;
+    private static Configuration getConfiguration(String principal, File keytabFile) {
         return new Configuration() {
             @Override
             public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
