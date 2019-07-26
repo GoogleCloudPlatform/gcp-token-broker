@@ -18,61 +18,18 @@ limitations under the License.
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.google.cloud.broker</groupId>
+    <parent>
+        <groupId>com.google.cloud.broker</groupId>
+        <artifactId>broker-parent</artifactId>
+        <version>0.3.2</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
     <artifactId>broker-connector</artifactId>
-    <version>${hadoop.identifier}-0.3.2</version>
+    <version>${hadoop.identifier}-${project.parent.version}</version>
 
     <name>GCP Token Broker Hadoop Connector</name>
-    <description>
-        Hadoop connector for the GCP Token Broker.
-    </description>
-
-    <url>https://github.com/GoogleCloudPlatform/gcp-token-broker</url>
-
-    <licenses>
-        <license>
-            <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-
-    <developers>
-        <developer>
-            <organization>Google Inc.</organization>
-            <organizationUrl>http://www.google.com</organizationUrl>
-        </developer>
-    </developers>
-
-    <scm>
-        <connection>scm:git:git@github.com:GoogleCloudPlatform/gcp-token-broker.git</connection>
-        <developerConnection>
-            scm:git:git@github.com:GoogleCloudPlatform/gcp-token-broker.git
-        </developerConnection>
-        <url>git@github.com:GoogleCloudPlatform/gcp-token-broker.git</url>
-    </scm>
-
-    <issueManagement>
-        <system>GitHub Issues</system>
-        <url>https://github.com/GoogleCloudPlatform/gcp-token-broker/issues</url>
-    </issueManagement>
-
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
-
-    <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <io.grpc.version>1.19.0</io.grpc.version>
-    </properties>
+    <description>Hadoop connector for the GCP Token Broker.</description>
 
     <profiles>
       <profile>
@@ -217,15 +174,11 @@ limitations under the License.
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
-                <version>0.6.1</version>
+                <version>${maven.protobuf.plugin.version}</version>
                 <configuration>
-                    <protocArtifact>
-                        com.google.protobuf:protoc:3.6.1:exe:${os.detected.classifier}
-                    </protocArtifact>
+                    <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
-                    <pluginArtifact>
-                        io.grpc:protoc-gen-grpc-java:${io.grpc.version}:exe:${os.detected.classifier}
-                    </pluginArtifact>
+                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${io.grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
                 </configuration>
                 <executions>
                     <execution>

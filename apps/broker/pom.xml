@@ -17,76 +17,20 @@ limitations under the License.
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.google.cloud.broker</groupId>
+    <parent>
+        <groupId>com.google.cloud.broker</groupId>
+        <artifactId>broker-parent</artifactId>
+        <version>0.3.2</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
     <artifactId>broker</artifactId>
-    <version>0.3.2</version>
 
     <name>GCP Token Broker</name>
-    <description>
-        Service to enable end-to-end Kerberos security and Cloud IAM integration for Hadoop workloads on Google Cloud Platform (GCP).
-    </description>
+    <description>Service to enable end-to-end Kerberos security and Cloud IAM integration for Hadoop workloads on Google Cloud Platform (GCP).</description>
 
     <url>https://github.com/GoogleCloudPlatform/gcp-token-broker</url>
 
-    <licenses>
-        <license>
-            <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-
-    <developers>
-        <developer>
-            <organization>Google Inc.</organization>
-            <organizationUrl>http://www.google.com</organizationUrl>
-        </developer>
-    </developers>
-
-    <scm>
-        <connection>scm:git:git@github.com:GoogleCloudPlatform/gcp-token-broker.git</connection>
-        <developerConnection>
-            scm:git:git@github.com:GoogleCloudPlatform/gcp-token-broker.git
-        </developerConnection>
-        <url>git@github.com:GoogleCloudPlatform/gcp-token-broker.git</url>
-    </scm>
-
-    <issueManagement>
-        <system>GitHub Issues</system>
-        <url>https://github.com/GoogleCloudPlatform/gcp-token-broker/issues</url>
-    </issueManagement>
-
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
-
-    <properties>
-        <grpc.version>1.18.0</grpc.version>
-        <protoc.version>3.7.0</protoc.version>
-        <netty.tcnative.version>2.0.20.Final</netty.tcnative.version>
-        <redisson.version>3.10.6</redisson.version>
-        <javax.annotation.version>1.2</javax.annotation.version>
-        <cloud.datastore.version>1.67.0</cloud.datastore.version>
-        <cloud.kms.version>1.3.0</cloud.kms.version>
-        <cloud.iam.version>v1-rev247-1.23.0</cloud.iam.version>
-        <logback.version>1.2.3</logback.version>
-        <logback.contrib.version>0.1.5</logback.contrib.version>
-        <jackson.databind.version>2.9.9.1</jackson.databind.version>
-        <expiringmap.version>0.5.9</expiringmap.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.assembly.plugin.version>3.1.1</maven.assembly.plugin.version>
-        <maven.os.plugin.version>1.6.1</maven.os.plugin.version>
-        <maven.protobuf.plugin.version>0.5.1</maven.protobuf.plugin.version>
-        <maven.javadoc.plugin.version>3.1.0</maven.javadoc.plugin.version>
-    </properties>
 
     <profiles>
         <profile>
@@ -147,12 +91,12 @@ limitations under the License.
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
-            <version>${grpc.version}</version>
+            <version>${io.grpc.version}</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-stub</artifactId>
-            <version>${grpc.version}</version>
+            <version>${io.grpc.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.annotation</groupId>
@@ -163,7 +107,7 @@ limitations under the License.
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty-shaded</artifactId>
-            <version>${grpc.version}</version>
+            <version>${io.grpc.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
@@ -235,7 +179,7 @@ limitations under the License.
                 <configuration>
                     <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
-                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
+                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${io.grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
                 </configuration>
                 <executions>
                     <execution>
@@ -247,6 +191,11 @@ limitations under the License.
                 </executions>
             </plugin>
             <plugin>
+                <!--
+                Note: We're using the assembly plugin here instead of the shade plugin because of an issue with the
+                optimization function. We should be able to switch to the shade plugin once a new release includes the
+                fix in this pull request: https://github.com/apache/maven-shade-plugin/pull/17
+                -->
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>${maven.assembly.plugin.version}</version>
                 <executions>
@@ -271,4 +220,3 @@ limitations under the License.
         </plugins>
     </build>
 </project>
-
