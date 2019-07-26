@@ -18,10 +18,8 @@ load-testing/brokerservice/protobuf/broker_pb2.py
 kerberos-config.yaml
 
 # Java artifacts
-apps/broker/target/**
-apps/broker/dependency-reduced-pom.xml
-connector/target/**
-connector/dependency-reduced-pom.xml
+**/target/**
+dependency-reduced-pom.xml
 
 # Python artifacts
 .pytest_cache

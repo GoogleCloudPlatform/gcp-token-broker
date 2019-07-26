@@ -947,16 +947,28 @@ docker run -it -v $PWD:/base -w /base --detach --name broker-dev ubuntu:18.04
 docker exec -it broker-dev bash -- apps/broker/install-dev.sh
 ```
 
-To compile the broker service app:
+To build all packages:
 
 ```shell
-docker exec -it broker-dev bash -c 'cd apps/broker; mvn package'
+docker exec -it broker-dev bash -c 'mvn package'
 ```
 
-To compile the broker connector:
+To build the broker service:
 
 ```shell
-docker exec -it broker-dev bash -c 'cd connector; mvn package -Phadoop2'
+docker exec -it broker-dev bash -c "mvn package --projects apps/core,apps/broker"
+```
+
+To build an extension, for example the Redis caching backend:
+
+```shell
+docker exec -it broker-dev bash -c "mvn package --projects apps/core,apps/extensions/caching/redis"
+```
+
+To build the broker connector for a specific version of Hadoop (possible options: `hadoop2` and `hadoop3`):
+
+```shell
+docker exec -it broker-dev bash -c "mvn package --projects apps/core,connector -P hadoop2"
 ```
 
 ## Interacting with Redis

@@ -28,12 +28,15 @@ limitations under the License.
     <artifactId>broker-connector</artifactId>
     <version>${hadoop.identifier}-${project.parent.version}</version>
 
-    <name>GCP Token Broker Hadoop Connector</name>
+    <name>Hadoop Connector for the GCP Token Broker</name>
     <description>Hadoop connector for the GCP Token Broker.</description>
 
     <profiles>
       <profile>
         <id>hadoop2</id>
+        <activation>
+          <activeByDefault>true</activeByDefault>
+        </activation>
         <properties>
           <hadoop.identifier>hadoop2</hadoop.identifier>
           <hadoop.version>2.9.2</hadoop.version>
@@ -47,57 +50,6 @@ limitations under the License.
           <hadoop.version>3.1.1</hadoop.version>
           <gcs.connector.version>hadoop3-2.0.0-SNAPSHOT</gcs.connector.version>
         </properties>
-      </profile>
-      <profile>
-        <id>release</id>
-        <build>
-          <plugins>
-            <plugin>
-              <artifactId>maven-gpg-plugin</artifactId>
-              <executions>
-                <execution>
-                  <id>sign-artifacts</id>
-                  <phase>verify</phase>
-                  <goals>
-                    <goal>sign</goal>
-                  </goals>
-                  <configuration>
-                    <gpgArguments>
-                      <arg>--pinentry-mode</arg>
-                      <arg>loopback</arg>
-                    </gpgArguments>
-                  </configuration>
-                </execution>
-              </executions>
-            </plugin>
-            <plugin>
-              <artifactId>maven-source-plugin</artifactId>
-              <executions>
-                <execution>
-                  <id>attach-sources</id>
-                  <goals>
-                    <goal>jar-no-fork</goal>
-                  </goals>
-                </execution>
-              </executions>
-            </plugin>
-            <plugin>
-              <artifactId>maven-javadoc-plugin</artifactId>
-              <configuration>
-                <additionalOptions>-Xdoclint:none</additionalOptions>
-                <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
-              </configuration>
-              <executions>
-                <execution>
-                  <id>attach-javadocs</id>
-                  <goals>
-                    <goal>jar</goal>
-                  </goals>
-                </execution>
-              </executions>
-            </plugin>
-          </plugins>
-        </build>
       </profile>
     </profiles>
 
