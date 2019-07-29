@@ -19,6 +19,7 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 data:
+  APP_SETTINGS_CLASS: 'com.google.cloud.broker.settings.BrokerSettings'
   {{- range $key, $val := .Values.broker.app.settings }}
   {{ printf "APP_SETTING_%s" $key }}: {{ $val | quote }}
   {{- end}}

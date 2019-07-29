@@ -30,12 +30,12 @@ public class RedisCache extends AbstractRemoteCache {
 
     public RedisCache() {
         AppSettings settings = AppSettings.getInstance();
-        String host = settings.getProperty("REDIS_CACHE_HOST");
-        Integer port = Integer.valueOf(settings.getProperty("REDIS_CACHE_PORT"));
+        String host = settings.getProperty("REDIS_CACHE_HOST", "localhost");
+        Integer port = Integer.valueOf(settings.getProperty("REDIS_CACHE_PORT", "6379"));
         Config config = new Config();
         config.useSingleServer()
             .setAddress(String.format("redis://%s:%s", host, port))
-            .setDatabase(Integer.valueOf(settings.getProperty("REDIS_CACHE_DB")));
+            .setDatabase(Integer.valueOf(settings.getProperty("REDIS_CACHE_DB", "0")));
         client = Redisson.create(config);
     }
 
