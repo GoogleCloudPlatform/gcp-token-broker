@@ -193,7 +193,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         String blobType = "";
         switch (dialect) {
             case "sqlite":
-                autoincrementKey = "id NOT NULL PRIMARY KEY";
+                autoincrementKey = "id INTEGER PRIMARY KEY AUTOINCREMENT";
                 blobType = "BLOB";
                 break;
             case "postgresql":
