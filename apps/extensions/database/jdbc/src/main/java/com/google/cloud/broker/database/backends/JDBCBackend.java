@@ -26,16 +26,32 @@ public class JDBCBackend extends AbstractDatabaseBackend {
 
     protected AppSettings settings = AppSettings.getInstance();
 
+    protected Connection connectionInstance;
+
+    public Connection getConnection() {
+        if (connectionInstance == null) {
+            String url = settings.getProperty("DATABASE_JDBC_URL");
+            if (url == null) {
+                throw new RuntimeException("The DATABASE_JDBC_URL setting is missing for the JDBCBackend");
+            }
+            try {
+                connectionInstance = DriverManager.getConnection(url);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return connectionInstance;
+    }
+
     @Override
     public Model get(Class modelClass, String objectId) throws DatabaseObjectNotFound {
-        Connection connection = null;
+        Connection connection = getConnection();
         Statement statement = null;
         ResultSet rs = null;
         try {
             String table = modelClass.getSimpleName();
             String query = "SELECT * FROM " + table + " WHERE id = '" + objectId + "'";
 
-            connection = DriverManager.getConnection(settings.getProperty("DATABASE_JDBC_URL"));
             statement = connection.createStatement();
             rs = statement.executeQuery(query);
 
@@ -68,13 +84,12 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         } finally {
             try { if (rs != null) rs.close(); } catch (SQLException e) {throw new RuntimeException(e);}
             try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
-            try { if (connection != null) connection.close(); } catch (SQLException e) {throw new RuntimeException(e);}
         }
     }
 
     @Override
     public void insert(Model model) {
-        Connection connection = null;
+        Connection connection = getConnection();
         PreparedStatement statement = null;
         ResultSet rs = null;
         try {
@@ -99,7 +114,6 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             String query = "INSERT INTO " + table + " (" + columns + ") VALUES (" + values + ");";
 
             // Run the query
-            connection = DriverManager.getConnection(settings.getProperty("DATABASE_JDBC_URL"));
             statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             statement.executeUpdate();
 
@@ -113,13 +127,12 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         } finally {
             try { if (rs != null) rs.close(); } catch (SQLException e) {throw new RuntimeException(e);}
             try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
-            try { if (connection != null) connection.close(); } catch (SQLException e) {throw new RuntimeException(e);}
         }
     }
 
     @Override
     public void update(Model model) {
-        Connection connection = null;
+        Connection connection = getConnection();
         Statement statement = null;
         try {
             // Assemble the columns and values
@@ -141,20 +154,18 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             String query = "UPDATE " + table + " SET " + pairs + " WHERE id = '" + objectId + "'";
 
             // Run the query
-            connection = DriverManager.getConnection(settings.getProperty("DATABASE_JDBC_URL"));
             statement = connection.createStatement();
             statement.executeUpdate(query);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
             try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
-            try { if (connection != null) connection.close(); } catch (SQLException e) {throw new RuntimeException(e);}
         }
     }
 
     @Override
     public void delete(Model model) {
-        Connection connection = null;
+        Connection connection = getConnection();
         Statement statement = null;
         try {
             // Assemble the query
@@ -163,20 +174,18 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             String query = "DELETE FROM " + table + " WHERE id = '" + id + "'";
 
             // Run the query
-            connection = DriverManager.getConnection(settings.getProperty("DATABASE_JDBC_URL"));
             statement = connection.createStatement();
             statement.executeUpdate(query);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
             try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
-            try { if (connection != null) connection.close(); } catch (SQLException e) {throw new RuntimeException(e);}
         }
     }
 
     @Override
     public void initializeDatabase() {
-        Connection connection = null;
+        Connection connection = getConnection();
         Statement statement = null;
         String url = settings.getProperty("DATABASE_JDBC_URL");
         String dialect = url.split(":")[1];
@@ -184,7 +193,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         String blobType = "";
         switch (dialect) {
             case "sqlite":
-                autoincrementKey = "id NOT NULL PRIMARY KEY";
+                autoincrementKey = "id INTEGER PRIMARY KEY AUTOINCREMENT";
                 blobType = "BLOB";
                 break;
             case "postgresql":
@@ -196,7 +205,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         }
         try {
             String query =
-                "CREATE TABLE IF NOT EXISTS session (" +
+                "CREATE TABLE IF NOT EXISTS Session (" +
                     autoincrementKey + "," +
                     "owner VARCHAR(255)," +
                     "renewer VARCHAR(255)," +
@@ -206,19 +215,17 @@ public class JDBCBackend extends AbstractDatabaseBackend {
                     "expires_at BIGINT," +
                     "creation_time BIGINT" +
                 ");" +
-                "CREATE TABLE IF NOT EXISTS refreshtoken (" +
+                "CREATE TABLE IF NOT EXISTS RefreshToken (" +
                     "id VARCHAR(255) PRIMARY KEY," +
                     "value " + blobType + "," +
                     "creation_time BIGINT" +
                 ");";
-            connection = DriverManager.getConnection(settings.getProperty("DATABASE_JDBC_URL"));
             statement = connection.createStatement();
             statement.executeUpdate(query);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
             try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
-            try { if (connection != null) connection.close(); } catch (SQLException e) {throw new RuntimeException(e);}
         }
     }
 }
