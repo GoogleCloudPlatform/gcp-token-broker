@@ -220,7 +220,6 @@ public class JDBCBackend extends AbstractDatabaseBackend {
                     "value " + blobType + "," +
                     "creation_time BIGINT" +
                 ");";
-            connection = DriverManager.getConnection(settings.getProperty("DATABASE_JDBC_URL"));
             statement = connection.createStatement();
             statement.executeUpdate(query);
         } catch (SQLException e) {
