@@ -205,7 +205,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         }
         try {
             String query =
-                "CREATE TABLE IF NOT EXISTS session (" +
+                "CREATE TABLE IF NOT EXISTS Session (" +
                     autoincrementKey + "," +
                     "owner VARCHAR(255)," +
                     "renewer VARCHAR(255)," +
@@ -215,7 +215,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
                     "expires_at BIGINT," +
                     "creation_time BIGINT" +
                 ");" +
-                "CREATE TABLE IF NOT EXISTS refreshtoken (" +
+                "CREATE TABLE IF NOT EXISTS RefreshToken (" +
                     "id VARCHAR(255) PRIMARY KEY," +
                     "value " + blobType + "," +
                     "creation_time BIGINT" +
