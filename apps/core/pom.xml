@@ -29,6 +29,11 @@ limitations under the License.
     <name>Core components for the GCP Token Broker</name>
 
     <dependencies>
+      <dependency>
+          <groupId>io.grpc</groupId>
+          <artifactId>grpc-protobuf</artifactId>
+          <version>${io.grpc.version}</version>
+      </dependency>
       <!-- For local cache -->
       <dependency>
         <groupId>net.jodah</groupId>

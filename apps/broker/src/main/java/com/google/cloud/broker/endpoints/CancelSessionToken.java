@@ -17,7 +17,7 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
 
 import com.google.cloud.broker.logging.LoggingUtils;
-import com.google.cloud.broker.authentication.SpnegoAuthenticator;
+import com.google.cloud.broker.authentication.backends.AbstractAuthenticationBackend;
 import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.protobuf.CancelSessionTokenRequest;
 import com.google.cloud.broker.protobuf.CancelSessionTokenResponse;
@@ -28,7 +28,7 @@ import com.google.cloud.broker.validation.Validation;
 public class CancelSessionToken {
 
     public static void run(CancelSessionTokenRequest request, StreamObserver<CancelSessionTokenResponse> responseObserver) {
-        SpnegoAuthenticator authenticator = SpnegoAuthenticator.getInstance();
+        AbstractAuthenticationBackend authenticator = AbstractAuthenticationBackend.getInstance();
         String authenticatedUser = authenticator.authenticateUser();
 
         Validation.validateNotEmpty("session_token", request.getSessionToken());

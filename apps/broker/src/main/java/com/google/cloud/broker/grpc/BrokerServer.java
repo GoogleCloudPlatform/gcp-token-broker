@@ -19,9 +19,11 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
 import com.google.cloud.broker.logging.LoggingUtils;
 import io.grpc.Server;
 import io.grpc.ServerInterceptors;
+import io.grpc.ServerServiceDefinition;
 import io.grpc.StatusRuntimeException;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
@@ -30,7 +32,6 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.SslProvider;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.LoggerFactory;
 
-import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
 import com.google.cloud.broker.endpoints.GetAccessToken;
 import com.google.cloud.broker.endpoints.GetSessionToken;
 import com.google.cloud.broker.endpoints.RenewSessionToken;
@@ -50,6 +51,8 @@ public class BrokerServer {
     private final String certChainFilePath;
     private final String privateKeyFilePath;
     private final boolean tlsEnabled;
+    private static ServerServiceDefinition serviceDefinition = ServerInterceptors.intercept(
+        new BrokerImpl(), new AuthorizationHeaderServerInterceptor(), new ClientAddressServerInterceptor());
 
     public BrokerServer() {
         AppSettings settings = AppSettings.getInstance();
@@ -69,9 +72,13 @@ public class BrokerServer {
             SslProvider.OPENSSL);
     }
 
+    public static ServerServiceDefinition getServiceDefinition() {
+        return serviceDefinition;
+    }
+
     private void start() throws IOException {
         NettyServerBuilder builder = NettyServerBuilder.forAddress(new InetSocketAddress(host, port))
-            .addService(ServerInterceptors.intercept(new BrokerImpl(), new AuthorizationHeaderServerInterceptor(), new ClientAddressServerInterceptor()));
+            .addService(serviceDefinition);
         if (tlsEnabled) {
             builder = builder.sslContext(getSslContextBuilder().build());
         }

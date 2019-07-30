@@ -9,7 +9,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.authentication;
+package com.google.cloud.broker.authentication.backends;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -23,25 +23,26 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.login.Configuration;
 
-import com.google.cloud.broker.settings.AppSettings;
-import io.grpc.Status;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.Oid;
 
+import io.grpc.Status;
 
-public class SpnegoAuthenticator  {
+import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
+import com.google.cloud.broker.settings.AppSettings;
 
-    private static SpnegoAuthenticator instance = null;
+
+public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
 
     private ArrayList<Subject> logins = new ArrayList<Subject>();
 
     private static AppSettings settings = AppSettings.getInstance();
 
 
-    private SpnegoAuthenticator() {
+    public SpnegoAuthenticator() {
         // Load and validate keytabs
         File keytabsPath = new File(settings.getProperty("KEYTABS_PATH"));
         File[] keytabFiles = keytabsPath.listFiles();
@@ -114,14 +115,6 @@ public class SpnegoAuthenticator  {
             };
             }
         };
-    }
-
-
-    public static SpnegoAuthenticator getInstance() {
-        if (instance == null) {
-            instance = new SpnegoAuthenticator();
-        }
-        return instance;
     }
 
 

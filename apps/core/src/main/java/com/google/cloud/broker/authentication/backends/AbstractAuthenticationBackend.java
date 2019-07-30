@@ -9,36 +9,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.database.backends;
+package com.google.cloud.broker.authentication.backends;
 
 import java.lang.reflect.Constructor;
 
 import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.database.DatabaseObjectNotFound;
-import com.google.cloud.broker.database.models.Model;
 
 
-public abstract class AbstractDatabaseBackend {
+public abstract class AbstractAuthenticationBackend {
 
-    private static AbstractDatabaseBackend instance;
+    private static AbstractAuthenticationBackend instance;
 
-    public abstract Model get(Class modelClass, String objectId)  throws DatabaseObjectNotFound;
-    public abstract void insert(Model model);
-    public abstract void update(Model model);
-    public abstract void delete(Model model);
-    public abstract void initializeDatabase();
-
-    public static AbstractDatabaseBackend getInstance() {
+    public static AbstractAuthenticationBackend getInstance() {
         AppSettings settings = AppSettings.getInstance();
         if (instance == null) {
             try {
-                Class c = Class.forName(settings.getProperty("DATABASE_BACKEND"));
+                Class c = Class.forName(settings.getProperty("AUTHENTICATION_BACKEND"));
                 Constructor constructor = c.getConstructor();
-                instance = (AbstractDatabaseBackend) constructor.newInstance();
+                instance = (AbstractAuthenticationBackend) constructor.newInstance();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
         return instance;
     }
+
+    public abstract String authenticateUser();
 }

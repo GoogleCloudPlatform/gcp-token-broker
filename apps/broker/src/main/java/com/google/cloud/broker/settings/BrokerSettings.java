@@ -11,8 +11,6 @@
 
 package com.google.cloud.broker.settings;
 
-import java.util.Properties;
-import java.util.Set;
 
 public class BrokerSettings extends AppSettings {
 
@@ -75,6 +73,9 @@ public class BrokerSettings extends AppSettings {
 
         // Encryption backend
         this.setProperty("ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.CloudKMSBackend");
+
+        // Authentication backend
+        this.setProperty("AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.SpnegoAuthenticator");
 
         // Database backend class
         this.setProperty("DATABASE_BACKEND", "com.google.cloud.broker.database.backends.CloudDatastoreBackend");

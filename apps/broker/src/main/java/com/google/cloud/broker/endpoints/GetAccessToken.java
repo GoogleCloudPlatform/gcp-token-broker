@@ -11,7 +11,6 @@
 
 package com.google.cloud.broker.endpoints;
 
-import com.google.cloud.broker.accesstokens.AccessTokenCacheFetcher;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
@@ -19,9 +18,10 @@ import org.slf4j.MDC;
 import com.google.cloud.broker.logging.LoggingUtils;
 import com.google.cloud.broker.validation.Validation;
 import com.google.cloud.broker.authentication.SessionAuthenticator;
+import com.google.cloud.broker.authentication.backends.AbstractAuthenticationBackend;
 import com.google.cloud.broker.sessions.Session;
 import com.google.cloud.broker.accesstokens.AccessToken;
-import com.google.cloud.broker.authentication.SpnegoAuthenticator;
+import com.google.cloud.broker.accesstokens.AccessTokenCacheFetcher;
 import com.google.cloud.broker.protobuf.GetAccessTokenRequest;
 import com.google.cloud.broker.protobuf.GetAccessTokenResponse;
 
@@ -36,8 +36,8 @@ public class GetAccessToken {
         if (session == null) {
             // No session token was provided. The client is using direct authentication.
             // So let's authenticate the user.
-            SpnegoAuthenticator spnegoAuthenticator = SpnegoAuthenticator.getInstance();
-            String authenticatedUser = spnegoAuthenticator.authenticateUser();
+            AbstractAuthenticationBackend authenticator = AbstractAuthenticationBackend.getInstance();
+            String authenticatedUser = authenticator.authenticateUser();
 
             Validation.validateImpersonator(authenticatedUser, request.getOwner());
         }

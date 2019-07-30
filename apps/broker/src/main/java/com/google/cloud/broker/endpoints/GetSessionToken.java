@@ -21,7 +21,7 @@ import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.sessions.Session;
 import com.google.cloud.broker.sessions.SessionTokenUtils;
 import com.google.cloud.broker.validation.Validation;
-import com.google.cloud.broker.authentication.SpnegoAuthenticator;
+import com.google.cloud.broker.authentication.backends.AbstractAuthenticationBackend;
 import com.google.cloud.broker.protobuf.GetSessionTokenRequest;
 import com.google.cloud.broker.protobuf.GetSessionTokenResponse;
 
@@ -29,7 +29,7 @@ import com.google.cloud.broker.protobuf.GetSessionTokenResponse;
 public class GetSessionToken {
 
     public static void run(GetSessionTokenRequest request, StreamObserver<GetSessionTokenResponse> responseObserver) {
-        SpnegoAuthenticator authenticator = SpnegoAuthenticator.getInstance();
+        AbstractAuthenticationBackend authenticator = AbstractAuthenticationBackend.getInstance();
         String authenticatedUser = authenticator.authenticateUser();
 
         Validation.validateNotEmpty("owner", request.getOwner());

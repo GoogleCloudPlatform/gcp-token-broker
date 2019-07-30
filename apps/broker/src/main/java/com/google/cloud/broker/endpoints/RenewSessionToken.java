@@ -16,7 +16,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
 
-import com.google.cloud.broker.authentication.SpnegoAuthenticator;
+import com.google.cloud.broker.authentication.backends.AbstractAuthenticationBackend;
 import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.protobuf.RenewSessionTokenRequest;
 import com.google.cloud.broker.protobuf.RenewSessionTokenResponse;
@@ -28,7 +28,7 @@ import com.google.cloud.broker.validation.Validation;
 public class RenewSessionToken {
 
     public static void run(RenewSessionTokenRequest request, StreamObserver<RenewSessionTokenResponse> responseObserver) {
-        SpnegoAuthenticator authenticator = SpnegoAuthenticator.getInstance();
+        AbstractAuthenticationBackend authenticator = AbstractAuthenticationBackend.getInstance();
         String authenticatedUser = authenticator.authenticateUser();
 
         Validation.validateNotEmpty("session_token", request.getSessionToken());
