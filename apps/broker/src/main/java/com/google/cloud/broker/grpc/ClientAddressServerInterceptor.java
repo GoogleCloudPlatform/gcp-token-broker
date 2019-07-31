@@ -16,8 +16,6 @@ import io.grpc.*;
 
 public class ClientAddressServerInterceptor implements ServerInterceptor {
 
-    // FIXME: The returned address is that of the GKE node (i.e. the proxy), not the original client.
-
     public static final Context.Key<String> CLIENT_ADDRESS_CONTEXT_KEY = Context.key("ClientAddress");
 
     @Override
