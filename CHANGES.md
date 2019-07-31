@@ -1,3 +1,7 @@
+## 0.4.0 (XXXX)
+
+- Modified Session primary key data type from integer to string. TODO: Give instructions to update existing table.
+
 ## 0.3.2 (July 25, 2019)
 
 - Made `RefreshTokenProvider` work with all database backends instead of just Cloud Datastore.
