@@ -27,3 +27,11 @@ apt install -y mariadb-server
 echo "CREATE DATABASE broker;" | mariadb
 echo "CREATE USER 'testuser' IDENTIFIED BY 'UNSECURE-PASSWORD';" | mariadb
 echo "GRANT ALL privileges ON *.* TO 'testuser'@'%';" | mariadb
+
+# Redis
+apt-get install -y redis-server
+ps aux | grep [r]edis-server  &> /dev/null
+if [ $? != 0 ]; then
+    # Start Redis server if it's not already running
+    redis-server &
+fi
