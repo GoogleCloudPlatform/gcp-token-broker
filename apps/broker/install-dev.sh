@@ -24,7 +24,7 @@ su postgres -c "createdb broker --owner testuser"
 
 # MariaDB
 apt install -y mariadb-server
-echo "CREATE DATABASE broker;" | mariadb
+echo "CREATE DATABASE broker DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;" | mariadb
 echo "CREATE USER 'testuser' IDENTIFIED BY 'UNSECURE-PASSWORD';" | mariadb
 echo "GRANT ALL privileges ON *.* TO 'testuser'@'%';" | mariadb
 
