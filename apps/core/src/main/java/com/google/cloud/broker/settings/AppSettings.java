@@ -50,4 +50,8 @@ public class AppSettings extends Properties {
         }
         return instance;
     }
+
+    public static void reset() {
+        instance = null;
+    }
 }

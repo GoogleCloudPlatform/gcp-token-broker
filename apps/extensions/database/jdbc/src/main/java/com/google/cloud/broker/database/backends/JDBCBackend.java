@@ -44,6 +44,41 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         return connectionInstance;
     }
 
+    private void formatStatement(int index, PreparedStatement statement, HashMap<String, Object> values) throws SQLException {
+        Iterator<Map.Entry<String, Object>> iterator = values.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Object> entry = iterator.next();
+            Object value = entry.getValue();
+            if (value instanceof String) {
+                statement.setString(index, (String) value);
+            }
+            else if (value instanceof Long) {
+                statement.setLong(index, (long) value);
+            }
+            else if (value instanceof byte[]) {
+                statement.setBytes(index, (byte[]) value);
+            }
+            else {
+                // TODO extend to other supported types
+                throw new RuntimeException("Unsupported type");
+            }
+            index += 1;
+        }
+    }
+
+    private void runSimpleQuery(String query) {
+        Connection connection = getConnection();
+        Statement statement = null;
+        try {
+            statement = connection.createStatement();
+            statement.executeUpdate(query);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
+        }
+    }
+
     @Override
     public Model get(Class modelClass, String objectId) throws DatabaseObjectNotFound {
         Connection connection = getConnection();
@@ -137,77 +172,36 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         }
     }
 
-    private void formatStatement(int index, PreparedStatement statement, HashMap<String, Object> values) throws SQLException {
-        Iterator<Map.Entry<String, Object>> iterator = values.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<String, Object> entry = iterator.next();
-            Object value = entry.getValue();
-            if (value instanceof String) {
-                statement.setString(index, (String) value);
-            }
-            else if (value instanceof Long) {
-                statement.setLong(index, (long) value);
-            }
-            else if (value instanceof byte[]) {
-                statement.setBytes(index, (byte[]) value);
-            }
-            else {
-                // TODO extend to other supported types
-                throw new RuntimeException("Unsupported type");
-            }
-            index += 1;
-        }
-    }
-
     @Override
     public void delete(Model model) {
-        Connection connection = getConnection();
-        Statement statement = null;
-        try {
-            // Assemble the query
-            String table = model.getClass().getSimpleName();
-            String id = model.getValue("id").toString();
-            String query = "DELETE FROM " + table + " WHERE id = '" + id + "'";
-
-            // Run the query
-            statement = connection.createStatement();
-            statement.executeUpdate(query);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
-        }
+        String table = model.getClass().getSimpleName();
+        String id = model.getValue("id").toString();
+        String query = "DELETE FROM " + table + " WHERE id = '" + id + "'";
+        runSimpleQuery(query);
     }
 
     @Override
     public void initializeDatabase() {
-        Connection connection = getConnection();
-        Statement statement = null;
         String blobType = getBlobType();
-        try {
-            String query =
-                "CREATE TABLE IF NOT EXISTS Session (" +
-                    "id VARCHAR(255) PRIMARY KEY," +
-                    "owner VARCHAR(255)," +
-                    "renewer VARCHAR(255)," +
-                    "target VARCHAR(255)," +
-                    "scope VARCHAR(255)," +
-                    "password VARCHAR(255)," +
-                    "expires_at BIGINT," +
-                    "creation_time BIGINT" +
-                ");" +
-                "CREATE TABLE IF NOT EXISTS RefreshToken (" +
-                    "id VARCHAR(255) PRIMARY KEY," +
-                    "value " + blobType + "," +
-                    "creation_time BIGINT" +
-                ");";
-            statement = connection.createStatement();
-            statement.executeUpdate(query);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
-        }
+        runSimpleQuery(
+            "CREATE TABLE IF NOT EXISTS Session (" +
+            "id VARCHAR(255) PRIMARY KEY," +
+            "owner VARCHAR(255)," +
+            "renewer VARCHAR(255)," +
+            "target VARCHAR(255)," +
+            "scope VARCHAR(255)," +
+            "password VARCHAR(255)," +
+            "expires_at BIGINT," +
+            "creation_time BIGINT" +
+            ");"
+        );
+        runSimpleQuery(
+            "CREATE TABLE IF NOT EXISTS RefreshToken (" +
+            "id VARCHAR(255) PRIMARY KEY," +
+            "value " + blobType + "," +
+            "creation_time BIGINT" +
+            ");"
+        );
     }
 
     // Dialect-specific -----------------------------------------------------------------------------------------------
@@ -223,11 +217,12 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         String dialect = getDialect();
         switch (dialect) {
             case "sqlite":
+            case "mariadb":
                 return "BLOB";
             case "postgresql":
                 return "BYTEA";
             default:
-                throw new RuntimeException(String.format(DIALECT_NOT_SUPPORTED));
+                throw new RuntimeException(String.format(DIALECT_NOT_SUPPORTED, dialect));
         }
     }
 
@@ -237,8 +232,10 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             case "sqlite":
             case "postgresql":
                 return "ON CONFLICT(id) DO UPDATE SET";
+            case "mariadb":
+                return "ON DUPLICATE KEY UPDATE";
             default:
-                throw new RuntimeException();
+                throw new RuntimeException(String.format(DIALECT_NOT_SUPPORTED, dialect));
         }
     }
 }

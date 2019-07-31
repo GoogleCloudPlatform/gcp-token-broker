@@ -13,5 +13,17 @@
 
 source "/base/apps/broker/install.sh"
 
-# Install maven and its dependencies
+# Maven and its dependencies
 apt-get install -y libatomic1 maven
+
+# PostgreSQL
+echo exit 0 > /usr/sbin/policy-rc.d
+DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql
+echo "CREATE ROLE testuser LOGIN ENCRYPTED PASSWORD 'UNSECURE-PASSWORD';" | su postgres -c "psql"
+su postgres -c "createdb broker --owner testuser"
+
+# MariaDB
+apt install -y mariadb-server
+echo "CREATE DATABASE broker;" | mariadb
+echo "CREATE USER 'testuser' IDENTIFIED BY 'UNSECURE-PASSWORD';" | mariadb
+echo "GRANT ALL privileges ON *.* TO 'testuser'@'%';" | mariadb

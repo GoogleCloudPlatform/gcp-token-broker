@@ -18,38 +18,22 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import org.junit.*;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
-
-import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.oauth.RefreshToken;
 
 
-public class JDBCBackendTest {
+public abstract class JDBCBackendTest {
 
-    @ClassRule
-    public static final EnvironmentVariables environmentVariables = new EnvironmentVariables();
-
-    private static JDBCBackend backend;
-
-    @BeforeClass
-    public static void setupClass() {
-        environmentVariables.set("APP_SETTING_DATABASE_JDBC_URL", "jdbc:sqlite::memory:");
-        backend = new JDBCBackend();
-    }
-
-    @Before
-    public void setup() {
+    public static void setup(JDBCBackend backend) {
         // Initialize the database (i.e. create tables) before every test
         backend.initializeDatabase();
     }
 
-    @After
-    public void teardown() {
+    public static void teardown(JDBCBackend backend) {
         // Drop tables after every test
-        dropTables();
+        dropTables(backend);
     }
 
-    private void dropTables() {
+    private static void dropTables(JDBCBackend backend) {
         // Delete all tables
         Connection connection = backend.getConnection();
         String[] tables = {"RefreshToken", "Session"};
@@ -69,7 +53,7 @@ public class JDBCBackendTest {
     /**
      * Returns the number of tables in the database
      */
-    private int getNumTables() {
+    private static int getNumTables(JDBCBackend backend) {
         Connection connection = backend.getConnection();
         try {
             DatabaseMetaData databaseMetaData = connection.getMetaData();
@@ -84,59 +68,22 @@ public class JDBCBackendTest {
         }
     }
 
-    /**
-     * Returns a column's metadata, presented in a string format for ease-of-comparison.
-     */
-    private String getColumnMetadata(String table, String column) {
-        Connection connection = backend.getConnection();
-        try {
-            DatabaseMetaData databaseMetaData = connection.getMetaData();
-            ResultSet columns = databaseMetaData.getColumns(null,null, table, column);
-            columns.next();
-            String dataType = columns.getString("DATA_TYPE");
-            String columnSize = columns.getString("COLUMN_SIZE");
-            String decimalDigits = columns.getString("DECIMAL_DIGITS");
-            String isNullable = columns.getString("IS_NULLABLE");
-            String isAutoIncrement = columns.getString("IS_AUTOINCREMENT");
-            return dataType + "--" + columnSize + "--" + decimalDigits + "--" + isNullable + "--" + isAutoIncrement;
-        } catch(Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Test
-    public void testInitializeDatabase() {
+    public static void testInitializeDatabase(JDBCBackend backend) {
         // Check that the database is empty
-        dropTables();
-        assertEquals(getNumTables(), 0);
+        dropTables(backend);
+        assertEquals(getNumTables(backend), 0);
 
         // Initialize the database
         backend.initializeDatabase();
 
         // Check that the database now has tables
-        assertEquals(getNumTables(), 2);
-
-        // Check the RefreshToken table's columns
-        assertEquals(getColumnMetadata("RefreshToken", "id"), "12--2000000000--10--YES--NO");
-        assertEquals(getColumnMetadata("RefreshToken", "value"), "12--2000000000--10--YES--NO");
-        assertEquals(getColumnMetadata("RefreshToken", "creation_time"), "4--2000000000--10--YES--NO");
-
-        // Check the Session table's columns
-        assertEquals(getColumnMetadata("Session", "id"), "12--2000000000--10--YES--NO");
-        assertEquals(getColumnMetadata("Session", "owner"), "12--2000000000--10--YES--NO");
-        assertEquals(getColumnMetadata("Session", "renewer"), "12--2000000000--10--YES--NO");
-        assertEquals(getColumnMetadata("Session", "target"), "12--2000000000--10--YES--NO");
-        assertEquals(getColumnMetadata("Session", "scope"), "12--2000000000--10--YES--NO");
-        assertEquals(getColumnMetadata("Session", "password"), "12--2000000000--10--YES--NO");
-        assertEquals(getColumnMetadata("Session", "expires_at"), "4--2000000000--10--YES--NO");
-        assertEquals(getColumnMetadata("Session", "creation_time"), "4--2000000000--10--YES--NO");
+        assertEquals(getNumTables(backend), 2);
     }
 
     /**
      * Test saving a new model to the database.
      */
-    @Test
-    public void testSaveNew() {
+    public static void testSaveNew(JDBCBackend backend) {
         // Check that there are no records
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
@@ -181,8 +128,7 @@ public class JDBCBackendTest {
     /**
      * Test updating an existing model to the database.
      */
-    @Test
-    public void testUpdate() {
+    public static void testUpdate(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
@@ -228,8 +174,7 @@ public class JDBCBackendTest {
     /**
      * Test saving a model to the database, without specifying an ID. An ID should automatically be assigned.
      */
-    @Test
-    public void testSaveWithoutID() {
+    public static void testSaveWithoutID(JDBCBackend backend) {
         // Check that there are no records
         Connection connection = backend.getConnection();
         Statement statement = null;
@@ -278,8 +223,7 @@ public class JDBCBackendTest {
     /**
      * Test retrieving a model from the database.
      */
-    @Test
-    public void testGet() {
+    public static void testGet(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
@@ -306,16 +250,14 @@ public class JDBCBackendTest {
     /**
      * Test retrieving a model that doesn't exist. The DatabaseObjectNotFound exception should be thrown.
      */
-    @Test(expected = DatabaseObjectNotFound.class)
-    public void testGetNotExist() {
+    public static void testGetNotExist(JDBCBackend backend) {
         backend.get(RefreshToken.class, "whatever");
     }
 
     /**
      * Test deleting a model from the database.
      */
-    @Test
-    public void testDelete() {
+    public static void testDelete(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
