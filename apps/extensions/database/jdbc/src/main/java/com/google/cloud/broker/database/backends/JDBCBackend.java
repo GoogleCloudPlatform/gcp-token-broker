@@ -218,6 +218,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         switch (dialect) {
             case "sqlite":
             case "mariadb":
+            case "mysql":
                 return "BLOB";
             case "postgresql":
                 return "BYTEA";
@@ -233,6 +234,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             case "postgresql":
                 return "ON CONFLICT(id) DO UPDATE SET";
             case "mariadb":
+            case "mysql":
                 return "ON DUPLICATE KEY UPDATE";
             default:
                 throw new RuntimeException(String.format(DIALECT_NOT_SUPPORTED, dialect));
