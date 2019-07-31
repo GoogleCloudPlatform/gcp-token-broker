@@ -13,20 +13,22 @@ package com.google.cloud.broker.grpc;
 
 import static org.junit.Assert.*;
 
-import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
-import com.google.cloud.broker.sessions.Session;
-import com.google.cloud.broker.sessions.SessionTokenUtils;
-import io.grpc.Metadata;
-import io.grpc.stub.MetadataUtils;
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
+import io.grpc.Metadata;
+import io.grpc.ServerInterceptors;
+import io.grpc.stub.MetadataUtils;
 import io.grpc.testing.GrpcCleanupRule;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
+import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
+import com.google.cloud.broker.sessions.Session;
+import com.google.cloud.broker.sessions.SessionTokenUtils;
 import com.google.cloud.broker.protobuf.BrokerGrpc;
 import com.google.cloud.broker.protobuf.GetSessionTokenResponse;
 import com.google.cloud.broker.protobuf.GetSessionTokenRequest;
@@ -40,11 +42,11 @@ public class BrokerServerTest {
     @Rule
     public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
-    @Rule
-    public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+    @ClassRule
+    public static final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
-    @Before
-    public void before() {
+    @BeforeClass
+    public static void setupClass() {
         environmentVariables.set("APP_SETTINGS_CLASS", "com.google.cloud.broker.settings.BrokerSettings");
         environmentVariables.set("APP_SETTING_DATABASE_BACKEND", "com.google.cloud.broker.database.backends.JDBCBackend");
         environmentVariables.set("APP_SETTING_DATABASE_JDBC_URL", "jdbc:sqlite::memory:");

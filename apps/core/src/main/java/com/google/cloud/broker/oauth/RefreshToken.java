@@ -9,7 +9,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.authorization;
+package com.google.cloud.broker.oauth;
 
 import com.google.cloud.broker.database.models.CreationTimeModel;
 

@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.datastore.*;
 
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
@@ -24,10 +25,16 @@ import com.google.cloud.broker.database.models.Model;
 
 public class CloudDatastoreBackend extends AbstractDatabaseBackend {
 
+    private Datastore getService() {
+        AppSettings settings = AppSettings.getInstance();
+        String projectId = settings.getProperty("GCP_PROJECT");
+        return DatastoreOptions.newBuilder().setProjectId(projectId).build().getService();
+    }
+
     @Override
     public Model get(Class modelClass, String objectId) throws DatabaseObjectNotFound {
         // Load entity from Datastore
-        Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
+        Datastore datastore = getService();
         KeyFactory keyFactory = datastore.newKeyFactory().setKind(modelClass.getSimpleName());
         Key key = keyFactory.newKey(objectId);
         Entity entity = datastore.get(key);
@@ -40,6 +47,7 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
 
         // Load entity values into a hashmap
         HashMap<String, Object> values = new HashMap<>();
+        values.put("id", objectId);
         for (String name : entity.getNames()) {
             Value<?> value = entity.getValue(name);
             if (value != null) {
@@ -65,19 +73,11 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
         return model;
     }
 
-    @Override
-    public void insert(Model model) {
-        model.setValue("id", UUID.randomUUID().toString());
-        upsert(model);
-    }
-
-    @Override
-    public void update(Model model) {
-        upsert(model);
-    }
-
-    public void upsert(Model model) {
-        Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
+    public void save(Model model) {
+        if (! model.hasValue("id")) {
+            model.setValue("id", UUID.randomUUID().toString());
+        }
+        Datastore datastore = getService();
         KeyFactory keyFactory = datastore.newKeyFactory().setKind(model.getClass().getSimpleName());
         Key key = keyFactory.newKey((String) model.getValue("id"));
         Entity.Builder builder = Entity.newBuilder(key);
@@ -104,7 +104,7 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
 
     @Override
     public void delete(Model model) {
-        Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
+        Datastore datastore = getService();
         KeyFactory keyFactory = datastore.newKeyFactory().setKind(model.getClass().getSimpleName());
         Key key = keyFactory.newKey((String) model.getValue("id"));
         datastore.delete(key);

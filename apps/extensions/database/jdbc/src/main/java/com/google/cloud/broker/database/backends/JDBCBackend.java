@@ -16,6 +16,7 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.models.Model;
@@ -88,7 +89,12 @@ public class JDBCBackend extends AbstractDatabaseBackend {
     }
 
     @Override
-    public void insert(Model model) {
+    public void save(Model model) {
+        if (!model.hasValue("id")) {
+            // Assign a  unique ID
+            model.setValue("id", UUID.randomUUID().toString());
+        }
+
         Connection connection = getConnection();
         PreparedStatement statement = null;
         ResultSet rs = null;
@@ -96,32 +102,33 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             // Assemble the columns and values
             String columns = "";
             String values = "";
+            String update = "";
             Iterator<Map.Entry<String, Object>> iterator = model.getValues().entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<String, Object> entry = iterator.next();
                 String column = entry.getKey();
-                Object value = entry.getValue().toString();
                 columns += column;
-                values += "'" + value + "'";
+                values += "?";
+                update += column + " = ?";
                 if (iterator.hasNext()) {
                     columns += ", ";
                     values += ", ";
+                    update += ", ";
                 }
             }
 
             // Assemble the query
             String table = model.getClass().getSimpleName();
-            String query = "INSERT INTO " + table + " (" + columns + ") VALUES (" + values + ");";
+            String query = "INSERT INTO " + table + " (" + columns + ") VALUES (" + values + ") " +
+                           getUpsertStatement() + " " + update;
+
+            // Format the statement
+            statement = connection.prepareStatement(query);
+            formatStatement(1, statement, model.getValues());  // Format the INSERT values
+            formatStatement(1 + model.getValues().size(), statement, model.getValues());  // Format the UPDATE values
 
             // Run the query
-            statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             statement.executeUpdate();
-
-            // Retrieve the auto-generated id
-            rs = statement.getGeneratedKeys();
-            rs.next();
-            int id = rs.getInt(1);
-            model.setValue("id", id);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
@@ -130,36 +137,25 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         }
     }
 
-    @Override
-    public void update(Model model) {
-        Connection connection = getConnection();
-        Statement statement = null;
-        try {
-            // Assemble the columns and values
-            String pairs = "";
-            Iterator<Map.Entry<String, Object>> iterator = model.getValues().entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<String, Object> entry = iterator.next();
-                String column = entry.getKey();
-                Object value = entry.getValue().toString();
-                pairs += column + " = '" + value + "'";
-                if (iterator.hasNext()) {
-                    pairs += ", ";
-                }
+    private void formatStatement(int index, PreparedStatement statement, HashMap<String, Object> values) throws SQLException {
+        Iterator<Map.Entry<String, Object>> iterator = values.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Object> entry = iterator.next();
+            Object value = entry.getValue();
+            if (value instanceof String) {
+                statement.setString(index, (String) value);
             }
-
-            // Assemble the query
-            String table = model.getClass().getSimpleName();
-            String objectId = model.getValue("id").toString();
-            String query = "UPDATE " + table + " SET " + pairs + " WHERE id = '" + objectId + "'";
-
-            // Run the query
-            statement = connection.createStatement();
-            statement.executeUpdate(query);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
+            else if (value instanceof Long) {
+                statement.setLong(index, (long) value);
+            }
+            else if (value instanceof byte[]) {
+                statement.setBytes(index, (byte[]) value);
+            }
+            else {
+                // TODO extend to other supported types
+                throw new RuntimeException("Unsupported type");
+            }
+            index += 1;
         }
     }
 
@@ -187,26 +183,11 @@ public class JDBCBackend extends AbstractDatabaseBackend {
     public void initializeDatabase() {
         Connection connection = getConnection();
         Statement statement = null;
-        String url = settings.getProperty("DATABASE_JDBC_URL");
-        String dialect = url.split(":")[1];
-        String autoincrementKey = "";
-        String blobType = "";
-        switch (dialect) {
-            case "sqlite":
-                autoincrementKey = "id INTEGER PRIMARY KEY AUTOINCREMENT";
-                blobType = "BLOB";
-                break;
-            case "postgresql":
-                autoincrementKey = "id SERIAL PRIMARY KEY";
-                blobType = "BYTEA";
-                break;
-            default:
-                throw new RuntimeException("Dialect `" + dialect + "` is not currently supported by the JDBCDatabaseBackend.");
-        }
+        String blobType = getBlobType();
         try {
             String query =
                 "CREATE TABLE IF NOT EXISTS Session (" +
-                    autoincrementKey + "," +
+                    "id VARCHAR(255) PRIMARY KEY," +
                     "owner VARCHAR(255)," +
                     "renewer VARCHAR(255)," +
                     "target VARCHAR(255)," +
@@ -226,6 +207,38 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             throw new RuntimeException(e);
         } finally {
             try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
+        }
+    }
+
+    // Dialect-specific -----------------------------------------------------------------------------------------------
+
+    private static final String DIALECT_NOT_SUPPORTED = "Dialect `%s` is not currently supported by the JDBCDatabaseBackend.";
+
+    private String getDialect() {
+        String url = settings.getProperty("DATABASE_JDBC_URL");
+        return url.split(":")[1];
+    }
+
+    private String getBlobType() {
+        String dialect = getDialect();
+        switch (dialect) {
+            case "sqlite":
+                return "BLOB";
+            case "postgresql":
+                return "BYTEA";
+            default:
+                throw new RuntimeException(String.format(DIALECT_NOT_SUPPORTED));
+        }
+    }
+
+    private String getUpsertStatement() {
+        String dialect = getDialect();
+        switch (dialect) {
+            case "sqlite":
+            case "postgresql":
+                return "ON CONFLICT(id) DO UPDATE SET";
+            default:
+                throw new RuntimeException();
         }
     }
 }

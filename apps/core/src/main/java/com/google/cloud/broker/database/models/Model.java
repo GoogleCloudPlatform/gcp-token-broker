@@ -51,12 +51,7 @@ public abstract class Model {
     }
 
     public static void save(Model model) {
-        if (model.hasValue("id")) {
-            AbstractDatabaseBackend.getInstance().update(model);
-        }
-        else {
-            AbstractDatabaseBackend.getInstance().insert(model);
-        }
+        AbstractDatabaseBackend.getInstance().save(model);
     }
 
     public static void delete(Model model) {

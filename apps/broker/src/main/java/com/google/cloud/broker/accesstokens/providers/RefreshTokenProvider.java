@@ -24,14 +24,14 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.util.Clock;
-import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
 import io.grpc.Status;
 
 import com.google.cloud.broker.accesstokens.AccessToken;
+import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.models.Model;
-import com.google.cloud.broker.authorization.RefreshToken;
+import com.google.cloud.broker.oauth.RefreshToken;
 
 
 public class RefreshTokenProvider extends AbstractProvider {

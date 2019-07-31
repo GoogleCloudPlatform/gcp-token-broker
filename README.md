@@ -43,6 +43,10 @@ backward-incompatible ways and is not subject to any SLA or deprecation policy._
   - [Simulating the delegation token lifecycle](#simulating-the-delegation-token-lifecycle)
   - [What's next?](#whats-next)
 - [Setting up local development environment](#setting-up-local-development-environment)
+  - [Creating a development container](#creating-a-development-container)
+  - [Building packages](#building-packages)
+  - [Running the tests](#running-the-tests)
+  - [Troubleshooting](#troubleshooting)
 - [Interacting with Redis](#interacting-with-redis)
 - [Logging](#logging)
   - [GCS audit logs](#gcs-audit-logs)
@@ -940,35 +944,114 @@ further testing.
 
 This section contains some tips if you're interested in making code contributions to this project.
 
-Start a development container:
+### Creating a development container
+
+You can use docker to create a container dedicated for development tasks:
 
 ```shell
 docker run -it -v $PWD:/base -w /base --detach --name broker-dev ubuntu:18.04
 docker exec -it broker-dev bash -- apps/broker/install-dev.sh
 ```
 
+This installs all the dependencies needed to build packages and run the tests.
+
+### Building packages
+
 To build all packages:
 
 ```shell
-docker exec -it broker-dev bash -c 'mvn package'
-```
-
-To build the broker service:
-
-```shell
-docker exec -it broker-dev bash -c "mvn package --projects apps/core,apps/broker"
+docker exec -it broker-dev bash -c 'mvn package -DskipTests'
 ```
 
 To build an extension, for example the Redis caching backend:
 
 ```shell
-docker exec -it broker-dev bash -c "mvn package --projects apps/core,apps/extensions/caching/redis"
+docker exec -it broker-dev bash -c "mvn package -DskipTests --projects apps/core,apps/extensions/caching/redis"
 ```
 
 To build the broker connector for a specific version of Hadoop (possible options: `hadoop2` and `hadoop3`):
 
 ```shell
-docker exec -it broker-dev bash -c "mvn package --projects apps/core,connector -P hadoop2"
+docker exec -it broker-dev bash -c "mvn package -DskipTests --projects apps/core,connector -P hadoop2"
+```
+
+### Running the tests
+
+   1. Create a GCP project dedicated to running the tests. Do *not* re-use an existing project
+      that might be used for other purposes. Running the test suite will create and delete
+      GCP resources in the project, so it's important that this project is only used for running
+      the tests.
+
+   2. Set an environment variable for your project ID (Replace `[PROJECT_ID]` with your project ID):
+      ```shell
+      PROJECT=[PROJECT_ID]
+      ```
+
+   3. Set the project ID as the default for `gcloud`:
+
+      ```shell
+      gcloud config set project ${PROJECT}
+      ```
+   4. Enable some Google APIs:
+
+   ```shell
+   gcloud services enable datastore.googleapis.com
+   ```
+   5. Activate the Cloud Datastore database for your project:
+
+   ```shell
+   gcloud app create --region=us-central
+   ```
+   Note: Cloud Datastore requires an active App Engine application, so you must create one by using this command.
+   6. Create a service account:
+
+   ```shell
+   gcloud iam service-accounts create broker
+   ```
+   7. Add the Cloud Datastore user IAM role to allow the service account to read and write to the database:
+
+   ```shell
+   gcloud projects add-iam-policy-binding $PROJECT \
+     --role roles/datastore.user \
+     --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
+   ```
+   8. Download a private JSON key for the service account:
+
+   ```shell
+   gcloud iam service-accounts keys create --iam-account \
+     broker@${PROJECT}.iam.gserviceaccount.com \
+     service-account-key.json
+   ```
+   9. Upload the JSON key to the development container:
+
+   ```shell
+   docker cp service-account-key.json broker-dev:/base
+   ```
+   10. Run the entire test suite:
+
+   ```shell
+   docker exec -it \
+     --env APP_SETTING_GCP_PROJECT=${PROJECT} \
+     --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
+     broker-dev bash -c "mvn test"
+   ```
+
+   To run the tests for a specific component, for example the Cloud Datastore database backend:
+
+   ```shell
+   docker exec -it \
+     --env APP_SETTING_GCP_PROJECT=${PROJECT} \
+     --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
+     broker-dev bash -c "mvn test --projects apps/core,apps/extensions/database/cloud-datastore"
+   ```
+
+### Troubleshooting
+
+If you see an error in your development container: `Error response from daemon: Container XXXXX is not running`, then restart
+the container (Replace `XXXXX` with your container ID):
+
+```shell
+docker start XXXXX
 ```
 
 ## Interacting with Redis

@@ -23,8 +23,7 @@ public abstract class AbstractDatabaseBackend {
     private static AbstractDatabaseBackend instance;
 
     public abstract Model get(Class modelClass, String objectId)  throws DatabaseObjectNotFound;
-    public abstract void insert(Model model);
-    public abstract void update(Model model);
+    public abstract void save(Model model);
     public abstract void delete(Model model);
     public abstract void initializeDatabase();
 
