@@ -95,7 +95,7 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
             }
             else {
                 // TODO extend to other supported types
-                throw new RuntimeException("Unsupported type");
+                throw new RuntimeException("Unsupported type: " + value.getClass());
             }
         }
         Entity entity = builder.build();

@@ -60,7 +60,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             }
             else {
                 // TODO extend to other supported types
-                throw new RuntimeException("Unsupported type");
+                throw new RuntimeException("Unsupported type: " + value.getClass());
             }
             index += 1;
         }
