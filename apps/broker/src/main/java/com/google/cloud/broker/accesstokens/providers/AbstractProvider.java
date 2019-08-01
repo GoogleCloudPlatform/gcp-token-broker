@@ -24,7 +24,11 @@ public abstract class AbstractProvider {
         AppSettings settings = AppSettings.getInstance();
         if (instance == null) {
             try {
-                Class c = Class.forName(settings.getProperty("PROVIDER"));
+                String className = settings.getProperty("PROVIDER");
+                if (className == null) {
+                    throw new RuntimeException("The `PROVIDER` setting is not set");
+                }
+                Class c = Class.forName(className);
                 Constructor constructor  = c.getConstructor();
                 instance = (AbstractProvider) constructor.newInstance();
             } catch (Exception e) {

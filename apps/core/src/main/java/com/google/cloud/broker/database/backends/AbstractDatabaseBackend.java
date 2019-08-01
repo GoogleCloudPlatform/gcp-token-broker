@@ -31,7 +31,11 @@ public abstract class AbstractDatabaseBackend {
         AppSettings settings = AppSettings.getInstance();
         if (instance == null) {
             try {
-                Class c = Class.forName(settings.getProperty("DATABASE_BACKEND"));
+                String className = settings.getProperty("DATABASE_BACKEND");
+                if (className == null) {
+                    throw new RuntimeException("The `DATABASE_BACKEND` setting is not set");
+                }
+                Class c = Class.forName(className);
                 Constructor constructor = c.getConstructor();
                 instance = (AbstractDatabaseBackend) constructor.newInstance();
             } catch (Exception e) {

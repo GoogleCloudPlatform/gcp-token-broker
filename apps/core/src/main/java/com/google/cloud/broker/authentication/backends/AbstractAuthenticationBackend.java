@@ -24,7 +24,11 @@ public abstract class AbstractAuthenticationBackend {
         AppSettings settings = AppSettings.getInstance();
         if (instance == null) {
             try {
-                Class c = Class.forName(settings.getProperty("AUTHENTICATION_BACKEND"));
+                String className = settings.getProperty("AUTHENTICATION_BACKEND");
+                if (className == null) {
+                    throw new RuntimeException("The `AUTHENTICATION_BACKEND` setting is not set");
+                }
+                Class c = Class.forName(className);
                 Constructor constructor = c.getConstructor();
                 instance = (AbstractAuthenticationBackend) constructor.newInstance();
             } catch (Exception e) {
