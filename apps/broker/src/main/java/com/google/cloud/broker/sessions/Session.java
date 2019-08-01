@@ -40,7 +40,7 @@ public class Session extends CreationTimeModel {
 
     protected void generateRandomPassword() {
         Random random = new SecureRandom();
-        int length = 16;
+        int length = 24;
         String characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         StringBuilder password = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
