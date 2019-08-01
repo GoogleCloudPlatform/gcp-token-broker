@@ -62,7 +62,7 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         }
         GoogleCredential credential = new GoogleCredential();
         credential.setAccessToken(details.accessToken);
-        return new Iam.Builder(httpTransport, jsonFactory, credential).build();
+        return new Iam.Builder(httpTransport, jsonFactory, credential).setApplicationName("GCP Token Broker").build();
     }
 
     class BrokerDetails {
