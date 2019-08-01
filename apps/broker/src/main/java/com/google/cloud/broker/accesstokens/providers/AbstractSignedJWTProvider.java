@@ -11,10 +11,13 @@
 
 package com.google.cloud.broker.accesstokens.providers;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 
+import com.google.common.collect.Lists;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.auth.oauth2.TokenRequest;
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -27,9 +30,12 @@ import com.google.api.services.iam.v1.Iam;
 import com.google.api.services.iam.v1.model.SignJwtRequest;
 import com.google.api.services.iam.v1.model.SignJwtResponse;
 import com.google.auth.oauth2.ComputeEngineCredentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
+import io.grpc.Status;
 
 import com.google.cloud.broker.accesstokens.AccessToken;
 import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.utils.EnvUtils;
 import com.google.cloud.broker.utils.TimeUtils;
 
 
@@ -66,12 +72,28 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
 
     private BrokerDetails getBrokerDetails() {
         BrokerDetails details = new BrokerDetails();
-        ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
-        details.serviceAccount = credentials.getAccount();
-        try {
-            details.accessToken = credentials.refreshAccessToken().getTokenValue();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        String jsonPath = EnvUtils.getenv().get("GOOGLE_APPLICATION_CREDENTIALS");
+        if (jsonPath != null) {
+            // Use the JSON private key if provided
+            try {
+                ServiceAccountCredentials credentials = (ServiceAccountCredentials) ServiceAccountCredentials
+                    .fromStream(new FileInputStream(jsonPath))
+                    .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/iam"));
+                details.serviceAccount = credentials.getAccount();
+                details.accessToken = credentials.refreshAccessToken().getTokenValue();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        else {
+            // Fall back to using the default Compute Engine service account
+            ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
+            details.serviceAccount = credentials.getAccount();
+            try {
+                details.accessToken = credentials.refreshAccessToken().getTokenValue();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         return details;
     }
@@ -81,9 +103,8 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         BrokerDetails details = getBrokerDetails();
 
         // Create the JWT payload
-        AppSettings settings = AppSettings.getInstance();
         long iat = TimeUtils.currentTimeMillis() / 1000L;
-        long exp = iat + Long.parseLong(settings.getProperty("JWT_LIFE"));
+        long exp = iat + Long.parseLong(AppSettings.requireSetting("JWT_LIFE"));
         HashMap<String, Object> jwtPayload = new HashMap<>();
         jwtPayload.put("scope", scope);
         jwtPayload.put("aud", "https://www.googleapis.com/oauth2/v4/token");
@@ -95,8 +116,7 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
             jwtPayload.put("sub", googleIdentity);
             jwtPayload.put("iss", details.serviceAccount);
             serviceAccount = details.serviceAccount;
-        }
-        else {
+        } else {
             jwtPayload.put("iss", googleIdentity);
             serviceAccount = googleIdentity;
         }
@@ -112,11 +132,18 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
             Iam iamService = createIamService(details);
             String name = String.format("projects/-/serviceAccounts/%s", serviceAccount);
             Iam.Projects.ServiceAccounts.SignJwt request =
-                iamService.projects().serviceAccounts().signJwt(name, requestBody);
+                    iamService.projects().serviceAccounts().signJwt(name, requestBody);
 
             // Execute the request
             response = request.execute();
-        } catch (IOException e) {
+        } catch (GoogleJsonResponseException e) {
+            if (e.getStatusCode() == 403) {
+                throw Status.PERMISSION_DENIED.asRuntimeException();
+            }
+            else {
+                throw new RuntimeException(e);
+            }
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 

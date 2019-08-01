@@ -37,15 +37,26 @@ import com.google.cloud.broker.utils.TimeUtils;
 public class RefreshTokenProvider extends AbstractProvider {
 
     private static String AUTHZ_ERROR_MESSAGE = "GCP Token Broker authorization is invalid or has expired for user: %s";
-    
+
+    public String getGoogleIdentity(String owner) {
+        String username;
+        try {
+            username = owner.split("@")[0];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new IllegalArgumentException();
+        }
+        if (username.length() == 0) {
+            throw new IllegalArgumentException();
+        }
+        String domain = AppSettings.requireSetting("DOMAIN_NAME");
+        String googleIdentity = String.format("%s@%s", username, domain);
+        return googleIdentity;
+    }
 
     @Override
     public AccessToken getAccessToken(String owner, String scope) {
-        AppSettings settings = AppSettings.getInstance();
-
         // Map the Google identity
-        String username = owner.split("@")[0];
-        String googleIdentity = String.format("%s@%s", username, settings.getProperty("DOMAIN_NAME"));
+        String googleIdentity = getGoogleIdentity(owner);
 
         // Fetch refresh token from the database
         RefreshToken refreshToken = null;
@@ -57,6 +68,7 @@ public class RefreshTokenProvider extends AbstractProvider {
         }
 
         // Decrypt the refresh token's value
+        AppSettings settings = AppSettings.getInstance();
         String cryptoKey = settings.getProperty("ENCRYPTION_REFRESH_TOKEN_CRYPTO_KEY");
         byte[] encryptedValue = (byte[]) refreshToken.getValue("value");
         String decryptedValue = new String(AbstractEncryptionBackend.getInstance().decrypt(cryptoKey, encryptedValue));

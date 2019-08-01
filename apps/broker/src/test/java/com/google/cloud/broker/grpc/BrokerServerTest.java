@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
-
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -46,8 +45,8 @@ import com.google.cloud.broker.protobuf.*;
 
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(fullyQualifiedNames = "com.google.cloud.broker.*")
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "javax.activation.*", "org.xml.*", "org.w3c.*"})
+@PrepareForTest({EnvUtils.class, TimeUtils.class})  // Classes to be mocked
 public class BrokerServerTest {
 
     private static final String SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
@@ -64,6 +63,7 @@ public class BrokerServerTest {
         env.put("APP_SETTINGS_CLASS", "com.google.cloud.broker.settings.BrokerSettings");
         env.put("APP_SETTING_DATABASE_BACKEND", "com.google.cloud.broker.database.backends.JDBCBackend");
         env.put("APP_SETTING_DATABASE_JDBC_URL", "jdbc:sqlite::memory:");
+        env.put("APP_SETTING_REMOTE_CACHE", "com.google.cloud.broker.caching.remote.DummyCache");
         env.put("APP_SETTING_ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
         env.put("APP_SETTING_AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.MockAuthenticator");
         env.put("APP_SETTING_PROXY_USER_WHITELIST", "hive@FOO.BAR");
@@ -257,8 +257,8 @@ public class BrokerServerTest {
         stub = SPNEGOify(stub, "baz@FOO.BAR");
         try {
             stub.renewSessionToken(RenewSessionTokenRequest.newBuilder()
-                    .setSessionToken(SessionTokenUtils.marshallSessionToken(session))
-                    .build());
+                .setSessionToken(SessionTokenUtils.marshallSessionToken(session))
+                .build());
             fail("StatusRuntimeException not thrown");
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
@@ -268,4 +268,15 @@ public class BrokerServerTest {
         // Check that the session still exists
         Model.get(Session.class, (String) session.getValue("id"));
     }
+
+//    @Test
+//    public void testGetAccessToken() {
+//        BrokerGrpc.BrokerBlockingStub stub = getStub();
+//        stub = SPNEGOify(stub, "alice@EXAMPLE.COM");
+//        stub.getAccessToken(GetAccessTokenRequest.newBuilder()
+//            .setOwner("alice@EXAMPLE.COM")
+//            .setScope(SCOPE)
+//            .setTarget(MOCK_BUCKET)
+//            .build());
+//    }
 }

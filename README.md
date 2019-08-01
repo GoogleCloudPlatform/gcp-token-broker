@@ -977,57 +977,69 @@ docker exec -it broker-dev bash -c "mvn package -DskipTests --projects apps/core
 
 ### Running the tests
 
-   1. Create a GCP project dedicated to running the tests. Do *not* re-use an existing project
-      that might be used for other purposes. Running the test suite will create and delete
-      GCP resources in the project, so it's important that this project is only used for running
-      the tests.
+1. Create a GCP project dedicated to running the tests. Do *not* re-use an existing project
+   that might be used for other purposes. Running the test suite will create and delete
+   GCP resources in the project, so it's important that this project is only used for running
+   the tests.
 
-   2. Set an environment variable for your project ID (Replace `[PROJECT_ID]` with your project ID):
-      ```shell
-      PROJECT=[PROJECT_ID]
-      ```
+1. Set an environment variable for your project ID (Replace `[PROJECT_ID]` with your project ID):
+   ```shell
+   PROJECT=[PROJECT_ID]
+   ```
 
-   3. Set the project ID as the default for `gcloud`:
-
-      ```shell
-      gcloud config set project ${PROJECT}
-      ```
-   4. Enable some Google APIs:
+1. Set the project ID as the default for `gcloud`:
 
    ```shell
-   gcloud services enable datastore.googleapis.com
+   gcloud config set project ${PROJECT}
    ```
-   5. Activate the Cloud Datastore database for your project:
+1. Enable some Google APIs:
+
+   ```shell
+   gcloud services enable datastore.googleapis.com iam.googleapis.com
+   ```
+1. Activate the Cloud Datastore database for your project:
 
    ```shell
    gcloud app create --region=us-central
    ```
    Note: Cloud Datastore requires an active App Engine application, so you must create one by using this command.
-   6. Create a service account:
+1. Create a service account for the broker service:
 
    ```shell
    gcloud iam service-accounts create broker
    ```
-   7. Add the Cloud Datastore user IAM role to allow the service account to read and write to the database:
+1. Create a service account for a test user:
+
+   ```shell
+   gcloud iam service-accounts create alice-shadow
+   ```
+1. Allow the broker service account to generate access tokens on behalf of the test service account:
+
+   ```shell
+   gcloud iam service-accounts add-iam-policy-binding alice-shadow@${PROJECT}.iam.gserviceaccount.com \
+     --role roles/iam.serviceAccountTokenCreator \
+     --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
+   ```
+1. Add the Cloud Datastore user IAM role to allow the broker service account to read and write to the database:
 
    ```shell
    gcloud projects add-iam-policy-binding $PROJECT \
      --role roles/datastore.user \
      --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
    ```
-   8. Download a private JSON key for the service account:
+1. Download a private JSON key for the broker service account:
 
    ```shell
    gcloud iam service-accounts keys create --iam-account \
      broker@${PROJECT}.iam.gserviceaccount.com \
      service-account-key.json
    ```
-   9. Upload the JSON key to the development container:
+1. Upload the JSON key to the development container:
 
    ```shell
    docker cp service-account-key.json broker-dev:/base
    ```
-   10. Run the entire test suite:
+2. Run the entire test suite:
 
    ```shell
    docker exec -it \

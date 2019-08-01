@@ -33,7 +33,10 @@ public class GetSessionToken {
         String authenticatedUser = authenticator.authenticateUser();
 
         Validation.validateNotEmpty("owner", request.getOwner());
+        Validation.validateNotEmpty("renewer", request.getRenewer());
         Validation.validateNotEmpty("scope", request.getScope());
+        Validation.validateNotEmpty("target", request.getTarget());
+
         Validation.validateImpersonator(authenticatedUser, request.getOwner());
 
         // Create session

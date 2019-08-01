@@ -29,6 +29,10 @@ import com.google.cloud.broker.protobuf.GetAccessTokenResponse;
 public class GetAccessToken {
 
     public static void run(GetAccessTokenRequest request, StreamObserver<GetAccessTokenResponse> responseObserver) {
+        Validation.validateNotEmpty("owner", request.getOwner());
+        Validation.validateNotEmpty("scope", request.getScope());
+        Validation.validateNotEmpty("target", request.getTarget());
+
         // First try to authenticate the session, if any.
         SessionAuthenticator sessionAuthenticator = new SessionAuthenticator();
         Session session = sessionAuthenticator.authenticateSession();
@@ -43,8 +47,6 @@ public class GetAccessToken {
         }
         else {
             // A session token was provided. The client is using delegated authentication.
-            Validation.validateNotEmpty("owner", request.getOwner());
-            Validation.validateNotEmpty("scope", request.getScope());
             Validation.validateScope(request.getScope());
             if (!request.getTarget().equals(session.getValue("target"))) {
                 throw Status.PERMISSION_DENIED
