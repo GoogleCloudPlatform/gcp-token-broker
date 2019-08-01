@@ -24,13 +24,9 @@ public abstract class AbstractEncryptionBackend {
     public abstract byte[] encrypt(String cryptoKey, byte[] plainText);
 
     public static AbstractEncryptionBackend getInstance() {
-        AppSettings settings = AppSettings.getInstance();
         if (instance == null) {
             try {
-                String className = settings.getProperty("ENCRYPTION_BACKEND");
-                if (className == null) {
-                    throw new RuntimeException("The `ENCRYPTION_BACKEND` setting is not set");
-                }
+                String className = AppSettings.requireSetting("ENCRYPTION_BACKEND");
                 Class c = Class.forName(className);
                 Constructor constructor  = c.getConstructor();
                 instance = (AbstractEncryptionBackend) constructor.newInstance();

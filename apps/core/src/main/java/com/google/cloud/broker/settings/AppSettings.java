@@ -53,6 +53,14 @@ public class AppSettings extends Properties {
         return instance;
     }
 
+    public static String requireSetting(String setting) {
+        String value = getInstance().getProperty(setting);
+        if (value == null) {
+            throw new RuntimeException(String.format("The `%s` setting is not set", setting));
+        }
+        return value;
+    }
+
     public static void reset() {
         instance = null;
     }

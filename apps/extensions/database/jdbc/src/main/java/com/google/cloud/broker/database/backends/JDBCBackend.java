@@ -31,10 +31,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
 
     public Connection getConnection() {
         if (connectionInstance == null) {
-            String url = settings.getProperty("DATABASE_JDBC_URL");
-            if (url == null) {
-                throw new RuntimeException("The DATABASE_JDBC_URL setting is missing for the JDBCBackend");
-            }
+            String url = AppSettings.requireSetting("DATABASE_JDBC_URL");
             try {
                 connectionInstance = DriverManager.getConnection(url);
             } catch (Exception e) {
