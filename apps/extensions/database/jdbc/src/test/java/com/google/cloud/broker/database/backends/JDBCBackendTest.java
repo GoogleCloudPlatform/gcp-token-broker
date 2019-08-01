@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import org.junit.*;
+
+import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.oauth.RefreshToken;
 
 
@@ -251,7 +253,10 @@ public abstract class JDBCBackendTest {
      * Test retrieving a model that doesn't exist. The DatabaseObjectNotFound exception should be thrown.
      */
     public static void testGetNotExist(JDBCBackend backend) {
-        backend.get(RefreshToken.class, "whatever");
+        try {
+            backend.get(RefreshToken.class, "whatever");
+            fail("DatabaseObjectNotFound not thrown");
+        } catch (DatabaseObjectNotFound e) {}
     }
 
     /**

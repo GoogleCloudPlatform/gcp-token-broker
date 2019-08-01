@@ -15,7 +15,6 @@ import org.junit.*;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
 import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.database.DatabaseObjectNotFound;
 
 
 public class SQLiteBackendTest extends JDBCBackendTest {
@@ -67,7 +66,7 @@ public class SQLiteBackendTest extends JDBCBackendTest {
         JDBCBackendTest.testGet(backend);
     }
 
-    @Test(expected = DatabaseObjectNotFound.class)
+    @Test
     public void testGetNotExist() {
         JDBCBackendTest.testGetNotExist(backend);
     }
