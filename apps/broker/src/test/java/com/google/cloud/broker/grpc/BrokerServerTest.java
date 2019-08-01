@@ -13,11 +13,14 @@ package com.google.cloud.broker.grpc;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static org.junit.Assert.*;
 
+import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
 import com.google.cloud.broker.utils.EnvUtils;
 import com.google.cloud.broker.utils.TimeUtils;
+import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,7 +39,6 @@ import io.grpc.testing.GrpcCleanupRule;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 
-import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import com.google.cloud.broker.sessions.Session;
 import com.google.cloud.broker.sessions.SessionTokenUtils;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
@@ -61,8 +63,7 @@ public class BrokerServerTest {
     public static void setupClass() {
         HashMap<String, String> env = new HashMap(System.getenv());
         env.put("APP_SETTINGS_CLASS", "com.google.cloud.broker.settings.BrokerSettings");
-        env.put("APP_SETTING_DATABASE_BACKEND", "com.google.cloud.broker.database.backends.JDBCBackend");
-        env.put("APP_SETTING_DATABASE_JDBC_URL", "jdbc:sqlite::memory:");
+        env.put("APP_SETTING_DATABASE_BACKEND", "com.google.cloud.broker.database.backends.DummyDatabaseBackend");
         env.put("APP_SETTING_REMOTE_CACHE", "com.google.cloud.broker.caching.remote.DummyCache");
         env.put("APP_SETTING_ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
         env.put("APP_SETTING_AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.MockAuthenticator");
@@ -71,10 +72,13 @@ public class BrokerServerTest {
         env.put("APP_SESSION_MAXIMUM_LIFETIME", SESSION_MAXIMUM_LIFETIME.toString());
         mockStatic(EnvUtils.class);
         when(EnvUtils.getenv()).thenReturn(env);
+    }
 
-        // Initialize the database
-        AbstractDatabaseBackend backend = AbstractDatabaseBackend.getInstance();
-        backend.initializeDatabase();
+    @After
+    public void teardown() {
+        // Clear the database
+        ConcurrentMap<String, Object> map = DummyDatabaseBackend.getMap();
+        map.clear();
     }
 
     private BrokerGrpc.BrokerBlockingStub getStub() {
@@ -268,6 +272,9 @@ public class BrokerServerTest {
         // Check that the session still exists
         Model.get(Session.class, (String) session.getValue("id"));
     }
+
+
+    // TODO: "UNAUTHENTICATED: Session token is invalid or has expired"
 
 //    @Test
 //    public void testGetAccessToken() {

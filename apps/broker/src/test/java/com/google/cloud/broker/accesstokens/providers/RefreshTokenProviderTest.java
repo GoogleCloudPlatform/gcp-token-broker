@@ -11,17 +11,20 @@
 
 package com.google.cloud.broker.accesstokens.providers;
 
-import static org.junit.Assert.*;
+import java.util.concurrent.ConcurrentMap;
 
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
+import static org.junit.Assert.*;
+import org.junit.After;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.ClassRule;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 
 import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
+import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
+
 
 public class RefreshTokenProviderTest {
 
@@ -34,12 +37,14 @@ public class RefreshTokenProviderTest {
     public static void setupClass() {
         AppSettings.reset();
         environmentVariables.set("APP_SETTING_DOMAIN_NAME", "example.com");
-        environmentVariables.set("APP_SETTING_DATABASE_BACKEND", "com.google.cloud.broker.database.backends.JDBCBackend");
-        environmentVariables.set("APP_SETTING_DATABASE_JDBC_URL", "jdbc:sqlite::memory:");
+        environmentVariables.set("APP_SETTING_DATABASE_BACKEND", "com.google.cloud.broker.database.backends.DummyDatabaseBackend");
+    }
 
-//        // Initialize the database
-//        AbstractDatabaseBackend backend = AbstractDatabaseBackend.getInstance();
-//        backend.initializeDatabase();
+    @After
+    public void teardown() {
+        // Clear the database
+        ConcurrentMap<String, Object> map = DummyDatabaseBackend.getMap();
+        map.clear();
     }
 
     @Test
@@ -64,17 +69,17 @@ public class RefreshTokenProviderTest {
         } catch (IllegalArgumentException e) {}
     }
 
-//    @Test
-//    public void testUnauthorized() {
-//        RefreshTokenProvider provider = new RefreshTokenProvider();
-//        try {
-//            provider.getAccessToken("bob@EXAMPLE.COM", SCOPE);
-//            fail("StatusRuntimeException not thrown");
-//        } catch (StatusRuntimeException e) {
-//            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-//            assertEquals("GCP Token Broker authorization is invalid or has expired for user: bob@EXAMPLE.COM", e.getStatus().getDescription());
-//        }
-//    }
+    @Test
+    public void testUnauthorized() {
+        RefreshTokenProvider provider = new RefreshTokenProvider();
+        try {
+            provider.getAccessToken("bob@EXAMPLE.COM", SCOPE);
+            fail("StatusRuntimeException not thrown");
+        } catch (StatusRuntimeException e) {
+            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
+            assertEquals("GCP Token Broker authorization is invalid or has expired for user: bob@EXAMPLE.COM", e.getStatus().getDescription());
+        }
+    }
 
     // TODO: Test the happy path.
 }
