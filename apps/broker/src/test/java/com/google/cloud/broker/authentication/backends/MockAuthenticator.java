@@ -11,6 +11,8 @@
 
 package com.google.cloud.broker.authentication.backends;
 
+import io.grpc.Status;
+
 import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
 
 public class MockAuthenticator extends AbstractAuthenticationBackend {
@@ -20,7 +22,11 @@ public class MockAuthenticator extends AbstractAuthenticationBackend {
     @Override
     public String authenticateUser() {
         String authorizationHeader = AuthorizationHeaderServerInterceptor.AUTHORIZATION_CONTEXT_KEY.get();
-        return authorizationHeader;
+        if (! authorizationHeader.startsWith("Negotiate ")) {
+            throw Status.UNAUTHENTICATED.asRuntimeException();
+        }
+        String token = authorizationHeader.split("\\s")[1];
+        return token;
     }
 
 }

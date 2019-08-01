@@ -23,7 +23,6 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.Clock;
 import com.google.api.services.iam.v1.Iam;
 import com.google.api.services.iam.v1.model.SignJwtRequest;
 import com.google.api.services.iam.v1.model.SignJwtResponse;
@@ -31,6 +30,7 @@ import com.google.auth.oauth2.ComputeEngineCredentials;
 
 import com.google.cloud.broker.accesstokens.AccessToken;
 import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.utils.TimeUtils;
 
 
 public abstract class AbstractSignedJWTProvider extends AbstractProvider {
@@ -82,7 +82,7 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
 
         // Create the JWT payload
         AppSettings settings = AppSettings.getInstance();
-        long iat = Clock.SYSTEM.currentTimeMillis() / 1000L;
+        long iat = TimeUtils.currentTimeMillis() / 1000L;
         long exp = iat + Long.parseLong(settings.getProperty("JWT_LIFE"));
         HashMap<String, Object> jwtPayload = new HashMap<>();
         jwtPayload.put("scope", scope);
@@ -143,7 +143,7 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         }
         return new AccessToken(
             response.getAccessToken(),
-            Clock.SYSTEM.currentTimeMillis() + response.getExpiresInSeconds() * 1000);
+            TimeUtils.currentTimeMillis() + response.getExpiresInSeconds() * 1000);
     }
 
     @Override

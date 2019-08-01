@@ -11,6 +11,8 @@
 
 package com.google.cloud.broker.settings;
 
+import com.google.cloud.broker.utils.EnvUtils;
+
 import java.util.Map;
 import java.util.Properties;
 import java.lang.reflect.Constructor;
@@ -23,7 +25,7 @@ public class AppSettings extends Properties {
 
     private void loadEnvironmentSettings() {
         // Override default settings with potential environment variables
-        Map<String, String> env = System.getenv();
+        Map<String, String> env = EnvUtils.getenv();
         for (Map.Entry<String, String> entry : env.entrySet()) {
             if (entry.getKey().startsWith("APP_SETTING_")) {
                 this.setProperty(entry.getKey().substring("APP_SETTING_".length()), entry.getValue());
@@ -33,13 +35,13 @@ public class AppSettings extends Properties {
 
     public static AppSettings getInstance() {
         if (instance == null) {
-            String settingsClassName = System.getenv("APP_SETTINGS_CLASS");
+            String settingsClassName = EnvUtils.getenv().get("APP_SETTINGS_CLASS");
             if (settingsClassName == null) {
                 instance = new AppSettings();
             }
             else {
                 try {
-                    Class c = Class.forName(System.getenv("APP_SETTINGS_CLASS"));
+                    Class c = Class.forName(settingsClassName);
                     Constructor constructor = c.getConstructor();
                     instance = (AppSettings) constructor.newInstance();
                 } catch (Exception e) {

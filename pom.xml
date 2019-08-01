@@ -68,6 +68,7 @@ limitations under the License.
 
     <properties>
         <junit.version>4.2</junit.version>
+        <powermock.version>2.0.2</powermock.version>
         <sqlite.jdbc.version>3.28.0</sqlite.jdbc.version>
         <postgresql.jdbc.version>42.2.5</postgresql.jdbc.version>
         <mariadb.jdbc.version>2.4.2</mariadb.jdbc.version>

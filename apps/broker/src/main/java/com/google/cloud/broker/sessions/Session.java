@@ -19,9 +19,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
-import com.google.api.client.util.Clock;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.database.models.CreationTimeModel;
+import com.google.cloud.broker.utils.TimeUtils;
+
 
 
 public class Session extends CreationTimeModel {
@@ -50,7 +51,7 @@ public class Session extends CreationTimeModel {
 
     public void extendLifetime() {
         AppSettings settings = AppSettings.getInstance();
-        long now = Clock.SYSTEM.currentTimeMillis();
+        long now = TimeUtils.currentTimeMillis();
         long creationTime = (long) getValue("creation_time");
         values.put("expires_at", Math.min(
             now + Long.parseLong(settings.getProperty("SESSION_RENEW_PERIOD")),
@@ -60,7 +61,7 @@ public class Session extends CreationTimeModel {
 
     @JsonIgnore
     public boolean isExpired() {
-        long now = Clock.SYSTEM.currentTimeMillis();
+        long now = TimeUtils.currentTimeMillis();
         long expiresAt = (long) values.get("expires_at");
         return (now >= expiresAt);
     }

@@ -23,7 +23,6 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.util.Clock;
 import io.grpc.Status;
 
 import com.google.cloud.broker.accesstokens.AccessToken;
@@ -32,6 +31,7 @@ import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.oauth.RefreshToken;
+import com.google.cloud.broker.utils.TimeUtils;
 
 
 public class RefreshTokenProvider extends AbstractProvider {
@@ -88,7 +88,7 @@ public class RefreshTokenProvider extends AbstractProvider {
 
         return new AccessToken(
             response.getAccessToken(),
-                Clock.SYSTEM.currentTimeMillis() + response.getExpiresInSeconds() * 1000);
+                TimeUtils.currentTimeMillis() + response.getExpiresInSeconds() * 1000);
     }
 
 }

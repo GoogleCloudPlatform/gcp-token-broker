@@ -9,20 +9,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.database.models;
+package com.google.cloud.broker.utils;
 
-import java.util.HashMap;
+public final class EnvUtils {
 
-import com.google.cloud.broker.utils.TimeUtils;
-
-
-public abstract class CreationTimeModel extends Model {
-
-    public CreationTimeModel(HashMap<String, Object> values) {
-        super(values);
-        if (!this.values.containsKey("creation_time")) {
-            this.values.put("creation_time", Long.valueOf(TimeUtils.currentTimeMillis()));
-        }
+    public static java.util.Map<String,String> getenv() {
+        return System.getenv();
     }
 
 }
