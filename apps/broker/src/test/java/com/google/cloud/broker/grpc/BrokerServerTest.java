@@ -16,10 +16,6 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static org.junit.Assert.*;
-
-import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
-import com.google.cloud.broker.utils.EnvUtils;
-import com.google.cloud.broker.utils.TimeUtils;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -39,9 +35,12 @@ import io.grpc.testing.GrpcCleanupRule;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 
+import com.google.cloud.broker.database.DatabaseObjectNotFound;
+import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
+import com.google.cloud.broker.utils.EnvUtils;
+import com.google.cloud.broker.utils.TimeUtils;
 import com.google.cloud.broker.sessions.Session;
 import com.google.cloud.broker.sessions.SessionTokenUtils;
-import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.protobuf.*;
 
@@ -63,10 +62,12 @@ public class BrokerServerTest {
     public static void setupClass() {
         HashMap<String, String> env = new HashMap(System.getenv());
         env.put("APP_SETTINGS_CLASS", "com.google.cloud.broker.settings.BrokerSettings");
+        env.put("APP_SETTING_PROVIDER", "com.google.cloud.broker.accesstokens.providers.MockProvider");
         env.put("APP_SETTING_DATABASE_BACKEND", "com.google.cloud.broker.database.backends.DummyDatabaseBackend");
         env.put("APP_SETTING_REMOTE_CACHE", "com.google.cloud.broker.caching.remote.DummyCache");
         env.put("APP_SETTING_ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
         env.put("APP_SETTING_AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.MockAuthenticator");
+        env.put("APP_SETTING_SCOPE_WHITELIST", "https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/bigquery");
         env.put("APP_SETTING_PROXY_USER_WHITELIST", "hive@FOO.BAR");
         env.put("APP_SETTING_SESSION_RENEW_PERIOD", SESSION_RENEW_PERIOD.toString());
         env.put("APP_SESSION_MAXIMUM_LIFETIME", SESSION_MAXIMUM_LIFETIME.toString());
@@ -97,7 +98,7 @@ public class BrokerServerTest {
         return stub;
     }
 
-    public BrokerGrpc.BrokerBlockingStub SPNEGOify(BrokerGrpc.BrokerBlockingStub stub, String principal) {
+    public BrokerGrpc.BrokerBlockingStub addSPNEGOTokenToMetadata(BrokerGrpc.BrokerBlockingStub stub, String principal) {
         Metadata metadata = new Metadata();
         Metadata.Key<String> key = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
         metadata.put(key, "Negotiate " + principal);
@@ -105,10 +106,30 @@ public class BrokerServerTest {
         return stub;
     }
 
+    public BrokerGrpc.BrokerBlockingStub addSessionTokenToMetadata(BrokerGrpc.BrokerBlockingStub stub, Session session) {
+        Metadata metadata = new Metadata();
+        Metadata.Key<String> key = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
+        metadata.put(key, "BrokerSession " + SessionTokenUtils.marshallSessionToken(session));
+        stub = MetadataUtils.attachHeaders(stub, metadata);
+        return stub;
+    }
+
+    private Session createSession() {
+        // Create a session in the database
+        HashMap<String, Object> values = new HashMap<String, Object>();
+        values.put("owner", "alice@EXAMPLE.COM");
+        values.put("renewer", "yarn@FOO.BAR");
+        values.put("scope", SCOPE);
+        values.put("target", MOCK_BUCKET);
+        Session session = new Session(values);
+        Model.save(session);
+        return session;
+    }
+
     @Test
     public void testGetSessionToken() {
         BrokerGrpc.BrokerBlockingStub stub = getStub();
-        stub = SPNEGOify(stub, "alice@EXAMPLE.COM");
+        stub = addSPNEGOTokenToMetadata(stub, "alice@EXAMPLE.COM");
 
         // Mock the system time
         mockStatic(TimeUtils.class);
@@ -136,15 +157,11 @@ public class BrokerServerTest {
     @Test
     public void testCancelSessionToken() {
         // Create a session in the database
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("owner", "alice@EXAMPLE.COM");
-        values.put("renewer", "yarn@FOO.BAR");
-        Session session = new Session(values);
-        Model.save(session);
+        Session session = createSession();
 
         // Send the Cancel request
         BrokerGrpc.BrokerBlockingStub stub = getStub();
-        stub = SPNEGOify(stub, "yarn@FOO.BAR");
+        stub = addSPNEGOTokenToMetadata(stub, "yarn@FOO.BAR");
         stub.cancelSessionToken(CancelSessionTokenRequest.newBuilder()
             .setSessionToken(SessionTokenUtils.marshallSessionToken(session))
             .build());
@@ -160,15 +177,11 @@ public class BrokerServerTest {
     @Test
     public void testCancelSessionToken_WrongRenewer() {
         // Create a session in the database
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("owner", "alice@EXAMPLE.COM");
-        values.put("renewer", "yarn@FOO.BAR");
-        Session session = new Session(values);
-        Model.save(session);
+        Session session = createSession();
 
         // Send the Cancel request
         BrokerGrpc.BrokerBlockingStub stub = getStub();
-        stub = SPNEGOify(stub, "baz@FOO.BAR");
+        stub = addSPNEGOTokenToMetadata(stub, "baz@FOO.BAR");
         try {
             stub.cancelSessionToken(CancelSessionTokenRequest.newBuilder()
                 .setSessionToken(SessionTokenUtils.marshallSessionToken(session))
@@ -191,13 +204,7 @@ public class BrokerServerTest {
         PowerMockito.when(TimeUtils.currentTimeMillis()).thenReturn(now);
 
         // Create a session in the database
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("owner", "alice@EXAMPLE.COM");
-        values.put("renewer", "yarn@FOO.BAR");
-        values.put("scope", SCOPE);
-        values.put("target", MOCK_BUCKET);
-        Session session = new Session(values);
-        Model.save(session);
+        Session session = createSession();
 
         // Change the system time again to simulate elapsing time
         Long newNow = now + 5000L;
@@ -205,7 +212,7 @@ public class BrokerServerTest {
 
         // Send the Renew request
         BrokerGrpc.BrokerBlockingStub stub = getStub();
-        stub = SPNEGOify(stub, "yarn@FOO.BAR");
+        stub = addSPNEGOTokenToMetadata(stub, "yarn@FOO.BAR");
         stub.renewSessionToken(RenewSessionTokenRequest.newBuilder()
             .setSessionToken(SessionTokenUtils.marshallSessionToken(session))
             .build());
@@ -223,13 +230,7 @@ public class BrokerServerTest {
         PowerMockito.when(TimeUtils.currentTimeMillis()).thenReturn(now);
 
         // Create a session in the database
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("owner", "alice@EXAMPLE.COM");
-        values.put("renewer", "yarn@FOO.BAR");
-        values.put("scope", SCOPE);
-        values.put("target", MOCK_BUCKET);
-        Session session = new Session(values);
-        Model.save(session);
+        Session session = createSession();
 
         // Change the system time again to simulate elapsing time near the maximum lifetime
         Long newNow = now + SESSION_MAXIMUM_LIFETIME - 5000L;
@@ -237,7 +238,7 @@ public class BrokerServerTest {
 
         // Send the Renew request
         BrokerGrpc.BrokerBlockingStub stub = getStub();
-        stub = SPNEGOify(stub, "yarn@FOO.BAR");
+        stub = addSPNEGOTokenToMetadata(stub, "yarn@FOO.BAR");
         stub.renewSessionToken(RenewSessionTokenRequest.newBuilder()
             .setSessionToken(SessionTokenUtils.marshallSessionToken(session))
             .build());
@@ -250,15 +251,11 @@ public class BrokerServerTest {
     @Test
     public void testRenewSessionToken_WrongRenewer() {
         // Create a session in the database
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("owner", "alice@EXAMPLE.COM");
-        values.put("renewer", "yarn@FOO.BAR");
-        Session session = new Session(values);
-        Model.save(session);
+        Session session = createSession();
 
         // Send the Renew request
         BrokerGrpc.BrokerBlockingStub stub = getStub();
-        stub = SPNEGOify(stub, "baz@FOO.BAR");
+        stub = addSPNEGOTokenToMetadata(stub, "baz@FOO.BAR");
         try {
             stub.renewSessionToken(RenewSessionTokenRequest.newBuilder()
                 .setSessionToken(SessionTokenUtils.marshallSessionToken(session))
@@ -273,17 +270,91 @@ public class BrokerServerTest {
         Model.get(Session.class, (String) session.getValue("id"));
     }
 
+    @Test
+    public void testGetAccessToken_DirectAuth() {
+        BrokerGrpc.BrokerBlockingStub stub = getStub();
+        stub = addSPNEGOTokenToMetadata(stub, "alice@EXAMPLE.COM");
+        GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder()
+            .setOwner("alice@EXAMPLE.COM")
+            .setScope(SCOPE)
+            .setTarget(MOCK_BUCKET)
+            .build());
+        assertEquals("xxxxx", response.getAccessToken());
+        assertEquals(999999999L, response.getExpiresAt());
+    }
 
-    // TODO: "UNAUTHENTICATED: Session token is invalid or has expired"
 
-//    @Test
-//    public void testGetAccessToken() {
-//        BrokerGrpc.BrokerBlockingStub stub = getStub();
-//        stub = SPNEGOify(stub, "alice@EXAMPLE.COM");
-//        stub.getAccessToken(GetAccessTokenRequest.newBuilder()
-//            .setOwner("alice@EXAMPLE.COM")
-//            .setScope(SCOPE)
-//            .setTarget(MOCK_BUCKET)
-//            .build());
-//    }
+    @Test
+    public void testGetAccessToken_DelegatedAuth_Success() {
+        // Create a session in the database
+        Session session = createSession();
+
+        // Add the session token to the request's metadata
+        BrokerGrpc.BrokerBlockingStub stub = getStub();
+        stub = addSessionTokenToMetadata(stub, session);
+
+        // Send the GetAccessToken request
+        GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder()
+            .setOwner("alice@EXAMPLE.COM")
+            .setScope(SCOPE)
+            .setTarget(MOCK_BUCKET)
+            .build());
+
+        assertEquals("xxxxx", response.getAccessToken());
+        assertEquals(999999999L, response.getExpiresAt());
+    }
+
+    @Test
+    public void testGetAccessToken_DelegatedAuth_ParameterMisMatch() {
+        // Create a session in the database
+        Session session = createSession();
+
+        // Add the session token to the request's metadata
+        BrokerGrpc.BrokerBlockingStub stub = getStub();
+        stub = addSessionTokenToMetadata(stub, session);
+
+        // Send the GetAccessToken request, with wrong owner
+        try {
+            stub.getAccessToken(GetAccessTokenRequest.newBuilder()
+                .setOwner("bob@EXAMPLE.COM")
+                .setScope(SCOPE)
+                .setTarget(MOCK_BUCKET)
+                .build());
+            fail("StatusRuntimeException not thrown");
+        } catch (StatusRuntimeException e) {
+            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
+            assertEquals("Owner mismatch", e.getStatus().getDescription());
+        }
+
+        // Send the GetAccessToken request, with wrong owner
+        try {
+            stub.getAccessToken(GetAccessTokenRequest.newBuilder()
+                .setOwner("alice@EXAMPLE.COM")
+                .setScope("https://www.googleapis.com/auth/bigquery")
+                .setTarget(MOCK_BUCKET)
+                .build());
+            fail("StatusRuntimeException not thrown");
+        } catch (StatusRuntimeException e) {
+            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
+            assertEquals("Scope mismatch", e.getStatus().getDescription());
+        }
+
+        // Send the GetAccessToken request, with wrong owner
+        try {
+            stub.getAccessToken(GetAccessTokenRequest.newBuilder()
+                .setOwner("alice@EXAMPLE.COM")
+                .setScope(SCOPE)
+                .setTarget("gs://test")
+                .build());
+            fail("StatusRuntimeException not thrown");
+        } catch (StatusRuntimeException e) {
+            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
+            assertEquals("Target mismatch", e.getStatus().getDescription());
+        }
+    }
+
+    // TODO:
+    //  - "UNAUTHENTICATED: Session token is invalid or has expired"
+    //  - Proxy users
+    //  - Not whitelisted scopes
 }
