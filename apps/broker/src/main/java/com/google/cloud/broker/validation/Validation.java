@@ -11,12 +11,13 @@
 
 package com.google.cloud.broker.validation;
 
-import com.google.cloud.broker.settings.AppSettings;
-import io.grpc.Status;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import io.grpc.Status;
+
+import com.google.cloud.broker.settings.AppSettings;
 
 public class Validation {
 
@@ -29,8 +30,7 @@ public class Validation {
     }
 
     public static void validateImpersonator(String impersonator, String impersonated) {
-        AppSettings settings = AppSettings.getInstance();
-        String proxyString = settings.getProperty("PROXY_USER_WHITELIST");
+        String proxyString = AppSettings.requireSetting("PROXY_USER_WHITELIST");
         String[] proxyUsers = proxyString.split(",");
         boolean whitelisted = Arrays.stream(proxyUsers).anyMatch(impersonator::equals);
         if (!impersonator.equals(impersonated) && !whitelisted) {
@@ -40,11 +40,9 @@ public class Validation {
         }
     }
 
-
     public static void validateScope(String scope) {
-        AppSettings settings = AppSettings.getInstance();
         Set<String> scopeSet = new HashSet<String>(Arrays.asList(scope.split(",")));
-        Set<String> whitelist = new HashSet<String>(Arrays.asList(settings.getProperty("SCOPE_WHITELIST")));
+        Set<String> whitelist = new HashSet<String>(Arrays.asList(AppSettings.requireSetting("SCOPE_WHITELIST").split(",")));
         if (!whitelist.containsAll(scopeSet)) {
             throw Status.PERMISSION_DENIED
                 .withDescription(String.format("%s is not a whitelisted scope", scope))
