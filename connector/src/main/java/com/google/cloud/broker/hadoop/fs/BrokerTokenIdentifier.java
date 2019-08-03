@@ -53,7 +53,7 @@ public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
         GetSessionTokenResponse response = loginUser.doAs((PrivilegedAction<GetSessionTokenResponse>) () -> {
             BrokerGateway gateway;
             try {
-                gateway = new BrokerGateway(config, loginUser);
+                gateway = new BrokerGateway(config);
             } catch (GSSException e) {
                 throw new RuntimeException(e);
             }

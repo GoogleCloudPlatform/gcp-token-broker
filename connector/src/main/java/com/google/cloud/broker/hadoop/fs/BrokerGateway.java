@@ -11,25 +11,13 @@
 
 package com.google.cloud.broker.hadoop.fs;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.security.AccessController;
+import java.security.Principal;
 import java.util.Base64;
-import java.util.concurrent.TimeUnit;
-import javax.net.ssl.SSLException;
+import javax.security.auth.Subject;
 
-import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.ietf.jgss.GSSContext;
-import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
-import org.ietf.jgss.GSSManager;
-import org.ietf.jgss.GSSName;
-import org.ietf.jgss.Oid;
 
-
-import io.grpc.internal.PickFirstLoadBalancerProvider;
-import io.grpc.internal.DnsNameResolverProvider;
 import io.grpc.ManagedChannel;
 import io.grpc.Metadata;
 import io.grpc.stub.MetadataUtils;
@@ -41,56 +29,36 @@ import com.google.cloud.broker.protobuf.BrokerGrpc;
 
 public final class BrokerGateway {
 
-    private static final String SPNEGO_OID = "1.3.6.1.5.5.2";
-    private static final String KRB5_MECHANISM_OID = "1.2.840.113554.1.2.2";
-    private static final String KRB5_PRINCIPAL_NAME_OID = "1.2.840.113554.1.2.2.1";
-
     protected BrokerGrpc.BrokerBlockingStub stub;
     protected ManagedChannel managedChannel;
     protected Configuration config;
 
-    // Timeout for RPC calls
-    private static int DEADLINE_MILLISECONDS = 20*1000;
-
-    public BrokerGateway(Configuration config, UserGroupInformation loginUser) throws GSSException {
-        this(config, loginUser,null);
+    public BrokerGateway(Configuration config) throws GSSException {
+        this(config,null);
     }
 
-    public BrokerGateway(Configuration config, UserGroupInformation loginUser, String sessionToken) throws GSSException {
+    public BrokerGateway(Configuration config, String sessionToken) throws GSSException {
         this.config = config;
 
+        String brokerHostname = config.get("gcp.token.broker.uri.hostname", "localhost");
+        int brokerPort = config.getInt("gcp.token.broker.uri.port", 443);
         boolean tlsEnabled = config.getBoolean("gcp.token.broker.tls.enabled", true);
         String tlsCertificate = config.get("gcp.token.broker.tls.certificate", "");
-        String brokerHostname = config.get("gcp.token.broker.uri.hostname");
-        int brokerPort = config.getInt("gcp.token.broker.uri.port", 443);
 
-        // Create the gRPC stub
-        NettyChannelBuilder builder = NettyChannelBuilder.forAddress(brokerHostname, brokerPort)
-            .nameResolverFactory(new DnsNameResolverProvider());
-        if (!tlsEnabled) {
-            builder = builder.usePlaintext();
-        }
-        if (!tlsCertificate.equals("")) {
-            // A certificate is provided, so add it to the stub's build
-            InputStream inputStream = new ByteArrayInputStream(tlsCertificate.getBytes());
-            try {
-                builder = builder.sslContext(GrpcSslContexts.forClient()
-                    .trustManager(inputStream).build());
-            } catch (SSLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        managedChannel = builder
-            .loadBalancerFactory(new PickFirstLoadBalancerProvider())
-            .build();
-        stub = BrokerGrpc.newBlockingStub(managedChannel)
-            .withDeadlineAfter(DEADLINE_MILLISECONDS, TimeUnit.MILLISECONDS);
+        managedChannel = GrpcUtils.newManagedChannel(brokerHostname, brokerPort, tlsEnabled, tlsCertificate);
+        stub = GrpcUtils.newStub(managedChannel);
 
         if (sessionToken != null) {
             setDelegationToken(sessionToken);
         }
         else {
-            setSPNEGOToken(loginUser);
+            try {
+                setSPNEGOToken();
+            } catch (GSSException e) {
+                // Clean up the channel before re-throwing the exception
+                managedChannel.shutdownNow();
+                throw e;
+            }
         }
     }
 
@@ -102,35 +70,25 @@ public final class BrokerGateway {
         return managedChannel;
     }
 
-    private void setSPNEGOToken(UserGroupInformation loginUser) throws GSSException {
-        String brokerHostname = config.get("gcp.token.broker.uri.hostname");
+    private void setSPNEGOToken() throws GSSException {
         String brokerServiceName = config.get("gcp.token.broker.servicename", "broker");
+        String brokerHostname = config.get("gcp.token.broker.uri.hostname", "localhost");
 
+        // Figure out the broker's realm
         String brokerRealm = config.get("gcp.token.broker.realm", "");
         if (brokerRealm.equals("")) {
             // If no realm is provided, use the logged-in user's realm
-            String username = loginUser.getUserName();
+            Subject subject = Subject.getSubject(AccessController.getContext());
+            Principal principal = subject.getPrincipals().iterator().next();
+            String username = principal.getName();
             brokerRealm = username.substring(username.indexOf("@") + 1);
         }
 
-        // Create GSS context for the broker service and the logged-in user
-        Oid krb5Mechanism = new Oid(KRB5_MECHANISM_OID);
-        Oid krb5PrincipalNameType = new Oid(KRB5_PRINCIPAL_NAME_OID);
-        Oid spnegoOid = new Oid(SPNEGO_OID);
-        GSSManager manager = GSSManager.getInstance();
-        String servicePrincipal = brokerServiceName + "/" + brokerHostname + "@" + brokerRealm;
-        GSSName gssServerName = manager.createName(servicePrincipal , krb5PrincipalNameType, krb5Mechanism);
-        GSSContext gssContext = manager.createContext(
-            gssServerName, spnegoOid, null, GSSCredential.DEFAULT_LIFETIME);
-        gssContext.requestMutualAuth(true);
-        gssContext.requestCredDeleg(true);
+        // Create the SPNEGO token
+        byte[] rawToken = SpnegoUtils.newSPNEGOToken(brokerServiceName, brokerHostname, brokerRealm);
+        String encodedToken = Base64.getEncoder().encodeToString(rawToken);
 
-        // Generate the authentication token
-        byte[] authToken = new byte[0];
-        authToken = gssContext.initSecContext(authToken, 0, authToken.length);
-        String encodedToken = Base64.getEncoder().encodeToString(authToken);
-
-        // Set the 'authorization' header
+        // Set the 'authorization' header with the SPNEGO token
         Metadata metadata = new Metadata();
         Metadata.Key<String> key = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
         metadata.put(key, "Negotiate " + encodedToken);

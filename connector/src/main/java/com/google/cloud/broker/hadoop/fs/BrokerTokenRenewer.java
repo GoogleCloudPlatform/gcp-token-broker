@@ -45,7 +45,7 @@ public class BrokerTokenRenewer extends TokenRenewer {
         RenewSessionTokenResponse response = loginUser.doAs((PrivilegedAction<RenewSessionTokenResponse>) () -> {
             BrokerGateway gateway;
             try {
-                gateway = new BrokerGateway(conf, loginUser);
+                gateway = new BrokerGateway(conf);
             } catch (GSSException e) {
                 throw new RuntimeException(e);
             }
@@ -67,7 +67,7 @@ public class BrokerTokenRenewer extends TokenRenewer {
         loginUser.doAs((PrivilegedAction<CancelSessionTokenResponse>) () -> {
             BrokerGateway gateway;
             try {
-                gateway = new BrokerGateway(conf, loginUser);
+                gateway = new BrokerGateway(conf);
             } catch (GSSException e) {
                 throw new RuntimeException(e);
             }

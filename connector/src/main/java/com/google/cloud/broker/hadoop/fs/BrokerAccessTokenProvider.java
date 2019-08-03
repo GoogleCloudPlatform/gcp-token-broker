@@ -77,7 +77,7 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
         GetAccessTokenResponse response = loginUser.doAs((PrivilegedAction<GetAccessTokenResponse>) () -> {
             BrokerGateway gateway;
             try {
-                gateway = new BrokerGateway(config, loginUser, sessionToken);
+                gateway = new BrokerGateway(config, sessionToken);
             } catch (GSSException e) {
                 // Kerberos authentication failed
                 errorMessage.set(e.getMessage());
