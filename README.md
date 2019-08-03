@@ -46,6 +46,7 @@ backward-incompatible ways and is not subject to any SLA or deprecation policy._
   - [Creating a development container](#creating-a-development-container)
   - [Building packages](#building-packages)
   - [Running the tests](#running-the-tests)
+  - [Inspecting the test coverage](#inspecting-the-test-coverage)
   - [Troubleshooting](#troubleshooting)
 - [Interacting with Redis](#interacting-with-redis)
 - [Logging](#logging)
@@ -946,12 +947,19 @@ This section contains some tips if you're interested in making code contribution
 
 ### Creating a development container
 
-You can use docker to create a container dedicated for development tasks:
+You can use docker to create a container dedicated for development tasks.
 
-```shell
-docker run -it -v $PWD:/base -w /base --detach --name broker-dev ubuntu:18.04
-docker exec -it broker-dev bash -- apps/broker/install-dev.sh
-```
+1. Create the container by running this command from the repository's root:
+
+   ```shell
+   docker run -it -v $PWD:/base -w /base -p 7070:7070 --detach --name broker-dev ubuntu:18.04
+   ```
+
+2. Install the required dependencies in the container:
+
+   ```shell
+   docker exec -it broker-dev bash -- apps/broker/install-dev.sh
+   ```
 
 This installs all the dependencies needed to build packages and run the tests.
 
@@ -982,64 +990,64 @@ docker exec -it broker-dev bash -c "mvn package -DskipTests --projects apps/core
    GCP resources in the project, so it's important that this project is only used for running
    the tests.
 
-1. Set an environment variable for your project ID (Replace `[PROJECT_ID]` with your project ID):
+2. Set an environment variable for your project ID (Replace `[PROJECT_ID]` with your project ID):
    ```shell
    PROJECT=[PROJECT_ID]
    ```
 
-1. Set the project ID as the default for `gcloud`:
+3. Set the project ID as the default for `gcloud`:
 
    ```shell
    gcloud config set project ${PROJECT}
    ```
-1. Enable some Google APIs:
+4. Enable some Google APIs:
 
    ```shell
    gcloud services enable datastore.googleapis.com iam.googleapis.com
    ```
-1. Activate the Cloud Datastore database for your project:
+5. Activate the Cloud Datastore database for your project:
 
    ```shell
    gcloud app create --region=us-central
    ```
    Note: Cloud Datastore requires an active App Engine application, so you must create one by using this command.
-1. Create a service account for the broker service:
+6. Create a service account for the broker service:
 
    ```shell
    gcloud iam service-accounts create broker
    ```
-1. Create a service account for a test user:
+7. Create a service account for a test user:
 
    ```shell
    gcloud iam service-accounts create alice-shadow
    ```
-1. Allow the broker service account to generate access tokens on behalf of the test service account:
+8. Allow the broker service account to generate access tokens on behalf of the test service account:
 
    ```shell
    gcloud iam service-accounts add-iam-policy-binding alice-shadow@${PROJECT}.iam.gserviceaccount.com \
      --role roles/iam.serviceAccountTokenCreator \
      --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
    ```
-1. Add the Cloud Datastore user IAM role to allow the broker service account to read and write to the database:
+9. Add the Cloud Datastore user IAM role to allow the broker service account to read and write to the database:
 
    ```shell
    gcloud projects add-iam-policy-binding $PROJECT \
      --role roles/datastore.user \
      --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
    ```
-1. Download a private JSON key for the broker service account:
+10. Download a private JSON key for the broker service account:
 
    ```shell
    gcloud iam service-accounts keys create --iam-account \
      broker@${PROJECT}.iam.gserviceaccount.com \
      service-account-key.json
    ```
-1. Upload the JSON key to the development container:
+11. Upload the JSON key to the development container:
 
    ```shell
    docker cp service-account-key.json broker-dev:/base
    ```
-2. Run the entire test suite:
+12. Run the entire test suite:
 
    ```shell
    docker exec -it \
@@ -1056,6 +1064,26 @@ docker exec -it broker-dev bash -c "mvn package -DskipTests --projects apps/core
      --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
      broker-dev bash -c "mvn test --projects apps/core,apps/extensions/database/cloud-datastore"
    ```
+
+### Inspecting the test coverage
+
+1. Follow the steps in the "Running the tests" section to set up your test environment.
+2. Run the test with the `test-coverage` profile:
+
+   ```shell
+      docker exec -it \
+        --env APP_SETTING_GCP_PROJECT=${PROJECT} \
+        --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
+        broker-dev bash -c "mvn test -P test-coverage"
+   ```
+3. Start a web server inside the container:
+
+   ```shell
+   docker exec -it broker-dev bash -c "python3 -m http.server 7070"
+   ```
+4. You can now browse the coverage reports for each component, for example:
+   * Broker service: http://localhost:7070/apps/broker/target/site/jacoco/index.html
+   * Cloud Datastore backend: http://localhost:7070/apps/extensions/database/cloud-datastore/target/site/jacoco/index.html
 
 ### Troubleshooting
 
