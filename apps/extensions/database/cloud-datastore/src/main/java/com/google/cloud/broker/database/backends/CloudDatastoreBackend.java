@@ -11,7 +11,6 @@
 
 package com.google.cloud.broker.database.backends;
 
-import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -62,15 +61,7 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
         }
 
         // Instantiate a new object
-        Model model = null;
-        try {
-            Constructor constructor = modelClass.getConstructor(HashMap.class);
-            model = (Model) constructor.newInstance(values);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        return model;
+        return Model.newModelInstance(modelClass, values);
     }
 
     public void save(Model model) {
@@ -95,7 +86,7 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
             }
             else {
                 // TODO extend to other supported types
-                throw new RuntimeException("Unsupported type: " + value.getClass());
+                throw new UnsupportedOperationException("Unsupported type: " + value.getClass());
             }
         }
         Entity entity = builder.build();

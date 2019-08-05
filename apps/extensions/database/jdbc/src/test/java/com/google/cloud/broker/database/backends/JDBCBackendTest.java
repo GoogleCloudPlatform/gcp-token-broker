@@ -17,13 +17,16 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.UUID;
 
-import org.junit.*;
-
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.oauth.RefreshToken;
 
 
 public abstract class JDBCBackendTest {
+
+    // TODO: Still needs tests:
+    // - Error when saving or deleting
+    // - Check names of tables created by initializeDatabase()
+
 
     public static void setup(JDBCBackend backend) {
         // Initialize the database (i.e. create tables) before every test
@@ -70,6 +73,9 @@ public abstract class JDBCBackendTest {
         }
     }
 
+    /**
+     * Check that the initialization creates the tables
+     */
     public static void testInitializeDatabase(JDBCBackend backend) {
         // Check that the database is empty
         dropTables(backend);

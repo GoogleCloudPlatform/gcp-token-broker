@@ -11,7 +11,6 @@
 
 package com.google.cloud.broker.database.backends;
 
-import java.lang.reflect.Constructor;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -57,7 +56,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             }
             else {
                 // TODO extend to other supported types
-                throw new RuntimeException("Unsupported type: " + value.getClass());
+                throw new UnsupportedOperationException("Unsupported type: " + value.getClass());
             }
             index += 1;
         }
@@ -103,15 +102,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             }
 
             // Instantiate a new object
-            Model model = null;
-            try {
-                Constructor constructor = modelClass.getConstructor(HashMap.class);
-                model = (Model) constructor.newInstance(values);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
-            return model;
+            return Model.newModelInstance(modelClass, values);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
@@ -220,7 +211,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             case "postgresql":
                 return "BYTEA";
             default:
-                throw new RuntimeException(String.format(DIALECT_NOT_SUPPORTED, dialect));
+                throw new UnsupportedOperationException(String.format(DIALECT_NOT_SUPPORTED, dialect));
         }
     }
 
@@ -234,7 +225,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             case "mysql":
                 return "ON DUPLICATE KEY UPDATE";
             default:
-                throw new RuntimeException(String.format(DIALECT_NOT_SUPPORTED, dialect));
+                throw new UnsupportedOperationException(String.format(DIALECT_NOT_SUPPORTED, dialect));
         }
     }
 }

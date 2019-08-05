@@ -11,6 +11,8 @@
 
 package com.google.cloud.broker.database.models;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -32,6 +34,20 @@ public abstract class Model {
 
     public Object getValue(String key) {
         return values.get(key);
+    }
+
+    public static Model newModelInstance(Class modelClass, HashMap<String, Object> values) {
+        Constructor constructor = null;
+        try {
+            constructor = modelClass.getConstructor(HashMap.class);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+        try {
+            return (Model) constructor.newInstance(values);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void setValue(String key, Object value) {

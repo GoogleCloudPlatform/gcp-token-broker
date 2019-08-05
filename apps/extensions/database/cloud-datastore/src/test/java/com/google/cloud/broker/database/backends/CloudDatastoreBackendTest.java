@@ -28,6 +28,9 @@ import com.google.cloud.broker.settings.AppSettings;
 
 public class CloudDatastoreBackendTest {
 
+    // TODO: Still needs tests:
+    // - Error when saving or deleting
+
     @After
     public void teardown() {
         // Delete all records
