@@ -25,7 +25,6 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 
 import com.google.cloud.broker.protobuf.BrokerGrpc;
 
-
 public class GrpcUtils {
 
     // Timeout for RPC calls
@@ -46,6 +45,8 @@ public class GrpcUtils {
                     .trustManager(inputStream).build());
             } catch (SSLException e) {
                 throw new RuntimeException(e);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("The provided certificate for the broker service is invalid");
             }
         }
         ManagedChannel managedChannel = builder

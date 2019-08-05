@@ -32,3 +32,75 @@ echo "GRANT ALL privileges ON *.* TO 'testuser'@'%';" | mariadb
 apt-get install -y redis-server
 ps aux | grep [r]edis-server  &> /dev/null
 redis-server &
+
+# Kerberos --------------------------------------------
+
+apt-get update
+
+export REALM=EXAMPLE.COM
+export BROKER_HOST=testhost
+
+DEBIAN_FRONTEND=noninteractive apt-get -yq install krb5-kdc krb5-admin-server
+
+cat << EOF > /etc/krb5.conf
+[realms]
+    ${REALM} = {
+        kdc = localhost:88
+        admin_server = localhost:749
+    }
+[libdefaults]
+    default_realm = ${REALM}
+    dns_lookup_realm = false
+    dns_lookup_kdc = false
+EOF
+
+
+cat << EOF > /etc/krb5kdc/kdc.conf
+[kdcdefaults]
+    kdc_ports = 750,88
+
+[realms]
+    ${REALM} = {
+        database_name = /etc/krb5kdc/principal
+        admin_keytab = FILE:/etc/krb5kdc/kadm5.keytab
+        acl_file = /etc/krb5kdc/kadm5.acl
+        key_stash_file = /etc/krb5kdc/.k5.${REALM}
+        kdc_ports = 750,88
+        max_life = 10h 0m 0s
+        max_renewable_life = 7d 0h 0m 0s
+        master_key_type = des3-hmac-sha1
+        supported_enctypes = aes256-cts:normal arcfour-hmac:normal des3-hmac-sha1:normal des-cbc-crc:normal des:normal des:v4 des:norealm des:onlyrealm des:afs3
+        default_principal_flags = +preauth
+    }
+EOF
+
+
+cat << EOF >> /etc/krb5kdc/kadm5.acl
+root *
+EOF
+
+mkdir /var/log/kerberos
+touch /var/log/kerberos/krb5libs.log
+touch /var/log/kerberos/krb5kdc.log
+touch /var/log/kerberos/kadmind.log
+
+KDC_DB_KEY=$(openssl rand -base64 32)
+/usr/sbin/kdb5_util create -s -W -P "${KDC_DB_KEY}"
+
+service krb5-kdc restart
+service krb5-admin-server restart
+
+kadmin.local -q "addprinc -randkey root"
+
+# Create directory to host the keytabs
+mkdir /etc/security/keytabs
+
+# Create broker principal and keytab
+kadmin.local -q "addprinc -randkey broker/${BROKER_HOST}"
+kadmin.local -q "ktadd -k /etc/security/keytabs/broker.keytab broker/${BROKER_HOST}"
+
+# Create user principals and keytab
+kadmin.local -q "addprinc -randkey alice"
+kadmin.local -q "ktadd -k /etc/security/keytabs/alice.keytab alice"
+kadmin.local -q "addprinc -randkey bob"
+kadmin.local -q "ktadd -k /etc/security/keytabs/bob.keytab bob"
