@@ -1047,23 +1047,46 @@ docker exec -it broker-dev bash -c "mvn package -DskipTests --projects apps/core
    ```shell
    docker cp service-account-key.json broker-dev:/base
    ```
-12. Run the entire test suite:
+12. You can now run the tests as follows:
 
-   ```shell
-   docker exec -it \
-     --env APP_SETTING_GCP_PROJECT=${PROJECT} \
-     --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
-     broker-dev bash -c "mvn test"
-   ```
+    To run the entire test suite:
 
-   To run the tests for a specific component, for example the Cloud Datastore database backend:
+    ```shell
+    docker exec -it \
+      --env APP_SETTING_GCP_PROJECT=${PROJECT} \
+      --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
+      broker-dev bash -c "mvn test"
+    ```
 
-   ```shell
-   docker exec -it \
-     --env APP_SETTING_GCP_PROJECT=${PROJECT} \
-     --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
-     broker-dev bash -c "mvn test --projects apps/core,apps/extensions/database/cloud-datastore"
-   ```
+    To run the tests for a specific component, for example the Cloud Datastore database backend:
+
+    ```shell
+    docker exec -it \
+      --env APP_SETTING_GCP_PROJECT=${PROJECT} \
+      --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
+      broker-dev bash -c "mvn test --projects apps/core,apps/extensions/database/cloud-datastore"
+    ```
+
+    To run a specific test class, pass the `-DfailIfNoTests=false -Dtest=[NAME_OF_TEST_CLASS]` properties, for example:
+
+    ```shell
+    docker exec -it \
+      broker-dev bash -c "mvn test --projects apps/core,apps/broker \
+      -DfailIfNoTests=false -Dtest=ValidationTest"
+    ```
+
+    To run a specific test method, pass the `-DfailIfNoTests=false -Dtest=[NAME_OF_TEST_CLASS]#[NAME_OF_TEST_METHOD]`
+    properties, for example:
+
+    ```shell
+    docker exec -it \
+      broker-dev bash -c "mvn test --projects apps/core,apps/broker \
+      -DfailIfNoTests=false -Dtest=ValidationTest#testValidateScope"
+    ```
+
+**Note:** The `APP_SETTING_GCP_PROJECT` and `GOOGLE_APPLICATION_CREDENTIALS` environment variables
+are only necessary for the tests that rely on GCP APIs (e.g. for the Cloud Datastore backend).
+Other tests do not need those variables.
 
 ### Inspecting the test coverage
 
