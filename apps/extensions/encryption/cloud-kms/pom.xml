@@ -24,7 +24,7 @@ limitations under the License.
         <relativePath>../../../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>encryption-backend-jdbc</artifactId>
+    <artifactId>encryption-backend-cloud-kms</artifactId>
 
     <name>Cloud KMS encryption backend for the GCP Token Broker</name>
 
