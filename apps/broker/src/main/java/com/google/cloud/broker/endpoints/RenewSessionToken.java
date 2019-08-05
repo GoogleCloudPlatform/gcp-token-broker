@@ -31,7 +31,7 @@ public class RenewSessionToken {
         AbstractAuthenticationBackend authenticator = AbstractAuthenticationBackend.getInstance();
         String authenticatedUser = authenticator.authenticateUser();
 
-        Validation.validateNotEmpty("session_token", request.getSessionToken());
+        Validation.validateParameterNotEmpty("session_token", request.getSessionToken());
 
         // Retrieve the session details from the database
         Session session = SessionTokenUtils.getSessionFromRawToken(request.getSessionToken());

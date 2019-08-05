@@ -29,9 +29,9 @@ import com.google.cloud.broker.protobuf.GetAccessTokenResponse;
 public class GetAccessToken {
 
     public static void run(GetAccessTokenRequest request, StreamObserver<GetAccessTokenResponse> responseObserver) {
-        Validation.validateNotEmpty("owner", request.getOwner());
-        Validation.validateNotEmpty("scope", request.getScope());
-        Validation.validateNotEmpty("target", request.getTarget());
+        Validation.validateParameterNotEmpty("owner", request.getOwner());
+        Validation.validateParameterNotEmpty("scope", request.getScope());
+        Validation.validateParameterNotEmpty("target", request.getTarget());
 
         // First try to authenticate the session, if any.
         SessionAuthenticator sessionAuthenticator = new SessionAuthenticator();

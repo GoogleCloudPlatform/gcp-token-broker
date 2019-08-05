@@ -21,7 +21,7 @@ import com.google.cloud.broker.settings.AppSettings;
 
 public class Validation {
 
-    public static void validateNotEmpty(String parameter, String value) {
+    public static void validateParameterNotEmpty(String parameter, String value) {
         if (value.length() == 0) {
             throw Status.INVALID_ARGUMENT
                 .withDescription(String.format("Request must provide the `%s` parameter", parameter))
@@ -30,19 +30,25 @@ public class Validation {
     }
 
     public static void validateImpersonator(String impersonator, String impersonated) {
-        String proxyString = AppSettings.requireSetting("PROXY_USER_WHITELIST");
-        String[] proxyUsers = proxyString.split(",");
-        boolean whitelisted = Arrays.stream(proxyUsers).anyMatch(impersonator::equals);
-        if (!impersonator.equals(impersonated) && !whitelisted) {
-            throw Status.PERMISSION_DENIED
-                .withDescription(String.format("%s is not a whitelisted impersonator", impersonator))
-                .asRuntimeException();
+        if (impersonator.equals(impersonated)) {
+            // A user is allowed to impersonate themselves
+            return;
+        }
+        else {
+            String proxyString = AppSettings.requireSetting("PROXY_USER_WHITELIST");
+            String[] proxyUsers = proxyString.split("\\s*,\\s*");
+            boolean whitelisted = Arrays.stream(proxyUsers).anyMatch(impersonator::equals);
+            if (!whitelisted) {
+                throw Status.PERMISSION_DENIED
+                    .withDescription(String.format("%s is not a whitelisted impersonator", impersonator))
+                    .asRuntimeException();
+            }
         }
     }
 
     public static void validateScope(String scope) {
-        Set<String> scopeSet = new HashSet<String>(Arrays.asList(scope.split(",")));
-        Set<String> whitelist = new HashSet<String>(Arrays.asList(AppSettings.requireSetting("SCOPE_WHITELIST").split(",")));
+        Set<String> scopeSet = new HashSet<String>(Arrays.asList(scope.split("\\s*,\\s*")));
+        Set<String> whitelist = new HashSet<String>(Arrays.asList(AppSettings.requireSetting("SCOPE_WHITELIST").split("\\s*,\\s*")));
         if (!whitelist.containsAll(scopeSet)) {
             throw Status.PERMISSION_DENIED
                 .withDescription(String.format("%s is not a whitelisted scope", scope))

@@ -76,6 +76,29 @@ public class RedisCacheTest {
     }
 
     @Test
+    public void testSetExpire() {
+        // Check that the key doesn't exist
+        RBucket<byte[]> bucket = client.getBucket("test", ByteArrayCodec.INSTANCE);
+        assertNull(bucket.get());
+
+        // Let the backend set the key/value
+        backend.set("test", "abcd".getBytes(), 1);
+
+        // Check that the key/value was correctly set
+        assertArrayEquals("abcd".getBytes(), bucket.get());
+
+        // Wait for a second
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Check that the key/value is now gone
+        assertNull(bucket.get());
+    }
+
+    @Test
     public void testDelete() {
         // Set a key/value
         RBucket<byte[]> bucket = client.getBucket("test", ByteArrayCodec.INSTANCE);

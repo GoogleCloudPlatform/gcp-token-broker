@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.sun.security.auth.module.Krb5LoginModule;
-import org.ietf.jgss.GSSException;
+import org.ietf.jgss.*;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -29,18 +29,29 @@ import static com.google.cloud.broker.hadoop.fs.SpnegoUtils.newSPNEGOToken;
 public class SpnegoUtilsTest {
 
     private static final String REALM = "EXAMPLE.COM";
+    private static final String BROKER_HOST = "testhost";
+    private static final String BROKER_NAME = "broker";
 
-    public static final String KERBEROS_ERROR = "No valid credentials provided (Mechanism level: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt))";
+    public static final String TGT_ERROR = "No valid credentials provided (Mechanism level: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt))";
+    public static final String SERVER_NOT_FOUND_ERROR = "No valid credentials provided (Mechanism level: No valid credentials provided (Mechanism level: Server not found in Kerberos database (7) - LOOKING_UP_SERVER))";
 
-    private final Krb5LoginModule krb5LoginModule = new Krb5LoginModule();
+    private Krb5LoginModule krb5LoginModule;
 
-    private Subject login(String username) {
-        String alice = username + "@" + REALM;
-        Subject subject = new Subject();
+    private Subject login(String user) {
+        // Clear any open sessions
+        krb5LoginModule = new Krb5LoginModule();
+
+        String principal;
+        if (user == "broker") {
+            principal = BROKER_NAME + "/" + BROKER_HOST + "@" + REALM;
+        }
+        else {
+            principal = user + "@" + REALM;
+        }
 
         final Map<String, String> options = new HashMap<String, String>();
-        options.put("keyTab", "/etc/security/keytabs/" + username + ".keytab");
-        options.put("principal", alice);
+        options.put("keyTab", "/etc/security/keytabs/" + user + ".keytab");
+        options.put("principal", principal);
         options.put("doNotPrompt", "true");
         options.put("isInitiator", "true");
         options.put("refreshKrb5Config", "true");
@@ -49,6 +60,7 @@ public class SpnegoUtilsTest {
         options.put("useKeyTab", "true");
         options.put("useTicketCache", "true");
 
+        Subject subject = new Subject();
         krb5LoginModule.initialize(subject, null,
             new HashMap<String, String>(),
             options);
@@ -64,40 +76,76 @@ public class SpnegoUtilsTest {
         return subject;
     }
 
-    private void logout() {
+    private String decryptToken(byte[] token) {
         try {
-            krb5LoginModule.logout();
-        } catch (LoginException e) {
+            GSSManager manager = GSSManager.getInstance();
+            Oid spnegoOid = new Oid("1.3.6.1.5.5.2");
+            GSSCredential serverCreds = manager.createCredential(null,
+                GSSCredential.DEFAULT_LIFETIME, spnegoOid, GSSCredential.ACCEPT_ONLY);
+            GSSContext context = manager.createContext((GSSCredential)serverCreds);
+            context.acceptSecContext(token, 0, token.length);
+            return context.getSrcName().toString();
+        } catch (GSSException e) {
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * Check the happy path: a user logs in and can generate a SPNEGO token.
+     */
     @Test
     public void testLoggedIn() {
-        Subject subject = login("alice");
-        byte[] token = Subject.doAs(subject, (PrivilegedAction<byte[]>) () -> {
+        // Let a logged-in user generate a token
+        Subject alice = login("alice");
+        byte[] token = Subject.doAs(alice, (PrivilegedAction<byte[]>) () -> {
             try {
-                return newSPNEGOToken("broker", "testhost", "EXAMPLE.COM");
+                return newSPNEGOToken(BROKER_NAME, BROKER_HOST, REALM);
             } catch (GSSException e) {
                 throw new RuntimeException(e);
             }
         });
-        assertTrue(token.length > 0);
-        logout();
+
+        // Let the broker decrypt the token and verify the user's identity
+        Subject broker = login("broker");
+        String decrypted = Subject.doAs(broker, (PrivilegedAction<String>) () -> {
+            return decryptToken(token);
+        });
+        assertEquals("alice@EXAMPLE.COM", decrypted);
     }
 
+    /**
+     * Check that a GSSException is thrown if the user is not logged in and attempts to generate a SPNEGO token.
+     */
     @Test
     public void testNotLoggedIn() {
-        Subject subject = new Subject();
-        Subject.doAs(subject, (PrivilegedAction<Void>) () -> {
+        Subject anonymous = new Subject();
+        Subject.doAs(anonymous, (PrivilegedAction<Void>) () -> {
             try {
-                newSPNEGOToken("broker", "testhost", "EXAMPLE.COM");
+                newSPNEGOToken(BROKER_NAME, BROKER_HOST, "EXAMPLE.COM");
                 fail();
             } catch (GSSException e) {
-                assertEquals(KERBEROS_ERROR, e.getMessage());
+                assertEquals(TGT_ERROR, e.getMessage());
             }
             return null;
         });
     }
+
+    /**
+     * Check that a GSSException is thrown if the provided broker principal is wrong.
+     */
+    @Test
+    public void testWrongBrokerPrincipal() {
+        Subject alice = login("alice");
+        Subject.doAs(alice, (PrivilegedAction<byte[]>) () -> {
+            try {
+                newSPNEGOToken("wrong", BROKER_HOST, REALM);
+                fail();
+            } catch (GSSException e) {
+                assertEquals(SERVER_NOT_FOUND_ERROR, e.getMessage());
+            }
+            return null;
+        });
+    }
+
 
 }

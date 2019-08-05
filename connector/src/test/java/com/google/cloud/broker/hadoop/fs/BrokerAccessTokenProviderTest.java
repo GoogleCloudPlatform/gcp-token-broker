@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import org.junit.Test;
 
-import static com.google.cloud.broker.hadoop.fs.SpnegoUtilsTest.KERBEROS_ERROR;
+import static com.google.cloud.broker.hadoop.fs.SpnegoUtilsTest.TGT_ERROR;
 
 public class BrokerAccessTokenProviderTest {
 
@@ -39,7 +39,7 @@ public class BrokerAccessTokenProviderTest {
         } catch (Exception e) {
             assertEquals(RuntimeException.class, e.getClass());
             assertEquals(
-                "User is not logged-in with Kerberos or cannot authenticate with the broker. Kerberos error message: " + KERBEROS_ERROR,
+                "User is not logged-in with Kerberos or cannot authenticate with the broker. Kerberos error message: " + TGT_ERROR,
                 e.getMessage()
             );
         }

@@ -50,6 +50,11 @@ import com.google.cloud.broker.protobuf.*;
 @PrepareForTest({EnvUtils.class, TimeUtils.class})  // Classes to be mocked
 public class BrokerServerTest {
 
+    // TODO: Still needs tests:
+    //  - "UNAUTHENTICATED: Session token is invalid or has expired"
+    //  - Proxy users
+    //  - Not whitelisted scopes
+
     private static final String SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
     private static final String MOCK_BUCKET = "gs://example";
     private static final Long SESSION_RENEW_PERIOD = 80000000L;
@@ -353,8 +358,4 @@ public class BrokerServerTest {
         }
     }
 
-    // TODO:
-    //  - "UNAUTHENTICATED: Session token is invalid or has expired"
-    //  - Proxy users
-    //  - Not whitelisted scopes
 }

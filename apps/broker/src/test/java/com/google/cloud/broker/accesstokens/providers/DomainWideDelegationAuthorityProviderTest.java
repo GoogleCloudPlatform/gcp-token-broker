@@ -24,6 +24,9 @@ import com.google.cloud.broker.settings.AppSettings;
 
 public class DomainWideDelegationAuthorityProviderTest {
 
+    // TODO: Still needs tests:
+    // - Happy path
+
     private static final String SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
 
     @ClassRule
@@ -69,5 +72,4 @@ public class DomainWideDelegationAuthorityProviderTest {
         }
     }
 
-    // TODO: Test the happy path.
 }

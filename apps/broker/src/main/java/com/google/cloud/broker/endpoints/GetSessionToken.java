@@ -32,10 +32,10 @@ public class GetSessionToken {
         AbstractAuthenticationBackend authenticator = AbstractAuthenticationBackend.getInstance();
         String authenticatedUser = authenticator.authenticateUser();
 
-        Validation.validateNotEmpty("owner", request.getOwner());
-        Validation.validateNotEmpty("renewer", request.getRenewer());
-        Validation.validateNotEmpty("scope", request.getScope());
-        Validation.validateNotEmpty("target", request.getTarget());
+        Validation.validateParameterNotEmpty("owner", request.getOwner());
+        Validation.validateParameterNotEmpty("renewer", request.getRenewer());
+        Validation.validateParameterNotEmpty("scope", request.getScope());
+        Validation.validateParameterNotEmpty("target", request.getTarget());
 
         Validation.validateImpersonator(authenticatedUser, request.getOwner());
 

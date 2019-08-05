@@ -22,7 +22,7 @@ public abstract class AbstractRemoteCache {
 
     public abstract byte[] get(String key);
     public abstract void set(String key, byte[] value);
-    public abstract void set(String key, byte[] value, int expireIn);
+    public abstract void set(String key, byte[] value, int expireIn);  // "expireIn" in seconds
     public abstract void delete(String key);
     public abstract Lock acquireLock(String lockName);
 

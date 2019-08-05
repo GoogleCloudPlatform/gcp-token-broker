@@ -37,13 +37,18 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.google.cloud.broker.protobuf.BrokerGrpc;
 import com.google.cloud.broker.protobuf.GetAccessTokenRequest;
-import static com.google.cloud.broker.hadoop.fs.SpnegoUtilsTest.KERBEROS_ERROR;
+import static com.google.cloud.broker.hadoop.fs.SpnegoUtilsTest.TGT_ERROR;
 
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "javax.activation.*", "org.xml.*", "org.w3c.*", "javax.crypto.*", "javax.net.ssl.*", "javax.security.*", "org.ietf.jgss.*"})
 @PrepareForTest({SpnegoUtils.class, GrpcUtils.class})  // Classes to be mocked
 public class BrokerGatewayTest {
+
+    // TODO: Still needs tests:
+    // - Configuration properties: gcp.token.broker.uri.port, gcp.token.broker.realm, etc.
+    // - Client sends proper request parameters
+    // - BrokerSession header
 
     @Rule
     public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
@@ -97,7 +102,7 @@ public class BrokerGatewayTest {
                 new BrokerGateway(conf);
                 fail();
             } catch (GSSException e) {
-                assertEquals(KERBEROS_ERROR, e.getMessage());
+                assertEquals(TGT_ERROR, e.getMessage());
             }
             return null;
         });
@@ -151,11 +156,5 @@ public class BrokerGatewayTest {
         }
 
     }
-
-
-    // TODO:
-    // - Configuration properties: gcp.token.broker.uri.port, gcp.token.broker.realm, etc.
-    // - Client sends proper request parameters
-    // - BrokerSession header
 
 }
