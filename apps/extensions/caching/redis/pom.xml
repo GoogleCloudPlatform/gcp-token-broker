@@ -39,20 +39,6 @@ limitations under the License.
             <artifactId>redisson</artifactId>
             <version>${redisson.version}</version>
         </dependency>
-
-        <!-- Testing dependencies -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.stefanbirkner</groupId>
-            <artifactId>system-rules</artifactId>
-            <version>${system.rules.version}</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
 </project>
