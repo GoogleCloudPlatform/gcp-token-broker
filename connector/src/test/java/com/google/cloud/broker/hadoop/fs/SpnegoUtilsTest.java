@@ -42,15 +42,18 @@ public class SpnegoUtilsTest {
         krb5LoginModule = new Krb5LoginModule();
 
         String principal;
+        String keytab;
         if (user == "broker") {
             principal = BROKER_NAME + "/" + BROKER_HOST + "@" + REALM;
+            keytab = "/etc/security/keytabs/broker/broker.keytab";
         }
         else {
             principal = user + "@" + REALM;
+            keytab = "/etc/security/keytabs/users/" + user + ".keytab";
         }
 
         final Map<String, String> options = new HashMap<String, String>();
-        options.put("keyTab", "/etc/security/keytabs/" + user + ".keytab");
+        options.put("keyTab", keytab);
         options.put("principal", principal);
         options.put("doNotPrompt", "true");
         options.put("isInitiator", "true");

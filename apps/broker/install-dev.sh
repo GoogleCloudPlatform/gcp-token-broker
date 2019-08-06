@@ -92,15 +92,16 @@ service krb5-admin-server restart
 
 kadmin.local -q "addprinc -randkey root"
 
-# Create directory to host the keytabs
-mkdir /etc/security/keytabs
+# Create directories to host the keytabs
+mkdir -p /etc/security/keytabs/broker
+mkdir -p /etc/security/keytabs/users
 
 # Create broker principal and keytab
 kadmin.local -q "addprinc -randkey broker/${BROKER_HOST}"
-kadmin.local -q "ktadd -k /etc/security/keytabs/broker.keytab broker/${BROKER_HOST}"
+kadmin.local -q "ktadd -k /etc/security/keytabs/broker/broker.keytab broker/${BROKER_HOST}"
 
 # Create user principals and keytab
 kadmin.local -q "addprinc -randkey alice"
-kadmin.local -q "ktadd -k /etc/security/keytabs/alice.keytab alice"
+kadmin.local -q "ktadd -k /etc/security/keytabs/users/alice.keytab alice"
 kadmin.local -q "addprinc -randkey bob"
-kadmin.local -q "ktadd -k /etc/security/keytabs/bob.keytab bob"
+kadmin.local -q "ktadd -k /etc/security/keytabs/users/bob.keytab bob"

@@ -13,6 +13,7 @@ package com.google.cloud.broker.authentication.backends;
 
 import java.lang.reflect.Constructor;
 
+import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
 import com.google.cloud.broker.settings.AppSettings;
 
 
@@ -34,5 +35,14 @@ public abstract class AbstractAuthenticationBackend {
         return instance;
     }
 
-    public abstract String authenticateUser();
+    public static void reset() {
+        instance = null;
+    }
+
+    public String authenticateUser() {
+        String authorizationHeader = AuthorizationHeaderServerInterceptor.AUTHORIZATION_CONTEXT_KEY.get();
+        return authenticateUser(authorizationHeader);
+    }
+
+    public abstract String authenticateUser(String authorizationHeader);
 }
