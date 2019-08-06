@@ -47,7 +47,7 @@ public class BrokerGatewayTest {
 
     // TODO: Still needs tests:
     // - Configuration properties: gcp.token.broker.uri.port, gcp.token.broker.realm, etc.
-    // - Client sends proper request parameters
+    // - Client incorrect request parameters
     // - BrokerSession header
 
     @Rule

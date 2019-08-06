@@ -1111,10 +1111,10 @@ Other tests do not need those variables.
 ### Troubleshooting
 
 If you see an error in your development container: `Error response from daemon: Container XXXXX is not running`, then restart
-the container (Replace `XXXXX` with your container ID):
+the container (Replace `[XXXXX]` with your container ID):
 
 ```shell
-docker start XXXXX
+docker start [XXXXX]
 ```
 
 ## Interacting with Redis

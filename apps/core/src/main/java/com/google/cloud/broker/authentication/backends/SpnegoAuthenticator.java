@@ -91,7 +91,6 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
         }
 
         if (logins.size() == 0) {
-            System.out.println("XXX logins.size() == 0");
             throw new IllegalStateException(String.format(NO_VALID_KEYTABS_ERROR, keytabsPath));
         }
     }
@@ -132,9 +131,6 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
 
 
     public String authenticateUser(String authorizationHeader) {
-
-        System.out.println("XXX logins.size(): " + logins.size());
-
         if (logins.isEmpty()) {
             loadKeytabs();
         }

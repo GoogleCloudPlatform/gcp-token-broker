@@ -56,7 +56,7 @@ public class AppSettings extends Properties {
     public static String requireSetting(String setting) {
         String value = getInstance().getProperty(setting);
         if (value == null) {
-            throw new RuntimeException(String.format("The `%s` setting is not set", setting));
+            throw new IllegalStateException(String.format("The `%s` setting is not set", setting));
         }
         return value;
     }

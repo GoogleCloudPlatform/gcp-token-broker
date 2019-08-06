@@ -11,8 +11,8 @@
 
 package com.google.cloud.broker.hadoop.fs;
 
-import javax.security.auth.login.LoginException;
 import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,11 +35,8 @@ public class SpnegoUtilsTest {
     public static final String TGT_ERROR = "No valid credentials provided (Mechanism level: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt))";
     public static final String SERVER_NOT_FOUND_ERROR = "No valid credentials provided (Mechanism level: No valid credentials provided (Mechanism level: Server not found in Kerberos database (7) - LOOKING_UP_SERVER))";
 
-    private Krb5LoginModule krb5LoginModule;
-
-    private Subject login(String user) {
-        // Clear any open sessions
-        krb5LoginModule = new Krb5LoginModule();
+    public static Subject login(String user) {
+        Krb5LoginModule krb5LoginModule = new Krb5LoginModule();
 
         String principal;
         String keytab;
@@ -69,10 +66,8 @@ public class SpnegoUtilsTest {
             options);
 
         try {
-            boolean loginOK = krb5LoginModule.login();
-            assertTrue(loginOK);
-            boolean commitOK = krb5LoginModule.commit();
-            assertTrue(commitOK);
+            krb5LoginModule.login();
+            krb5LoginModule.commit();
         } catch (LoginException e) {
             throw new RuntimeException(e);
         }
