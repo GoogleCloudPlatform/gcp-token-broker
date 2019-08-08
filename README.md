@@ -362,7 +362,7 @@ Follow these steps to deploy the demo environment to GCP:
 
 ### Configuring the OAuth client
 
-1. Add an `A` DNS record in your domain registrar for your authorizer app's domain name.
+1. Add an `A` DNS record in your domain registrar for your authorizer app's fully qualified domain name.
    For the `A` record's IP address, use the IP returned by the following command:
 
    ```shell
@@ -375,8 +375,9 @@ Follow these steps to deploy the demo environment to GCP:
    * For "Scopes for Google APIs", click "Add scope", then search for
      "Google Cloud Storage JSON API", then tick the checkbox for
      "auth/devstorage.read_write", then click "Add".
-   * For "Authorized domains", type your domain name then press `Enter` on your keyboard
-     to add it to the list.
+   * For "Authorized domains":
+     - Type the authorizer app's [top private domain](https://github.com/google/guava/wiki/InternetDomainNameExplained#public-suffixes-and-private-domains),
+     - **Press `Enter`** on your keyboard to add the top private domain to the list.
    * Click "Save".
 3. Create a new OAuth client ID:
    * Go to: https://console.cloud.google.com/apis/credentials
@@ -386,12 +387,12 @@ Follow these steps to deploy the demo environment to GCP:
    * Leave "Authorized JavaScript origins" blank.
    * For "Authorized redirect URIs":
      - Type the following (Replace `[your.authorizer.hostname]` with your authorizer
-       app's host name): `https://[your.authorizer.hostname]/google/auth`
-     - Press "Enter" on your keyboard to add the URI to the list.
+       app's fully qualified domain name): `https://[your.authorizer.hostname]/google/auth`
+     - **Press "Enter"** on your keyboard to add the URI to the list.
    * Click "Create".
    * Click "Ok" to close the confirmation popup.
    * Click the "Download JSON" icon for your client ID.
-   * Move the downloaded JSON file to the code repository's root, then rename it to
+   * Move the downloaded JSON file to the code repository's **root**, then rename it to
      `client_secret.json`.
 
 ### Enabling audit logs for GCS
@@ -412,7 +413,7 @@ You may choose to use your own domain, certificates, and trusted Certificate
 Authority. Alternatively, for development and testing purposes only,
 you may create self-signed certificates as described below.
 
-Run from the following commands from the root of the repository:
+Run from the following commands **from the root of the repository**:
 
 * Create broker certificate:
 
@@ -435,7 +436,7 @@ Run from the following commands from the root of the repository:
 
 ### Deploying the broker service
 
-To deploy the broker service, run the following commands from the root of the repository:
+To deploy the broker service, run the following commands **from the root of the repository**:
 
 1. Download the broker app's JAR:
 
@@ -538,7 +539,7 @@ the broker. The authorization process consists of a simple OAuth flow:
 
 In this section, you create a Dataproc cluster to run sample Hadoop jobs and interact with the broker.
 
-Run the following commands from the root of the repository:
+Run the following commands **from the root of the repository**:
 
 1. Set an environment variable for the Kerberos realm (Replace `[ORIGIN.REALM.COM]` with the
    same Kerberos realm you used in the `terraform.tfvars` file):
@@ -591,6 +592,9 @@ Run the following commands from the root of the repository:
      --metadata "origin-realm=$REALM"
    ```
 
+   *Note:* The command creates a [single-node](https://cloud.google.com/dataproc/docs/concepts/configuring-clusters/single-node-clusters)
+   Cloud Dataproc cluster, which is sufficient for the scope of this demo. In production, it is recommended to use a multi-node
+   cluster instead.
 
 ### Uploading keytabs
 
@@ -949,7 +953,7 @@ This section contains some tips if you're interested in making code contribution
 
 You can use docker to create a container dedicated for development tasks.
 
-1. Create the container by running this command from the repository's root:
+1. Create the container by running this command **from the repository's root**:
 
    ```shell
    docker run -it -v $PWD:/base -w /base -p 7070:7070 --detach --name broker-dev ubuntu:18.04
@@ -980,8 +984,11 @@ docker exec -it broker-dev bash -c "mvn package -DskipTests --projects apps/core
 To build the broker connector for a specific version of Hadoop (possible options: `hadoop2` and `hadoop3`):
 
 ```shell
-docker exec -it broker-dev bash -c "mvn package -DskipTests --projects apps/core,connector -P hadoop2"
+docker exec -it broker-dev bash -c "mvn package -DskipTests --projects connector -P hadoop2"
 ```
+
+Note: Some packages depend on the `broker-core` package, which is why you must pass the `apps/core` parameter
+when you build those packages.
 
 ### Running the tests
 
