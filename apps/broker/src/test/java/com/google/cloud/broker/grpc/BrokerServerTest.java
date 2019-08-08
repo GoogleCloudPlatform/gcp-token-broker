@@ -35,6 +35,7 @@ import io.grpc.testing.GrpcCleanupRule;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 
+import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
 import com.google.cloud.broker.utils.EnvUtils;
@@ -42,6 +43,7 @@ import com.google.cloud.broker.utils.TimeUtils;
 import com.google.cloud.broker.sessions.Session;
 import com.google.cloud.broker.sessions.SessionTokenUtils;
 import com.google.cloud.broker.database.models.Model;
+import static com.google.cloud.broker.protobuf.BrokerGrpc.BrokerBlockingStub;
 import com.google.cloud.broker.protobuf.*;
 
 
@@ -55,7 +57,8 @@ public class BrokerServerTest {
     //  - Proxy users
     //  - Not whitelisted scopes
 
-    private static final String SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
+    private static final String ALICE = "alice@EXAMPLE.COM";
+    private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
     private static final String MOCK_BUCKET = "gs://example";
     private static final Long SESSION_RENEW_PERIOD = 80000000L;
     private static final Long SESSION_MAXIMUM_LIFETIME = 80000000L;
@@ -65,6 +68,7 @@ public class BrokerServerTest {
 
     @BeforeClass
     public static void setupClass() {
+        AppSettings.reset();
         HashMap<String, String> env = new HashMap(System.getenv());
         env.put("APP_SETTINGS_CLASS", "com.google.cloud.broker.settings.BrokerSettings");
         env.put("APP_SETTING_PROVIDER", "com.google.cloud.broker.accesstokens.providers.MockProvider");
@@ -87,7 +91,7 @@ public class BrokerServerTest {
         map.clear();
     }
 
-    private BrokerGrpc.BrokerBlockingStub getStub() {
+    private BrokerBlockingStub getStub() {
         String serverName = InProcessServerBuilder.generateName();
 
         try {
@@ -97,13 +101,13 @@ public class BrokerServerTest {
             throw new RuntimeException(e);
         }
 
-        BrokerGrpc.BrokerBlockingStub stub = BrokerGrpc.newBlockingStub(
+        BrokerBlockingStub stub = BrokerGrpc.newBlockingStub(
             grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build()));
 
         return stub;
     }
 
-    public BrokerGrpc.BrokerBlockingStub addSPNEGOTokenToMetadata(BrokerGrpc.BrokerBlockingStub stub, String principal) {
+    public BrokerBlockingStub addSPNEGOTokenToMetadata(BrokerBlockingStub stub, String principal) {
         Metadata metadata = new Metadata();
         Metadata.Key<String> key = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
         metadata.put(key, "Negotiate " + principal);
@@ -111,7 +115,7 @@ public class BrokerServerTest {
         return stub;
     }
 
-    public BrokerGrpc.BrokerBlockingStub addSessionTokenToMetadata(BrokerGrpc.BrokerBlockingStub stub, Session session) {
+    public BrokerBlockingStub addSessionTokenToMetadata(BrokerBlockingStub stub, Session session) {
         Metadata metadata = new Metadata();
         Metadata.Key<String> key = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
         metadata.put(key, "BrokerSession " + SessionTokenUtils.marshallSessionToken(session));
@@ -122,9 +126,9 @@ public class BrokerServerTest {
     private Session createSession() {
         // Create a session in the database
         HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("owner", "alice@EXAMPLE.COM");
+        values.put("owner", ALICE);
         values.put("renewer", "yarn@FOO.BAR");
-        values.put("scope", SCOPE);
+        values.put("scope", GCS);
         values.put("target", MOCK_BUCKET);
         Session session = new Session(values);
         Model.save(session);
@@ -134,7 +138,7 @@ public class BrokerServerTest {
     @Test
     public void testGetSessionToken() {
         BrokerGrpc.BrokerBlockingStub stub = getStub();
-        stub = addSPNEGOTokenToMetadata(stub, "alice@EXAMPLE.COM");
+        stub = addSPNEGOTokenToMetadata(stub, ALICE);
 
         // Mock the system time
         mockStatic(TimeUtils.class);
@@ -143,17 +147,17 @@ public class BrokerServerTest {
 
         // Send the GetSessionToken request
         GetSessionTokenResponse response = stub.getSessionToken(GetSessionTokenRequest.newBuilder()
-            .setOwner("alice@EXAMPLE.COM")
+            .setOwner(ALICE)
             .setRenewer("yarn@FOO.BAR")
-            .setScope(SCOPE)
+            .setScope(GCS)
             .setTarget(MOCK_BUCKET)
             .build());
 
         // Check that the session was created
         Session session = SessionTokenUtils.getSessionFromRawToken(response.getSessionToken());
-        assertEquals("alice@EXAMPLE.COM", session.getValue("owner"));
+        assertEquals(ALICE, session.getValue("owner"));
         assertEquals("yarn@FOO.BAR", session.getValue("renewer"));
-        assertEquals(SCOPE, session.getValue("scope"));
+        assertEquals(GCS, session.getValue("scope"));
         assertEquals(MOCK_BUCKET, session.getValue("target"));
         assertEquals(now, session.getValue("creation_time"));
         assertEquals(now + SESSION_RENEW_PERIOD, session.getValue("expires_at"));
@@ -165,7 +169,7 @@ public class BrokerServerTest {
         Session session = createSession();
 
         // Send the Cancel request
-        BrokerGrpc.BrokerBlockingStub stub = getStub();
+        BrokerBlockingStub stub = getStub();
         stub = addSPNEGOTokenToMetadata(stub, "yarn@FOO.BAR");
         stub.cancelSessionToken(CancelSessionTokenRequest.newBuilder()
             .setSessionToken(SessionTokenUtils.marshallSessionToken(session))
@@ -185,7 +189,7 @@ public class BrokerServerTest {
         Session session = createSession();
 
         // Send the Cancel request
-        BrokerGrpc.BrokerBlockingStub stub = getStub();
+        BrokerBlockingStub stub = getStub();
         stub = addSPNEGOTokenToMetadata(stub, "baz@FOO.BAR");
         try {
             stub.cancelSessionToken(CancelSessionTokenRequest.newBuilder()
@@ -216,7 +220,7 @@ public class BrokerServerTest {
         PowerMockito.when(TimeUtils.currentTimeMillis()).thenReturn(newNow);
 
         // Send the Renew request
-        BrokerGrpc.BrokerBlockingStub stub = getStub();
+        BrokerBlockingStub stub = getStub();
         stub = addSPNEGOTokenToMetadata(stub, "yarn@FOO.BAR");
         stub.renewSessionToken(RenewSessionTokenRequest.newBuilder()
             .setSessionToken(SessionTokenUtils.marshallSessionToken(session))
@@ -242,7 +246,7 @@ public class BrokerServerTest {
         PowerMockito.when(TimeUtils.currentTimeMillis()).thenReturn(newNow);
 
         // Send the Renew request
-        BrokerGrpc.BrokerBlockingStub stub = getStub();
+        BrokerBlockingStub stub = getStub();
         stub = addSPNEGOTokenToMetadata(stub, "yarn@FOO.BAR");
         stub.renewSessionToken(RenewSessionTokenRequest.newBuilder()
             .setSessionToken(SessionTokenUtils.marshallSessionToken(session))
@@ -259,7 +263,7 @@ public class BrokerServerTest {
         Session session = createSession();
 
         // Send the Renew request
-        BrokerGrpc.BrokerBlockingStub stub = getStub();
+        BrokerBlockingStub stub = getStub();
         stub = addSPNEGOTokenToMetadata(stub, "baz@FOO.BAR");
         try {
             stub.renewSessionToken(RenewSessionTokenRequest.newBuilder()
@@ -277,14 +281,14 @@ public class BrokerServerTest {
 
     @Test
     public void testGetAccessToken_DirectAuth() {
-        BrokerGrpc.BrokerBlockingStub stub = getStub();
-        stub = addSPNEGOTokenToMetadata(stub, "alice@EXAMPLE.COM");
+        BrokerBlockingStub stub = getStub();
+        stub = addSPNEGOTokenToMetadata(stub, ALICE);
         GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder()
-            .setOwner("alice@EXAMPLE.COM")
-            .setScope(SCOPE)
+            .setOwner(ALICE)
+            .setScope(GCS)
             .setTarget(MOCK_BUCKET)
             .build());
-        assertEquals("xxxxx", response.getAccessToken());
+        assertEquals("FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scope=" + GCS, response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
 
@@ -295,17 +299,17 @@ public class BrokerServerTest {
         Session session = createSession();
 
         // Add the session token to the request's metadata
-        BrokerGrpc.BrokerBlockingStub stub = getStub();
+        BrokerBlockingStub stub = getStub();
         stub = addSessionTokenToMetadata(stub, session);
 
         // Send the GetAccessToken request
         GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder()
-            .setOwner("alice@EXAMPLE.COM")
-            .setScope(SCOPE)
+            .setOwner(ALICE)
+            .setScope(GCS)
             .setTarget(MOCK_BUCKET)
             .build());
 
-        assertEquals("xxxxx", response.getAccessToken());
+        assertEquals("FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scope=" + GCS, response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
 
@@ -315,14 +319,14 @@ public class BrokerServerTest {
         Session session = createSession();
 
         // Add the session token to the request's metadata
-        BrokerGrpc.BrokerBlockingStub stub = getStub();
+        BrokerBlockingStub stub = getStub();
         stub = addSessionTokenToMetadata(stub, session);
 
         // Send the GetAccessToken request, with wrong owner
         try {
             stub.getAccessToken(GetAccessTokenRequest.newBuilder()
                 .setOwner("bob@EXAMPLE.COM")
-                .setScope(SCOPE)
+                .setScope(GCS)
                 .setTarget(MOCK_BUCKET)
                 .build());
             fail("StatusRuntimeException not thrown");
@@ -334,7 +338,7 @@ public class BrokerServerTest {
         // Send the GetAccessToken request, with wrong owner
         try {
             stub.getAccessToken(GetAccessTokenRequest.newBuilder()
-                .setOwner("alice@EXAMPLE.COM")
+                .setOwner(ALICE)
                 .setScope("https://www.googleapis.com/auth/bigquery")
                 .setTarget(MOCK_BUCKET)
                 .build());
@@ -347,8 +351,8 @@ public class BrokerServerTest {
         // Send the GetAccessToken request, with wrong owner
         try {
             stub.getAccessToken(GetAccessTokenRequest.newBuilder()
-                .setOwner("alice@EXAMPLE.COM")
-                .setScope(SCOPE)
+                .setOwner(ALICE)
+                .setScope(GCS)
                 .setTarget("gs://test")
                 .build());
             fail("StatusRuntimeException not thrown");

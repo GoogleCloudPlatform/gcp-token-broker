@@ -12,9 +12,14 @@
 package com.google.cloud.broker.settings;
 
 import static org.junit.Assert.*;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
 public class AppSettingsTest {
+
+    @Rule
+    public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
     @Test
     public void testRequireSetting() {
@@ -24,6 +29,15 @@ public class AppSettingsTest {
         } catch (IllegalStateException e) {
             assertEquals("The `xxxx` setting is not set", e.getMessage());
         }
+    }
+
+    @Test
+    public void testEnvironmentVariables() {
+        assertEquals(null, AppSettings.getInstance().getProperty("FOO"));
+
+        environmentVariables.set("APP_SETTING_FOO", "BAR");
+        AppSettings.reset();
+        assertEquals("BAR", AppSettings.getInstance().getProperty("FOO"));
     }
 
     @Test

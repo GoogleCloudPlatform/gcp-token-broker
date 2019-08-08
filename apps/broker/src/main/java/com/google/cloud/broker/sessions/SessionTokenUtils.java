@@ -11,19 +11,21 @@
 
 package com.google.cloud.broker.sessions;
 
-import com.google.cloud.broker.database.DatabaseObjectNotFound;
-import com.google.cloud.broker.database.models.Model;
-import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
-import com.google.cloud.broker.settings.AppSettings;
+import java.security.MessageDigest;
+import java.util.Base64;
+import java.util.regex.Pattern;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import io.grpc.Status;
 
-import java.security.MessageDigest;
-import java.util.Base64;
-import java.util.regex.Pattern;
+import com.google.cloud.broker.database.DatabaseObjectNotFound;
+import com.google.cloud.broker.database.models.Model;
+import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
+import com.google.cloud.broker.settings.AppSettings;
+
 
 public class SessionTokenUtils {
 
@@ -61,8 +63,7 @@ public class SessionTokenUtils {
         }
 
         // Decrypt the provided password
-        AppSettings settings = AppSettings.getInstance();
-        String cryptoKey = settings.getProperty("ENCRYPTION_DELEGATION_TOKEN_CRYPTO_KEY");
+        String cryptoKey = AppSettings.requireSetting("ENCRYPTION_DELEGATION_TOKEN_CRYPTO_KEY");
         byte[] decryptedPassword = AbstractEncryptionBackend.getInstance().decrypt(cryptoKey, sessionToken.getEncryptedPassword());
 
         // Verify that the provided password matches that of the session
@@ -79,10 +80,9 @@ public class SessionTokenUtils {
 
 
     public static String marshallSessionToken(Session session) {
-        AppSettings settings = AppSettings.getInstance();
         String password = session.getValue("password").toString();
         byte[] encryptedPassword = AbstractEncryptionBackend.getInstance().encrypt(
-            settings.getProperty("ENCRYPTION_DELEGATION_TOKEN_CRYPTO_KEY"),
+            AppSettings.requireSetting("ENCRYPTION_DELEGATION_TOKEN_CRYPTO_KEY"),
             password.getBytes()
         );
         JsonObject header = new JsonObject();

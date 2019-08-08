@@ -9,6 +9,6 @@ public class MockProvider extends AbstractProvider {
 
     @Override
     public AccessToken getAccessToken(String owner, String scope) {
-        return new AccessToken("xxxxx", 999999999L);
+        return new AccessToken("FakeAccessToken/Owner=" + owner.toLowerCase() + ";Scope=" + scope, 999999999L);
     }
 }

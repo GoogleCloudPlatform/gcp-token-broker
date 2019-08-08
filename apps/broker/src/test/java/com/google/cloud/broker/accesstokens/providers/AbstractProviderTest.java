@@ -21,6 +21,8 @@ public class AbstractProviderTest {
 
     @Test
     public void testGetInstance() {
+        AppSettings.reset();
+        AbstractProvider.reset();
         AppSettings.getInstance().setProperty("PROVIDER", "com.example.DoesNotExist");
         try {
             AbstractProvider.getInstance();

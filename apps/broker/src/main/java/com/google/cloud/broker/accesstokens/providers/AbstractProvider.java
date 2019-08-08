@@ -34,6 +34,10 @@ public abstract class AbstractProvider {
         return instance;
     }
 
+    public static void reset() {
+        instance = null;
+    }
+
     public abstract AccessToken getAccessToken(String owner, String scope);
 
 }

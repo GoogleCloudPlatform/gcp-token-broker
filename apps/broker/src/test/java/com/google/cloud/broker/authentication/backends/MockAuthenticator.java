@@ -15,13 +15,17 @@ import io.grpc.Status;
 
 import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
 
+/**
+ * Used only for testing. Do NOT use in production.
+ * This is a dummy authenticator that returns the provided token as the authenticated user. In other terms, to allow
+ * this authenticator to authenticate a user, simply pass the user name in the token, e.g.: "Negotiate: alice@EXAMPLE.COM"
+ */
 public class MockAuthenticator extends AbstractAuthenticationBackend {
 
     public MockAuthenticator() {}
 
     @Override
-    public String authenticateUser() {
-        String authorizationHeader = AuthorizationHeaderServerInterceptor.AUTHORIZATION_CONTEXT_KEY.get();
+    public String authenticateUser(String authorizationHeader) {
         if (! authorizationHeader.startsWith("Negotiate ")) {
             throw Status.UNAUTHENTICATED.asRuntimeException();
         }
