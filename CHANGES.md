@@ -1,6 +1,12 @@
-## 0.4.0 (XXXX)
+## 0.4.0 (August 8, 2019)
 
-- Modified Session primary key data type from integer to string. TODO: Give instructions to update existing table.
+- Restructured the Java codebase by splitting off some components into separate modules:
+  `broker` (the main broker service), `cache-backend-redis`, `database-backend-cloud-datastore`,
+  `database-backend-jdbc`, `encryption-backend-cloud-kms`, and `broker-core` (code shared by all the
+  aforementioned packages).
+- Added support for MySQL and MariaDB database backends (via `JDBCBackend`).
+- Modified Session primary key data type from integer to string.
+- Add support for pluggable authentication backends, defaults to SPNEGO authentication.
 
 ## 0.3.2 (July 25, 2019)
 
