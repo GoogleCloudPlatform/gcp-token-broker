@@ -111,6 +111,7 @@ resource "google_project_iam_custom_role" "minimalWorker" {
   description = "Same as Dataproc Worker minus the storage admin perms"
   permissions = [
     "dataproc.agents.create",
+    "dataproc.agents.delete",
     "dataproc.agents.get",
     "dataproc.agents.update",
     "dataproc.tasks.lease",
