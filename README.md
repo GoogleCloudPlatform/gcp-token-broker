@@ -585,6 +585,7 @@ Run the following commands **from the root of the repository**:
      --service-account "dataproc@${PROJECT}.iam.gserviceaccount.com" \
      --initialization-actions gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh \
      --kerberos-config-file=kerberos-config.yaml \
+     --metadata "broker-version=${BROKER_VERSION}" \
      --metadata "gcp-token-broker-tls-enabled=true" \
      --metadata "gcp-token-broker-tls-certificate=$(cat broker-tls.crt)" \
      --metadata "gcp-token-broker-uri-hostname=$BROKER_SERVICE_HOSTNAME" \

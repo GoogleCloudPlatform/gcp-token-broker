@@ -24,13 +24,8 @@ set -xeuo pipefail
 # used as-is in production.
 #####################################################################
 
-
-BROKER_VERSION="0.3.2"
-GCS_CONN_VERSION="2.0.0-SNAPSHOT-shaded"
-
-NEW_JARS_BUCKET="gs://gcp-token-broker"
-GCS_CONN_JAR="gcs-connector-hadoop2-${GCS_CONN_VERSION}.jar"
-BROKER_CONN_JAR="broker-connector-hadoop2-${BROKER_VERSION}.jar"
+GCS_CONN_VERSION="hadoop2-2.0.0-RC2"
+OFFICIAL_BUCKET="gs://gcp-token-broker"
 ROLE="$(/usr/share/google/get_metadata_value attributes/dataproc-role)"
 WORKER_COUNT="$(/usr/share/google/get_metadata_value attributes/dataproc-worker-count)"
 HADOOP_CONF_DIR="/etc/hadoop/conf"
@@ -42,6 +37,7 @@ DATAPROC_REALM=$(sudo cat /etc/krb5.conf | grep "default_realm" | awk '{print $N
 # This will affect whether nodemanager should be restarted
 readonly early_init="$(/usr/share/google/get_metadata_value attributes/dataproc-option-run-init-actions-early || echo 'false')"
 
+readonly broker_version="$(/usr/share/google/get_metadata_value attributes/broker-version)"
 readonly broker_tls_enabled="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-tls-enabled)"
 readonly broker_tls_certificate="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-tls-certificate)"
 readonly broker_uri_hostname="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-uri-hostname)"
@@ -97,15 +93,16 @@ else
 fi
 
 # Remove the old GCS connector
-rm -f "${lib_dir}/gcs-connector-"*
+cd ${lib_dir}
+rm -f "gcs-connector-"*
 
-# Download the new JARs
-gsutil cp "$NEW_JARS_BUCKET/$BROKER_CONN_JAR" "${lib_dir}/"
-gsutil cp "$NEW_JARS_BUCKET/$GCS_CONN_JAR" "${lib_dir}/"
+# Download the JARs
+gsutil cp "$OFFICIAL_BUCKET/broker-connector-hadoop2-${broker_version}.jar" .
+wget https://repo1.maven.org/maven2/com/google/cloud/bigdataoss/gcs-connector/${GCS_CONN_VERSION}/gcs-connector-${GCS_CONN_VERSION}-shaded.jar
 
 # Update version-less connector link if present
 if [[ -L ${lib_dir}/gcs-connector.jar ]]; then
-    ln -s -f "${lib_dir}/${GCS_CONN_JAR}" "${lib_dir}/gcs-connector.jar"
+    ln -s -f "${lib_dir}/gcs-connector-${GCS_CONN_VERSION}-shaded.jar" "${lib_dir}/gcs-connector.jar"
 fi
 
 # Setup some useful env vars
