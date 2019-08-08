@@ -21,7 +21,7 @@ limitations under the License.
     <parent>
         <groupId>com.google.cloud.broker</groupId>
         <artifactId>broker-parent</artifactId>
-        <version>0.3.2</version>
+        <version>0.4.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
