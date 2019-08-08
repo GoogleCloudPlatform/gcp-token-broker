@@ -18,8 +18,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import io.grpc.ManagedChannel;
-import io.grpc.internal.DnsNameResolverProvider;
-import io.grpc.internal.PickFirstLoadBalancerProvider;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 
@@ -32,8 +30,7 @@ public class GrpcUtils {
 
     public static ManagedChannel newManagedChannel(String brokerHostname, int brokerPort, boolean tlsEnabled, String tlsCertificate) {
         // Create the gRPC stub
-        NettyChannelBuilder builder = NettyChannelBuilder.forAddress(brokerHostname, brokerPort)
-            .nameResolverFactory(new DnsNameResolverProvider());
+        NettyChannelBuilder builder = NettyChannelBuilder.forAddress(brokerHostname, brokerPort);
         if (!tlsEnabled) {
             builder = builder.usePlaintext();
         }
@@ -50,7 +47,6 @@ public class GrpcUtils {
             }
         }
         ManagedChannel managedChannel = builder
-            .loadBalancerFactory(new PickFirstLoadBalancerProvider())
             .executor(Executors.newSingleThreadExecutor())
             .build();
         return managedChannel;
