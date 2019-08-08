@@ -438,12 +438,18 @@ Run from the following commands **from the root of the repository**:
 
 To deploy the broker service, run the following commands **from the root of the repository**:
 
-1. Download the broker app's JAR:
+1. Download the broker app's JARs:
 
    ```
    export BROKER_VERSION=$(cat VERSION)
    mkdir -p apps/broker/target
-   curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker/$BROKER_VERSION/broker-$BROKER_VERSION-jar-with-dependencies.jar > apps/broker/target/broker-$BROKER_VERSION-jar-with-dependencies.jar
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker/${BROKER_VERSION}/broker-${BROKER_VERSION}-jar-with-dependencies.jar > apps/broker/target/broker-${BROKER_VERSION}-jar-with-dependencies.jar
+   mkdir -p apps/extensions/caching/redis/target
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/cache-backend-redis/${BROKER_VERSION}/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar > apps/extensions/caching/redis/target/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar
+   mkdir -p apps/extensions/database/cloud-datastore/target
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/database-backend-cloud-datastore/${BROKER_VERSION}/database-backend-cloud-datastore-${BROKER_VERSION}-jar-with-dependencies.jar > apps/extensions/database/cloud-datastore/target/database-backend-cloud-datastore-${BROKER_VERSION}-jar-with-dependencies.jar
+   mkdir -p apps/extensions/encryption/cloud-kms/target
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/encryption-backend-cloud-kms/${BROKER_VERSION}/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar > apps/extensions/encryption/cloud-kms/target/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar
    ```
 2. Set some environment variables:
 
@@ -563,11 +569,11 @@ Run the following commands **from the root of the repository**:
    ```shell
    cat > kerberos-config.yaml << EOL
    root_principal_password_uri: gs://${PROJECT}-secrets/root-password.encrypted
-   kms_key_uri: projects/$PROJECT/locations/$REGION/keyRings/dataproc-key-ring/cryptoKeys/dataproc-key
+   kms_key_uri: projects/${PROJECT}/locations/${REGION}/keyRings/dataproc-key-ring/cryptoKeys/dataproc-key
    cross_realm_trust:
-     kdc: $ORIGIN_KDC_HOSTNAME
-     realm: $REALM
-     shared_password_uri: gs://$PROJECT-secrets/shared-password.encrypted
+     kdc: ${ORIGIN_KDC_HOSTNAME}
+     realm: ${REALM}
+     shared_password_uri: gs://${PROJECT}-secrets/shared-password.encrypted
    EOL
    ```
 
@@ -577,7 +583,7 @@ Run the following commands **from the root of the repository**:
    gcloud beta dataproc clusters create test-cluster \
      --single-node \
      --no-address \
-     --zone $ZONE \
+     --zone ${ZONE} \
      --subnet client-subnet \
      --image-version 1.4 \
      --bucket ${PROJECT}-staging \

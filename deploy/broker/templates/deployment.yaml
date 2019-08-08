@@ -34,7 +34,7 @@ spec:
         env:
         - name: JAVA_OPTS
           value: {{ .Values.broker.app.javaOpts }}
-        command: ['java', '-cp', '/classpath/broker.jar:/classpath/cache-backend-redis.jar:/classpath/database-backend-cloud-datastore.jar:/classpath/encryption-backend-jdbc.jar,', 'com.google.cloud.broker.grpc.BrokerServer']
+        command: ['java', '-cp', '/classpath/broker.jar:/classpath/cache-backend-redis.jar:/classpath/database-backend-cloud-datastore.jar:/classpath/encryption-backend-cloud-kms.jar', 'com.google.cloud.broker.grpc.BrokerServer']
         ports:
         - containerPort: {{ .Values.broker.app.port }}
         envFrom:
