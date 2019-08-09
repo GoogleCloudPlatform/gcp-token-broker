@@ -1,6 +1,6 @@
 # GCP Token Broker
 
-_**Notice**: This is an **alpha** release of the GCP Token Broker. This project might be changed in
+_**Notice**: This is an **early** release of the GCP Token Broker. This project might be changed in
 backward-incompatible ways and is not subject to any SLA or deprecation policy._
 
 **Table of contents:**
@@ -92,7 +92,7 @@ This repository contains:
 
 ## Roadmap
 
-Included in the current **alpha** release:
+Included in the current **early** release:
 
 * Full lifecycle of Hadoop-style delegation tokens: creation, renewal, cancellation.
 * Support for Hadoop-style proxy users.
@@ -101,7 +101,7 @@ Included in the current **alpha** release:
 * Database backends: Cloud Datastore, JDBC.
 * Cache backend: Redis on Cloud Memorystore.
 
-Plans for the **beta** & **stable** releases:
+Plans for the **stable** releases:
 
 * Performance optimizations.
 * Rewrite of server application from Python to Java.
