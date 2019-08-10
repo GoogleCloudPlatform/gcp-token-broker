@@ -27,11 +27,11 @@ public class AccessTokenCacheFetcherTest {
     @BeforeClass
     public static void setupClass() {
         AppSettings.reset();
-        AppSettings.getInstance().setProperty("REMOTE_CACHE", "com.google.cloud.broker.caching.remote.RedisCache");
-        AppSettings.getInstance().setProperty("PROVIDER", "com.google.cloud.broker.accesstokens.providers.MockProvider");
-        AppSettings.getInstance().setProperty("ACCESS_TOKEN_LOCAL_CACHE_TIME", "1234");
-        AppSettings.getInstance().setProperty("ACCESS_TOKEN_REMOTE_CACHE_TIME", "6789");
-        AppSettings.getInstance().setProperty("ENCRYPTION_ACCESS_TOKEN_CACHE_CRYPTO_KEY", "My-Crypto-Key");
+        AppSettings.setProperty("REMOTE_CACHE", "com.google.cloud.broker.caching.remote.RedisCache");
+        AppSettings.setProperty("PROVIDER", "com.google.cloud.broker.accesstokens.providers.MockProvider");
+        AppSettings.setProperty("ACCESS_TOKEN_LOCAL_CACHE_TIME", "1234");
+        AppSettings.setProperty("ACCESS_TOKEN_REMOTE_CACHE_TIME", "6789");
+        AppSettings.setProperty("ENCRYPTION_ACCESS_TOKEN_CACHE_CRYPTO_KEY", "My-Crypto-Key");
     }
 
     @Test
@@ -72,7 +72,7 @@ public class AccessTokenCacheFetcherTest {
     public void testGetRemoteCacheTime() {
         AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, GCS);
         assertEquals(6789, fetcher.getRemoteCacheTime());
-        AppSettings.getInstance().setProperty("ENCRYPTION_ACCESS_TOKEN_CACHE_CRYPTO_KEY", "My-Crypto-Key");
+        AppSettings.setProperty("ENCRYPTION_ACCESS_TOKEN_CACHE_CRYPTO_KEY", "My-Crypto-Key");
     }
 
     @Test

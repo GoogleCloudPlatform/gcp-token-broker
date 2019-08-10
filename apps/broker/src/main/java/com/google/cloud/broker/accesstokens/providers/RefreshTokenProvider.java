@@ -48,7 +48,7 @@ public class RefreshTokenProvider extends AbstractProvider {
         if (username.length() == 0) {
             throw new IllegalArgumentException();
         }
-        String domain = AppSettings.requireSetting("DOMAIN_NAME");
+        String domain = AppSettings.requireProperty("DOMAIN_NAME");
         String googleIdentity = String.format("%s@%s", username, domain);
         return googleIdentity;
     }
@@ -68,13 +68,12 @@ public class RefreshTokenProvider extends AbstractProvider {
         }
 
         // Decrypt the refresh token's value
-        AppSettings settings = AppSettings.getInstance();
-        String cryptoKey = settings.getProperty("ENCRYPTION_REFRESH_TOKEN_CRYPTO_KEY");
+        String cryptoKey = AppSettings.requireProperty("ENCRYPTION_REFRESH_TOKEN_CRYPTO_KEY");
         byte[] encryptedValue = (byte[]) refreshToken.getValue("value");
         String decryptedValue = new String(AbstractEncryptionBackend.getInstance().decrypt(cryptoKey, encryptedValue));
 
         // Load OAuth client secret
-        File secretJson = new java.io.File(settings.getProperty("CLIENT_SECRET_PATH"));
+        File secretJson = new java.io.File(AppSettings.requireProperty("CLIENT_SECRET_PATH"));
         JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
         GoogleClientSecrets clientSecrets;
         try {

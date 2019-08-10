@@ -104,7 +104,7 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
 
         // Create the JWT payload
         long iat = TimeUtils.currentTimeMillis() / 1000L;
-        long exp = iat + Long.parseLong(AppSettings.requireSetting("JWT_LIFE"));
+        long exp = iat + Long.parseLong(AppSettings.requireProperty("JWT_LIFE"));
         HashMap<String, Object> jwtPayload = new HashMap<>();
         jwtPayload.put("scope", scope);
         jwtPayload.put("aud", "https://www.googleapis.com/oauth2/v4/token");

@@ -30,7 +30,7 @@ public abstract class AbstractDatabaseBackend {
     public static AbstractDatabaseBackend getInstance() {
         if (instance == null) {
             try {
-                String className = AppSettings.requireSetting("DATABASE_BACKEND");
+                String className = AppSettings.requireProperty("DATABASE_BACKEND");
                 Class c = Class.forName(className);
                 Constructor constructor = c.getConstructor();
                 instance = (AbstractDatabaseBackend) constructor.newInstance();

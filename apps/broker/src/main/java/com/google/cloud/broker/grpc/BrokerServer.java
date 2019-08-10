@@ -55,12 +55,11 @@ public class BrokerServer {
         new BrokerImpl(), new AuthorizationHeaderServerInterceptor(), new ClientAddressServerInterceptor());
 
     public BrokerServer() {
-        AppSettings settings = AppSettings.getInstance();
-        this.host = settings.getProperty("SERVER_HOST");
-        this.port = Integer.parseInt(settings.getProperty("SERVER_PORT"));
-        this.tlsEnabled = Boolean.parseBoolean(settings.getProperty("TLS_ENABLED"));
-        this.certChainFilePath = settings.getProperty("TLS_CRT_PATH");
-        this.privateKeyFilePath = settings.getProperty("TLS_KEY_PATH");
+        this.host = AppSettings.requireProperty("SERVER_HOST");
+        this.port = Integer.parseInt(AppSettings.requireProperty("SERVER_PORT"));
+        this.tlsEnabled = Boolean.parseBoolean(AppSettings.requireProperty("TLS_ENABLED"));
+        this.certChainFilePath = AppSettings.requireProperty("TLS_CRT_PATH");
+        this.privateKeyFilePath = AppSettings.requireProperty("TLS_KEY_PATH");
     }
 
     private SslContextBuilder getSslContextBuilder() {
@@ -107,8 +106,7 @@ public class BrokerServer {
 
 
     public static void setLoggingLevel() {
-        AppSettings settings = AppSettings.getInstance();
-        Level level = Level.parse(settings.getProperty("LOGGING_LEVEL"));
+        Level level = Level.parse(AppSettings.requireProperty("LOGGING_LEVEL"));
         Logger root = Logger.getLogger("");
         root.setLevel(level);
         for (Handler handler : root.getHandlers()) {

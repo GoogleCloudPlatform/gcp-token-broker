@@ -24,13 +24,11 @@ import com.google.cloud.broker.settings.AppSettings;
 
 public class JDBCBackend extends AbstractDatabaseBackend {
 
-    protected AppSettings settings = AppSettings.getInstance();
-
     protected Connection connectionInstance;
 
     public Connection getConnection() {
         if (connectionInstance == null) {
-            String url = AppSettings.requireSetting("DATABASE_JDBC_URL");
+            String url = AppSettings.requireProperty("DATABASE_JDBC_URL");
             try {
                 connectionInstance = DriverManager.getConnection(url);
             } catch (Exception e) {
@@ -197,7 +195,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
     private static final String DIALECT_NOT_SUPPORTED = "Dialect `%s` is not currently supported by the JDBCDatabaseBackend.";
 
     private String getDialect() {
-        String url = settings.getProperty("DATABASE_JDBC_URL");
+        String url = AppSettings.requireProperty("DATABASE_JDBC_URL");
         return url.split(":")[1];
     }
 

@@ -26,7 +26,7 @@ public abstract class AbstractEncryptionBackend {
     public static AbstractEncryptionBackend getInstance() {
         if (instance == null) {
             try {
-                String className = AppSettings.requireSetting("ENCRYPTION_BACKEND");
+                String className = AppSettings.requireProperty("ENCRYPTION_BACKEND");
                 Class c = Class.forName(className);
                 Constructor constructor  = c.getConstructor();
                 instance = (AbstractEncryptionBackend) constructor.newInstance();

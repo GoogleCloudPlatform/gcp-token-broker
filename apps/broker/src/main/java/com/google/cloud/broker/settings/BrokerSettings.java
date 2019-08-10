@@ -11,8 +11,9 @@
 
 package com.google.cloud.broker.settings;
 
+import java.util.Properties;
 
-public class BrokerSettings extends AppSettings {
+public class BrokerSettings extends Properties {
 
     public BrokerSettings() {
         // GCP settings

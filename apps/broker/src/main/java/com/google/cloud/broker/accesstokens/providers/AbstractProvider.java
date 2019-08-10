@@ -23,7 +23,7 @@ public abstract class AbstractProvider {
     public static AbstractProvider getInstance() {
         if (instance == null) {
             try {
-                String className = AppSettings.requireSetting("PROVIDER");
+                String className = AppSettings.requireProperty("PROVIDER");
                 Class c = Class.forName(className);
                 Constructor constructor  = c.getConstructor();
                 instance = (AbstractProvider) constructor.newInstance();

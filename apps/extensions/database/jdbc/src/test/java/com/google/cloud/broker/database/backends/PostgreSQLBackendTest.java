@@ -33,7 +33,6 @@ public class PostgreSQLBackendTest extends JDBCBackendTest {
 
     @Before
     public void setup() {
-        AppSettings s = AppSettings.getInstance();
         JDBCBackendTest.setup(backend);
     }
 

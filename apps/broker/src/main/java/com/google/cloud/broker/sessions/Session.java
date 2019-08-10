@@ -53,8 +53,8 @@ public class Session extends CreationTimeModel {
         long now = TimeUtils.currentTimeMillis();
         long creationTime = (long) getValue("creation_time");
         values.put("expires_at", Math.min(
-            now + Long.parseLong(AppSettings.requireSetting("SESSION_RENEW_PERIOD")),
-            creationTime + Long.parseLong(AppSettings.requireSetting("SESSION_MAXIMUM_LIFETIME"))
+            now + Long.parseLong(AppSettings.requireProperty("SESSION_RENEW_PERIOD")),
+            creationTime + Long.parseLong(AppSettings.requireProperty("SESSION_MAXIMUM_LIFETIME"))
         ));
     }
 

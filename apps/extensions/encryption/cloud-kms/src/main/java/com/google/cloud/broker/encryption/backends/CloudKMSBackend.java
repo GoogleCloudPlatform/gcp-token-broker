@@ -24,10 +24,9 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
 
 
     public byte[] decrypt(String cryptoKey, byte[] cipherText) {
-        AppSettings settings = AppSettings.getInstance();
-        String projectId = settings.getProperty("GCP_PROJECT");
-        String region = settings.getProperty("GCP_REGION");
-        String keyRing = settings.getProperty("ENCRYPTION_CRYPTO_KEY_RING");
+        String projectId = AppSettings.requireProperty("GCP_PROJECT");
+        String region = AppSettings.requireProperty("GCP_REGION");
+        String keyRing = AppSettings.requireProperty("ENCRYPTION_CRYPTO_KEY_RING");
 
         byte[] plainText;
         try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
@@ -43,10 +42,9 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
 
 
     public byte[] encrypt(String cryptoKey, byte[] plainText) {
-        AppSettings settings = AppSettings.getInstance();
-        String projectId = settings.getProperty("GCP_PROJECT");
-        String region = settings.getProperty("GCP_REGION");
-        String keyRing = settings.getProperty("ENCRYPTION_CRYPTO_KEY_RING");
+        String projectId = AppSettings.requireProperty("GCP_PROJECT");
+        String region = AppSettings.requireProperty("GCP_REGION");
+        String keyRing = AppSettings.requireProperty("ENCRYPTION_CRYPTO_KEY_RING");
 
         byte[] cipherText;
         try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {

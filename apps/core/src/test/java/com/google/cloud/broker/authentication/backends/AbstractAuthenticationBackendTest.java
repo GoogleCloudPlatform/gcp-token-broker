@@ -21,7 +21,7 @@ public class AbstractAuthenticationBackendTest {
 
     @Test
     public void testGetInstance() {
-        AppSettings.getInstance().setProperty("AUTHENTICATION_BACKEND", "com.example.DoesNotExist");
+        AppSettings.setProperty("AUTHENTICATION_BACKEND", "com.example.DoesNotExist");
         try {
             AbstractAuthenticationBackend.getInstance();
             fail();

@@ -21,7 +21,7 @@ public class AbstractRemoteCacheTest {
 
     @Test
     public void testGetInstance() {
-        AppSettings.getInstance().setProperty("REMOTE_CACHE", "com.example.DoesNotExist");
+        AppSettings.setProperty("REMOTE_CACHE", "com.example.DoesNotExist");
         try {
             AbstractRemoteCache.getInstance();
             fail();

@@ -43,7 +43,7 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
 
     private void loadKeytabs() {
         // Find files in provided KEYTABS_PATH setting
-        File keytabsPath = new File(AppSettings.requireSetting("KEYTABS_PATH"));
+        File keytabsPath = new File(AppSettings.requireProperty("KEYTABS_PATH"));
         File[] keytabFiles = keytabsPath.listFiles();
 
         if (keytabFiles == null) {
@@ -61,8 +61,8 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
                         break;
                     }
 
-                    String serviceName = AppSettings.requireSetting("BROKER_SERVICE_NAME");
-                    String hostname = AppSettings.requireSetting("BROKER_SERVICE_HOSTNAME");
+                    String serviceName = AppSettings.requireProperty("BROKER_SERVICE_NAME");
+                    String hostname = AppSettings.requireProperty("BROKER_SERVICE_HOSTNAME");
                     String realm = null;
 
                     // Perform further validation of entries in the keytab

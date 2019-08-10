@@ -25,8 +25,7 @@ import com.google.cloud.broker.database.models.Model;
 public class CloudDatastoreBackend extends AbstractDatabaseBackend {
 
     private Datastore getService() {
-        AppSettings settings = AppSettings.getInstance();
-        String projectId = settings.getProperty("GCP_PROJECT");
+        String projectId = AppSettings.requireProperty("GCP_PROJECT");
         return DatastoreOptions.newBuilder().setProjectId(projectId).build().getService();
     }
 

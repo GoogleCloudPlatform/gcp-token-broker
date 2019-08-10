@@ -17,48 +17,63 @@ import java.util.Map;
 import java.util.Properties;
 import java.lang.reflect.Constructor;
 
-public class AppSettings extends Properties {
+public class AppSettings {
 
-    private static AppSettings instance = null;
+    private static Properties instance = null;
 
     public AppSettings() {}
 
-    private void loadEnvironmentSettings() {
+    private static void loadEnvironmentSettings() {
         // Override default settings with potential environment variables
         Map<String, String> env = EnvUtils.getenv();
         for (Map.Entry<String, String> entry : env.entrySet()) {
             if (entry.getKey().startsWith("APP_SETTING_")) {
-                this.setProperty(entry.getKey().substring("APP_SETTING_".length()), entry.getValue());
+                setProperty(entry.getKey().substring("APP_SETTING_".length()), entry.getValue());
             }
         }
     }
 
-    public static AppSettings getInstance() {
+    private static Properties getInstance() {
         if (instance == null) {
             String settingsClassName = EnvUtils.getenv().get("APP_SETTINGS_CLASS");
             if (settingsClassName == null) {
-                instance = new AppSettings();
+                instance = new Properties();
             }
             else {
                 try {
                     Class c = Class.forName(settingsClassName);
                     Constructor constructor = c.getConstructor();
-                    instance = (AppSettings) constructor.newInstance();
+                    instance = (Properties) constructor.newInstance();
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }
-            instance.loadEnvironmentSettings();
+            loadEnvironmentSettings();
         }
         return instance;
     }
 
-    public static String requireSetting(String setting) {
-        String value = getInstance().getProperty(setting);
+    public static String getProperty(String key) {
+        return getInstance().getProperty(key);
+    }
+
+    public static String getProperty(String key, String defaultValue) {
+        return getInstance().getProperty(key, defaultValue);
+    }
+
+    /**
+     * Same as getProperty(key), but throw an exception if the key doesn't exist.
+     */
+    public static String requireProperty(String key) {
+        String value = getInstance().getProperty(key);
         if (value == null) {
-            throw new IllegalStateException(String.format("The `%s` setting is not set", setting));
+            throw new IllegalStateException(String.format("The `%s` setting is not set", key));
         }
         return value;
+    }
+
+    public static void setProperty(String key, String value) {
+        getInstance().setProperty(key, value);
     }
 
     public static void reset() {

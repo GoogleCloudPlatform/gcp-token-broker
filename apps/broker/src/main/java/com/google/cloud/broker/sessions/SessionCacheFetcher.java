@@ -23,8 +23,6 @@ public class SessionCacheFetcher extends CacheFetcher {
 
     private String rawToken;
 
-    private AppSettings settings = AppSettings.getInstance();
-
 
     public SessionCacheFetcher(String rawToken) {
         this.rawToken = rawToken;
@@ -40,7 +38,7 @@ public class SessionCacheFetcher extends CacheFetcher {
 
     @Override
     protected int getLocalCacheTime() {
-        return Integer.parseInt(settings.getProperty("SESSION_LOCAL_CACHE_TIME"));
+        return Integer.parseInt(AppSettings.requireProperty("SESSION_LOCAL_CACHE_TIME"));
     }
 
     @Override

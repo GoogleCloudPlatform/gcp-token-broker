@@ -36,13 +36,12 @@ import io.grpc.Status;
  */
 public class JSONFileCredentialsProvider extends AbstractProvider {
 
-    private AppSettings settings = AppSettings.getInstance();
     private static String AUTHZ_ERROR_MESSAGE = "GCP Token Broker authorization is invalid or has expired for user: %s";
 
     @Override
     public AccessToken getAccessToken(String owner, String scope) {
         try {
-            String basedir = settings.getProperty("JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR", "");
+            String basedir = AppSettings.getProperty("JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR", "");
             Path path = Paths.get(basedir, owner.split("@")[0] + ".json");
             GoogleCredentials credentials = GoogleCredentials.fromStream(new ByteArrayInputStream(Files.readAllBytes(path)));
             com.google.auth.oauth2.AccessToken token = credentials

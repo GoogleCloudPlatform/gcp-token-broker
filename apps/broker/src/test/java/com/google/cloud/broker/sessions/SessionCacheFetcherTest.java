@@ -34,12 +34,12 @@ public class SessionCacheFetcherTest {
     @BeforeClass
     public static void setupClass() {
         AppSettings.reset();
-        AppSettings.getInstance().setProperty("SESSION_LOCAL_CACHE_TIME", "1234");
-        AppSettings.getInstance().setProperty("SESSION_RENEW_PERIOD", SESSION_RENEW_PERIOD.toString());
-        AppSettings.getInstance().setProperty("SESSION_MAXIMUM_LIFETIME", SESSION_MAXIMUM_LIFETIME.toString());
-        AppSettings.getInstance().setProperty("DATABASE_BACKEND", "com.google.cloud.broker.database.backends.DummyDatabaseBackend");
-        AppSettings.getInstance().setProperty("ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
-        AppSettings.getInstance().setProperty("ENCRYPTION_DELEGATION_TOKEN_CRYPTO_KEY", "blah");
+        AppSettings.setProperty("SESSION_LOCAL_CACHE_TIME", "1234");
+        AppSettings.setProperty("SESSION_RENEW_PERIOD", SESSION_RENEW_PERIOD.toString());
+        AppSettings.setProperty("SESSION_MAXIMUM_LIFETIME", SESSION_MAXIMUM_LIFETIME.toString());
+        AppSettings.setProperty("DATABASE_BACKEND", "com.google.cloud.broker.database.backends.DummyDatabaseBackend");
+        AppSettings.setProperty("ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
+        AppSettings.setProperty("ENCRYPTION_DELEGATION_TOKEN_CRYPTO_KEY", "blah");
     }
 
     private Session createSession() {

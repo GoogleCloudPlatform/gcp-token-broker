@@ -34,7 +34,7 @@ public class ValidationTest {
     }
 
     @Test
-    public void testRequireSetting() {
+    public void testrequireProperty() {
         Validation.validateParameterNotEmpty("my-param", "Request must provide the `%s` parameter");
         try {
             Validation.validateParameterNotEmpty("my-param", "");

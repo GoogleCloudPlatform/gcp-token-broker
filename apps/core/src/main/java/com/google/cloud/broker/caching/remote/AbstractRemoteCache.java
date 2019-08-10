@@ -30,7 +30,7 @@ public abstract class AbstractRemoteCache {
     public static AbstractRemoteCache getInstance() {
         if (instance == null) {
             try {
-                String className = AppSettings.requireSetting("REMOTE_CACHE");
+                String className = AppSettings.requireProperty("REMOTE_CACHE");
                 Class c = Class.forName(className);
                 Constructor constructor  = c.getConstructor();
                 instance = (AbstractRemoteCache) constructor.newInstance();

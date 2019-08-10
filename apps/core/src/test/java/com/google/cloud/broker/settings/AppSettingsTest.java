@@ -22,9 +22,9 @@ public class AppSettingsTest {
     public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
     @Test
-    public void testRequireSetting() {
+    public void testrequireProperty() {
         try {
-            AppSettings.requireSetting("xxxx");
+            AppSettings.requireProperty("xxxx");
             fail();
         } catch (IllegalStateException e) {
             assertEquals("The `xxxx` setting is not set", e.getMessage());
@@ -33,19 +33,19 @@ public class AppSettingsTest {
 
     @Test
     public void testEnvironmentVariables() {
-        assertEquals(null, AppSettings.getInstance().getProperty("FOO"));
+        assertEquals(null, AppSettings.getProperty("FOO"));
 
         environmentVariables.set("APP_SETTING_FOO", "BAR");
         AppSettings.reset();
-        assertEquals("BAR", AppSettings.getInstance().getProperty("FOO"));
+        assertEquals("BAR", AppSettings.getProperty("FOO"));
     }
 
     @Test
     public void testReset() {
-        AppSettings.getInstance().setProperty("foo", "bar");
-        assertEquals("bar", AppSettings.getInstance().getProperty("foo"));
+        AppSettings.setProperty("foo", "bar");
+        assertEquals("bar", AppSettings.getProperty("foo"));
         AppSettings.reset();
-        assertEquals(null, AppSettings.getInstance().getProperty("foo"));
+        assertEquals(null, AppSettings.getProperty("foo"));
     }
 
 }

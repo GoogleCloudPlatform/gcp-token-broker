@@ -35,7 +35,7 @@ public class Validation {
             return;
         }
         else {
-            String proxyString = AppSettings.requireSetting("PROXY_USER_WHITELIST");
+            String proxyString = AppSettings.requireProperty("PROXY_USER_WHITELIST");
             String[] proxyUsers = proxyString.split("\\s*,\\s*");
             boolean whitelisted = Arrays.stream(proxyUsers).anyMatch(impersonator::equals);
             if (!whitelisted) {
@@ -48,7 +48,7 @@ public class Validation {
 
     public static void validateScope(String scope) {
         Set<String> scopeSet = new HashSet<String>(Arrays.asList(scope.split("\\s*,\\s*")));
-        Set<String> whitelist = new HashSet<String>(Arrays.asList(AppSettings.requireSetting("SCOPE_WHITELIST").split("\\s*,\\s*")));
+        Set<String> whitelist = new HashSet<String>(Arrays.asList(AppSettings.requireProperty("SCOPE_WHITELIST").split("\\s*,\\s*")));
         if (!whitelist.containsAll(scopeSet)) {
             throw Status.PERMISSION_DENIED
                 .withDescription(String.format("%s is not a whitelisted scope", scope))
