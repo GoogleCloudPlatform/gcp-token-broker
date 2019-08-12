@@ -74,7 +74,7 @@ public class SpnegoUtilsTest {
         return subject;
     }
 
-    private String decryptToken(byte[] token) {
+    public static String decryptToken(byte[] token) {
         try {
             GSSManager manager = GSSManager.getInstance();
             Oid spnegoOid = new Oid("1.3.6.1.5.5.2");
@@ -95,7 +95,7 @@ public class SpnegoUtilsTest {
     public void testLoggedIn() {
         // Let a logged-in user generate a token
         Subject alice = login("alice");
-        byte[] token = Subject.doAs(alice, (PrivilegedAction<byte[]>) () -> {
+        byte[] spnegoToken = Subject.doAs(alice, (PrivilegedAction<byte[]>) () -> {
             try {
                 return newSPNEGOToken(BROKER_NAME, BROKER_HOST, REALM);
             } catch (GSSException e) {
@@ -105,9 +105,9 @@ public class SpnegoUtilsTest {
 
         // Let the broker decrypt the token and verify the user's identity
         Subject broker = login("broker");
-        String decrypted = Subject.doAs(broker, (PrivilegedAction<String>) () -> {
-            return decryptToken(token);
-        });
+        String decrypted = Subject.doAs(broker, (PrivilegedAction<String>) () ->
+            decryptToken(spnegoToken)
+        );
         assertEquals("alice@EXAMPLE.COM", decrypted);
     }
 
