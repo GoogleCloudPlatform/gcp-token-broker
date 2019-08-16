@@ -1,4 +1,4 @@
-package com.google.cloud.broker.database.commands;
+package com.google.cloud.broker.commands;
 
 import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 
