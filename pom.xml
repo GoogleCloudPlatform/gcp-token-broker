@@ -151,6 +151,11 @@ limitations under the License.
                             </execution>
                         </executions>
                     </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>versions-maven-plugin</artifactId>
+                        <version>2.7</version>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
