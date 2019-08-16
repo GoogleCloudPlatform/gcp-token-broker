@@ -21,6 +21,7 @@ public class ShadowServiceAccountProvider extends AbstractSignedJWTProvider {
 
     public String getGoogleIdentity(String owner) {
         String shadowProject = AppSettings.requireProperty("SHADOW_PROJECT");
+        String shadowPattern = AppSettings.requireProperty("SHADOW_USERNAME_PATTERN");
         String username;
         try {
             username = owner.split("@")[0];
@@ -30,7 +31,7 @@ public class ShadowServiceAccountProvider extends AbstractSignedJWTProvider {
         if (username.length() == 0) {
             throw new IllegalArgumentException();
         }
-        return String.format("%s-shadow@%s.iam.gserviceaccount.com", username, shadowProject);
+        return String.format(shadowPattern, username) + "@" + shadowProject + ".iam.gserviceaccount.com";
     }
 
 }

@@ -32,17 +32,19 @@ public class ShadowServiceAccountProviderTest {
     public void setup() {
         AppSettings.reset();
         environmentVariables.set("APP_SETTING_SHADOW_PROJECT", System.getenv().get("APP_SETTING_GCP_PROJECT"));
+        environmentVariables.set("APP_SETTING_SHADOW_USERNAME_PATTERN", "%s-shadow");
         environmentVariables.set("APP_SETTING_JWT_LIFE", "30");
     }
 
     @Test
     public void testGoogleIdentity() {
         environmentVariables.set("APP_SETTING_SHADOW_PROJECT", "MY_SHADOW_PROJECT");
+        environmentVariables.set("APP_SETTING_SHADOW_USERNAME_PATTERN", "xxx-%s-XXX");
 
         ShadowServiceAccountProvider provider = new ShadowServiceAccountProvider();
-        assertEquals("alice-shadow@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice@EXAMPLE.COM"));
-        assertEquals("alice-shadow@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice@EXAMPLE.NET"));
-        assertEquals("alice-shadow@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice"));
+        assertEquals("xxx-alice-XXX@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice@EXAMPLE.COM"));
+        assertEquals("xxx-alice-XXX@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice@EXAMPLE.NET"));
+        assertEquals("xxx-alice-XXX@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice"));
 
         try {
             provider.getGoogleIdentity("");

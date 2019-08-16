@@ -84,8 +84,8 @@ public class BrokerSettings extends Properties {
         // Life duration for JWT tokens (the shorter the better)
         this.setProperty("JWT_LIFE", "30");  // in seconds
 
-        // Project containing the shadow service account
-        this.setProperty("SHADOW_PROJECT", "");
+        // Pattern for the shadow service account "username"
+        this.setProperty("SHADOW_USERNAME_PATTERN", "%s-shadow");
 
         // Session maximum lifetime (in milliseconds)
         this.setProperty("SESSION_MAXIMUM_LIFETIME", Integer.toString(7 * 24 * 3600 * 1000));  // 7 days
