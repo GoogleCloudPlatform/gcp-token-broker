@@ -1,3 +1,7 @@
+## 0.4.1 (August 16, 2019)
+
+- Make shadow service account's username pattern configurable.
+
 ## 0.4.0 (August 8, 2019)
 
 - Restructured the Java codebase by splitting off some components into separate modules:
