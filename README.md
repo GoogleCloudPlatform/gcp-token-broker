@@ -317,7 +317,7 @@ Follow these steps to deploy the demo environment to GCP:
    gcloud auth application-default login
    ```
 2. Run the following commands to set some default configuration values for `gcloud`.
-   Replace `[your-project-id]` with your GCP project ID, and `[your-zone-of-choice]`
+   Replace **`[your-project-id]`** with your GCP project ID, and **`[your-zone-of-choice]`**
    with your preferred zone (See list of [availables zones](https://cloud.google.com/compute/docs/regions-zones/#available)):
 
    ```shell
@@ -386,7 +386,7 @@ Follow these steps to deploy the demo environment to GCP:
    * For "Name", type "GCP Token Broker".
    * Leave "Authorized JavaScript origins" blank.
    * For "Authorized redirect URIs":
-     - Type the following (Replace `[your.authorizer.hostname]` with your authorizer
+     - Type the following (Replace **`[your.authorizer.hostname]`** with your authorizer
        app's fully qualified domain name): `https://[your.authorizer.hostname]/google/auth`
      - **Press "Enter"** on your keyboard to add the URI to the list.
    * Click "Create".
@@ -424,7 +424,7 @@ Run from the following commands **from the root of the repository**:
   openssl x509 -req -days 365 -in broker-tls.csr -signkey broker-tls.key -out broker-tls.crt
   openssl pkcs8 -topk8 -nocrypt -in broker-tls.key -out broker-tls.pem
   ```
-* Create authorizer certificate (Replace `[your.authorizer.hostname]` with your authorizer
+* Create authorizer certificate (Replace **`[your.authorizer.hostname]`** with your authorizer
   app's host name):
 
   ```shell
@@ -547,7 +547,7 @@ In this section, you create a Dataproc cluster to run sample Hadoop jobs and int
 
 Run the following commands **from the root of the repository**:
 
-1. Set an environment variable for the Kerberos realm (Replace `[ORIGIN.REALM.COM]` with the
+1. Set an environment variable for the Kerberos realm (Replace **`[ORIGIN.REALM.COM]`** with the
    same Kerberos realm you used in the `terraform.tfvars` file):
 
    ```shell
@@ -590,7 +590,7 @@ Run the following commands **from the root of the repository**:
      --scopes cloud-platform \
      --service-account "dataproc@${PROJECT}.iam.gserviceaccount.com" \
      --initialization-actions gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh \
-     --kerberos-config-file=kerberos-config.yaml \
+     --kerberos-config-file kerberos-config.yaml \
      --metadata "broker-version=${BROKER_VERSION}" \
      --metadata "gcp-token-broker-tls-enabled=true" \
      --metadata "gcp-token-broker-tls-certificate=$(cat broker-tls.crt)" \
@@ -1004,7 +1004,7 @@ when you build those packages.
    GCP resources in the project, so it's important that this project is only used for running
    the tests.
 
-2. Set an environment variable for your project ID (Replace `[PROJECT_ID]` with your project ID):
+2. Set an environment variable for your project ID (Replace **`[PROJECT_ID]`** with your project ID):
    ```shell
    PROJECT=[PROJECT_ID]
    ```
@@ -1125,7 +1125,7 @@ Other tests do not need those variables.
 ### Troubleshooting
 
 If you see an error in your development container: `Error response from daemon: Container XXXXX is not running`, then restart
-the container (Replace `[XXXXX]` with your container ID):
+the container (Replace **`[XXXXX]`** with your container ID):
 
 ```shell
 docker start [XXXXX]
@@ -1161,11 +1161,14 @@ Then, here are some example Redis commands you can run:
 
 ### GCS audit logs
 
+Before you can see the GCS audit logs, make sure you have [enabled](#enabling-audit-logs-for-gcs) the logs.
+
 Follow these steps to view the GCS audit logs in Stackdriver:
 
 1. Open the logs viewer in Stackdriver: https://console.cloud.google.com/logs/viewer
 2. Click the down arrow in the text search box, then click "Convert to advanced filter".
-3. Type the following in the text search box (Replace `[PROJECT-ID]` with your project ID):
+3. Type the following in the text search box (Replace the **two** **`[PROJECT-ID]`** instances
+   with your project ID):
 
    ```conf
    resource.type="gcs_bucket"

@@ -22,23 +22,23 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.security.UserGroupInformation;
 import com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import static com.google.cloud.broker.hadoop.fs.SpnegoUtilsTest.TGT_ERROR;
 import com.google.cloud.hadoop.util.AccessTokenProvider.AccessToken;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 import com.google.cloud.broker.protobuf.*;
 
