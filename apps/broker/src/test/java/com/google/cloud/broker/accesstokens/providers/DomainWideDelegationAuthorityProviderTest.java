@@ -35,30 +35,7 @@ public class DomainWideDelegationAuthorityProviderTest {
     @BeforeClass
     public static void setupClass() {
         AppSettings.reset();
-        environmentVariables.set("APP_SETTING_DOMAIN_NAME", "example.com");
         environmentVariables.set("APP_SETTING_JWT_LIFE", "30");
-    }
-
-    @Test
-    public void testGoogleIdentity() {
-        DomainWideDelegationAuthorityProvider provider = new DomainWideDelegationAuthorityProvider();
-        assertEquals("alice@example.com", provider.getGoogleIdentity("alice@EXAMPLE.COM"));
-        assertEquals("alice@example.com", provider.getGoogleIdentity("alice@EXAMPLE.NET"));
-        assertEquals("alice@example.com", provider.getGoogleIdentity("alice"));
-        try {
-            provider.getGoogleIdentity("");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
-
-        try {
-            provider.getGoogleIdentity("@EXAMPLE.NET");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
-
-        try {
-            provider.getGoogleIdentity("@");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
     }
 
     @Test

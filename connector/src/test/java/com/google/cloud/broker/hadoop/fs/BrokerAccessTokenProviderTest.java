@@ -112,7 +112,7 @@ public class BrokerAccessTokenProviderTest {
                 throw new RuntimeException(e);
             }
 
-            assertEquals("FakeAccessToken/AuthenticatedUser=" + ALICE + ";Owner=" + ALICE + ";Target=" + MOCK_BUCKET, token.getToken());
+            assertEquals("FakeAccessToken/AuthenticatedUser=" + ALICE + ";GoogleIdentity=" + ALICE + ";Target=" + MOCK_BUCKET, token.getToken());
 
         } catch (Exception e) {throw new RuntimeException(e);}
 
@@ -150,7 +150,7 @@ public class BrokerAccessTokenProviderTest {
             try {
                 String authenticatedUser = authenticateUser();
                 GetAccessTokenResponse response = GetAccessTokenResponse.newBuilder()
-                    .setAccessToken("FakeAccessToken/AuthenticatedUser=" + authenticatedUser + ";Owner=" + request.getOwner() + ";Target=" + request.getTarget())
+                    .setAccessToken("FakeAccessToken/AuthenticatedUser=" + authenticatedUser + ";GoogleIdentity=" + request.getOwner() + ";Target=" + request.getTarget())
                     .setExpiresAt(11111111111111L)
                     .build();
                 responseObserver.onNext(response);

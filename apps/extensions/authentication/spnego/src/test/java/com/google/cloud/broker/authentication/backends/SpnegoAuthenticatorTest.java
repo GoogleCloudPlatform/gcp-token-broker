@@ -47,9 +47,60 @@ public class SpnegoAuthenticatorTest {
 
     @Before
     public void setup() {
-        AbstractAuthenticationBackend.reset();
         AppSettings.reset();
-        AppSettings.setProperty("AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.SpnegoAuthenticator");
+        AppSettings.setProperty("KERBEROS_NAME_TRANSLATION_RULES",
+            "RULE:[1:$1@$0](.*\\Q@EXAMPLE.COM\\E)s/(.*)\\Q@EXAMPLE.COM\\E/$1@altostrat.com/\n" +
+            "RULE:[2:$1@$0](.*\\Q@EXAMPLE.COM\\E)s/(.*)\\Q@EXAMPLE.COM\\E/$1@altostrat.com/\n" +
+            "RULE:[1:$1@$0](.*\\Q-app@FOO.ORG\\E)s/(.*)\\Q-app@FOO.ORG\\E/robot-$1@altostrat.org/\n" +
+            "RULE:[1:$1@$0](.*\\Q@FOO.ORG\\E)s/(.*)\\Q@FOO.ORG\\E/$1@altostrat.org/\n"
+        );
+        AppSettings.setProperty("SHORTNAME_TRANSLATION_RULES",
+            "RULE:(.*-hello)s/(.*)-hello/$1-bonjour@altostrat.net/\n" +
+            "RULE:(.*-lowercase)s/(.*)/$1@altostrat.com.au/L\n" +
+            "RULE:s/(.*)/$1@altostrat.com/\n"
+        );
+    }
+
+    @Test
+    public void testTranslateKerberosName() {
+        SpnegoAuthenticator auth = new SpnegoAuthenticator();
+        assertEquals("alice@altostrat.com", auth.translateName("alice@EXAMPLE.COM"));
+        assertEquals("hive@altostrat.com", auth.translateName("hive/example.com@EXAMPLE.COM"));
+        assertEquals("robot-yarn@altostrat.org", auth.translateName("yarn-app@FOO.ORG"));
+        assertEquals("bob@altostrat.org", auth.translateName("bob@FOO.ORG"));
+    }
+
+    @Test
+    public void testTranslateShortName() {
+        SpnegoAuthenticator auth = new SpnegoAuthenticator();
+        assertEquals("alice@altostrat.com", auth.translateName("alice"));
+        assertEquals("john-bonjour@altostrat.net", auth.translateName("john-hello"));
+        assertEquals("marie-lowercase@altostrat.com.au", auth.translateName("MaRiE-lowercase"));
+    }
+
+    @Test
+    public void testTranslateNameInvalid() {
+        SpnegoAuthenticator auth = new SpnegoAuthenticator();
+        try {
+            auth.translateName("alice@BLAH.NET");
+            fail();
+        } catch (IllegalArgumentException e) {}
+        try {
+            auth.translateName(null);
+            fail();
+        } catch (IllegalArgumentException e) {}
+        try {
+            auth.translateName("");
+            fail();
+        } catch (IllegalArgumentException e) {}
+        try {
+            auth.translateName("@EXAMPLE.COM");
+            fail();
+        } catch (IllegalArgumentException e) {}
+        try {
+            auth.translateName("@");
+            fail();
+        } catch (IllegalArgumentException e) {}
     }
 
     public static Subject login(String user) {
@@ -133,7 +184,7 @@ public class SpnegoAuthenticatorTest {
         }
 
         try {
-            SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
+            SpnegoAuthenticator auth = new SpnegoAuthenticator();
             auth.authenticateUser();
             fail();
         } catch (IllegalStateException e) {
@@ -148,7 +199,7 @@ public class SpnegoAuthenticatorTest {
     public void testInexistentKeytabPath() {
         AppSettings.setProperty("KEYTABS_PATH", "/home/does-not-exist");
         try {
-            SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
+            SpnegoAuthenticator auth = new SpnegoAuthenticator();
             auth.authenticateUser();
             fail();
         } catch (IllegalStateException e) {
@@ -171,7 +222,7 @@ public class SpnegoAuthenticatorTest {
         }
 
         try {
-            SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
+            SpnegoAuthenticator auth = new SpnegoAuthenticator();
             auth.authenticateUser();
             fail();
         } catch (IllegalStateException e) {
@@ -185,7 +236,7 @@ public class SpnegoAuthenticatorTest {
         AppSettings.setProperty("BROKER_SERVICE_NAME", BROKER_NAME);
         AppSettings.setProperty("BROKER_SERVICE_HOSTNAME", BROKER_HOST);
 
-        SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
+        SpnegoAuthenticator auth = new SpnegoAuthenticator();
         try {
             auth.authenticateUser("xxx");
             fail();
@@ -201,7 +252,7 @@ public class SpnegoAuthenticatorTest {
         AppSettings.setProperty("BROKER_SERVICE_NAME", BROKER_NAME);
         AppSettings.setProperty("BROKER_SERVICE_HOSTNAME", BROKER_HOST);
 
-        SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
+        SpnegoAuthenticator auth = new SpnegoAuthenticator();
         try {
             auth.authenticateUser("Negotiate xxx");
             fail();
@@ -228,7 +279,7 @@ public class SpnegoAuthenticatorTest {
 
         // Let the SpnegoAuthenticator decrypt the token and authenticate Alice
         String encodedToken = Base64.getEncoder().encodeToString(token);
-        SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
+        SpnegoAuthenticator auth = new SpnegoAuthenticator();
         String authenticateUser =auth.authenticateUser("Negotiate " + encodedToken);
         assertEquals("alice@EXAMPLE.COM", authenticateUser);
     }

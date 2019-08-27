@@ -98,7 +98,7 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         return details;
     }
 
-    private String getSignedJWT(String owner, String scope) {
+    private String getSignedJWT(String googleIdentity, String scope) {
         // Get broker's service account details
         BrokerDetails details = getBrokerDetails();
 
@@ -111,7 +111,6 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         jwtPayload.put("iat", iat);
         jwtPayload.put("exp", exp);
         String serviceAccount;
-        String googleIdentity = getGoogleIdentity(owner);
         if (isBrokerIssuer()) {
             jwtPayload.put("sub", googleIdentity);
             jwtPayload.put("iss", details.serviceAccount);
@@ -174,9 +173,9 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
     }
 
     @Override
-    public AccessToken getAccessToken(String owner, String scope) {
+    public AccessToken getAccessToken(String googleIdentity, String scope) {
         // Get signed JWT
-        String signedJWT = getSignedJWT(owner, scope);
+        String signedJWT = getSignedJWT(googleIdentity, scope);
 
         // Obtain new access token for the owner
         AccessToken accessToken = tradeSignedJWTForAccessToken(signedJWT);
@@ -184,5 +183,4 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         return accessToken;
     }
 
-    public abstract String getGoogleIdentity(String owner);
 }

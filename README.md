@@ -444,6 +444,8 @@ To deploy the broker service, run the following commands **from the root of the 
    export BROKER_VERSION=$(cat VERSION)
    mkdir -p apps/broker/target
    curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker/${BROKER_VERSION}/broker-${BROKER_VERSION}-jar-with-dependencies.jar > apps/broker/target/broker-${BROKER_VERSION}-jar-with-dependencies.jar
+   mkdir -p apps/extensions/authentication/spnego/target
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/authentication-backend-spnego/${BROKER_VERSION}/authentication-backend-spnego-${BROKER_VERSION}-jar-with-dependencies.jar > apps/extensions/caching/redis/target/authentication-backend-spnego-${BROKER_VERSION}-jar-with-dependencies.jar
    mkdir -p apps/extensions/caching/redis/target
    curl https://repo1.maven.org/maven2/com/google/cloud/broker/cache-backend-redis/${BROKER_VERSION}/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar > apps/extensions/caching/redis/target/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar
    mkdir -p apps/extensions/database/cloud-datastore/target
@@ -1033,12 +1035,12 @@ when you build those packages.
 7. Create a service account for a test user:
 
    ```shell
-   gcloud iam service-accounts create alice-shadow
+   gcloud iam service-accounts create alice-svc-acct
    ```
 8. Allow the broker service account to generate access tokens on behalf of the test service account:
 
    ```shell
-   gcloud iam service-accounts add-iam-policy-binding alice-shadow@${PROJECT}.iam.gserviceaccount.com \
+   gcloud iam service-accounts add-iam-policy-binding alice-svc-acct@${PROJECT}.iam.gserviceaccount.com \
      --role roles/iam.serviceAccountTokenCreator \
      --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
    ```

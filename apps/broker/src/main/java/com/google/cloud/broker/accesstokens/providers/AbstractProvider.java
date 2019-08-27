@@ -38,6 +38,6 @@ public abstract class AbstractProvider {
         instance = null;
     }
 
-    public abstract AccessToken getAccessToken(String owner, String scope);
+    public abstract AccessToken getAccessToken(String googleIdentity, String scope);
 
 }

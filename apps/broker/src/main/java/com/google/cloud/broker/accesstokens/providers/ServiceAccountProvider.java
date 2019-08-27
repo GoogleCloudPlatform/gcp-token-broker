@@ -11,13 +11,20 @@
 
 package com.google.cloud.broker.accesstokens.providers;
 
-import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.accesstokens.AccessToken;
 
+public class ServiceAccountProvider extends AbstractSignedJWTProvider {
 
-public class DomainWideDelegationAuthorityProvider extends AbstractSignedJWTProvider {
+    public ServiceAccountProvider() {
+        super(false);
+    }
 
-    public DomainWideDelegationAuthorityProvider() {
-        super(true);
+    @Override
+    public AccessToken getAccessToken(String googleIdentity, String scope) {
+        if (!googleIdentity.endsWith(".iam.gserviceaccount.com")) {
+            throw new IllegalArgumentException("Google identity must end with '.iam.gserviceaccount.com'. Value received: " + googleIdentity);
+        }
+        return super.getAccessToken(googleIdentity, scope);
     }
 
 }

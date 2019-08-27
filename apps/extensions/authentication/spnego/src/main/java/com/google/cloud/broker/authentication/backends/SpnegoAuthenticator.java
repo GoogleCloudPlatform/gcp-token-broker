@@ -12,17 +12,18 @@
 package com.google.cloud.broker.authentication.backends;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Base64;
+import java.io.IOException;
+import java.util.*;
 import java.security.PrivilegedAction;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.security.auth.Subject;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.login.Configuration;
 
+import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSContext;
@@ -37,7 +38,6 @@ import com.google.cloud.broker.settings.AppSettings;
 public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
 
     private ArrayList<Subject> logins = new ArrayList<Subject>();
-
     private static final String NO_VALID_KEYTABS_ERROR = "No valid keytabs found in path `%s` as defined in the `KEYTABS_PATH` setting";
 
 
@@ -95,7 +95,6 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
         }
     }
 
-
     private Subject login(String principal, File keytabFile) {
         try {
             LoginContext loginContext = new LoginContext(
@@ -107,7 +106,6 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
             throw new RuntimeException(e);
         }
     }
-
 
     private static Configuration getConfiguration(String principal, File keytabFile) {
         return new Configuration() {
@@ -128,7 +126,6 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
             }
         };
     }
-
 
     public String authenticateUser(String authorizationHeader) {
         if (logins.isEmpty()) {
@@ -169,5 +166,104 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
 
         throw Status.UNAUTHENTICATED.withDescription("SPNEGO authentication failed").asRuntimeException();
     }
+
+
+    private static class Rule {
+        private final Pattern match;
+        private final Pattern fromPattern;
+        private final String toPattern;
+        private final boolean toLowerCase;
+
+        Rule(String match, String fromPattern,
+             String toPattern, boolean toLowerCase) {
+            this.match = match == null ? null : Pattern.compile(match);
+            this.fromPattern =
+                fromPattern == null ? null : Pattern.compile(fromPattern);
+            this.toPattern = toPattern;
+            this.toLowerCase = toLowerCase;
+        }
+
+        String apply(String shortName) {
+            String result = null;
+            if (match == null || match.matcher(shortName).matches()) {
+                if (fromPattern == null) {
+                    result = shortName;
+                } else {
+                    Matcher fromMatcher = fromPattern.matcher(shortName);
+                    result = fromMatcher.replaceFirst(toPattern);
+                }
+            }
+            if (toLowerCase && result != null) {
+                result = result.toLowerCase(Locale.ENGLISH);
+            }
+            return result;
+        }
+    }
+
+    private static final Pattern ruleParser = Pattern.compile("\\s*(RULE:(\\(([^)]*)\\))?(s/([^/]*)/([^/]*))?)/?(L)?");
+
+
+    private void parseShortNameRules(String rules) {
+        rules = rules.trim();
+        while (rules.length() > 0) {
+            Matcher matcher = ruleParser.matcher(rules);
+            if (!matcher.lookingAt()) {
+                throw new IllegalArgumentException("Invalid rule: " + rules);
+            }
+            rulesList.add(new Rule(
+                matcher.group(3),
+                matcher.group(5),
+                matcher.group(6),
+                "L".equals(matcher.group(7))));
+            rules = rules.substring(matcher.end());
+        }
+    }
+
+
+    public String translateShortName(String shortName) {
+        for (Rule rule: rulesList) {
+            String translated = rule.apply(shortName);
+            if (translated != null) {
+                return translated;
+            }
+        }
+        throw new IllegalArgumentException("Principal `" + shortName + "` cannot be matched to a Google identity.");
+    }
+
+
+
+    private List<Rule> rulesList = new ArrayList<Rule>();
+
+    public SpnegoAuthenticator() {
+        KerberosName.setRules(AppSettings.requireProperty("KERBEROS_NAME_TRANSLATION_RULES"));
+        KerberosName.setRuleMechanism(KerberosName.MECHANISM_MIT);
+        parseShortNameRules(AppSettings.requireProperty("SHORTNAME_TRANSLATION_RULES"));
+    }
+
+
+
+    public String translateName(String name) {
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be null or empty");
+        }
+        else if (name.contains("@")) {
+            KerberosName kn = new KerberosName(name);
+            try {
+                String translated = kn.getShortName();
+                if (name.equals(translated)) {
+                    throw new IllegalArgumentException("Principal `" + name + "` cannot be matched to a Google identity.");
+                }
+                return translated;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        else {
+            // If it's not a Kerberos name, then use the "short name" rule instead.
+            return translateShortName(name);
+        }
+    }
+
+
 
 }

@@ -256,10 +256,10 @@ broker:
       GCP_PROJECT: '${var.gcp_project}'
       GCP_REGION: '${var.gcp_region}'
       PROXY_USER_WHITELIST: 'hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}'
-      DOMAIN_NAME: '${var.domain}'
       BROKER_SERVICE_HOSTNAME: '${var.broker_service_hostname}'
       REDIS_CACHE_HOST: '${google_redis_instance.cache.host}'
       LOGGING_LEVEL: 'INFO'
+      # TODO: Add Kerberos name translation rules
   service:
     port: '${var.broker_service_port}'
     loadBalancerIP: '${var.broker_service_ip}'

@@ -288,7 +288,7 @@ public class BrokerServerTest {
             .setScope(GCS)
             .setTarget(MOCK_BUCKET)
             .build());
-        assertEquals("FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scope=" + GCS, response.getAccessToken());
+        assertEquals("FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scope=" + GCS, response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
 
@@ -309,7 +309,7 @@ public class BrokerServerTest {
             .setTarget(MOCK_BUCKET)
             .build());
 
-        assertEquals("FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scope=" + GCS, response.getAccessToken());
+        assertEquals("FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scope=" + GCS, response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
 

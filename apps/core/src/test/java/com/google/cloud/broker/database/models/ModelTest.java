@@ -23,13 +23,13 @@ public class ModelTest {
     @Test
     public void testNewModelInstance() {
         HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("id", "alice@example.com");
+        values.put("id", "alice@altostrat.com");
         values.put("creation_time", 2222222222222L);
         values.put("value", "xyz".getBytes());
         Model model = Model.newModelInstance(RefreshToken.class, values);
 
         assertTrue(model instanceof RefreshToken);
-        assertEquals("alice@example.com", model.getValue("id"));
+        assertEquals("alice@altostrat.com", model.getValue("id"));
         assertEquals(2222222222222L, model.getValue("creation_time"));
         assertArrayEquals("xyz".getBytes(), (byte[]) model.getValue("value"));
     }

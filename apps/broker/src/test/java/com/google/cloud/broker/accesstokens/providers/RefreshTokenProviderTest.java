@@ -39,8 +39,8 @@ public class RefreshTokenProviderTest {
     @BeforeClass
     public static void setupClass() {
         AppSettings.reset();
-        environmentVariables.set("APP_SETTING_DOMAIN_NAME", "example.com");
         environmentVariables.set("APP_SETTING_DATABASE_BACKEND", "com.google.cloud.broker.database.backends.DummyDatabaseBackend");
+        environmentVariables.set("APP_SETTING_AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.MockAuthenticator");
     }
 
     @After
@@ -51,28 +51,6 @@ public class RefreshTokenProviderTest {
     }
 
     @Test
-    public void testGoogleIdentity() {
-        RefreshTokenProvider provider = new RefreshTokenProvider();
-        assertEquals("alice@example.com", provider.getGoogleIdentity("alice@EXAMPLE.COM"));
-        assertEquals("alice@example.com", provider.getGoogleIdentity("alice@EXAMPLE.NET"));
-        assertEquals("alice@example.com", provider.getGoogleIdentity("alice"));
-        try {
-            provider.getGoogleIdentity("");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
-
-        try {
-            provider.getGoogleIdentity("@EXAMPLE.NET");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
-
-        try {
-            provider.getGoogleIdentity("@");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
-    }
-
-    @Test
     public void testUnauthorized() {
         RefreshTokenProvider provider = new RefreshTokenProvider();
         try {
@@ -80,7 +58,7 @@ public class RefreshTokenProviderTest {
             fail("StatusRuntimeException not thrown");
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("GCP Token Broker authorization is invalid or has expired for user: bob@EXAMPLE.COM", e.getStatus().getDescription());
+            assertEquals("GCP Token Broker authorization is invalid or has expired for identity: bob@EXAMPLE.COM", e.getStatus().getDescription());
         }
     }
 

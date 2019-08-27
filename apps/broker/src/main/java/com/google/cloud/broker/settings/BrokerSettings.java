@@ -20,9 +20,6 @@ public class BrokerSettings extends Properties {
         this.setProperty("GCP_PROJECT", "");
         this.setProperty("GCP_REGION", "");
 
-        // Domain name
-        this.setProperty("DOMAIN_NAME", "");
-
         // Host and port to serve the broker app from
         this.setProperty("SERVER_HOST", "0.0.0.0");
         this.setProperty("SERVER_PORT", "5000");
@@ -83,9 +80,6 @@ public class BrokerSettings extends Properties {
 
         // Life duration for JWT tokens (the shorter the better)
         this.setProperty("JWT_LIFE", "30");  // in seconds
-
-        // Pattern for the shadow service account "username"
-        this.setProperty("SHADOW_USERNAME_PATTERN", "%s-shadow");
 
         // Session maximum lifetime (in milliseconds)
         this.setProperty("SESSION_MAXIMUM_LIFETIME", Integer.toString(7 * 24 * 3600 * 1000));  // 7 days

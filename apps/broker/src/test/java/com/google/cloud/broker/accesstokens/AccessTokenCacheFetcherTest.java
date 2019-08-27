@@ -29,6 +29,7 @@ public class AccessTokenCacheFetcherTest {
         AppSettings.reset();
         AppSettings.setProperty("REMOTE_CACHE", "com.google.cloud.broker.caching.remote.RedisCache");
         AppSettings.setProperty("PROVIDER", "com.google.cloud.broker.accesstokens.providers.MockProvider");
+        AppSettings.setProperty("AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.MockAuthenticator");
         AppSettings.setProperty("ACCESS_TOKEN_LOCAL_CACHE_TIME", "1234");
         AppSettings.setProperty("ACCESS_TOKEN_REMOTE_CACHE_TIME", "6789");
         AppSettings.setProperty("ENCRYPTION_ACCESS_TOKEN_CACHE_CRYPTO_KEY", "My-Crypto-Key");
@@ -38,7 +39,7 @@ public class AccessTokenCacheFetcherTest {
     public void testComputeResult() {
         AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, GCS);
         AccessToken token = (AccessToken) fetcher.computeResult();
-        assertEquals(token.getValue(), "FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scope=" + GCS);
+        assertEquals(token.getValue(), "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scope=" + GCS);
         assertEquals(token.getExpiresAt(), 999999999L);
     }
 

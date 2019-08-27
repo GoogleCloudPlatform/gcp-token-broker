@@ -45,4 +45,6 @@ public abstract class AbstractAuthenticationBackend {
     }
 
     public abstract String authenticateUser(String authorizationHeader);
+
+    public abstract String translateName(String name) throws IllegalArgumentException;
 }

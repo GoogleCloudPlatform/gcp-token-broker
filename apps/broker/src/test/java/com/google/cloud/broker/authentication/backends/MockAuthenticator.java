@@ -33,4 +33,9 @@ public class MockAuthenticator extends AbstractAuthenticationBackend {
         return token;
     }
 
+    @Override
+    public String translateName(String name) {
+        return name.split("@")[0] + "@altostrat.com";
+    }
+
 }

@@ -225,6 +225,7 @@ limitations under the License.
     <modules>
         <module>apps/broker</module>
         <module>apps/core</module>
+        <module>apps/extensions/authentication/spnego</module>
         <module>apps/extensions/database/jdbc</module>
         <module>apps/extensions/database/cloud-datastore</module>
         <module>apps/extensions/encryption/cloud-kms</module>

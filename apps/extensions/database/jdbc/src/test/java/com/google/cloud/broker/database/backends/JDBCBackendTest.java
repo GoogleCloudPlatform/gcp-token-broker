@@ -110,7 +110,7 @@ public abstract class JDBCBackendTest {
 
         // Create a new record
         HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("id", "alice@example.com");
+        values.put("id", "alice@altostrat.com");
         values.put("creation_time", 1111111111111L);
         values.put("value", "abcd".getBytes());
         RefreshToken token = new RefreshToken(values);
@@ -118,7 +118,7 @@ public abstract class JDBCBackendTest {
 
         // Check that the record was correctly created
         try {
-            String query = "SELECT * from RefreshToken WHERE id = 'alice@example.com'";
+            String query = "SELECT * from RefreshToken WHERE id = 'alice@altostrat.com'";
             statement = connection.prepareStatement(query);
             rs = statement.executeQuery();
             assertTrue(rs.next());
@@ -143,7 +143,7 @@ public abstract class JDBCBackendTest {
         try {
             String query = "INSERT INTO RefreshToken (id, creation_time, value) VALUES (?, ?, ?);";
             statement = connection.prepareStatement(query);
-            statement.setString(1, "alice@example.com");
+            statement.setString(1, "alice@altostrat.com");
             statement.setLong(2, 1111111111111L);
             statement.setBytes(3, "abcd".getBytes());
             statement.executeUpdate();
@@ -155,7 +155,7 @@ public abstract class JDBCBackendTest {
 
         // Update the record with the same ID but different values
         HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("id", "alice@example.com");
+        values.put("id", "alice@altostrat.com");
         values.put("creation_time", 2222222222222L);
         values.put("value", "xyz".getBytes());
         RefreshToken token = new RefreshToken(values);
@@ -164,7 +164,7 @@ public abstract class JDBCBackendTest {
         // Check that the record was updated
         ResultSet rs = null;
         try {
-            String query = "SELECT * from RefreshToken WHERE id = 'alice@example.com'";
+            String query = "SELECT * from RefreshToken WHERE id = 'alice@altostrat.com'";
             statement = connection.prepareStatement(query);
             rs = statement.executeQuery();
             assertTrue(rs.next());
@@ -238,7 +238,7 @@ public abstract class JDBCBackendTest {
         try {
             String query = "INSERT INTO RefreshToken (id, creation_time, value) VALUES (?, ?, ?);";
             statement = connection.prepareStatement(query);
-            statement.setString(1, "alice@example.com");
+            statement.setString(1, "alice@altostrat.com");
             statement.setLong(2, 1111111111111L);
             statement.setBytes(3, "abcd".getBytes());
             statement.executeUpdate();
@@ -249,8 +249,8 @@ public abstract class JDBCBackendTest {
         }
 
         // Check that the record is correctly retrieved
-        RefreshToken token = (RefreshToken) backend.get(RefreshToken.class, "alice@example.com");
-        assertEquals(token.getValue("id"), "alice@example.com");
+        RefreshToken token = (RefreshToken) backend.get(RefreshToken.class, "alice@altostrat.com");
+        assertEquals(token.getValue("id"), "alice@altostrat.com");
         assertEquals(token.getValue("creation_time"), 1111111111111L);
         assertArrayEquals((byte[]) token.getValue("value"), "abcd".getBytes());
     }
@@ -275,7 +275,7 @@ public abstract class JDBCBackendTest {
         try {
             String query = "INSERT INTO RefreshToken (id, creation_time, value) VALUES (?, ?, ?);";
             statement = connection.prepareStatement(query);
-            statement.setString(1, "alice@example.com");
+            statement.setString(1, "alice@altostrat.com");
             statement.setLong(2, 1111111111111L);
             statement.setBytes(3, "abcd".getBytes());
             statement.executeUpdate();
@@ -287,14 +287,14 @@ public abstract class JDBCBackendTest {
 
         // Delete the record
         HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("id", "alice@example.com");
+        values.put("id", "alice@altostrat.com");
         RefreshToken token = new RefreshToken(values);
         backend.delete(token);
 
         // Check that the record was deleted
         ResultSet rs = null;
         try {
-            String query = "SELECT * from RefreshToken WHERE id='alice@example.com';";
+            String query = "SELECT * from RefreshToken WHERE id='alice@altostrat.com';";
             statement = connection.prepareStatement(query);
             rs = statement.executeQuery();
             assertFalse(rs.next());

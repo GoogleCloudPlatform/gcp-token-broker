@@ -10,9 +10,9 @@
 # limitations under the License.
 
 resource "google_service_account" "test_user_serviceaccount" {
-  count = "${length(var.test_users)}"
-  account_id = "${element(var.test_users, count.index)}-shadow"
-  display_name = "${element(var.test_users, count.index)}'s shadow service account"
+  count = "${length(var.test_users)}-svc-acct"
+  account_id = "${element(var.test_users, count.index)}"
+  display_name = "${element(var.test_users, count.index)}'s service account"
 }
 
 resource "google_service_account_iam_member" "token_creator_0" {
