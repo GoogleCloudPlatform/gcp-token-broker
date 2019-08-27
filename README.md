@@ -1017,7 +1017,7 @@ when you build those packages.
 4. Enable some Google APIs:
 
    ```shell
-   gcloud services enable datastore.googleapis.com iam.googleapis.com
+   gcloud services enable datastore.googleapis.com iam.googleapis.com cloudkms.googleapis.com
    ```
 5. Activate the Cloud Datastore database for your project:
 
@@ -1049,19 +1049,36 @@ when you build those packages.
      --role roles/datastore.user \
      --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
    ```
-10. Download a private JSON key for the broker service account:
+10. Create a KMS keyring:
+
+    ```shell
+    gcloud kms keyrings create mykeyring --location global
+    ```
+11. Create a KMS key:
+
+    ```shell
+    gcloud kms keys create mykey --location global \
+      --keyring mykeyring --purpose encryption
+    ```
+
+12. Give permission to the broker service account to use the keyring:
+
+    ```shell
+    gcloud kms keyrings add-iam-policy-binding \
+      mykeyring --location global \
+      --role roles/cloudkms.cryptoKeyEncrypterDecrypter \
+      --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
+    ```
+
+13. Download a private JSON key for the broker service account:
 
    ```shell
    gcloud iam service-accounts keys create --iam-account \
      broker@${PROJECT}.iam.gserviceaccount.com \
      service-account-key.json
    ```
-11. Upload the JSON key to the development container:
 
-   ```shell
-   docker cp service-account-key.json broker-dev:/base
-   ```
-12. You can now run the tests as follows:
+14. You can now run the tests as follows:
 
     To run the entire test suite:
 
