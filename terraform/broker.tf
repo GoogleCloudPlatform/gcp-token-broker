@@ -254,7 +254,7 @@ broker:
   app:
     settings:
       GCP_PROJECT: '${var.gcp_project}'
-      GCP_REGION: '${var.gcp_region}'
+      ENCRYPTION_CRYPTO_KEY_RING_REGION: '${var.gcp_region}'
       PROXY_USER_WHITELIST: 'hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}'
       DOMAIN_NAME: '${var.domain}'
       BROKER_SERVICE_HOSTNAME: '${var.broker_service_hostname}'
@@ -273,7 +273,7 @@ authorizer:
   app:
     settings:
       GCP_PROJECT: '${var.gcp_project}'
-      GCP_REGION: '${var.gcp_region}'
+      ENCRYPTION_CRYPTO_KEY_RING_REGION: '${var.gcp_region}'
       DOMAIN_NAME: '${var.domain}'
   ingress:
     host: '${var.authorizer_hostname}'

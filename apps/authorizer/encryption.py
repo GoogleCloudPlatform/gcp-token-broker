@@ -21,7 +21,7 @@ def encrypt(key_id, plaintext):
     client = kms_v1.KeyManagementServiceClient()
     key = client.crypto_key_path_path(
         settings.GCP_PROJECT,
-        settings.GCP_REGION,
+        settings.ENCRYPTION_CRYPTO_KEY_RING_REGION,
         settings.ENCRYPTION_CRYPTO_KEY_RING,
         key_id)
     response = client.encrypt(key, plaintext.encode('utf-8'))
@@ -35,7 +35,7 @@ def decrypt(key_id, ciphertext):
     client = kms_v1.KeyManagementServiceClient()
     key = client.crypto_key_path_path(
         settings.GCP_PROJECT,
-        settings.GCP_REGION,
+        settings.ENCRYPTION_CRYPTO_KEY_RING_REGION,
         settings.ENCRYPTION_CRYPTO_KEY_RING,
         key_id)
     response = client.decrypt(key, ciphertext)
