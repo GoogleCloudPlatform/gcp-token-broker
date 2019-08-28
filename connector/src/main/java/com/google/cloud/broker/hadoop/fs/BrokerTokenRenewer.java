@@ -43,18 +43,13 @@ public class BrokerTokenRenewer extends TokenRenewer {
         BrokerTokenIdentifier tokenIdentifier = (BrokerTokenIdentifier) GcsDelegationTokens.extractIdentifier(token);
         UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
         RenewSessionTokenResponse response = loginUser.doAs((PrivilegedAction<RenewSessionTokenResponse>) () -> {
-            BrokerGateway gateway;
-            try {
-                gateway = new BrokerGateway(conf);
-            } catch (GSSException e) {
-                throw new RuntimeException(e);
-            }
+            BrokerGateway gateway = new BrokerGateway(conf);
             RenewSessionTokenRequest request = RenewSessionTokenRequest.newBuilder()
                 .setSessionToken(tokenIdentifier.getSessionToken())
                 .build();
-            RenewSessionTokenResponse response1 = gateway.getStub().renewSessionToken(request);
+            RenewSessionTokenResponse r = gateway.getStub().renewSessionToken(request);
             gateway.getManagedChannel().shutdown();
-            return response1;
+            return r;
         });
         return response.getExpiresAt();
     }
@@ -65,12 +60,7 @@ public class BrokerTokenRenewer extends TokenRenewer {
         BrokerTokenIdentifier tokenIdentifier = (BrokerTokenIdentifier) GcsDelegationTokens.extractIdentifier(token);
         UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
         loginUser.doAs((PrivilegedAction<CancelSessionTokenResponse>) () -> {
-            BrokerGateway gateway;
-            try {
-                gateway = new BrokerGateway(conf);
-            } catch (GSSException e) {
-                throw new RuntimeException(e);
-            }
+            BrokerGateway gateway = new BrokerGateway(conf);
             CancelSessionTokenRequest request = CancelSessionTokenRequest.newBuilder()
                 .setSessionToken(tokenIdentifier.getSessionToken())
                 .build();

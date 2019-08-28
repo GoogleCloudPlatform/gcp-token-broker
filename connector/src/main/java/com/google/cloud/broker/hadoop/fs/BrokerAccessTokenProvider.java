@@ -72,18 +72,8 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
             sessionToken = null;
         }
 
-        AtomicReference<String> errorMessage = new AtomicReference<>();
-
         GetAccessTokenResponse response = loginUser.doAs((PrivilegedAction<GetAccessTokenResponse>) () -> {
-            BrokerGateway gateway;
-            try {
-                gateway = new BrokerGateway(config, sessionToken);
-            } catch (GSSException e) {
-                // Kerberos authentication failed
-                errorMessage.set(e.getMessage());
-                return null;
-            }
-
+            BrokerGateway gateway = new BrokerGateway(config, sessionToken);
             GetAccessTokenRequest request = GetAccessTokenRequest.newBuilder()
                 .setScope(BrokerTokenIdentifier.BROKER_SCOPE)
                 .setOwner(currentUser.getUserName())
@@ -94,14 +84,9 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
             return r;
         });
 
-        if (response != null) {
-            String tokenString = response.getAccessToken();
-            long expiresAt = response.getExpiresAt();
-            accessToken = new AccessToken(tokenString, expiresAt);
-        }
-        else {
-            throw new RuntimeException("User is not logged-in with Kerberos or cannot authenticate with the broker. Kerberos error message: " + errorMessage.get());
-        }
+        String tokenString = response.getAccessToken();
+        long expiresAt = response.getExpiresAt();
+        accessToken = new AccessToken(tokenString, expiresAt);
     }
 
     @Override

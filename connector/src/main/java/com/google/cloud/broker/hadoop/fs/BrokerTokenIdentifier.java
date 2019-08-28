@@ -51,20 +51,13 @@ public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
         }
 
         GetSessionTokenResponse response = loginUser.doAs((PrivilegedAction<GetSessionTokenResponse>) () -> {
-            BrokerGateway gateway;
-            try {
-                gateway = new BrokerGateway(config);
-            } catch (GSSException e) {
-                throw new RuntimeException(e);
-            }
-
+            BrokerGateway gateway = new BrokerGateway(config);
             GetSessionTokenRequest request = GetSessionTokenRequest.newBuilder()
                 .setScope(BROKER_SCOPE)
                 .setOwner(currentUser.getUserName())
                 .setRenewer(renewer.toString())
                 .setTarget(service.toString())
                 .build();
-
             GetSessionTokenResponse r = gateway.getStub().getSessionToken(request);
             gateway.getManagedChannel().shutdown();
             return r;

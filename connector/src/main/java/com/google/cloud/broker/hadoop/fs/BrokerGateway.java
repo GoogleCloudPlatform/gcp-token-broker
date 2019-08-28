@@ -33,11 +33,11 @@ public final class BrokerGateway {
     protected ManagedChannel managedChannel;
     protected Configuration config;
 
-    public BrokerGateway(Configuration config) throws GSSException {
+    public BrokerGateway(Configuration config) {
         this(config,null);
     }
 
-    public BrokerGateway(Configuration config, String sessionToken) throws GSSException {
+    public BrokerGateway(Configuration config, String sessionToken) {
         this.config = config;
 
         String brokerHostname = config.get("gcp.token.broker.uri.hostname", "localhost");
@@ -57,7 +57,8 @@ public final class BrokerGateway {
             } catch (GSSException e) {
                 // Clean up the channel before re-throwing the exception
                 managedChannel.shutdownNow();
-                throw e;
+                throw new RuntimeException(
+                    "User is not logged-in with Kerberos or cannot authenticate with the broker. Kerberos error message: " + e.getMessage());
             }
         }
     }
