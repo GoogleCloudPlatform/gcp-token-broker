@@ -17,10 +17,6 @@ build:
     context: ../
     docker:
       dockerfile: ./apps/broker/Dockerfile
-  - image: gcr.io/PROJECT/authorizer
-    context: ../
-    docker:
-      dockerfile: ./apps/authorizer/Dockerfile
 deploy:
   helm:
     releases:
@@ -28,11 +24,5 @@ deploy:
       chartPath: ./broker
       values:
         broker.image: gcr.io/PROJECT/broker
-      valuesFiles:
-        - ./values_override.yaml
-    - name: authorizer
-      chartPath: ./authorizer
-      values:
-        authorizer.image: gcr.io/PROJECT/authorizer
       valuesFiles:
         - ./values_override.yaml
