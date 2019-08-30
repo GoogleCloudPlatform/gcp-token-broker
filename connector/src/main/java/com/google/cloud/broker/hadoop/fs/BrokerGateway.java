@@ -11,10 +11,7 @@
 
 package com.google.cloud.broker.hadoop.fs;
 
-import java.security.AccessController;
-import java.security.Principal;
-import javax.security.auth.Subject;
-
+import com.google.api.client.http.GenericUrl;
 import com.google.common.io.BaseEncoding;
 import org.ietf.jgss.GSSException;
 
@@ -42,10 +39,11 @@ public final class BrokerGateway {
         this.config = config;
 
         brokerPrincipal = config.get("gcp.token.broker.principal", "");
-
-        String brokerHostname = config.get("gcp.token.broker.uri.hostname", "localhost");
-        int brokerPort = config.getInt("gcp.token.broker.uri.port", 443);
-        boolean tlsEnabled = config.getBoolean("gcp.token.broker.tls.enabled", true);
+        String brokerUri = config.get("gcp.token.broker.uri", "https://localhost:443");
+        GenericUrl url = new GenericUrl(brokerUri);
+        String brokerHostname = url.getHost();
+        int brokerPort = url.getPort();
+        boolean tlsEnabled = url.getScheme().equalsIgnoreCase("https");
         String tlsCertificate = config.get("gcp.token.broker.tls.certificate", "");
 
         managedChannel = GrpcUtils.newManagedChannel(brokerHostname, brokerPort, tlsEnabled, tlsCertificate);
