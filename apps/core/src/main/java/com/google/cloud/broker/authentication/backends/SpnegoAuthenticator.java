@@ -13,16 +13,13 @@ package com.google.cloud.broker.authentication.backends;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Base64;
+import java.util.Set;
 import java.security.PrivilegedAction;
 import javax.security.auth.Subject;
-import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.LoginContext;
-import javax.security.auth.login.LoginException;
-import javax.security.auth.login.Configuration;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.io.BaseEncoding;
+import com.typesafe.config.Config;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSContext;
@@ -36,115 +33,39 @@ import com.google.cloud.broker.settings.AppSettings;
 
 public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
 
-    private ArrayList<Subject> logins = new ArrayList<Subject>();
-
+    private ArrayList<Subject> logins;
+    public static final String KEYTABS_PATH = "KEYTABS_PATH";
+    public static final String BROKER_SERVICE_NAME = "BROKER_SERVICE_NAME";
+    public static final String BROKER_SERVICE_HOSTNAME = "BROKER_SERVICE_HOSTNAME";
+    public static final String BROKER_SERVICE_REALM = "BROKER_SERVICE_REALM";
     private static final String NO_VALID_KEYTABS_ERROR = "No valid keytabs found in path `%s` as defined in the `KEYTABS_PATH` setting";
 
-
-    private void loadKeytabs() {
-        // Find files in provided KEYTABS_PATH setting
-        File keytabsPath = new File(AppSettings.requireProperty("KEYTABS_PATH"));
-        File[] keytabFiles = keytabsPath.listFiles();
-
-        if (keytabFiles == null) {
-            throw new IllegalStateException("Invalid path `" + keytabsPath + "` as defined in the `KEYTABS_PATH` setting");
-        }
-
-        if (keytabFiles.length > 0) {
-            // Loop through the found files
-            for (File keytabFile : keytabFiles) {
-                if (keytabFile.isFile()) {
-                    sun.security.krb5.internal.ktab.KeyTab keytab = sun.security.krb5.internal.ktab.KeyTab.getInstance(keytabFile);
-                    sun.security.krb5.internal.ktab.KeyTabEntry[] entries = keytab.getEntries();
-
-                    if (!keytab.isValid() || entries.length < 1) {
-                        break;
-                    }
-
-                    String serviceName = AppSettings.requireProperty("BROKER_SERVICE_NAME");
-                    String hostname = AppSettings.requireProperty("BROKER_SERVICE_HOSTNAME");
-                    String realm = null;
-
-                    // Perform further validation of entries in the keytab
-                    for (sun.security.krb5.internal.ktab.KeyTabEntry entry : entries) {
-                        String[] nameStrings = entry.getService().getNameStrings();
-
-                        // Ensure that the entries' service name and hostname match the whitelisted values
-                        if (!nameStrings[0].equals(serviceName) || !nameStrings[1].equals(hostname)) {
-                            throw new IllegalStateException(String.format("Invalid service name or hostname in keytab: %s", keytabFile.getPath()));
-                        }
-
-                        // Ensure that all entries share the same realm
-                        String entryRealm = entry.getService().getRealmAsString();
-                        if (realm == null) {
-                            realm = entryRealm;
-                        } else if (!entryRealm.equals(realm)) {
-                            throw new IllegalStateException(String.format("Keytab `%s` contains multiple realms: %s, %s", keytabFile.getPath(), realm, entryRealm));
-                        }
-                    }
-
-                    String principal = serviceName + "/" + hostname + "@" + realm;
-                    Subject subject = login(principal, keytabFile);
-                    logins.add(subject);
-                }
-            }
-        }
+    public SpnegoAuthenticator() {
+        Config config = AppSettings.getConfig();
+        String keytabsPath = config.getString(KEYTABS_PATH);
+        Set<String> serviceNames = ImmutableSet.copyOf(config.getString(BROKER_SERVICE_NAME).split(","));
+        Set<String> hostNames = ImmutableSet.copyOf(config.getString(BROKER_SERVICE_HOSTNAME).split(","));
+        Set<String> realms = ImmutableSet.copyOf(config.getString(BROKER_SERVICE_REALM).split(","));
+        logins = KerberosUtil.loadKeytabs(new File(keytabsPath), serviceNames, hostNames, realms);
 
         if (logins.size() == 0) {
             throw new IllegalStateException(String.format(NO_VALID_KEYTABS_ERROR, keytabsPath));
         }
     }
 
-
-    private Subject login(String principal, File keytabFile) {
-        try {
-            LoginContext loginContext = new LoginContext(
-                    "", new Subject(), null, getConfiguration(principal, keytabFile));
-            loginContext.login();
-            Subject subject = loginContext.getSubject();
-            return subject;
-        } catch (LoginException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
-    private static Configuration getConfiguration(String principal, File keytabFile) {
-        return new Configuration() {
-            @Override
-            public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
-                Map<String, String> options = new HashMap<String, String>();
-                options.put("principal", principal);
-                options.put("keyTab", keytabFile.getPath());
-                options.put("doNotPrompt", "true");
-                options.put("useKeyTab", "true");
-                options.put("storeKey", "true");
-                options.put("isInitiator", "false");
-                return new AppConfigurationEntry[] {
-                    new AppConfigurationEntry(
-                        "com.sun.security.auth.module.Krb5LoginModule",
-                        AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options)
-                };
-            }
-        };
-    }
-
-
+    /** Authenticates SPNEGO token and returns username
+      * @param authorizationHeader SPNEGO token
+      * @return user name
+      */
     public String authenticateUser(String authorizationHeader) {
-        if (logins.isEmpty()) {
-            loadKeytabs();
-        }
-
-        if (! authorizationHeader.startsWith("Negotiate ")) {
+        if (!authorizationHeader.startsWith("Negotiate ")) {
             throw Status.UNAUTHENTICATED.withDescription("Use \"authorization: Negotiate <token>\" metadata to authenticate").asRuntimeException();
         }
 
         String spnegoToken = authorizationHeader.split("\\s")[1];
 
-        String authenticatedUser = null;
-
         for (Subject login : logins) {
-            authenticatedUser = Subject.doAs(login, new PrivilegedAction<String>() {
+            String authenticatedUser = Subject.doAs(login, new PrivilegedAction<String>() {
                 public String run() {
                     try {
                         GSSManager manager = GSSManager.getInstance();
@@ -153,8 +74,8 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
                             GSSCredential.DEFAULT_LIFETIME,
                             spnegoOid,
                             GSSCredential.ACCEPT_ONLY);
-                        GSSContext context = manager.createContext((GSSCredential) serverCredential);
-                        byte[] tokenBytes = Base64.getDecoder().decode(spnegoToken.getBytes());
+                        GSSContext context = manager.createContext(serverCredential);
+                        byte[] tokenBytes = BaseEncoding.base64().decode(spnegoToken);
                         context.acceptSecContext(tokenBytes, 0, tokenBytes.length);
                         return context.getSrcName().toString();
                     } catch (GSSException e) {

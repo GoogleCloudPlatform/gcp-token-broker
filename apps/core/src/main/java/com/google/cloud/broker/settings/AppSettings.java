@@ -12,6 +12,8 @@
 package com.google.cloud.broker.settings;
 
 import com.google.cloud.broker.utils.EnvUtils;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import java.util.Map;
 import java.util.Properties;
@@ -22,6 +24,10 @@ public class AppSettings {
     private static Properties instance = null;
 
     public AppSettings() {}
+
+    public static Config getConfig() {
+        return ConfigFactory.parseProperties(getInstance());
+    }
 
     private static void loadEnvironmentSettings() {
         // Override default settings with potential environment variables

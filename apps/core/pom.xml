@@ -46,6 +46,11 @@ limitations under the License.
         <artifactId>jackson-databind</artifactId>
         <version>${jackson.databind.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.typesafe</groupId>
+        <artifactId>config</artifactId>
+        <version>${config.version}</version>
+      </dependency>
     </dependencies>
 
 </project>
