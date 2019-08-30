@@ -13,9 +13,9 @@ package com.google.cloud.broker.hadoop.fs;
 
 import java.security.AccessController;
 import java.security.Principal;
-import java.util.Base64;
 import javax.security.auth.Subject;
 
+import com.google.common.io.BaseEncoding;
 import org.ietf.jgss.GSSException;
 
 import io.grpc.ManagedChannel;
@@ -32,6 +32,7 @@ public final class BrokerGateway {
     protected BrokerGrpc.BrokerBlockingStub stub;
     protected ManagedChannel managedChannel;
     protected Configuration config;
+    private String brokerPrincipal;
 
     public BrokerGateway(Configuration config) {
         this(config,null);
@@ -39,6 +40,8 @@ public final class BrokerGateway {
 
     public BrokerGateway(Configuration config, String sessionToken) {
         this.config = config;
+
+        brokerPrincipal = config.get("gcp.token.broker.principal", "");
 
         String brokerHostname = config.get("gcp.token.broker.uri.hostname", "localhost");
         int brokerPort = config.getInt("gcp.token.broker.uri.port", 443);
@@ -72,22 +75,7 @@ public final class BrokerGateway {
     }
 
     private void setSPNEGOToken() throws GSSException {
-        String brokerServiceName = config.get("gcp.token.broker.servicename", "broker");
-        String brokerHostname = config.get("gcp.token.broker.uri.hostname", "localhost");
-
-        // Figure out the broker's realm
-        String brokerRealm = config.get("gcp.token.broker.realm", "");
-        if (brokerRealm.equals("")) {
-            // If no realm is provided, use the logged-in user's realm
-            Subject subject = Subject.getSubject(AccessController.getContext());
-            Principal principal = subject.getPrincipals().iterator().next();
-            String username = principal.getName();
-            brokerRealm = username.substring(username.indexOf("@") + 1);
-        }
-
-        // Create the SPNEGO token
-        byte[] rawToken = SpnegoUtils.newSPNEGOToken(brokerServiceName, brokerHostname, brokerRealm);
-        String encodedToken = Base64.getEncoder().encodeToString(rawToken);
+        String encodedToken = BaseEncoding.base64().encode(SpnegoUtils.newSPNEGOToken(brokerPrincipal));
 
         // Set the 'authorization' header with the SPNEGO token
         Metadata metadata = new Metadata();
