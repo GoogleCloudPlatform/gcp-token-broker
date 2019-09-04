@@ -18,7 +18,6 @@ public class BrokerSettings extends Properties {
     public BrokerSettings() {
         // GCP settings
         this.setProperty("GCP_PROJECT", "");
-        this.setProperty("GCP_REGION", "");
 
         // Domain name
         this.setProperty("DOMAIN_NAME", "");
