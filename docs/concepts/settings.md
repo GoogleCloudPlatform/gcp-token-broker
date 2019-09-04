@@ -46,35 +46,29 @@ Default: `com.google.cloud.broker.database.backends.CloudDatastoreBackend`
 
 Domain name for your GSuite users.
 
-### `ENCRYPTION_ACCESS_TOKEN_CACHE_CRYPTO_KEY`
-
-Default: `access-token-cache-key`
-
-Name of the key used to [encrypt](encryption.md) access tokens.
-
 ### `ENCRYPTION_BACKEND`
 
 Default: `com.google.cloud.broker.encryption.backends.CloudKMSBackend`
 
 [Encryption](encryption.md) backend class.
 
-### `ENCRYPTION_CRYPTO_KEY_RING`
+### `ENCRYPTION_KEY`
+
+Default: `broker-key`
+
+Name of the Cloud KMS key used to [encrypt](encryption.md) data.
+
+### `ENCRYPTION_KEY_RING`
 
 Default: `broker-key-ring`
 
-Name of the [encryption](encryption.md) key ring.
+Name of the Cloud KMS [encryption](encryption.md) key ring.
 
-### `ENCRYPTION_REFRESH_TOKEN_CRYPTO_KEY`
+### `ENCRYPTION_KEY_RING_REGION`
 
-Default: `refresh-token-key`
+Default: `global`
 
-Name of the key used to [encrypt](encryption.md) [refresh tokens](providers.md#refresh-token-provider).
-
-### `ENCRYPTION_SESSION_TOKEN_CRYPTO_KEY`
-
-Default: `session-token-key`
-
-Name of the key used to [encrypt](encryption.md) [session](sessions.md) tokens.
+Name of the Cloud KMS [encryption](encryption.md) key ring's [region](https://cloud.google.com/kms/docs/locations).
 
 ### `GCP_PROJECT`
 

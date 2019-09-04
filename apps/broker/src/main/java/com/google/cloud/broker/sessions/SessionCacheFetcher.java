@@ -48,12 +48,6 @@ public class SessionCacheFetcher extends CacheFetcher {
     }
 
     @Override
-    protected String getRemoteCacheCryptoKey() {
-        // Remote cache not enabled
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     protected Object computeResult() {
         return SessionTokenUtils.getSessionFromRawToken(rawToken);
     }

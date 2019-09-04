@@ -19,9 +19,9 @@ public abstract class AbstractEncryptionBackend {
 
     private static AbstractEncryptionBackend instance;
 
-    public abstract byte[] decrypt(String cryptoKey, byte[] cipherText);
+    public abstract byte[] decrypt(byte[] cipherText);
 
-    public abstract byte[] encrypt(String cryptoKey, byte[] plainText);
+    public abstract byte[] encrypt(byte[] plainText);
 
     public static AbstractEncryptionBackend getInstance() {
         if (instance == null) {

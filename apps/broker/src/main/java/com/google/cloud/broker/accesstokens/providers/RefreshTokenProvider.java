@@ -68,9 +68,8 @@ public class RefreshTokenProvider extends AbstractProvider {
         }
 
         // Decrypt the refresh token's value
-        String cryptoKey = AppSettings.requireProperty("ENCRYPTION_REFRESH_TOKEN_CRYPTO_KEY");
         byte[] encryptedValue = (byte[]) refreshToken.getValue("value");
-        String decryptedValue = new String(AbstractEncryptionBackend.getInstance().decrypt(cryptoKey, encryptedValue));
+        String decryptedValue = new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
 
         // Load OAuth client secret
         File secretJson = new java.io.File(AppSettings.requireProperty("CLIENT_SECRET_PATH"));

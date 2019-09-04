@@ -58,7 +58,7 @@ def index():
 
 def handle_authorize(remote, token, user_info):
     refresh_token_value = token['refresh_token']
-    encrypted_value = encrypt(settings.ENCRYPTION_REFRESH_TOKEN_CRYPTO_KEY, refresh_token_value)
+    encrypted_value = encrypt(refresh_token_value)
 
     gcp_user = user_info['email']
     validate_domain(gcp_user)

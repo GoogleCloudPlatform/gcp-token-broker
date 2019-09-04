@@ -24,15 +24,16 @@ public class CloudKMSBackendTest {
     @Before
     public void setup() {
         AppSettings.reset();
-        AppSettings.setProperty("ENCRYPTION_CRYPTO_KEY_RING_REGION", KEY_RING_REGION);
-        AppSettings.setProperty("ENCRYPTION_CRYPTO_KEY_RING", KEY_RING);
+        AppSettings.setProperty("ENCRYPTION_KEY_RING_REGION", KEY_RING_REGION);
+        AppSettings.setProperty("ENCRYPTION_KEY_RING", KEY_RING);
+        AppSettings.setProperty("ENCRYPTION_KEY", KEY);
     }
 
     @Test
     public void testEncrypt() {
         // Use the backend to encrypt
         CloudKMSBackend backend = new CloudKMSBackend();
-        byte[] encrypted = backend.encrypt(KEY, "abcd".getBytes());
+        byte[] encrypted = backend.encrypt("abcd".getBytes());
 
         // Decrypt directly with Cloud KMS
         byte[] decrypted;
@@ -60,7 +61,7 @@ public class CloudKMSBackendTest {
 
         // Use the backend to decrypt
         CloudKMSBackend backend = new CloudKMSBackend();
-        byte[] decrypted = backend.decrypt(KEY, cipherText);
+        byte[] decrypted = backend.decrypt(cipherText);
         assertArrayEquals("abcd".getBytes(), decrypted);
     }
 

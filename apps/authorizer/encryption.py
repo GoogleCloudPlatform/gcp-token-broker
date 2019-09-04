@@ -14,29 +14,29 @@ from google.cloud import kms_v1
 from conf import settings
 
 
-def encrypt(key_id, plaintext):
+def encrypt(plaintext):
     """
     Encrypt the given plain text value with the given Cloud KMS key.
     """
     client = kms_v1.KeyManagementServiceClient()
     key = client.crypto_key_path_path(
         settings.GCP_PROJECT,
-        settings.ENCRYPTION_CRYPTO_KEY_RING_REGION,
-        settings.ENCRYPTION_CRYPTO_KEY_RING,
-        key_id)
+        settings.ENCRYPTION_KEY_RING_REGION,
+        settings.ENCRYPTION_KEY_RING,
+        settings.ENCRYPTION_KEY)
     response = client.encrypt(key, plaintext.encode('utf-8'))
     return response.ciphertext
 
 
-def decrypt(key_id, ciphertext):
+def decrypt(ciphertext):
     """
     Decrypt the given encrypted value with the given Cloud KMS key.
     """
     client = kms_v1.KeyManagementServiceClient()
     key = client.crypto_key_path_path(
         settings.GCP_PROJECT,
-        settings.ENCRYPTION_CRYPTO_KEY_RING_REGION,
-        settings.ENCRYPTION_CRYPTO_KEY_RING,
-        key_id)
+        settings.ENCRYPTION_KEY_RING_REGION,
+        settings.ENCRYPTION_KEY_RING,
+        settings.ENCRYPTION_KEY)
     response = client.decrypt(key, ciphertext)
     return response.plaintext.decode('utf-8')

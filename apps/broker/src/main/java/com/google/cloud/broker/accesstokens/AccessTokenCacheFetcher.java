@@ -47,11 +47,6 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
     }
 
     @Override
-    protected String getRemoteCacheCryptoKey() {
-        return AppSettings.requireProperty("ENCRYPTION_ACCESS_TOKEN_CACHE_CRYPTO_KEY");
-    }
-
-    @Override
     protected Object computeResult() {
         return AbstractProvider.getInstance().getAccessToken(owner, scope);
     }

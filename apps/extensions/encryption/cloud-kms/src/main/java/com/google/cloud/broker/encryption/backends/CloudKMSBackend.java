@@ -23,14 +23,15 @@ import java.io.IOException;
 public class CloudKMSBackend extends AbstractEncryptionBackend {
 
 
-    public byte[] decrypt(String cryptoKey, byte[] cipherText) {
+    public byte[] decrypt(byte[] cipherText) {
         String projectId = AppSettings.requireProperty("GCP_PROJECT");
-        String keyRing = AppSettings.requireProperty("ENCRYPTION_CRYPTO_KEY_RING");
-        String region = AppSettings.getProperty("ENCRYPTION_CRYPTO_KEY_RING_REGION", "global");
+        String key = AppSettings.requireProperty("ENCRYPTION_KEY");
+        String keyRing = AppSettings.requireProperty("ENCRYPTION_KEY_RING");
+        String region = AppSettings.getProperty("ENCRYPTION_KEY_RING_REGION", "global");
 
         byte[] plainText;
         try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
-            String resourceName = CryptoKeyName.format(projectId, region, keyRing, cryptoKey);
+            String resourceName = CryptoKeyName.format(projectId, region, keyRing, key);
             DecryptResponse response = client.decrypt(resourceName, ByteString.copyFrom(cipherText));
             plainText = response.getPlaintext().toByteArray();
         } catch (IOException e) {
@@ -41,14 +42,15 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
     }
 
 
-    public byte[] encrypt(String cryptoKey, byte[] plainText) {
+    public byte[] encrypt(byte[] plainText) {
         String projectId = AppSettings.requireProperty("GCP_PROJECT");
-        String keyRing = AppSettings.requireProperty("ENCRYPTION_CRYPTO_KEY_RING");
-        String region = AppSettings.getProperty("ENCRYPTION_CRYPTO_KEY_RING_REGION", "global");
+        String key = AppSettings.requireProperty("ENCRYPTION_KEY");
+        String keyRing = AppSettings.requireProperty("ENCRYPTION_KEY_RING");
+        String region = AppSettings.getProperty("ENCRYPTION_KEY_RING_REGION", "global");
 
         byte[] cipherText;
         try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
-            String resourceName = CryptoKeyName.format(projectId, region, keyRing, cryptoKey);
+            String resourceName = CryptoKeyName.format(projectId, region, keyRing, key);
             EncryptResponse response = client.encrypt(resourceName, ByteString.copyFrom(plainText));
             cipherText = response.getCiphertext().toByteArray();
         } catch (IOException e) {

@@ -27,6 +27,10 @@ This backend is available as a separate [package on Maven Central](https://searc
 <artifactId>encryption-backend-cloud-kms</artifactId>
 ```
 
+This backend requires that you set the following setting: [`GCP_PROJECT`](settings.md#GCP_PROJECT),
+[`ENCRYPTION_KEY`](settings.md#ENCRYPTION_KEY), [`ENCRYPTION_KEY_RING`](settings.md#ENCRYPTION_KEY_RING),
+and [`ENCRYPTION_KEY_RING_REGION`](settings.md#ENCRYPTION_KEY_RING_REGION).
+
 ### Dummy encryption backend
 
 Class path: `com.google.cloud.broker.encryption.backends.DummyEncryptionBackend`

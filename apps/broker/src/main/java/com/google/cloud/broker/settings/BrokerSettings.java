@@ -93,10 +93,7 @@ public class BrokerSettings extends Properties {
         this.setProperty("SESSION_RENEW_PERIOD", Integer.toString(24 * 3600 * 1000));  // 24 hours
 
         // KMS settings
-        this.setProperty("ENCRYPTION_CRYPTO_KEY_RING", "broker-key-ring");
-        this.setProperty("ENCRYPTION_REFRESH_TOKEN_CRYPTO_KEY", "refresh-token-key");
-        this.setProperty("ENCRYPTION_ACCESS_TOKEN_CACHE_CRYPTO_KEY", "access-token-cache-key");
-        this.setProperty("ENCRYPTION_SESSION_TOKEN_CRYPTO_KEY", "session-token-key");
+        this.setProperty("ENCRYPTION_KEY_RING", "broker-key-ring");
     }
 
 }
