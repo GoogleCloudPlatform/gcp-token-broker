@@ -31,7 +31,7 @@ import com.google.cloud.broker.protobuf.GetSessionTokenResponse;
 
 public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
 
-    public static final Text KIND = new Text("GCPBrokerDelegationToken");
+    public static final Text KIND = new Text("GCPBrokerSessionToken");
     public static final String BROKER_SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
     private String sessionToken;
 

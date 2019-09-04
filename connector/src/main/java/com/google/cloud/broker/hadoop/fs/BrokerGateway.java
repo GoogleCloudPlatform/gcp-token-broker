@@ -49,7 +49,7 @@ public final class BrokerGateway {
         stub = GrpcUtils.newStub(managedChannel);
 
         if (sessionToken != null) {
-            setDelegationToken(sessionToken);
+            setSessionToken(sessionToken);
         }
         else {
             try {
@@ -96,8 +96,8 @@ public final class BrokerGateway {
         stub = MetadataUtils.attachHeaders(stub, metadata);
     }
 
-    private void setDelegationToken(String sessionToken) {
-        // Set the delegation token in the 'authorization' header
+    private void setSessionToken(String sessionToken) {
+        // Set the session token in the 'authorization' header
         Metadata metadata = new Metadata();
         Metadata.Key<String> key = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
         metadata.put(key, "BrokerSession " + sessionToken);

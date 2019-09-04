@@ -217,8 +217,8 @@ resource "google_kms_crypto_key" "access_token_cache_key" {
   key_ring        = "${google_kms_key_ring.broker_key_ring.self_link}"
 }
 
-resource "google_kms_crypto_key" "delegation_token_key" {
-  name            = "delegation-token-key"
+resource "google_kms_crypto_key" "session_token_key" {
+  name            = "session-token-key"
   key_ring        = "${google_kms_key_ring.broker_key_ring.self_link}"
 }
 
