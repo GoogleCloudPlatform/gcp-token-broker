@@ -25,10 +25,10 @@ public class SessionTest {
     private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
     private static final String MOCK_BUCKET = "gs://example";
 
-    // TODO: testToHashmap
+    // TODO: testToMap
 
     @Test
-    public void testfromHashmap() {
+    public void testFromMap() {
         HashMap<String, Object> values = new HashMap<String, Object>();
         values.put("id", "123456789");
         values.put("owner", ALICE);
@@ -40,7 +40,7 @@ public class SessionTest {
         values.put("expiresAt", 2222222222222L);
         values.put("owner", "alice@EXAMPLE.COM");
 
-        Session session = (Session) Model.fromHashMap(Session.class, values);
+        Session session = (Session) Model.fromMap(Session.class, values);
         assertEquals("123456789", session.getId());
         assertEquals(ALICE, session.getOwner());
         assertEquals(YARN, session.getRenewer());

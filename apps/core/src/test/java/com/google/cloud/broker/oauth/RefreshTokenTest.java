@@ -20,19 +20,19 @@ import com.google.cloud.broker.database.models.Model;
 
 public class RefreshTokenTest {
 
-    // TODO: testToHashmap
+    // TODO: testToMap
 
     @Test
-    public void testfromHashmap() {
+    public void testFromMap() {
         HashMap<String, Object> values = new HashMap<String, Object>();
         values.put("id", "alice@example.com");
         values.put("creationTime", 2222222222222L);
         values.put("value", "xyz".getBytes());
 
-        RefreshToken token = (RefreshToken) Model.fromHashMap(RefreshToken.class, values);
+        RefreshToken token = (RefreshToken) Model.fromMap(RefreshToken.class, values);
         assertEquals("alice@example.com", token.getId());
         assertEquals(2222222222222L, token.getCreationTime().longValue());
-        assertArrayEquals("xyz".getBytes(), (byte[]) token.getValue());
+        assertArrayEquals("xyz".getBytes(), token.getValue());
     }
 
 }

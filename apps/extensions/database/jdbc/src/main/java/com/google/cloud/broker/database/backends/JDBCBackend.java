@@ -38,7 +38,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         return connectionInstance;
     }
 
-    private void formatStatement(int index, PreparedStatement statement, HashMap<String, Object> values) throws SQLException {
+    private void formatStatement(int index, PreparedStatement statement, Map<String, Object> values) throws SQLException {
         Iterator<Map.Entry<String, Object>> iterator = values.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, Object> entry = iterator.next();
@@ -100,7 +100,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             }
 
             // Instantiate a new object
-            return Model.fromHashMap(modelClass, values);
+            return Model.fromMap(modelClass, values);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
@@ -116,7 +116,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             model.setDBId(UUID.randomUUID().toString());
         }
 
-        HashMap<String, Object> hashmap = model.toHashMap();
+        Map<String, Object> map = model.toMap();
         Connection connection = getConnection();
         PreparedStatement statement = null;
         ResultSet rs = null;
@@ -125,7 +125,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             String columns = "";
             String values = "";
             String update = "";
-            Iterator<Map.Entry<String, Object>> iterator = hashmap.entrySet().iterator();
+            Iterator<Map.Entry<String, Object>> iterator = map.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<String, Object> entry = iterator.next();
                 String column = entry.getKey();
@@ -146,8 +146,8 @@ public class JDBCBackend extends AbstractDatabaseBackend {
 
             // Format the statement
             statement = connection.prepareStatement(query);
-            formatStatement(1, statement, hashmap);  // Format the INSERT values
-            formatStatement(1 + hashmap.size(), statement, hashmap);  // Format the UPDATE values
+            formatStatement(1, statement, map);  // Format the INSERT values
+            formatStatement(1 + map.size(), statement, map);  // Format the UPDATE values
 
             // Run the query
             statement.executeUpdate();

@@ -13,24 +13,24 @@ package com.google.cloud.broker.database.models;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
+import java.util.Map;
 
 public abstract class Model {
 
-    public abstract HashMap<String, Object> toHashMap();
+    public abstract Map<String, Object> toMap();
 
     public abstract void setDBId(String id);
     public abstract String getDBId();
 
-    public static Model fromHashMap(Class klass, HashMap<String, Object> hashmap) {
+    public static Model fromMap(Class klass, Map<String, Object> map) {
         Method method;
         try {
-            method = klass.getMethod("fromHashMap", hashmap.getClass());
+            method = klass.getMethod("fromMap", Map.class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
         try {
-            return (Model) method.invoke(null, hashmap);
+            return (Model) method.invoke(null, map);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }

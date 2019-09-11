@@ -60,7 +60,7 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
         }
 
         // Instantiate a new object
-        return Model.fromHashMap(modelClass, values);
+        return Model.fromMap(modelClass, values);
     }
 
     public void save(Model model) {
@@ -72,8 +72,8 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
         KeyFactory keyFactory = datastore.newKeyFactory().setKind(model.getClass().getSimpleName());
         Key key = keyFactory.newKey(model.getDBId());
         Entity.Builder builder = Entity.newBuilder(key);
-        HashMap<String, Object> hashmap = model.toHashMap();
-        for(Map.Entry<String, Object> entry : hashmap.entrySet()) {
+        Map<String, Object> map = model.toMap();
+        for(Map.Entry<String, Object> entry : map.entrySet()) {
             String name = entry.getKey();
             Object value = entry.getValue();
             if (value instanceof String) {

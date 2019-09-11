@@ -12,6 +12,7 @@
 package com.google.cloud.broker.sessions;
 
 import java.security.SecureRandom;
+import java.util.Map;
 import java.util.Random;
 import java.util.HashMap;
 
@@ -64,29 +65,29 @@ public class Session extends Model {
         return getId();
     }
 
-    public HashMap<String, Object> toHashMap() {
-        HashMap<String, Object> hashmap = new HashMap<String, Object>();
-        hashmap.put("id", id);
-        hashmap.put("owner", owner);
-        hashmap.put("renewer", renewer);
-        hashmap.put("target", target);
-        hashmap.put("scope", scope);
-        hashmap.put("password", password);
-        hashmap.put("expiresAt", expiresAt);
-        hashmap.put("creationTime", creationTime);
-        return hashmap;
+    public Map<String, Object> toMap() {
+        HashMap<String, Object> map = new HashMap<String, Object>();
+        map.put("id", id);
+        map.put("owner", owner);
+        map.put("renewer", renewer);
+        map.put("target", target);
+        map.put("scope", scope);
+        map.put("password", password);
+        map.put("expiresAt", expiresAt);
+        map.put("creationTime", creationTime);
+        return map;
     }
 
-    public static Model fromHashMap(HashMap<String, Object> hashmap) {
+    public static Model fromMap(Map<String, Object> map) {
         return new Session(
-            (String) hashmap.get("id"),
-            (String) hashmap.get("owner"),
-            (String) hashmap.get("renewer"),
-            (String) hashmap.get("target"),
-            (String) hashmap.get("scope"),
-            (String) hashmap.get("password"),
-            (Long) hashmap.get("expiresAt"),
-            (Long) hashmap.get("creationTime")
+            (String) map.get("id"),
+            (String) map.get("owner"),
+            (String) map.get("renewer"),
+            (String) map.get("target"),
+            (String) map.get("scope"),
+            (String) map.get("password"),
+            (Long) map.get("expiresAt"),
+            (Long) map.get("creationTime")
         );
     }
 

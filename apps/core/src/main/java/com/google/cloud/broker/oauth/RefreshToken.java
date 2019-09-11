@@ -16,6 +16,7 @@ import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.utils.TimeUtils;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class RefreshToken extends Model {
 
@@ -32,19 +33,19 @@ public class RefreshToken extends Model {
     }
 
     @Override
-    public HashMap<String, Object> toHashMap() {
-        HashMap<String, Object> hashmap = new HashMap<String, Object>();
-        hashmap.put("id", id);
-        hashmap.put("value", value);
-        hashmap.put("creationTime", creationTime);
-        return hashmap;
+    public Map<String, Object> toMap() {
+        HashMap<String, Object> map = new HashMap<String, Object>();
+        map.put("id", id);
+        map.put("value", value);
+        map.put("creationTime", creationTime);
+        return map;
     }
 
-    public static Model fromHashMap(HashMap<String, Object> hashmap) {
+    public static Model fromMap(Map<String, Object> map) {
         return new RefreshToken(
-            (String) hashmap.get("id"),
-            (byte[]) hashmap.get("value"),
-            (Long) hashmap.get("creationTime")
+            (String) map.get("id"),
+            (byte[]) map.get("value"),
+            (Long) map.get("creationTime")
         );
     }
 
