@@ -31,7 +31,7 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
     private static ConcurrentMap<String, Object> instance;
 
     private String calculateKey(Model model) {
-        return model.getClass().getSimpleName() + "-" + model.getValue("id");
+        return model.getClass().getSimpleName() + "-" + model.getDBId();
     }
 
     private String calculateKey(Class modelClass, String objectId) {
@@ -52,8 +52,8 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
 
     @Override
     public void save(Model model) {
-        if (! model.hasValue("id")) {
-            model.setValue("id", UUID.randomUUID().toString());
+        if (model.getDBId() == null) {
+            model.setDBId(UUID.randomUUID().toString());
         }
         ConcurrentMap<String, Object> cache = getMap();
         String key = calculateKey(model);

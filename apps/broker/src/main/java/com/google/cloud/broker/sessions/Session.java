@@ -17,66 +17,168 @@ import java.util.HashMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonCreator;
 
+import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.database.models.CreationTimeModel;
 import com.google.cloud.broker.utils.TimeUtils;
 
 
 
-public class Session extends CreationTimeModel {
+public class Session extends Model {
 
-    /**
-     * Expected schema:
-     *
-     * Session:
-     *   id: String            => UUID
-     *   owner: String         => Identity who owns the session (e.g. alice@EXAMPLE.COM)
-     *   renewer: String       => Identity who is allowed to renew/cancel the session (e.g. yarn@FOO.BAR)
-     *   target: String        => Target resource on GCP (e.g. gs://example)
-     *   scope: String         => API scope for the target resource (e.g. https://www.googleapis.com/auth/devstorage.read_write)
-     *   password: String      => Randomly generated password for the session
-     *   expires_at: Long      => Time when the session will expire (in milliseconds)
-     *   creation_time: Long   => Time when the session was created (in milliseconds)
-     */
+    private String id;          // UUID
+    private String owner;       // Identity who owns the session (e.g. alice@EXAMPLE.COM)
+    private String renewer;     // Identity who is allowed to renew/cancel the session (e.g. yarn@FOO.BAR)
+    private String target;      // Target resource on GCP (e.g. gs://example)
+    private String scope;       // API scope for the target resource (e.g. https://www.googleapis.com/auth/devstorage.read_write)
+    private String password;    // Randomly generated password for the session
+    private Long expiresAt;     // Time when the session will expire (in milliseconds)
+    private Long creationTime;  // Time when the session was created (in milliseconds)
 
-    @JsonCreator
-    public Session(@JsonProperty("values") HashMap<String, Object> values) {
-        super(values);
-        if (!this.values.containsKey("password")) {
-            generateRandomPassword();
-        }
-        if (!this.values.containsKey("expires_at")) {
+    public Session(@JsonProperty("id") String id,
+                   @JsonProperty("owner") String owner,
+                   @JsonProperty("renewer") String renewer,
+                   @JsonProperty("target") String target,
+                   @JsonProperty("scope") String scope,
+                   @JsonProperty("password") String password,
+                   @JsonProperty("expiresAt") Long expiresAt,
+                   @JsonProperty("creationTime") Long creationTime) {
+        this.id = id;
+        this.owner = owner;
+        this.renewer = renewer;
+        this.target = target;
+        this.scope = scope;
+        this.expiresAt = expiresAt;
+        this.creationTime = (creationTime==null) ? Long.valueOf(TimeUtils.currentTimeMillis()) : creationTime;
+        this.password = (password==null) ? generateRandomPassword() : password;
+        if (expiresAt==null) {
             extendLifetime();
         }
     }
 
-    protected void generateRandomPassword() {
+    public void setDBId(String id) {
+        setId(id);
+    }
+
+    public String getDBId() {
+        return getId();
+    }
+
+    public HashMap<String, Object> toHashMap() {
+        HashMap<String, Object> hashmap = new HashMap<String, Object>();
+        hashmap.put("id", id);
+        hashmap.put("owner", owner);
+        hashmap.put("renewer", renewer);
+        hashmap.put("target", target);
+        hashmap.put("scope", scope);
+        hashmap.put("password", password);
+        hashmap.put("expiresAt", expiresAt);
+        hashmap.put("creationTime", creationTime);
+        return hashmap;
+    }
+
+    public static Model fromHashMap(HashMap<String, Object> hashmap) {
+        return new Session(
+            (String) hashmap.get("id"),
+            (String) hashmap.get("owner"),
+            (String) hashmap.get("renewer"),
+            (String) hashmap.get("target"),
+            (String) hashmap.get("scope"),
+            (String) hashmap.get("password"),
+            (Long) hashmap.get("expiresAt"),
+            (Long) hashmap.get("creationTime")
+        );
+    }
+
+    private static String generateRandomPassword() {
         Random random = new SecureRandom();
         int length = 24;
         String characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        StringBuilder password = new StringBuilder(length);
+        StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
-            password.append(characters.charAt(random.nextInt(characters.length())));
+            sb.append(characters.charAt(random.nextInt(characters.length())));
         }
-        values.put("password", password.toString());
+        return sb.toString();
     }
 
     public void extendLifetime() {
         long now = TimeUtils.currentTimeMillis();
-        long creationTime = (long) getValue("creation_time");
-        values.put("expires_at", Math.min(
+        expiresAt = Math.min(
             now + Long.parseLong(AppSettings.requireProperty("SESSION_RENEW_PERIOD")),
             creationTime + Long.parseLong(AppSettings.requireProperty("SESSION_MAXIMUM_LIFETIME"))
-        ));
+        );
     }
 
     @JsonIgnore
     public boolean isExpired() {
         long now = TimeUtils.currentTimeMillis();
-        long expiresAt = (long) values.get("expires_at");
         return (now >= expiresAt);
+    }
+
+
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
+    public String getRenewer() {
+        return renewer;
+    }
+
+    public void setRenewer(String renewer) {
+        this.renewer = renewer;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public void setTarget(String target) {
+        this.target = target;
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    public void setScope(String scope) {
+        this.scope = scope;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Long getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(Long expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
+    public Long getCreationTime() {
+        return creationTime;
+    }
+
+    public void setCreationTime(Long creationTime) {
+        this.creationTime = creationTime;
     }
 
 }

@@ -11,67 +11,29 @@
 
 package com.google.cloud.broker.database.models;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.UUID;
-
-import com.google.cloud.broker.database.DatabaseObjectNotFound;
-import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
-
 
 public abstract class Model {
 
-    protected HashMap<String, Object> values;
+    public abstract HashMap<String, Object> toHashMap();
 
-    public Model(HashMap<String, Object> values) {
-        this.values = new HashMap<>();
-        for (String key : values.keySet()) {
-            Object value = values.get(key);
-            this.values.put(key, value);
-        }
-    }
+    public abstract void setDBId(String id);
+    public abstract String getDBId();
 
-    public Object getValue(String key) {
-        return values.get(key);
-    }
-
-    public static Model newModelInstance(Class modelClass, HashMap<String, Object> values) {
-        Constructor constructor = null;
+    public static Model fromHashMap(Class klass, HashMap<String, Object> hashmap) {
+        Method method;
         try {
-            constructor = modelClass.getConstructor(HashMap.class);
+            method = klass.getMethod("fromHashMap", hashmap.getClass());
         } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        }
-        try {
-            return (Model) constructor.newInstance(values);
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public void setValue(String key, Object value) {
-        values.put(key, value);
-    }
-
-    public boolean hasValue(String key) {
-        return values.containsKey(key);
-    }
-
-    public HashMap<String, Object> getValues() {
-        return values;
-    }
-
-    public static Model get(Class modelClass, String id) throws DatabaseObjectNotFound {
-        return AbstractDatabaseBackend.getInstance().get(modelClass, id);
-    }
-
-    public static void save(Model model) {
-        AbstractDatabaseBackend.getInstance().save(model);
-    }
-
-    public static void delete(Model model) {
-        AbstractDatabaseBackend.getInstance().delete(model);
+        try {
+            return (Model) method.invoke(null, hashmap);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

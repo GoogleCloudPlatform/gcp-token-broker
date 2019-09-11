@@ -12,14 +12,13 @@
 package com.google.cloud.broker.sessions;
 
 import java.io.IOException;
-import java.util.HashMap;
 
 import static org.junit.Assert.*;
-import com.google.cloud.broker.database.models.Model;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 
 public class SessionCacheFetcherTest {
 
@@ -43,13 +42,8 @@ public class SessionCacheFetcherTest {
 
     private Session createSession() {
         // Create a session in the database
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("owner", ALICE);
-        values.put("renewer", "yarn@FOO.BAR");
-        values.put("scope", GCS);
-        values.put("target", MOCK_BUCKET);
-        Session session = new Session(values);
-        Model.save(session);
+        Session session = new Session(null, ALICE, "yarn@FOO.BAR", MOCK_BUCKET, GCS, null, null, null);
+        AbstractDatabaseBackend.getInstance().save(session);
         return session;
     }
 
@@ -59,23 +53,21 @@ public class SessionCacheFetcherTest {
         String rawToken = SessionTokenUtils.marshallSessionToken(session);
         SessionCacheFetcher fetcher = new SessionCacheFetcher(rawToken);
         Session computed = (Session) fetcher.computeResult();
-        assertEquals(session.getValue("id"), computed.getValue("id"));
+        assertEquals(session.getId(), computed.getId());
     }
 
     @Test
     public void testFromJSON() {
         SessionCacheFetcher fetcher = new SessionCacheFetcher("xxxx");
         String json = "{" +
-            "\"values\": {" +
-                "\"id\": \"abcd\", " +
-                "\"creation_time\": 1000000000000, " +
-                "\"owner\": \"bob@EXAMPLE.COM\", " +
-                "\"renewer\": \"yarn@BAZ.NET\", " +
-                "\"scope\": \"" + BIGQUERY + "\", " +
-                "\"target\": \"gs://blah\", " +
-                "\"password\": \"secret!\", " +
-                "\"expires_at\": 2000000000000" +
-            "}" +
+            "\"id\": \"abcd\", " +
+            "\"creationTime\": 1000000000000, " +
+            "\"owner\": \"bob@EXAMPLE.COM\", " +
+            "\"renewer\": \"yarn@BAZ.NET\", " +
+            "\"scope\": \"" + BIGQUERY + "\", " +
+            "\"target\": \"gs://blah\", " +
+            "\"password\": \"secret!\", " +
+            "\"expiresAt\": 2000000000000" +
         "}";
         Session session;
         try {
@@ -83,14 +75,14 @@ public class SessionCacheFetcherTest {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        assertEquals("abcd", session.getValue("id"));
-        assertEquals(1000000000000L, session.getValue("creation_time"));
-        assertEquals("bob@EXAMPLE.COM", session.getValue("owner"));
-        assertEquals("yarn@BAZ.NET", session.getValue("renewer"));
-        assertEquals(BIGQUERY, session.getValue("scope"));
-        assertEquals("gs://blah", session.getValue("target"));
-        assertEquals("secret!", session.getValue("password"));
-        assertEquals(2000000000000L, session.getValue("expires_at"));
+        assertEquals("abcd", session.getId());
+        assertEquals(1000000000000L, session.getCreationTime().longValue());
+        assertEquals("bob@EXAMPLE.COM", session.getOwner());
+        assertEquals("yarn@BAZ.NET", session.getRenewer());
+        assertEquals(BIGQUERY, session.getScope());
+        assertEquals("gs://blah", session.getTarget());
+        assertEquals("secret!", session.getPassword());
+        assertEquals(2000000000000L, session.getExpiresAt().longValue());
     }
 
     @Test

@@ -11,23 +11,72 @@
 
 package com.google.cloud.broker.oauth;
 
-import com.google.cloud.broker.database.models.CreationTimeModel;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.cloud.broker.database.models.Model;
+import com.google.cloud.broker.utils.TimeUtils;
 
 import java.util.HashMap;
 
-public class RefreshToken extends CreationTimeModel {
+public class RefreshToken extends Model {
 
-    /**
-     * Expected schema:
-     *
-     * RefreshToken:
-     *   - id: String            => GSuite email address (e.g. alice@example.com)
-     *   - value: byte[]         => The actual OAuth refresh token (Recommendation: encrypt this value)
-     *   - creation_time: Long   => The time when the object was created (in milliseconds)
-     */
+    private String id;  // GSuite email address (e.g. alice@example.com)
+    byte[] value;       // The actual OAuth refresh token (Recommendation: encrypt this value)
+    Long creationTime;  // The time when the object was created (in milliseconds)
 
-    public RefreshToken(HashMap<String, Object> values) {
-        super(values);
+    public RefreshToken(@JsonProperty("id") String id,
+                        @JsonProperty("value") byte[] value,
+                        @JsonProperty("creationTime") Long creationTime) {
+        this.id = id;
+        this.value = value;
+        this.creationTime = (creationTime==null) ? Long.valueOf(TimeUtils.currentTimeMillis()) : creationTime;
     }
 
+    @Override
+    public HashMap<String, Object> toHashMap() {
+        HashMap<String, Object> hashmap = new HashMap<String, Object>();
+        hashmap.put("id", id);
+        hashmap.put("value", value);
+        hashmap.put("creationTime", creationTime);
+        return hashmap;
+    }
+
+    public static Model fromHashMap(HashMap<String, Object> hashmap) {
+        return new RefreshToken(
+            (String) hashmap.get("id"),
+            (byte[]) hashmap.get("value"),
+            (Long) hashmap.get("creationTime")
+        );
+    }
+
+    public void setDBId(String id) {
+        setId(id);
+    }
+
+    public String getDBId() {
+        return getId();
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public byte[] getValue() {
+        return value;
+    }
+
+    public void setValue(byte[] value) {
+        this.value = value;
+    }
+
+    public Long getCreationTime() {
+        return creationTime;
+    }
+
+    public void setCreationTime(Long creationTime) {
+        this.creationTime = creationTime;
+    }
 }

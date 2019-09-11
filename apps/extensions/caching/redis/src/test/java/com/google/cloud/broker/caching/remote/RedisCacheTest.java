@@ -104,7 +104,7 @@ public class RedisCacheTest {
         RBucket<byte[]> bucket = client.getBucket("test", ByteArrayCodec.INSTANCE);
         bucket.set("abcd".getBytes());
 
-        // Let the backend delete the key
+        // Let the backend deleteFromDB the key
         backend.delete("test");
 
         // Check that the key was deleted
