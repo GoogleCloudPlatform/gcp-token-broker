@@ -72,7 +72,7 @@ public class BrokerSettings extends Properties {
         this.setProperty("PROVIDER", "com.google.cloud.broker.accesstokens.providers.RefreshTokenProvider");
 
         // Encryption backend
-        this.setProperty("ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.CloudKMSBackend");
+        this.setProperty("ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.KMSEnvelopeEncryptionBackend");
 
         // Authentication backend
         this.setProperty("AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.SpnegoAuthenticator");

@@ -244,7 +244,8 @@ broker:
   app:
     settings:
       GCP_PROJECT: '${var.gcp_project}'
-      ENCRYPTION_KEY_RING_REGION: '${var.gcp_region}'
+      ENCRYPTION_CRYPTO_KEY: '${var.crypto_key}'
+      ENCRYPTION_DEK_URI: '${var.dek_uri}'
       PROXY_USER_WHITELIST: 'hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}'
       DOMAIN_NAME: '${var.domain}'
       BROKER_SERVICE_HOSTNAME: '${var.broker_service_hostname}'

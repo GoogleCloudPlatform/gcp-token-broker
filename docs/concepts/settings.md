@@ -48,31 +48,17 @@ Domain name for your GSuite users.
 
 ### `ENCRYPTION_BACKEND`
 
-Default: `com.google.cloud.broker.encryption.backends.CloudKMSBackend`
+Default: `com.google.cloud.broker.encryption.backends.KMSEnvelopeEncryptionBackend`
 
 [Encryption](encryption.md) backend class.
 
-### `ENCRYPTION_KEY`
-
-Default: `broker-key`
+### `ENCRYPTION_CRYPTO_KEY`
 
 Name of the Cloud KMS key used to [encrypt](encryption.md) data.
 
-### `ENCRYPTION_KEY_RING`
+### `ENCRYPTION_DEK_URI`
 
-Default: `broker-key-ring`
-
-Name of the Cloud KMS [encryption](encryption.md) key ring.
-
-### `ENCRYPTION_KEY_RING_REGION`
-
-Default: `global`
-
-Name of the Cloud KMS [encryption](encryption.md) key ring's [region](https://cloud.google.com/kms/docs/locations).
-
-### `GCP_PROJECT`
-
-ID of the project where the broker service is hosted.
+URI of the Cloud KMS [encryption](encryption.md) key ring in format `projects/_/locations/_/keyRings/_/cryptoKeys/_`.
 
 ### `DATABASE_JDBC_URL`
 

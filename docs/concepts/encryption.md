@@ -16,9 +16,9 @@ Below is the list of available database backends:
 
 ### Cloud KMS
 
-Class path: `com.google.cloud.broker.encryption.backends.CloudKMSBackend`
+Class path: `com.google.cloud.broker.encryption.backends.KMSEnvelopeEncryptionBackend`
 
-The Cloud KMS backend uses [Cloud KMS](https://cloud.google.com/kms/) to encrypt and decrypt data.
+The Cloud KMS backend uses [Cloud KMS](https://cloud.google.com/kms/) to encrypt and decrypt an AES256 key stored in GCS. The AES256 key is used to encrypt and decrypt data.
 
 This backend is available as a separate [package on Maven Central](https://search.maven.org/search?q=g:com.google.cloud.broker%20AND%20a:encryption-backend-cloud-kms):
 
@@ -27,9 +27,8 @@ This backend is available as a separate [package on Maven Central](https://searc
 <artifactId>encryption-backend-cloud-kms</artifactId>
 ```
 
-This backend requires that you set the following setting: [`GCP_PROJECT`](settings.md#GCP_PROJECT),
-[`ENCRYPTION_KEY`](settings.md#ENCRYPTION_KEY), [`ENCRYPTION_KEY_RING`](settings.md#ENCRYPTION_KEY_RING),
-and [`ENCRYPTION_KEY_RING_REGION`](settings.md#ENCRYPTION_KEY_RING_REGION).
+This backend requires that you set the following setting: [`ENCRYPTION_CRYPTO_KEY`](settings.md#ENCRYPTION_CRYPTO_KEY), [`ENCRYPTION_DEK_URI`](settings.md#ENCRYPTION_DEK_URI),
+
 
 ### Dummy encryption backend
 
