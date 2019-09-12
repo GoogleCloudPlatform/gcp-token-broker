@@ -169,8 +169,8 @@ public class JDBCBackend extends AbstractDatabaseBackend {
 
     @Override
     public void initializeDatabase() {
-        // Note: The tables names and column names are wrapped with backquotes to preserve the case. Otherwise some
-        // backends (e.g. Postgres) force the names to lowercase.
+        // Note: The tables names and column names are wrapped with quotes to preserve the case. Otherwise some
+        // backends (e.g. Postgres) force the names to be lowercased.
         String blobType = getBlobType();
         runSimpleQuery(
             "CREATE TABLE IF NOT EXISTS " + quote("Session") + " (" +
