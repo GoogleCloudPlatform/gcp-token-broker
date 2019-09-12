@@ -1,0 +1,28 @@
+{namespace Authorizer.Templates.Callback}
+
+{template .header}
+<html>
+  <head>
+    <title>Token Broker Authorizer</title>
+  </head>
+  <body>
+{/template}
+
+{template .footer}
+  </body>
+</html>
+{/template}
+
+{template .success}
+  {@param principal: string}
+  {@param email: string}
+  {@param picture: string}
+  {call .header}{/call}
+    <h1>Refresh token saved</h1>
+    <div>
+      <p>Principal: {$principal}</p>
+      <p>Email: {$email}</p>
+      <p><img alt="profile" src="{$picture}" /></p>
+    </div>
+  {call .footer}{/call}
+{/template}
