@@ -59,7 +59,7 @@ import java.security.Security;
  * Cloud KMS is called once at startup to decrypt the static key.
  * This is the preferred encryption backend when high-throughput is a requirement.
  */
-public class KMSEnvelopeEncryptionBackend extends AbstractEncryptionBackend {
+public class CloudKMSBackend extends AbstractEncryptionBackend {
 
     public static final String ENCRYPTION_KEK_URI = "ENCRYPTION_KEK_URI";
     public static final String ENCRYPTION_DEK_URI = "ENCRYPTION_DEK_URI";
@@ -84,7 +84,7 @@ public class KMSEnvelopeEncryptionBackend extends AbstractEncryptionBackend {
     private String kekUri;
     private String dekUri;
 
-    public KMSEnvelopeEncryptionBackend(){
+    public CloudKMSBackend(){
         kekUri = AppSettings.requireProperty(ENCRYPTION_KEK_URI);
         dekUri = AppSettings.requireProperty(ENCRYPTION_DEK_URI);
 

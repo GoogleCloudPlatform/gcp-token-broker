@@ -39,7 +39,7 @@ public class KeyGen {
         System.out.println("Wrapping with " + kekUri);
         System.out.println("Writing to gs://" + bucket + "/" + name);
         try {
-            KMSEnvelopeEncryptionBackend.generateAndWrite(bucket, name, kekUri);
+            CloudKMSBackend.generateAndWrite(bucket, name, kekUri);
         } catch (Exception e) {
             System.err.println("Failed to generate and write key");
             e.printStackTrace(System.err);

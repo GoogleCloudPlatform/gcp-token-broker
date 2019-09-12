@@ -24,13 +24,13 @@ import java.util.Arrays;
 
 import static org.junit.Assert.*;
 
-public class KMSEnvelopeEncryptionBackendTest {
+public class CloudKMSBackendTest {
 
     @BeforeClass
     public static void setUp(){
         String projectId = AppSettings.requireProperty("GCP_PROJECT");
-        AppSettings.setProperty(AppSettings.ENCRYPTION_KEK_URI, "projects/" + projectId + "/locations/global/keyRings/testkeyring/cryptoKeys/testkey");
-        AppSettings.setProperty(AppSettings.ENCRYPTION_DEK_URI, "gs://" + projectId + "-testbucket/testkey.json");
+        AppSettings.setProperty(CloudKMSBackend.ENCRYPTION_KEK_URI, "projects/" + projectId + "/locations/global/keyRings/testkeyring/cryptoKeys/testkey");
+        AppSettings.setProperty(CloudKMSBackend.ENCRYPTION_DEK_URI, "gs://" + projectId + "-testbucket/testkey.json");
     }
 
     /**
@@ -38,7 +38,7 @@ public class KMSEnvelopeEncryptionBackendTest {
      */
     @Test
     public void testEncryptAndDecrypt() {
-        KMSEnvelopeEncryptionBackend aead = new KMSEnvelopeEncryptionBackend();
+        CloudKMSBackend aead = new CloudKMSBackend();
         byte[] plainText = "test string".getBytes();
         byte[] cipherText = aead.encrypt(plainText);
         assertFalse(Arrays.equals(plainText, cipherText));
@@ -51,7 +51,7 @@ public class KMSEnvelopeEncryptionBackendTest {
      */
     @Test
     public void testQPS() {
-        KMSEnvelopeEncryptionBackend aead = new KMSEnvelopeEncryptionBackend();
+        CloudKMSBackend aead = new CloudKMSBackend();
         java.util.Random r = new java.util.Random();
         byte[] plainText = new byte[512];
         long t0 = System.currentTimeMillis();

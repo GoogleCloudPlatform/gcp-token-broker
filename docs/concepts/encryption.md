@@ -16,7 +16,7 @@ Below is the list of available database backends:
 
 ### Cloud KMS
 
-Class path: `com.google.cloud.broker.encryption.backends.KMSEnvelopeEncryptionBackend`
+Class path: `com.google.cloud.broker.encryption.backends.CloudKMSBackend`
 
 The Cloud KMS backend uses [Cloud KMS](https://cloud.google.com/kms/) to encrypt and decrypt an AES256 key stored in GCS. The AES256 key is used to encrypt and decrypt data.
 

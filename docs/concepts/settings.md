@@ -48,7 +48,7 @@ Domain name for your GSuite users.
 
 ### `ENCRYPTION_BACKEND`
 
-Default: `com.google.cloud.broker.encryption.backends.KMSEnvelopeEncryptionBackend`
+Default: `com.google.cloud.broker.encryption.backends.CloudKMSBackend`
 
 [Encryption](encryption.md) backend class.
 
