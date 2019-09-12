@@ -28,9 +28,9 @@ public class KMSEnvelopeEncryptionBackendTest {
 
     @BeforeClass
     public static void setUp(){
-        // Configure local in-memory key
-        AppSettings.setProperty(AppSettings.ENCRYPTION_CRYPTO_KEY, AppSettings.TEST_ENCRYPTION);
-        AppSettings.setProperty(AppSettings.ENCRYPTION_DEK_URI, "");
+        String projectId = AppSettings.requireProperty("GCP_PROJECT");
+        AppSettings.setProperty(AppSettings.ENCRYPTION_KEK_URI, "projects/" + projectId + "/locations/global/keyRings/testkeyring/cryptoKeys/testkey");
+        AppSettings.setProperty(AppSettings.ENCRYPTION_DEK_URI, "gs://" + projectId + "-testbucket/testkey.json");
     }
 
     /**

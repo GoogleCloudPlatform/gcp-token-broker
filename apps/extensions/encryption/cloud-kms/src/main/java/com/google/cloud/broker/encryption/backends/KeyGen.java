@@ -34,12 +34,12 @@ public class KeyGen {
         genKey(bucket, name, cryptoKey);
     }
 
-    public static void genKey(String bucket, String name, String cryptoKey) {
+    public static void genKey(String bucket, String name, String kekUri) {
         System.out.println("Generating key");
-        System.out.println("Wrapping with " + cryptoKey);
+        System.out.println("Wrapping with " + kekUri);
         System.out.println("Writing to gs://" + bucket + "/" + name);
         try {
-            KMSEnvelopeEncryptionBackend.generateAndWrite(bucket, name, cryptoKey);
+            KMSEnvelopeEncryptionBackend.generateAndWrite(bucket, name, kekUri);
         } catch (Exception e) {
             System.err.println("Failed to generate and write key");
             e.printStackTrace(System.err);

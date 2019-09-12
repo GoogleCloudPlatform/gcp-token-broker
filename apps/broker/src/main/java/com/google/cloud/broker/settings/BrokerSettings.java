@@ -92,8 +92,6 @@ public class BrokerSettings extends Properties {
         // Session lifetime increment (in milliseconds)
         this.setProperty("SESSION_RENEW_PERIOD", Integer.toString(24 * 3600 * 1000));  // 24 hours
 
-        // KMS settings
-        this.setProperty("ENCRYPTION_KEY_RING", "broker-key-ring");
     }
 
 }

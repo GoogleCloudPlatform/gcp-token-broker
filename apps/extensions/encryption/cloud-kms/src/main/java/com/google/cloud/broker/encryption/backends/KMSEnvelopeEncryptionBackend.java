@@ -17,17 +17,16 @@
 package com.google.cloud.broker.encryption.backends;
 
 import com.google.api.client.googleapis.util.Utils;
-import com.google.api.gax.rpc.FixedHeaderProvider;
 import com.google.api.services.cloudkms.v1.CloudKMS;
 import com.google.api.services.cloudkms.v1.model.DecryptRequest;
 import com.google.api.services.cloudkms.v1.model.DecryptResponse;
 import com.google.api.services.cloudkms.v1.model.EncryptRequest;
 import com.google.api.services.cloudkms.v1.model.EncryptResponse;
-import com.google.auth.Credentials;
 import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.WriteChannel;
 import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.utils.EnvUtils;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
@@ -45,6 +44,7 @@ import com.google.crypto.tink.proto.KeyTemplate;
 import com.google.crypto.tink.proto.Keyset;
 import org.conscrypt.Conscrypt;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -60,6 +60,11 @@ import java.security.Security;
  * This is the preferred encryption backend when high-throughput is a requirement.
  */
 public class KMSEnvelopeEncryptionBackend extends AbstractEncryptionBackend {
+
+    public static final String ENCRYPTION_KEK_URI = "ENCRYPTION_KEK_URI";
+    public static final String ENCRYPTION_DEK_URI = "ENCRYPTION_DEK_URI";
+    public static final String MEMORY = "memory";
+
     static {
         try {
             AeadConfig.register();
@@ -76,44 +81,32 @@ public class KMSEnvelopeEncryptionBackend extends AbstractEncryptionBackend {
     }
     private Aead aead;
     public static KeyTemplate KEY_TEMPLATE = AeadKeyTemplates.AES256_GCM;
-    private String cryptoKey;
+    private String kekUri;
     private String dekUri;
 
     public KMSEnvelopeEncryptionBackend(){
-        cryptoKey = AppSettings.requireProperty(AppSettings.ENCRYPTION_CRYPTO_KEY);
-        dekUri = AppSettings.requireProperty(AppSettings.ENCRYPTION_DEK_URI);
+        kekUri = AppSettings.requireProperty(ENCRYPTION_KEK_URI);
+        dekUri = AppSettings.requireProperty(ENCRYPTION_DEK_URI);
 
-        if (cryptoKey.equalsIgnoreCase(AppSettings.TEST_ENCRYPTION)) {
+        if (kekUri.equalsIgnoreCase(MEMORY)) {
+            // Experimental feature: Store the KEK in memory instead of Cloud KMS.
             try {
                 aead = KeysetHandle.generateNew(KEY_TEMPLATE).getPrimitive(Aead.class);
                 return;
             } catch (GeneralSecurityException e) {
                 throw new RuntimeException(e);
             }
-        } else if (cryptoKey.equalsIgnoreCase(AppSettings.NO_ENCRYPTION)) {
-            aead = new PlainTextAead();
-            return;
-        }
-
-        if (!cryptoKey.startsWith("gs://") || dekUri.length() < 10) {
-            throw new IllegalArgumentException("Invalid DEK URI '" + dekUri + "' - should be 'gs://bucket/path'");
-        }
-        if (cryptoKey.length() < "projects/_/locations/_/keyRings/_/cryptoKeys/_".length()) {
-            throw new IllegalArgumentException("Invalid master key URI '" + cryptoKey + "' - should be 'projects/_/locations/_/keyRings/_/cryptoKeys/_'");
         }
 
         try {
-            GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
-
             URI uri = new URI(dekUri);
-            Storage storage = getStorageClient(credentials);
-            CloudKMS kms = getKMSClient(credentials);
-
+            Storage storageClient = getStorageClient();
+            CloudKMS kmsClient = getKMSClient();
             aead = readKeyset(uri.getAuthority(),
-                uri.getPath().substring(1), cryptoKey, storage, kms)
+                uri.getPath().substring(1), kekUri, storageClient, kmsClient)
                 .getPrimitive(Aead.class);
-        } catch (IOException | URISyntaxException | GeneralSecurityException e) {
-            throw new RuntimeException("Failed to initialize EnvelopeEncryptionBackend", e);
+        } catch (URISyntaxException | GeneralSecurityException e) {
+            throw new RuntimeException("Failed to initialize encryption backend", e);
         }
 
     }
@@ -136,67 +129,58 @@ public class KMSEnvelopeEncryptionBackend extends AbstractEncryptionBackend {
         }
     }
 
-    public static String USER_AGENT = "google-pso-tool/gcp-token-broker/0.4";
-
-    public static Storage getStorageClient(Credentials credentials) {
+    public static Storage getStorageClient() {
+        String credentialsPath = EnvUtils.getenv().get("GOOGLE_APPLICATION_CREDENTIALS");
+        ServiceAccountCredentials credentials;
+        try {
+            credentials = (ServiceAccountCredentials) ServiceAccountCredentials
+                .fromStream(new FileInputStream(credentialsPath))
+                .createScoped("https://www.googleapis.com/auth/devstorage.read_write");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return StorageOptions.newBuilder()
             .setCredentials(credentials)
-            .setHeaderProvider(FixedHeaderProvider.create("user-agent", USER_AGENT))
             .build()
             .getService();
     }
 
-    public static Storage getStorageClient() {
-        try {
-            GoogleCredentials creds = GoogleCredentials
-                .getApplicationDefault()
-                .createScoped("https://www.googleapis.com/auth/devstorage.read_write");
-            return getStorageClient(creds);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to create Cloud Storage client application default credentials", e);
-        }
-    }
-
     public static CloudKMS getKMSClient() {
+        String credentialsPath = EnvUtils.getenv().get("GOOGLE_APPLICATION_CREDENTIALS");
+        ServiceAccountCredentials credentials;
         try {
-            GoogleCredentials creds = GoogleCredentials
-                .getApplicationDefault()
+            credentials = (ServiceAccountCredentials) ServiceAccountCredentials
+                .fromStream(new FileInputStream(credentialsPath))
                 .createScoped("https://www.googleapis.com/auth/cloudkms");
-            return getKMSClient(creds);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to create Cloud KMS client", e);
+            throw new RuntimeException(e);
         }
+        return new CloudKMS.Builder(Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(), new HttpCredentialsAdapter(credentials)).build();
     }
 
-    public static CloudKMS getKMSClient(Credentials credentials) {
-        return new CloudKMS.Builder(Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(), new HttpCredentialsAdapter(credentials))
-            .setApplicationName(USER_AGENT)
-            .build();
-    }
-
-    public static KeysetHandle readKeyset(String bucket, String name, String keyUri, Storage storage, CloudKMS kms) {
+    public static KeysetHandle readKeyset(String bucket, String name, String kekUri, Storage storage, CloudKMS kmsClient) {
         try {
-            Aead masterKey = new GcpKmsAead(kms, keyUri);
+            Aead kek = new GcpKmsAead(kmsClient, kekUri);
             KeysetReader keysetReader = new CloudStorageKeysetReader(bucket, name, storage);
-            return KeysetHandle.read(keysetReader, masterKey);
+            return KeysetHandle.read(keysetReader, kek);
         } catch (IOException | GeneralSecurityException e) {
-            throw new RuntimeException("Failed to read Keyset from gs://" + bucket + "/" + name + " with KMS key " + keyUri, e);
+            throw new RuntimeException("Failed to read Keyset from gs://" + bucket + "/" + name + " with KMS key " + kekUri, e);
         }
     }
 
-    public static KeysetHandle generateAndWrite(String bucket, String name, String keyUri) {
-        return generateAndWrite(KEY_TEMPLATE, bucket, name, keyUri, getStorageClient(), getKMSClient());
+    public static KeysetHandle generateAndWrite(String bucket, String dekName, String keyUri) {
+        return generateAndWrite(KEY_TEMPLATE, bucket, dekName, keyUri, getStorageClient(), getKMSClient());
     }
 
-    public static KeysetHandle generateAndWrite(KeyTemplate keyTemplate, String bucket, String name, String keyUri, Storage storage, CloudKMS kms) {
+    public static KeysetHandle generateAndWrite(KeyTemplate keyTemplate, String bucket, String dekName, String keyUri, Storage storage, CloudKMS kms) {
         try {
-            Aead masterKey = new GcpKmsAead(kms, keyUri);
-            KeysetWriter keysetWriter = new CloudStorageKeysetWriter(bucket, name, storage);
+            Aead kek = new GcpKmsAead(kms, keyUri);
+            KeysetWriter keysetWriter = new CloudStorageKeysetWriter(bucket, dekName, storage);
             KeysetHandle keysetHandle = KeysetHandle.generateNew(keyTemplate);
-            keysetHandle.write(keysetWriter, masterKey);
+            keysetHandle.write(keysetWriter, kek);
             return keysetHandle;
         } catch (IOException | GeneralSecurityException e) {
-            throw new RuntimeException("Failed to read Keyset from gs://" + bucket + "/" + name + " with KMS key " + keyUri, e);
+            throw new RuntimeException("Failed to read Keyset from gs://" + bucket + "/" + dekName + " with KMS key " + keyUri, e);
         }
     }
 
@@ -256,14 +240,14 @@ public class KMSEnvelopeEncryptionBackend extends AbstractEncryptionBackend {
 
         private final CloudKMS kmsClient;
 
-        // The location of a CryptoKey in Google Cloud KMS.
+        // The location of a key encryption key (KEK) in Google Cloud KMS.
         // Valid values have this format: projects/*/locations/*/keyRings/*/cryptoKeys/*.
         // See https://cloud.google.com/kms/docs/object-hierarchy.
-        private final String kmsKeyUri;
+        private final String kekUri;
 
-        public GcpKmsAead(CloudKMS kmsClient, String keyUri) throws GeneralSecurityException {
+        public GcpKmsAead(CloudKMS kmsClient, String kekUri) throws GeneralSecurityException {
             this.kmsClient = kmsClient;
-            this.kmsKeyUri = keyUri;
+            this.kekUri = kekUri;
         }
 
         @Override
@@ -277,7 +261,7 @@ public class KMSEnvelopeEncryptionBackend extends AbstractEncryptionBackend {
                         .locations()
                         .keyRings()
                         .cryptoKeys()
-                        .encrypt(this.kmsKeyUri, request)
+                        .encrypt(this.kekUri, request)
                         .execute();
                 return response.decodeCiphertext();
             } catch (IOException e) {
@@ -296,7 +280,7 @@ public class KMSEnvelopeEncryptionBackend extends AbstractEncryptionBackend {
                         .locations()
                         .keyRings()
                         .cryptoKeys()
-                        .decrypt(this.kmsKeyUri, request)
+                        .decrypt(this.kekUri, request)
                         .execute();
                 return response.decodePlaintext();
             } catch (IOException e) {
@@ -305,19 +289,4 @@ public class KMSEnvelopeEncryptionBackend extends AbstractEncryptionBackend {
         }
     }
 
-    /**
-     * Dummy encryption backend that does not encrypt nor decrypt anything.
-     * Use only for testing. Do NOT use in production!
-     */
-    public static class PlainTextAead implements Aead {
-        @Override
-        public byte[] decrypt(byte[] cipherText, byte[] associatedData) {
-            return cipherText;
-        }
-
-        @Override
-        public byte[] encrypt(byte[] plainText, byte[] associatedData) {
-            return plainText;
-        }
-    }
 }

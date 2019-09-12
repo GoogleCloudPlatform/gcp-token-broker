@@ -22,49 +22,59 @@ Follow these steps to run the test suite:
    ```shell
    gcloud services enable datastore.googleapis.com iam.googleapis.com cloudkms.googleapis.com
    ```
-5. Activate the Cloud Datastore database for your project:
+5. Create a test bucket:
+
+   ```shell
+   gsutil mb gs://${PROJECT}-testbucket
+   ```
+6. Allow the broker service account to access the bucket:
+
+   ```shell
+   gsutil iam ch serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com:objectAdmin gs://${PROJECT}-testbucket
+   ```
+7. Activate the Cloud Datastore database for your project:
 
    ```shell
    gcloud app create --region=us-central
    ```
    Note: Cloud Datastore requires an active App Engine application, so you must create one by using this command.
-6. Create a service account for the broker service:
+8. Create a service account for the broker service:
 
    ```shell
    gcloud iam service-accounts create broker
    ```
-7. Create a service account for a test user:
+9. Create a service account for a test user:
 
    ```shell
    gcloud iam service-accounts create alice-shadow
    ```
-8. Allow the broker service account to generate access tokens on behalf of the test service account:
+10. Allow the broker service account to generate access tokens on behalf of the test service account:
 
    ```shell
    gcloud iam service-accounts add-iam-policy-binding alice-shadow@${PROJECT}.iam.gserviceaccount.com \
      --role roles/iam.serviceAccountTokenCreator \
      --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
    ```
-9. Add the Cloud Datastore user IAM role to allow the broker service account to read and write to the database:
+11. Add the Cloud Datastore user IAM role to allow the broker service account to read and write to the database:
 
    ```shell
    gcloud projects add-iam-policy-binding $PROJECT \
      --role roles/datastore.user \
      --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
    ```
-10. Create a KMS keyring:
+11. Create a KMS keyring:
 
     ```shell
     gcloud kms keyrings create mykeyring --location global
     ```
-11. Create a KMS key:
+12. Create a KMS key:
 
     ```shell
     gcloud kms keys create mykey --location global \
       --keyring mykeyring --purpose encryption
     ```
 
-12. Give permission to the broker service account to use the keyring:
+13. Give permission to the broker service account to use the keyring:
 
     ```shell
     gcloud kms keyrings add-iam-policy-binding \
@@ -73,7 +83,7 @@ Follow these steps to run the test suite:
       --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
     ```
 
-13. Download a private JSON key for the broker service account:
+14. Download a private JSON key for the broker service account:
 
    ```shell
    gcloud iam service-accounts keys create --iam-account \

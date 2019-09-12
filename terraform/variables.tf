@@ -68,14 +68,6 @@ variable broker_service_cidr {
     default = "10.8.0.0/20"
 }
 
-variable crypto_key {
-  type = string
-}
-
-variable dek_uri {
-  type = string
-}
-
 // Authorizer --------------------------------------
 
 variable authorizer_hostname {

@@ -20,11 +20,6 @@ import java.lang.reflect.Constructor;
 public class AppSettings {
 
     private static Properties instance = null;
-    public static final String ENCRYPTION_CRYPTO_KEY = "ENCRYPTION_CRYPTO_KEY";
-    public static final String ENCRYPTION_DEK_URI = "ENCRYPTION_DEK_URI";
-    public static final String TEST_ENCRYPTION = "mem";
-    public static final String NO_ENCRYPTION = "plaintext";
-
 
     public AppSettings() {}
 

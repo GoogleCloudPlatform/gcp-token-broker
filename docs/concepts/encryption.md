@@ -27,7 +27,7 @@ This backend is available as a separate [package on Maven Central](https://searc
 <artifactId>encryption-backend-cloud-kms</artifactId>
 ```
 
-This backend requires that you set the following setting: [`ENCRYPTION_CRYPTO_KEY`](settings.md#ENCRYPTION_CRYPTO_KEY), [`ENCRYPTION_DEK_URI`](settings.md#ENCRYPTION_DEK_URI),
+This backend requires that you set the following settings: [`ENCRYPTION_KEK_URI`](settings.md#ENCRYPTION_KEK_URI), [`ENCRYPTION_DEK_URI`](settings.md#ENCRYPTION_DEK_URI),
 
 
 ### Dummy encryption backend

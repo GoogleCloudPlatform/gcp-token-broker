@@ -52,13 +52,13 @@ Default: `com.google.cloud.broker.encryption.backends.KMSEnvelopeEncryptionBacke
 
 [Encryption](encryption.md) backend class.
 
-### `ENCRYPTION_CRYPTO_KEY`
+### `ENCRYPTION_KEK_URI`
 
-Name of the Cloud KMS key used to [encrypt](encryption.md) data.
+URI of the Cloud KMS key encryption key (KEK) used to [encrypt/decrypt](encryption.md) the data encryption key (DEK).
 
 ### `ENCRYPTION_DEK_URI`
 
-URI of the Cloud KMS [encryption](encryption.md) key ring in format `projects/_/locations/_/keyRings/_/cryptoKeys/_`.
+URI in Cloud Storage for the data encryption key (DEK) used to [encrypt/decrypt](encryption.md) data.
 
 ### `DATABASE_JDBC_URL`
 
