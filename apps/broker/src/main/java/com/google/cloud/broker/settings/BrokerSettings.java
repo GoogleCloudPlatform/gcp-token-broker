@@ -92,6 +92,15 @@ public class BrokerSettings extends Properties {
         // Session lifetime increment (in milliseconds)
         this.setProperty("SESSION_RENEW_PERIOD", Integer.toString(24 * 3600 * 1000));  // 24 hours
 
+        this.setProperty("OAUTH_CALLBACK_URI", "http://localhost:8080");
+        this.setProperty("AUTHORIZER_HOST", "localhost");
+        this.setProperty("AUTHORIZER_PORT", "8080");
+        this.setProperty("AUTHORIZER_PRINCIPAL", "HTTP/localhost@realm");
+        this.setProperty("AUTHORIZER_KEYTAB", "authorizer.keytab");
+        this.setProperty("OAUTH_CLIENT_ID", "REQUIRED");
+        this.setProperty("OAUTH_CLIENT_SECRET", "REQUIRED");
+        this.setProperty("AUTHORIZER_ENABLE_SPNEGO", "true");
+
     }
 
 }

@@ -67,6 +67,10 @@ limitations under the License.
     </distributionManagement>
 
     <properties>
+        <apache.kerby.version>2.0.0</apache.kerby.version>
+        <conscrypt.version>2.1.0</conscrypt.version>
+        <google.guava.version>28.1-jre</google.guava.version>
+        <jetty.version>9.4.20.v20190813</jetty.version>
         <hadoop2.version>2.9.2</hadoop2.version>
         <hadoop3.version>3.1.1</hadoop3.version>
         <junit.version>4.13-beta-3</junit.version>
@@ -227,6 +231,7 @@ limitations under the License.
     </dependencies>
 
     <modules>
+        <module>apps/authorizer</module>
         <module>apps/broker</module>
         <module>apps/core</module>
         <module>apps/extensions/database/jdbc</module>

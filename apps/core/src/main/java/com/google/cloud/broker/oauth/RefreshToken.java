@@ -12,10 +12,16 @@
 package com.google.cloud.broker.oauth;
 
 import com.google.cloud.broker.database.models.CreationTimeModel;
+import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
+import com.google.cloud.broker.utils.TimeUtils;
+import com.google.common.base.Charsets;
 
 import java.util.HashMap;
 
 public class RefreshToken extends CreationTimeModel {
+    public static String ID = "id";
+    public static String VALUE = "value";
+    public static String CREATION_TIME = "creation_time";
 
     /**
      * Expected schema:
@@ -25,9 +31,15 @@ public class RefreshToken extends CreationTimeModel {
      *   - value: byte[]         => The actual OAuth refresh token (Recommendation: encrypt this value)
      *   - creation_time: Long   => The time when the object was created (in milliseconds)
      */
-
     public RefreshToken(HashMap<String, Object> values) {
         super(values);
     }
 
+    public static RefreshToken create(String refreshToken, String principal, AbstractEncryptionBackend aead) {
+        HashMap<String,Object> values = new HashMap<>();
+        values.put(ID, principal);
+        values.put(VALUE, aead.encrypt(refreshToken.getBytes(Charsets.UTF_8)));
+        values.put(CREATION_TIME, TimeUtils.currentTimeMillis());
+        return new RefreshToken(values);
+    }
 }
