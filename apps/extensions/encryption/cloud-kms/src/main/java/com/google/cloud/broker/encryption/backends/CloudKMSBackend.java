@@ -27,6 +27,8 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.WriteChannel;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.EnvUtils;
+import com.google.cloud.broker.utils.GoogleCredentialsDetails;
+import com.google.cloud.broker.utils.GoogleCredentialsFactory;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
@@ -130,32 +132,18 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
     }
 
     public static Storage getStorageClient() {
-        String credentialsPath = EnvUtils.getenv().get("GOOGLE_APPLICATION_CREDENTIALS");
-        ServiceAccountCredentials credentials;
-        try {
-            credentials = (ServiceAccountCredentials) ServiceAccountCredentials
-                .fromStream(new FileInputStream(credentialsPath))
-                .createScoped("https://www.googleapis.com/auth/devstorage.read_write");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        GoogleCredentialsDetails details = GoogleCredentialsFactory
+            .createCredentialsDetails(false, "https://www.googleapis.com/auth/devstorage.read_write");
         return StorageOptions.newBuilder()
-            .setCredentials(credentials)
+            .setCredentials(details.getCredentials())
             .build()
             .getService();
     }
 
     public static CloudKMS getKMSClient() {
-        String credentialsPath = EnvUtils.getenv().get("GOOGLE_APPLICATION_CREDENTIALS");
-        ServiceAccountCredentials credentials;
-        try {
-            credentials = (ServiceAccountCredentials) ServiceAccountCredentials
-                .fromStream(new FileInputStream(credentialsPath))
-                .createScoped("https://www.googleapis.com/auth/cloudkms");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return new CloudKMS.Builder(Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(), new HttpCredentialsAdapter(credentials)).build();
+        GoogleCredentialsDetails details = GoogleCredentialsFactory
+            .createCredentialsDetails(false, "https://www.googleapis.com/auth/cloudkms");
+        return new CloudKMS.Builder(Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(), new HttpCredentialsAdapter(details.getCredentials())).build();
     }
 
     public static KeysetHandle readKeyset(String bucket, String name, String kekUri, Storage storage, CloudKMS kmsClient) {

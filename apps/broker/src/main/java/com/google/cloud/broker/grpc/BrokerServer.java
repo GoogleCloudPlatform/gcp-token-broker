@@ -48,21 +48,19 @@ public class BrokerServer {
 
     private final String host;
     private final int port;
-    private final String certChainFilePath;
-    private final String privateKeyFilePath;
     private final boolean tlsEnabled;
     private static ServerServiceDefinition serviceDefinition = ServerInterceptors.intercept(
         new BrokerImpl(), new AuthorizationHeaderServerInterceptor(), new ClientAddressServerInterceptor());
 
     public BrokerServer() {
-        this.host = AppSettings.requireProperty("SERVER_HOST");
-        this.port = Integer.parseInt(AppSettings.requireProperty("SERVER_PORT"));
-        this.tlsEnabled = Boolean.parseBoolean(AppSettings.requireProperty("TLS_ENABLED"));
-        this.certChainFilePath = AppSettings.requireProperty("TLS_CRT_PATH");
-        this.privateKeyFilePath = AppSettings.requireProperty("TLS_KEY_PATH");
+        this.host = AppSettings.getProperty("SERVER_HOST", "0.0.0.0");
+        this.port = Integer.parseInt(AppSettings.getProperty("SERVER_PORT", "5000"));
+        this.tlsEnabled = Boolean.parseBoolean(AppSettings.getProperty("TLS_ENABLED", "true"));
     }
 
     private SslContextBuilder getSslContextBuilder() {
+        String certChainFilePath = AppSettings.requireProperty("TLS_CRT_PATH");
+        String privateKeyFilePath = AppSettings.requireProperty("TLS_KEY_PATH");
         SslContextBuilder sslClientContextBuilder = SslContextBuilder.forServer(
             new File(certChainFilePath),
             new File(privateKeyFilePath));
@@ -106,7 +104,7 @@ public class BrokerServer {
 
 
     public static void setLoggingLevel() {
-        Level level = Level.parse(AppSettings.requireProperty("LOGGING_LEVEL"));
+        Level level = Level.parse(AppSettings.getProperty("LOGGING_LEVEL", "INFO"));
         Logger root = Logger.getLogger("");
         root.setLevel(level);
         for (Handler handler : root.getHandlers()) {
