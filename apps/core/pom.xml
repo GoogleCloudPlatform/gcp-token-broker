@@ -34,6 +34,11 @@ limitations under the License.
           <artifactId>grpc-protobuf</artifactId>
           <version>${io.grpc.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.google.auth</groupId>
+        <artifactId>google-auth-library-oauth2-http</artifactId>
+        <version>0.17.1</version>
+      </dependency>
       <!-- For local cache -->
       <dependency>
         <groupId>net.jodah</groupId>
