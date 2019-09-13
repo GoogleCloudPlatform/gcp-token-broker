@@ -13,6 +13,7 @@
 
 apt-get update
 
-apt-get install -y python3-pip
-
-pip3 install -r "/base/apps/authorizer/requirements.txt"
+DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    krb5-user \
+    libkrb5-dev \
+    openjdk-11-jre-headless

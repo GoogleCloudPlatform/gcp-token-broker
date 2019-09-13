@@ -239,13 +239,20 @@ To deploy the broker service, run the following commands **from the root of the 
    minutes for the container images to build and get uploaded to the
    container registry.
 
-11. Wait until an external IP has been assigned to the broker service. You can
-   check the status by running the following command in a different terminal,
-   and by looking up the `EXTERNAL-IP` value:
+10. Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
 
-   ```shell
-   kubectl get service broker-service
-   ```
+    ```shell
+    BROKER_POD=$(kubectl get pods --field-selector=status.phase=Running -o name | grep -m1 "broker" | cut -d'/' -f 2)
+    kubectl exec -it $BROKER_POD -- bash -c "java -cp /classpath/broker.jar:/classpath/encryption-backend-cloud-kms.jar com.google.cloud.broker.encryption.GenerateDEK"
+    ```
+
+11. Wait until an external IP has been assigned to the broker service. You can
+    check the status by running the following command in a different terminal,
+    and by looking up the `EXTERNAL-IP` value:
+
+    ```shell
+    kubectl get service broker-service
+    ```
 
 ### Using the authorizer
 

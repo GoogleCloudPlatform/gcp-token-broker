@@ -92,6 +92,22 @@ resource "google_compute_firewall" "broker_allow_http" {
   ]
 }
 
+// Encryption ------------------------------------------------
+
+// Bucket to store data the encryption key (DEK) for the CloudKMS encryption backend
+
+resource "google_storage_bucket" "encryption_bucket" {
+  name = "${var.gcp_project}-encryption"
+  depends_on = ["google_project_service.service_compute"]  # Dependency required: https://github.com/terraform-providers/terraform-provider-google/issues/1089
+  force_destroy = true
+}
+
+resource "google_storage_bucket_iam_member" "encryption_bucket_perms" {
+  bucket = "${google_storage_bucket.encryption_bucket.name}"
+  role = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.broker.email}"
+}
+
 // NAT gateway -----------------------------------------------
 
 resource "google_compute_router" "broker" {
@@ -245,7 +261,7 @@ broker:
     settings:
       GCP_PROJECT: '${var.gcp_project}'
       ENCRYPTION_KEK_URI: '${google_kms_crypto_key.broker_key.self_link}'
-      ENCRYPTION_DEK_URI: ''  # FIXME
+      ENCRYPTION_DEK_URI: 'gs://${google_storage_bucket.encryption_bucket.name}/dek.json'
       PROXY_USER_WHITELIST: 'hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}'
       DOMAIN_NAME: '${var.domain}'
       BROKER_SERVICE_NAME: 'broker'
@@ -268,9 +284,16 @@ authorizer:
   image: 'gcr.io/${var.gcp_project}/authorizer'
   app:
     settings:
-      GCP_PROJECT: '${var.gcp_project}'
-      ENCRYPTION_KEY_RING_REGION: '${var.gcp_region}'
-      DOMAIN_NAME: '${var.domain}'
+      AUTHORIZER_KEYTAB: 'authorizer.keytab'
+      AUTHORIZER_PRINCIPAL: 'HTTP/localhost@EXAMPLE.COM'
+      AUTHORIZER_HOST: 'localhost'
+      AUTHORIZER_PORT: '8080'
+      AUTHORIZER_ENABLE_SPNEGO: 'true'
+      ENCRYPTION_KEK_URI: '${google_kms_crypto_key.broker_key.self_link}'
+      ENCRYPTION_DEK_URI: 'gs://${google_storage_bucket.encryption_bucket.name}/dek.json'
+      OAUTH_CALLBACK_URI: 'https://${var.authorizer_hostname}/oauth2callback'
+      OAUTH_CLIENT_ID: 'changeit'
+      OAUTH_CLIENT_SECRET: 'changeit'
   ingress:
     host: '${var.authorizer_hostname}'
 EOT
