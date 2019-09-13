@@ -32,9 +32,7 @@ Broker principal's service name.
 
 ### `CLIENT_SECRET_PATH`
 
-Default: `/secrets/client_secret.json`
-
-Path to the OAuth client ID used by the [Authorizer](authorizer.md) app and the [refresh token provider](providers.md#refresh-token-provider).
+Path to the OAuth client ID JSON file used by the [Authorizer](authorizer.md) app and the [refresh token provider](providers.md#refresh-token-provider).
 
 ### `DATABASE_BACKEND`
 
@@ -73,8 +71,6 @@ the [domain-wide delegation authority provider](providers.md#domain-wide-delegat
 (the shorter the time the better).
 
 ### `KEYTABS_PATH`
-
-Default: `/keytabs`
 
 Path on the filesystem for the directory that contains the broker principals' keytabs.
 
@@ -175,12 +171,8 @@ Flag to enable/disable [TLS](tls.md).
 
 ### `TLS_CRT_PATH`
 
-Default: `/secrets/tls.crt`
-
 Path on the filesystem for the [TLS](tls.md) certificate.
 
 ### `TLS_KEY_PATH`
-
-Default: `/secrets/tls.pem`
 
 Path on the filesystem for the [TLS](tls.md) private key.

@@ -26,7 +26,7 @@ public abstract class AbstractEncryptionBackend {
     public static AbstractEncryptionBackend getInstance() {
         if (instance == null) {
             try {
-                String className = AppSettings.requireProperty("ENCRYPTION_BACKEND");
+                String className = AppSettings.getProperty("ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.CloudKMSBackend");
                 Class c = Class.forName(className);
                 Constructor constructor  = c.getConstructor();
                 instance = (AbstractEncryptionBackend) constructor.newInstance();

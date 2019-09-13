@@ -43,7 +43,7 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
 
     private void loadKeytabs() {
         // Find files in provided KEYTABS_PATH setting
-        File keytabsPath = new File(AppSettings.requireProperty("KEYTABS_PATH"));
+        File keytabsPath = new File(AppSettings.getProperty("KEYTABS_PATH"));
         File[] keytabFiles = keytabsPath.listFiles();
 
         if (keytabFiles == null) {

@@ -70,7 +70,6 @@ public class BrokerServerTest {
     public static void setupClass() {
         AppSettings.reset();
         HashMap<String, String> env = new HashMap(System.getenv());
-        env.put("APP_SETTINGS_CLASS", "com.google.cloud.broker.settings.BrokerSettings");
         env.put("APP_SETTING_PROVIDER", "com.google.cloud.broker.accesstokens.providers.MockProvider");
         env.put("APP_SETTING_DATABASE_BACKEND", "com.google.cloud.broker.database.backends.DummyDatabaseBackend");
         env.put("APP_SETTING_REMOTE_CACHE", "com.google.cloud.broker.caching.remote.DummyCache");
