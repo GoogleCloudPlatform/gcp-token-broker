@@ -153,8 +153,6 @@ public class Authorizer implements AutoCloseable {
         ctx.addServlet(new ServletHolder(new LoginServlet(flow, settings.callbackUri.getPath())), "/");
 
         CallbackOptions callbackOptions = new CallbackOptions();
-        callbackOptions.aead = AbstractEncryptionBackend.getInstance();
-        callbackOptions.db = new DatabaseRefreshTokenStore();
         callbackOptions.flow = flow;
         callbackOptions.redirectUri = redirectUri;
         callbackServlet = new CallbackServlet(callbackOptions);
@@ -235,8 +233,6 @@ public class Authorizer implements AutoCloseable {
 
     public static class CallbackOptions{
         private GoogleAuthorizationCodeFlow flow;
-        private RefreshTokenStore db;
-        private AbstractEncryptionBackend aead;
         private String redirectUri;
     }
 
@@ -247,7 +243,9 @@ public class Authorizer implements AutoCloseable {
         }
 
         public void putRefreshToken(String principal, String refreshToken){
-            opts.db.putRefreshToken(RefreshToken.create(refreshToken, principal, opts.aead));
+            AbstractEncryptionBackend aead = AbstractEncryptionBackend.getInstance();
+            DatabaseRefreshTokenStore db = new DatabaseRefreshTokenStore();
+            db.putRefreshToken(RefreshToken.create(refreshToken, principal, aead));
         }
 
         @Override
