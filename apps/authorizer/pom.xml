@@ -107,17 +107,6 @@
             <version>${apache.kerby.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>1.4.199</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.cloud.broker</groupId>
-            <artifactId>database-backend-jdbc</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
 
