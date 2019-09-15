@@ -23,10 +23,8 @@ import com.google.api.services.cloudkms.v1.model.DecryptResponse;
 import com.google.api.services.cloudkms.v1.model.EncryptRequest;
 import com.google.api.services.cloudkms.v1.model.EncryptResponse;
 import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.WriteChannel;
 import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.utils.EnvUtils;
 import com.google.cloud.broker.utils.GoogleCredentialsDetails;
 import com.google.cloud.broker.utils.GoogleCredentialsFactory;
 import com.google.cloud.storage.BlobId;
@@ -46,7 +44,6 @@ import com.google.crypto.tink.proto.KeyTemplate;
 import com.google.crypto.tink.proto.Keyset;
 import org.conscrypt.Conscrypt;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -101,13 +98,11 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
         }
 
         try {
-            URI uri = new URI(dekUri);
             Storage storageClient = getStorageClient();
             CloudKMS kmsClient = getKMSClient();
-            aead = readKeyset(uri.getAuthority(),
-                uri.getPath().substring(1), kekUri, storageClient, kmsClient)
+            aead = readKeyset(dekUri, kekUri, storageClient, kmsClient)
                 .getPrimitive(Aead.class);
-        } catch (URISyntaxException | GeneralSecurityException e) {
+        } catch (GeneralSecurityException e) {
             throw new RuntimeException("Failed to initialize encryption backend", e);
         }
 
@@ -146,41 +141,44 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
         return new CloudKMS.Builder(Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(), new HttpCredentialsAdapter(details.getCredentials())).build();
     }
 
-    public static KeysetHandle readKeyset(String bucket, String name, String kekUri, Storage storage, CloudKMS kmsClient) {
+    public static KeysetHandle readKeyset(String dekUri, String kekUri, Storage storageClient, CloudKMS kmsClient) {
         try {
             Aead kek = new GcpKmsAead(kmsClient, kekUri);
-            KeysetReader keysetReader = new CloudStorageKeysetReader(bucket, name, storage);
-            return KeysetHandle.read(keysetReader, kek);
+            CloudStorageKeysetManager keysetManager = new CloudStorageKeysetManager(dekUri, storageClient);
+            return KeysetHandle.read(keysetManager, kek);
         } catch (IOException | GeneralSecurityException e) {
-            throw new RuntimeException("Failed to read Keyset from gs://" + bucket + "/" + name + " with KMS key " + kekUri, e);
+            throw new RuntimeException("Failed to read Keyset `" + dekUri + "` with KMS key `" + kekUri + "`", e);
         }
     }
 
-    public static KeysetHandle generateAndWrite(String bucket, String dekName, String keyUri) {
-        return generateAndWrite(KEY_TEMPLATE, bucket, dekName, keyUri, getStorageClient(), getKMSClient());
+    public static KeysetHandle generateAndWrite(String dekUri, String keyUri) {
+        return generateAndWrite(KEY_TEMPLATE, dekUri, keyUri, getStorageClient(), getKMSClient());
     }
 
-    public static KeysetHandle generateAndWrite(KeyTemplate keyTemplate, String bucket, String dekName, String keyUri, Storage storage, CloudKMS kms) {
+    public static KeysetHandle generateAndWrite(KeyTemplate keyTemplate, String dekUri, String kekUri, Storage storageClient, CloudKMS kmsClient) {
         try {
-            Aead kek = new GcpKmsAead(kms, keyUri);
-            KeysetWriter keysetWriter = new CloudStorageKeysetWriter(bucket, dekName, storage);
+            Aead kek = new GcpKmsAead(kmsClient, kekUri);
+            CloudStorageKeysetManager keysetManager = new CloudStorageKeysetManager(dekUri, storageClient);
             KeysetHandle keysetHandle = KeysetHandle.generateNew(keyTemplate);
-            keysetHandle.write(keysetWriter, kek);
+            keysetHandle.write(keysetManager, kek);
             return keysetHandle;
         } catch (IOException | GeneralSecurityException e) {
-            throw new RuntimeException("Failed to read Keyset from gs://" + bucket + "/" + dekName + " with KMS key " + keyUri, e);
+            throw new RuntimeException("Failed to write Keyset `" + dekUri + "` with KMS key `" + kekUri + "`", e);
         }
     }
 
-    public static class CloudStorageKeysetReader implements KeysetReader {
-        private String bucket;
-        private String name;
-        private Storage storage;
 
-        public CloudStorageKeysetReader(String bucket, String name, Storage storage) {
-            this.bucket = bucket;
-            this.name = name;
-            this.storage = storage;
+    public static class CloudStorageKeysetManager implements KeysetWriter, KeysetReader {
+        private URI dekUri;
+        private Storage storageClient;
+
+        public CloudStorageKeysetManager(String dekUri, Storage storageClient) {
+            try {
+                this.dekUri = new URI(dekUri);
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+            this.storageClient = storageClient;
         }
 
         @Override
@@ -190,21 +188,10 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
 
         @Override
         public EncryptedKeyset readEncrypted() throws IOException {
+            BlobId blobId = BlobId.of(dekUri.getAuthority(), dekUri.getPath().substring(1));
             return JsonKeysetReader
-                .withBytes(storage.readAllBytes(bucket, name))
+                .withBytes(storageClient.readAllBytes(blobId))
                 .readEncrypted();
-        }
-    }
-
-    public static class CloudStorageKeysetWriter implements KeysetWriter {
-        private String bucket;
-        private String name;
-        private Storage storage;
-
-        public CloudStorageKeysetWriter(String bucket, String name, Storage storage) {
-            this.bucket = bucket;
-            this.name = name;
-            this.storage = storage;
         }
 
         @Override
@@ -214,7 +201,8 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
 
         @Override
         public void write(EncryptedKeyset keyset) throws IOException {
-            WriteChannel wc = storage.writer(BlobInfo.newBuilder(BlobId.of(bucket, name)).build());
+            BlobId blobId = BlobId.of(dekUri.getAuthority(), dekUri.getPath().substring(1));
+            WriteChannel wc = storageClient.writer(BlobInfo.newBuilder(blobId).build());
             OutputStream os = Channels.newOutputStream(wc);
             JsonKeysetWriter
                 .withOutputStream(os)
