@@ -19,7 +19,7 @@ package com.google.cloud.broker.authorization;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
-import com.google.cloud.broker.database.backends.JDBCBackend;
+import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
 import com.google.cloud.broker.encryption.backends.DummyEncryptionBackend;
 import com.google.cloud.broker.oauth.RefreshToken;
@@ -64,8 +64,7 @@ public class AuthorizerTest extends KdcTestBase {
         AppSettings.setProperty("OAUTH_CLIENT_SECRET", "REQUIRED");
         AppSettings.setProperty("AUTHORIZER_ENABLE_SPNEGO", "true");
         AppSettings.setProperty("ENCRYPTION_BACKEND", DummyEncryptionBackend.class.getCanonicalName());
-        AppSettings.setProperty("DATABASE_BACKEND", JDBCBackend.class.getCanonicalName());
-        AppSettings.setProperty("DATABASE_JDBC_URL", "jdbc:h2:mem:;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE");
+        AppSettings.setProperty("DATABASE_BACKEND", DummyDatabaseBackend.class.getCanonicalName());
 
         authorizer = new Authorizer();
         authorizer.start();
@@ -90,6 +89,7 @@ public class AuthorizerTest extends KdcTestBase {
         assertEquals(statusCode, 302);
     }
 
+    @Test
     public void testRefreshTokenStore() {
         String token = "abcd";
         authorizer.getCallbackServlet().putRefreshToken(clientPrincipal, token);
