@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.cloud.broker.utils;
+package com.google.cloud.broker.oauth;
 
 import com.google.auth.oauth2.GoogleCredentials;
 

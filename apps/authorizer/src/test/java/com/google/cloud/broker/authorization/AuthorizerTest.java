@@ -36,8 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class AuthorizerTest extends KdcTestBase {
     static {
@@ -57,12 +56,12 @@ public class AuthorizerTest extends KdcTestBase {
         AppSettings.reset();
         AppSettings.setProperty("AUTHORIZER_HOST", "localhost");
         AppSettings.setProperty("AUTHORIZER_PORT", String.valueOf(authorizerPort));
-        AppSettings.setProperty("OAUTH_CALLBACK_URI", "http://localhost:8080/oauth2callback");
+        AppSettings.setProperty("AUTHORIZER_OAUTH_CALLBACK_URI", "http://localhost:8080/oauth2callback");
         AppSettings.setProperty("AUTHORIZER_PRINCIPAL", serverPrincipal);
         AppSettings.setProperty("AUTHORIZER_KEYTAB", serverKeytab.toString());
-        AppSettings.setProperty("OAUTH_CLIENT_ID", "REQUIRED");
-        AppSettings.setProperty("OAUTH_CLIENT_SECRET", "REQUIRED");
         AppSettings.setProperty("AUTHORIZER_ENABLE_SPNEGO", "true");
+        AppSettings.setProperty("OAUTH_CLIENT_ID", "FakeClientId");
+        AppSettings.setProperty("OAUTH_CLIENT_SECRET", "FakeClientSecret");
         AppSettings.setProperty("ENCRYPTION_BACKEND", DummyEncryptionBackend.class.getCanonicalName());
         AppSettings.setProperty("DATABASE_BACKEND", DummyDatabaseBackend.class.getCanonicalName());
 
@@ -87,6 +86,7 @@ public class AuthorizerTest extends KdcTestBase {
         int statusCode = response.getStatusLine().getStatusCode();
         // Should be redirected to Google OAuth page
         assertEquals(statusCode, 302);
+        assertTrue(response.getHeaders("Location")[0].getValue().startsWith("https://accounts.google.com/o/oauth2/auth?access_type=offline&client_id=FakeClientId&redirect_uri=/oauth2callback&response_type=code&scope=https://www.googleapis.com/auth/devstorage.read_write%20email%20profile&state="));
     }
 
     @Test

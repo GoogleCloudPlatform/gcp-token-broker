@@ -15,8 +15,8 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 
-import com.google.cloud.broker.utils.GoogleCredentialsDetails;
-import com.google.cloud.broker.utils.GoogleCredentialsFactory;
+import com.google.cloud.broker.oauth.GoogleCredentialsDetails;
+import com.google.cloud.broker.oauth.GoogleCredentialsFactory;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.auth.oauth2.TokenRequest;
 import com.google.api.client.auth.oauth2.TokenResponse;

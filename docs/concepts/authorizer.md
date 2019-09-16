@@ -15,9 +15,8 @@ It serves two endpoints:
 - `AUTHORIZER_PORT` listen port
 - `AUTHORIZER_KEYTAB` path to keytab containing login principal
 - `AUTHORIZER_PRINCIPAL` Kerberos principal name in format `HTTP/host.domain.tld@REALM`
-- `OAUTH_CALLBACK_URI` callback URI where authorization token is accepted after login.
-- `OAUTH_CLIENT_ID` OAuth 2.0 Client ID obtained from Cloud Console by creating an OAuth 2.0 application. Used to request Access Tokens.
-- `OAUTH_CLIENT_SECRET` OAuth 2.0 Client Secret obtained from Cloud Console by creating an OAuth 2.0 application. Used to request Access Tokens.
+- `AUTHORIZER_OAUTH_CALLBACK_URI` callback URI where authorization token is accepted after login.
+- `OAUTH_CLIENT_SECRET_JSON_PATH`
 - `AUTHORIZER_ENABLE_SPNEGO` boolean value indicating whether to require SPNEGO. Default: "true"
 
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.cloud.broker.utils;
+package com.google.cloud.broker.oauth;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -22,6 +22,7 @@ import java.io.IOException;
 import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.cloud.broker.utils.EnvUtils;
 
 public class GoogleCredentialsFactory {
 

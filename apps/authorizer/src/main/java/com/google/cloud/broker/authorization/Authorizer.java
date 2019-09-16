@@ -20,6 +20,7 @@ import com.google.api.client.auth.oauth2.BearerToken;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpTransport;
@@ -29,6 +30,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.Key;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
 import com.google.cloud.broker.oauth.DatabaseRefreshTokenStore;
+import com.google.cloud.broker.oauth.GoogleClientSecretsLoader;
 import com.google.cloud.broker.oauth.RefreshToken;
 import com.google.cloud.broker.oauth.RefreshTokenStore;
 import com.google.cloud.broker.settings.AppSettings;
@@ -138,11 +140,12 @@ public class Authorizer implements AutoCloseable {
         server = new Server(settings.port);
         server.setHandler(ctx);
 
+        GoogleClientSecrets clientSecrets = GoogleClientSecretsLoader.getSecrets();
+
         flow = new GoogleAuthorizationCodeFlow
             .Builder(HTTP_TRANSPORT,
                     JSON_FACTORY,
-                    settings.clientId,
-                    settings.clientSecret,
+                    clientSecrets,
                     SCOPES)
             .setAuthorizationServerEncodedUrl(AUTH_SERVER_URL)
             .setTokenServerUrl(new GenericUrl(TOKEN_URL))
@@ -215,19 +218,15 @@ public class Authorizer implements AutoCloseable {
         int port;
         String principal;
         String keytabPath;
-        String clientId;
-        String clientSecret;
         boolean enableSpnego;
 
         public Settings() {
-            callbackUri = new GenericUrl(AppSettings.requireProperty(("OAUTH_CALLBACK_URI"))).toURI();
-            host = AppSettings.requireProperty("AUTHORIZER_HOST");
-            port = Integer.valueOf(AppSettings.requireProperty("AUTHORIZER_PORT"));
+            callbackUri = new GenericUrl(AppSettings.requireProperty(("AUTHORIZER_OAUTH_CALLBACK_URI"))).toURI();
+            host = AppSettings.getProperty("AUTHORIZER_HOST", "0.0.0.0");
+            port = Integer.valueOf(AppSettings.getProperty("AUTHORIZER_PORT", "8080"));
             principal = AppSettings.requireProperty("AUTHORIZER_PRINCIPAL");
             keytabPath = AppSettings.requireProperty("AUTHORIZER_KEYTAB");
-            clientId = AppSettings.requireProperty("OAUTH_CLIENT_ID");
-            clientSecret = AppSettings.requireProperty("OAUTH_CLIENT_SECRET");
-            enableSpnego = AppSettings.requireProperty("AUTHORIZER_ENABLE_SPNEGO").equalsIgnoreCase("true");
+            enableSpnego = AppSettings.getProperty("AUTHORIZER_ENABLE_SPNEGO", "true").equalsIgnoreCase("true");
         }
     }
 

@@ -11,18 +11,14 @@
 
 package com.google.cloud.broker.accesstokens.providers;
 
-import java.io.File;
-import java.io.InputStream;
 import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.json.JsonFactory;
+import com.google.cloud.broker.oauth.GoogleClientSecretsLoader;
 import io.grpc.Status;
 
 import com.google.cloud.broker.accesstokens.AccessToken;
@@ -72,15 +68,7 @@ public class RefreshTokenProvider extends AbstractProvider {
         String decryptedValue = new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
 
         // Load OAuth client secret
-        File secretJson = new java.io.File(AppSettings.requireProperty("CLIENT_SECRET_PATH"));
-        JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-        GoogleClientSecrets clientSecrets;
-        try {
-            InputStream in = new FileInputStream(secretJson);
-            clientSecrets = GoogleClientSecrets.load(jsonFactory, new InputStreamReader(in));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        GoogleClientSecrets clientSecrets = GoogleClientSecretsLoader.getSecrets();
 
         // Generate a new access token
         TokenResponse response = null;

@@ -39,6 +39,11 @@ limitations under the License.
         <artifactId>google-auth-library-oauth2-http</artifactId>
         <version>0.17.1</version>
       </dependency>
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>1.30.3</version>
+        </dependency>
       <!-- For local cache -->
       <dependency>
         <groupId>net.jodah</groupId>
