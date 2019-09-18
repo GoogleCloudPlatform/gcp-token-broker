@@ -19,13 +19,12 @@ public final class SpnegoUtils {
     private static final String KRB5_MECHANISM_OID = "1.2.840.113554.1.2.2";
     private static final String KRB5_PRINCIPAL_NAME_OID = "1.2.840.113554.1.2.2.1";
 
-    public static byte[] newSPNEGOToken(String brokerServiceName, String brokerHostname, String brokerRealm) throws GSSException {
+    public static byte[] newSPNEGOToken(String servicePrincipal) throws GSSException {
         // Create GSS context for the broker service and the logged-in user
         Oid krb5Mechanism = new Oid(KRB5_MECHANISM_OID);
         Oid krb5PrincipalNameType = new Oid(KRB5_PRINCIPAL_NAME_OID);
         Oid spnegoOid = new Oid(SPNEGO_OID);
         GSSManager manager = GSSManager.getInstance();
-        String servicePrincipal = brokerServiceName + "/" + brokerHostname + "@" + brokerRealm;
         GSSName gssServerName = manager.createName(servicePrincipal , krb5PrincipalNameType, krb5Mechanism);
         GSSContext gssContext = manager.createContext(
             gssServerName, spnegoOid, null, GSSCredential.DEFAULT_LIFETIME);

@@ -11,11 +11,8 @@
 
 package com.google.cloud.broker.hadoop.fs;
 
-import java.security.AccessController;
-import java.security.Principal;
-import java.util.Base64;
-import javax.security.auth.Subject;
-
+import com.google.api.client.http.GenericUrl;
+import com.google.common.io.BaseEncoding;
 import org.ietf.jgss.GSSException;
 
 import io.grpc.ManagedChannel;
@@ -29,9 +26,15 @@ import com.google.cloud.broker.protobuf.BrokerGrpc;
 
 public final class BrokerGateway {
 
+
     protected BrokerGrpc.BrokerBlockingStub stub;
     protected ManagedChannel managedChannel;
     protected Configuration config;
+
+    private final String CONFIG_URI = "gcp.token.broker.uri";
+    private final String CONFIG_PRINCIPAL = "gcp.token.broker.kerberos.principal";
+    private final String CONFIG_CERTIFICATE = "gcp.token.broker.tls.certificate";
+
 
     public BrokerGateway(Configuration config) {
         this(config,null);
@@ -40,12 +43,34 @@ public final class BrokerGateway {
     public BrokerGateway(Configuration config, String sessionToken) {
         this.config = config;
 
-        String brokerHostname = config.get("gcp.token.broker.uri.hostname", "localhost");
-        int brokerPort = config.getInt("gcp.token.broker.uri.port", 443);
-        boolean tlsEnabled = config.getBoolean("gcp.token.broker.tls.enabled", true);
-        String tlsCertificate = config.get("gcp.token.broker.tls.certificate", "");
+        // Extract the host and port from the URI
+        String brokerUri = config.get(CONFIG_URI);
+        GenericUrl url;
+        try {
+            url = new GenericUrl(brokerUri);
+        }
+        catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid value for property `" + CONFIG_URI + "`");
+        }
+        String host = url.getHost();
+        int port = url.getPort();
 
-        managedChannel = GrpcUtils.newManagedChannel(brokerHostname, brokerPort, tlsEnabled, tlsCertificate);
+        // Determine if TLS should be used
+        boolean useTLS;
+        String scheme = url.getScheme();
+        if (scheme.equals("http")) {
+            useTLS = false;
+        }
+        else if (scheme.equals("https")) {
+            useTLS = true;
+        }
+        else {
+            throw new RuntimeException("Incorrect URI scheme `" + scheme + " ` in `" + CONFIG_URI + "` property: " + brokerUri);
+        }
+
+        String tlsCertificate = config.get(CONFIG_CERTIFICATE, "");
+
+        managedChannel = GrpcUtils.newManagedChannel(host, port, useTLS, tlsCertificate);
         stub = GrpcUtils.newStub(managedChannel);
 
         if (sessionToken != null) {
@@ -72,22 +97,8 @@ public final class BrokerGateway {
     }
 
     private void setSPNEGOToken() throws GSSException {
-        String brokerServiceName = config.get("gcp.token.broker.servicename", "broker");
-        String brokerHostname = config.get("gcp.token.broker.uri.hostname", "localhost");
-
-        // Figure out the broker's realm
-        String brokerRealm = config.get("gcp.token.broker.realm", "");
-        if (brokerRealm.equals("")) {
-            // If no realm is provided, use the logged-in user's realm
-            Subject subject = Subject.getSubject(AccessController.getContext());
-            Principal principal = subject.getPrincipals().iterator().next();
-            String username = principal.getName();
-            brokerRealm = username.substring(username.indexOf("@") + 1);
-        }
-
-        // Create the SPNEGO token
-        byte[] rawToken = SpnegoUtils.newSPNEGOToken(brokerServiceName, brokerHostname, brokerRealm);
-        String encodedToken = Base64.getEncoder().encodeToString(rawToken);
+        String brokerPrincipal = config.get(CONFIG_PRINCIPAL);
+        String encodedToken = BaseEncoding.base64().encode(SpnegoUtils.newSPNEGOToken(brokerPrincipal));
 
         // Set the 'authorization' header with the SPNEGO token
         Metadata metadata = new Metadata();

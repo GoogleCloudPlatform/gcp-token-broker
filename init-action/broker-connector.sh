@@ -37,10 +37,9 @@ DATAPROC_REALM=$(sudo cat /etc/krb5.conf | grep "default_realm" | awk '{print $N
 readonly early_init="$(/usr/share/google/get_metadata_value attributes/dataproc-option-run-init-actions-early || echo 'false')"
 
 readonly broker_version="$(/usr/share/google/get_metadata_value attributes/broker-version)"
-readonly broker_tls_enabled="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-tls-enabled)"
 readonly broker_tls_certificate="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-tls-certificate)"
-readonly broker_uri_hostname="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-uri-hostname)"
-readonly broker_uri_port="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-uri-port)"
+readonly broker_uri="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-uri)"
+readonly broker_kerberos_principal="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-kerberos-principal)"
 readonly origin_realm="$(/usr/share/google/get_metadata_value attributes/origin-realm)"
 readonly test_users="$(/usr/share/google/get_metadata_value attributes/test-users)"
 
@@ -76,11 +75,9 @@ function restart_worker_services() {
 # Set some hadoop config properties
 set_property_core_site "fs.gs.system.bucket" ""
 set_property_core_site "fs.gs.delegation.token.binding" "com.google.cloud.broker.hadoop.fs.BrokerDelegationTokenBinding"
-set_property_core_site "gcp.token.broker.tls.enabled" "$broker_tls_enabled"
 set_property_core_site "gcp.token.broker.tls.certificate" "$broker_tls_certificate"
-set_property_core_site "gcp.token.broker.uri.hostname" "$broker_uri_hostname"
-set_property_core_site "gcp.token.broker.uri.port" "$broker_uri_port"
-set_property_core_site "gcp.token.broker.realm" "$DATAPROC_REALM"
+set_property_core_site "gcp.token.broker.uri" "$broker_uri"
+set_property_core_site "gcp.token.broker.kerberos.principal" "$broker_kerberos_principal"
 
 # Get connector's lib directory
 if [[ -d ${DATAPROC_LIB_DIR} ]]; then

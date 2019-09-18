@@ -21,9 +21,8 @@ import org.apache.hadoop.security.authentication.util.KerberosName;
 
 public class TestingTools {
 
-    public static final String REALM = "EXAMPLE.COM";
     public static final String BROKER_HOST = "testhost";
-    public static final String BROKER_NAME = "broker";
+    public static final String BROKER_PRINCIPAL = "broker/testhost@EXAMPLE.COM";
     public static final String MOCK_BUCKET = "gs://example";
     public static final String ALICE = "alice@EXAMPLE.COM";
     public static final String YARN = "yarn/testhost@FOOR.COM";
@@ -71,14 +70,10 @@ public class TestingTools {
         }
     }
 
-
     public static Configuration getBrokerConfig() {
         Configuration conf = new Configuration();
-        conf.set("gcp.token.broker.uri.hostname", BROKER_HOST);
-        conf.set("gcp.token.broker.uri.port", "1234");
-        conf.set("gcp.token.broker.servicename", BROKER_NAME);
-        conf.set("gcp.token.broker.realm", REALM);
-        conf.set("gcp.token.broker.tls.enabled", "false");
+        conf.set("gcp.token.broker.uri", "http://" + BROKER_HOST + ":1234");
+        conf.set("gcp.token.broker.kerberos.principal", BROKER_PRINCIPAL);
         return conf;
     }
 

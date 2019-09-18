@@ -20,15 +20,13 @@ Default: `com.google.cloud.broker.authentication.backends.SpnegoAuthenticator`
 
 [Authentication](authentication.md) backend class.
 
-### `BROKER_SERVICE_HOSTNAME`
+### `KEYTABS`
 
-Broker principal's hostname.
+JSON-formatted list of keytabs and principals for the broker service to log in with. For example:
 
-### `BROKER_SERVICE_NAME`
-
-Default: `broker`
-
-Broker principal's service name.
+```json
+[{"keytab": "/home/broker/foo.keytab", "principal": "foo/bar@BAZ"}]
+```
 
 ### `CLIENT_SECRET_PATH`
 

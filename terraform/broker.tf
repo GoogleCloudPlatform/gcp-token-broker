@@ -248,9 +248,7 @@ broker:
       ENCRYPTION_DEK_URI: ''  # FIXME
       PROXY_USER_WHITELIST: 'hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}'
       DOMAIN_NAME: '${var.domain}'
-      BROKER_SERVICE_NAME: 'broker'
-      BROKER_SERVICE_HOSTNAME: '${var.broker_service_hostname}'
-      KEYTABS_PATH: '/keytabs'
+      KEYTABS: '{"keytab": "/keytabs/broker.keytab", "principal": "broker/${var.broker_service_hostname}@${local.dataproc_realm}""}'
       TLS_KEY_PATH: '/secrets/tls.pem'
       TLS_CRT_PATH: '/secrets/tls.crt'
       CLIENT_SECRET_PATH: '/secrets/client_secret.json'

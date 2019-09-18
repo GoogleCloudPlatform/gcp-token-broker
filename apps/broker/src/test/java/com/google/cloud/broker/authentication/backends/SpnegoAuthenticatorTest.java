@@ -38,9 +38,7 @@ import com.google.cloud.broker.settings.AppSettings;
 public class SpnegoAuthenticatorTest {
 
     private static final String REALM = "EXAMPLE.COM";
-    private static final String BROKER_HOST = "testhost";
-    private static final String BROKER_NAME = "broker";
-    private static final String KEYTABS_PATH = "/etc/security/keytabs/broker/";
+    private static final String KEYTABS = "[{\"keytab\": \"/etc/security/keytabs/broker/broker.keytab\", \"principal\": \"broker/testhost@EXAMPLE.COM\"}]";
     
     @Rule
     public TemporaryFolder tmp = new TemporaryFolder();
@@ -58,7 +56,7 @@ public class SpnegoAuthenticatorTest {
         String principal;
         String keytab;
         if (user == "broker") {
-            principal = BROKER_NAME + "/" + BROKER_HOST + "@" + REALM;
+            principal = "broker/testhost@" + REALM;
             keytab = "/etc/security/keytabs/broker/broker.keytab";
         }
         else {
@@ -103,7 +101,7 @@ public class SpnegoAuthenticatorTest {
             Oid krb5PrincipalNameType = new Oid(KRB5_PRINCIPAL_NAME_OID);
             Oid spnegoOid = new Oid(SPNEGO_OID);
             GSSManager manager = GSSManager.getInstance();
-            String servicePrincipal = BROKER_NAME + "/" + BROKER_HOST + "@" + REALM;
+            String servicePrincipal = "broker/testhost@" + REALM;
             GSSName gssServerName = manager.createName(servicePrincipal , krb5PrincipalNameType, krb5Mechanism);
             GSSContext gssContext = manager.createContext(
                 gssServerName, spnegoOid, null, GSSCredential.DEFAULT_LIFETIME);
@@ -120,70 +118,40 @@ public class SpnegoAuthenticatorTest {
     }
 
     /**
-     * Check that an exception is thrown if the provided KEYTABS_PATH doesn't contain any files.
-     */
-    @Test
-    public void testEmptyKeytabPath() {
-        File emptyFolder;
-        try {
-            emptyFolder = tmp.newFolder("empty");
-            AppSettings.setProperty("KEYTABS_PATH", emptyFolder.getAbsolutePath());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        try {
-            SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
-            auth.authenticateUser();
-            fail();
-        } catch (IllegalStateException e) {
-            assertEquals("No valid keytabs found in path `" + emptyFolder.getAbsolutePath() + "` as defined in the `KEYTABS_PATH` setting", e.getMessage());
-        }
-    }
-
-    /**
-     * Check that an exception is thrown if the KEYTABS_PATH doesn't exist.
+     * Check that an exception is thrown if the keytab doesn't exist.
      */
     @Test
     public void testInexistentKeytabPath() {
-        AppSettings.setProperty("KEYTABS_PATH", "/home/does-not-exist");
+        AppSettings.setProperty("KEYTABS", "[{\"keytab\": \"/home/does-not-exist\", \"principal\": \"blah\"}]");
         try {
             SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
             auth.authenticateUser();
             fail();
-        } catch (IllegalStateException e) {
-            assertEquals("Invalid path `/home/does-not-exist` as defined in the `KEYTABS_PATH` setting", e.getMessage());
+        } catch (RuntimeException e) {
+            assertEquals(RuntimeException.class, e.getClass());
+            assertEquals("Failed login for principal `blah` with keytab `/home/does-not-exist`", e.getMessage());
         }
     }
 
     /**
-     * Check that an exception is thrown if the KEYTABS_PATH doesn't contain any valid keytabs.
+     * Check that an exception is thrown if the JSON setting is misformatted.
      */
     @Test
-    public void testInvalidKeytab() {
-        File folder;
-        try {
-            folder = tmp.newFolder("folder");
-            tmp.newFile("folder/fake.keytab");
-            AppSettings.setProperty("KEYTABS_PATH", folder.getAbsolutePath());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+    public void testMisformattedJSONSetting() {
+        AppSettings.setProperty("KEYTABS", "[{\"foo\": \"bar\"}]");
         try {
             SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
             auth.authenticateUser();
             fail();
-        } catch (IllegalStateException e) {
-            assertEquals("No valid keytabs found in path `" + folder.getAbsolutePath() + "` as defined in the `KEYTABS_PATH` setting", e.getMessage());
+        } catch (Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("Invalid `KEYTABS` setting", e.getMessage());
         }
     }
 
     @Test
     public void testHeaderDoesntStartWithNegotiate() {
-        AppSettings.setProperty("KEYTABS_PATH", KEYTABS_PATH);
-        AppSettings.setProperty("BROKER_SERVICE_NAME", BROKER_NAME);
-        AppSettings.setProperty("BROKER_SERVICE_HOSTNAME", BROKER_HOST);
+        AppSettings.setProperty("KEYTABS", KEYTABS);
 
         SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
         try {
@@ -197,9 +165,7 @@ public class SpnegoAuthenticatorTest {
 
     @Test
     public void testInvalidSpnegoToken() {
-        AppSettings.setProperty("KEYTABS_PATH", KEYTABS_PATH);
-        AppSettings.setProperty("BROKER_SERVICE_NAME", BROKER_NAME);
-        AppSettings.setProperty("BROKER_SERVICE_HOSTNAME", BROKER_HOST);
+        AppSettings.setProperty("KEYTABS", KEYTABS);
 
         SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
         try {
@@ -216,9 +182,7 @@ public class SpnegoAuthenticatorTest {
      */
     @Test
     public void testSuccess() {
-        AppSettings.setProperty("KEYTABS_PATH", KEYTABS_PATH);
-        AppSettings.setProperty("BROKER_SERVICE_NAME", BROKER_NAME);
-        AppSettings.setProperty("BROKER_SERVICE_HOSTNAME", BROKER_HOST);
+        AppSettings.setProperty("KEYTABS", KEYTABS);
 
         // Let Alice generate a token
         Subject broker = login("alice");

@@ -28,10 +28,10 @@ public class GrpcUtils {
     // Timeout for RPC calls
     private static int DEADLINE_MILLISECONDS = 20*1000;
 
-    public static ManagedChannel newManagedChannel(String brokerHostname, int brokerPort, boolean tlsEnabled, String tlsCertificate) {
+    public static ManagedChannel newManagedChannel(String brokerHostname, int brokerPort, boolean useTLS, String tlsCertificate) {
         // Create the gRPC stub
         NettyChannelBuilder builder = NettyChannelBuilder.forAddress(brokerHostname, brokerPort);
-        if (!tlsEnabled) {
+        if (!useTLS) {
             builder = builder.usePlaintext();
         }
         else if (!tlsCertificate.equals("")) {

@@ -29,19 +29,17 @@ import static com.google.cloud.broker.hadoop.fs.SpnegoUtils.newSPNEGOToken;
 public class SpnegoUtilsTest {
 
     private static final String REALM = "EXAMPLE.COM";
-    private static final String BROKER_HOST = "testhost";
-    private static final String BROKER_NAME = "broker";
+    private static final String BROKER_PRINCIPAL = "broker/testhost@EXAMPLE.COM";
 
     public static final String TGT_ERROR = "No valid credentials provided (Mechanism level: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt))";
-    public static final String SERVER_NOT_FOUND_ERROR = "No valid credentials provided (Mechanism level: No valid credentials provided (Mechanism level: Server not found in Kerberos database (7) - LOOKING_UP_SERVER))";
 
     public static Subject login(String user) {
         Krb5LoginModule krb5LoginModule = new Krb5LoginModule();
 
         String principal;
         String keytab;
-        if (user == "broker") {
-            principal = BROKER_NAME + "/" + BROKER_HOST + "@" + REALM;
+        if (user.equals("broker")) {
+            principal = BROKER_PRINCIPAL;
             keytab = "/etc/security/keytabs/broker/broker.keytab";
         }
         else {
@@ -97,7 +95,7 @@ public class SpnegoUtilsTest {
         Subject alice = login("alice");
         byte[] spnegoToken = Subject.doAs(alice, (PrivilegedAction<byte[]>) () -> {
             try {
-                return newSPNEGOToken(BROKER_NAME, BROKER_HOST, REALM);
+                return newSPNEGOToken(BROKER_PRINCIPAL);
             } catch (GSSException e) {
                 throw new RuntimeException(e);
             }
@@ -119,7 +117,7 @@ public class SpnegoUtilsTest {
         Subject anonymous = new Subject();
         Subject.doAs(anonymous, (PrivilegedAction<Void>) () -> {
             try {
-                newSPNEGOToken(BROKER_NAME, BROKER_HOST, "EXAMPLE.COM");
+                newSPNEGOToken(BROKER_PRINCIPAL);
                 fail();
             } catch (GSSException e) {
                 assertEquals(TGT_ERROR, e.getMessage());
@@ -136,10 +134,10 @@ public class SpnegoUtilsTest {
         Subject alice = login("alice");
         Subject.doAs(alice, (PrivilegedAction<byte[]>) () -> {
             try {
-                newSPNEGOToken("wrong", BROKER_HOST, REALM);
+                newSPNEGOToken("blah/foo@BAR");
                 fail();
-            } catch (GSSException e) {
-                assertEquals(SERVER_NOT_FOUND_ERROR, e.getMessage());
+            } catch (Exception e) {
+                assertEquals(GSSException.class, e.getClass());
             }
             return null;
         });

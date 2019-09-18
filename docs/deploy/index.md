@@ -291,7 +291,9 @@ Run the following commands **from the root of the repository**:
    export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
    export REGION=${ZONE%-*}
    export ORIGIN_KDC_HOSTNAME=$(gcloud compute instances describe origin-kdc --format="value(networkInterfaces[0].networkIP)").xip.io
-   export BROKER_SERVICE_HOSTNAME="10.2.1.255.xip.io"
+   export BROKER_HOSTNAME="10.2.1.255.xip.io"
+   export BROKER_URI="https://${BROKER_HOSTNAME}:443"
+   export BROKER_PRINCIPAL="broker/${BROKER_HOSTNAME}"
    export BROKER_VERSION=$(cat VERSION)
    ```
 
@@ -323,11 +325,10 @@ Run the following commands **from the root of the repository**:
      --initialization-actions gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh \
      --kerberos-config-file kerberos-config.yaml \
      --metadata "broker-version=${BROKER_VERSION}" \
-     --metadata "gcp-token-broker-tls-enabled=true" \
      --metadata "gcp-token-broker-tls-certificate=$(cat broker-tls.crt)" \
-     --metadata "gcp-token-broker-uri-hostname=$BROKER_SERVICE_HOSTNAME" \
-     --metadata "gcp-token-broker-uri-port=443" \
-     --metadata "origin-realm=$REALM"
+     --metadata "gcp-token-broker-uri=${BROKER_URI}" \
+     --metadata "gcp-token-broker-kerberos-principal=${BROKER_PRINCIPAL}" \
+     --metadata "origin-realm=${REALM}"
    ```
 
    *Note:* The command creates a [single-node](https://cloud.google.com/dataproc/docs/concepts/configuring-clusters/single-node-clusters)
