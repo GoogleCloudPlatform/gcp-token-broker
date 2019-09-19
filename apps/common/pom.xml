@@ -24,33 +24,16 @@ limitations under the License.
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>broker-core</artifactId>
+    <artifactId>common</artifactId>
 
-    <name>Core components for the GCP Token Broker server and extensions</name>
+    <name>Common components for the GCP Token Broker server and client</name>
 
     <dependencies>
-      <dependency>
-          <groupId>io.grpc</groupId>
-          <artifactId>grpc-protobuf</artifactId>
-          <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.auth</groupId>
-        <artifactId>google-auth-library-oauth2-http</artifactId>
-        <version>0.17.1</version>
-      </dependency>
-      <!-- For local cache -->
-      <dependency>
-        <groupId>net.jodah</groupId>
-        <artifactId>expiringmap</artifactId>
-        <version>${expiringmap.version}</version>
-      </dependency>
-      <!-- For cache serialization/deserialization -->
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>${jackson.databind.version}</version>
-      </dependency>
+        <dependency>
+            <groupId>org.apache.kerby</groupId>
+            <artifactId>kerb-simplekdc</artifactId>
+            <version>${apache.kerby.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

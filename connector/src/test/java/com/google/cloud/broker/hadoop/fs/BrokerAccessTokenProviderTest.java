@@ -11,14 +11,14 @@
 
 package com.google.cloud.broker.hadoop.fs;
 
+import javax.security.auth.Subject;
 import java.io.IOException;
+import java.security.PrivilegedAction;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -34,6 +34,7 @@ import com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem;
 import static com.google.cloud.broker.hadoop.fs.SpnegoUtilsTest.TGT_ERROR;
 import static com.google.cloud.broker.hadoop.fs.TestingTools.*;
 import com.google.cloud.hadoop.util.AccessTokenProvider.AccessToken;
+import com.google.cloud.broker.testing.FakeKDC;
 import com.google.cloud.broker.protobuf.*;
 
 @RunWith(PowerMockRunner.class)
@@ -41,18 +42,23 @@ import com.google.cloud.broker.protobuf.*;
 @PrepareForTest({GrpcUtils.class})  // Classes to be mocked
 public class BrokerAccessTokenProviderTest {
 
+    private static FakeKDC fakeKDC;
+
     @Rule
     public static final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
     @BeforeClass
-    public static void setupClass() {
+    public static void setUpClass() {
         TestingTools.initHadoop();
+        fakeKDC = new FakeKDC(REALM);
+        fakeKDC.start();
+        fakeKDC.createPrincipal(ALICE);
+        fakeKDC.createPrincipal(BROKER);
     }
 
-    @Before
-    public void setup() {
-        // Make sure we're logged out before every test
-        TestingTools.logout();
+    @AfterClass
+    public static void tearDownClass() {
+        fakeKDC.stop();
     }
 
     public AccessToken refresh(Configuration conf) {
@@ -71,6 +77,11 @@ public class BrokerAccessTokenProviderTest {
     }
 
     private static class FakeServer extends TestingTools.FakeBrokerImpl {
+
+        public FakeServer(FakeKDC fakeKDC) {
+            super(fakeKDC);
+        }
+
         @Override
         public void getAccessToken(GetAccessTokenRequest request, StreamObserver<GetAccessTokenResponse> responseObserver) {
             try {
@@ -102,13 +113,14 @@ public class BrokerAccessTokenProviderTest {
     }
 
     @Test
-    public void testProviderRefresh() {
-        TestingTools.startServer(new FakeServer(), grpcCleanup);
-        AccessToken token;
+    public void testProviderRefresh() throws IOException {
+        TestingTools.startServer(new FakeServer(fakeKDC), grpcCleanup);
         Configuration conf = TestingTools.getBrokerConfig();
-        TestingTools.login(ALICE);
-        token = refresh(conf);
+        Subject alice = fakeKDC.login(ALICE);
+        UserGroupInformation.loginUserFromSubject(alice);
+        AccessToken token = refresh(conf);
         assertEquals("FakeAccessToken/AuthenticatedUser=" + ALICE + ";Owner=" + ALICE + ";Target=" + MOCK_BUCKET, token.getToken());
+        UserGroupInformation.setLoginUser(null);
     }
 
 }
