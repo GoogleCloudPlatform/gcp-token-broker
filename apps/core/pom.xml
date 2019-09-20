@@ -26,13 +26,18 @@ limitations under the License.
 
     <artifactId>broker-core</artifactId>
 
-    <name>Core components for the GCP Token Broker</name>
+    <name>Core components for the GCP Token Broker server and extensions</name>
 
     <dependencies>
       <dependency>
           <groupId>io.grpc</groupId>
           <artifactId>grpc-protobuf</artifactId>
           <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.auth</groupId>
+        <artifactId>google-auth-library-oauth2-http</artifactId>
+        <version>0.17.1</version>
       </dependency>
       <!-- For local cache -->
       <dependency>

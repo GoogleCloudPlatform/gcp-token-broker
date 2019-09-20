@@ -25,7 +25,6 @@ set -xeuo pipefail
 #####################################################################
 
 GCS_CONN_VERSION="hadoop2-2.0.0-RC2"
-OFFICIAL_BUCKET="gs://gcp-token-broker"
 ROLE="$(/usr/share/google/get_metadata_value attributes/dataproc-role)"
 WORKER_COUNT="$(/usr/share/google/get_metadata_value attributes/dataproc-worker-count)"
 HADOOP_CONF_DIR="/etc/hadoop/conf"
@@ -97,7 +96,7 @@ cd ${lib_dir}
 rm -f "gcs-connector-"*
 
 # Download the JARs
-gsutil cp "$OFFICIAL_BUCKET/broker-connector-hadoop2-${broker_version}.jar" .
+wget https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${broker_version}/broker-connector-hadoop2-${broker_version}.jar
 wget https://repo1.maven.org/maven2/com/google/cloud/bigdataoss/gcs-connector/${GCS_CONN_VERSION}/gcs-connector-${GCS_CONN_VERSION}-shaded.jar
 
 # Update version-less connector link if present

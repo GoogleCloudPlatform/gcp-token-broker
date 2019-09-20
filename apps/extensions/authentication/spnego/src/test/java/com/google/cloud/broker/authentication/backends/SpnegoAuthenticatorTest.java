@@ -12,41 +12,46 @@
 package com.google.cloud.broker.authentication.backends;
 
 import javax.security.auth.Subject;
-import javax.security.auth.login.LoginException;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.PrivilegedAction;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
 
-import com.sun.security.auth.module.Krb5LoginModule;
 import org.ietf.jgss.*;
-
 import static org.junit.Assert.*;
+import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 
 import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.testing.FakeKDC;
 
 
 public class SpnegoAuthenticatorTest {
 
+    private static FakeKDC fakeKDC;
     private static final String REALM = "EXAMPLE.COM";
     private static final String BROKER_HOST = "testhost";
     private static final String BROKER_NAME = "broker";
-    private static final String KEYTABS_PATH = "/etc/security/keytabs/broker/";
-    
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    public static final String BROKER = BROKER_NAME + "/" + BROKER_HOST + "@" + REALM;
+    public static final String ALICE = "alice@" + REALM;
+
+    @BeforeClass
+    public static void setUpClass() {
+        fakeKDC = new FakeKDC(REALM);
+        fakeKDC.start();
+        fakeKDC.createPrincipal(ALICE);
+        fakeKDC.createPrincipal(BROKER);
+    }
 
     @Before
-    public void setup() {
+    public void setUp() {
+        AbstractAuthenticationBackend.reset();
         AppSettings.reset();
         AppSettings.setProperty("KERBEROS_NAME_TRANSLATION_RULES",
             "RULE:[1:$1@$0](.*\\Q@EXAMPLE.COM\\E)s/(.*)\\Q@EXAMPLE.COM\\E/$1@altostrat.com/\n" +
@@ -103,43 +108,9 @@ public class SpnegoAuthenticatorTest {
         } catch (IllegalArgumentException e) {}
     }
 
-    public static Subject login(String user) {
-        Krb5LoginModule krb5LoginModule = new Krb5LoginModule();
-
-        String principal;
-        String keytab;
-        if (user == "broker") {
-            principal = BROKER_NAME + "/" + BROKER_HOST + "@" + REALM;
-            keytab = "/etc/security/keytabs/broker/broker.keytab";
-        }
-        else {
-            principal = user + "@" + REALM;
-            keytab = "/etc/security/keytabs/users/" + user + ".keytab";
-        }
-
-        final Map<String, String> options = new HashMap<String, String>();
-        options.put("keyTab", keytab);
-        options.put("principal", principal);
-        options.put("doNotPrompt", "true");
-        options.put("isInitiator", "true");
-        options.put("refreshKrb5Config", "true");
-        options.put("renewTGT", "true");
-        options.put("storeKey", "true");
-        options.put("useKeyTab", "true");
-        options.put("useTicketCache", "true");
-
-        Subject subject = new Subject();
-        krb5LoginModule.initialize(subject, null,
-            new HashMap<String, String>(),
-            options);
-
-        try {
-            krb5LoginModule.login();
-            krb5LoginModule.commit();
-        } catch (LoginException e) {
-            throw new RuntimeException(e);
-        }
-        return subject;
+    @AfterClass
+    public static void tearDownClass() {
+        fakeKDC.stop();
     }
 
     public static byte[] generateToken() {
@@ -154,7 +125,7 @@ public class SpnegoAuthenticatorTest {
             Oid krb5PrincipalNameType = new Oid(KRB5_PRINCIPAL_NAME_OID);
             Oid spnegoOid = new Oid(SPNEGO_OID);
             GSSManager manager = GSSManager.getInstance();
-            String servicePrincipal = BROKER_NAME + "/" + BROKER_HOST + "@" + REALM;
+            String servicePrincipal = BROKER;
             GSSName gssServerName = manager.createName(servicePrincipal , krb5PrincipalNameType, krb5Mechanism);
             GSSContext gssContext = manager.createContext(
                 gssServerName, spnegoOid, null, GSSCredential.DEFAULT_LIFETIME);
@@ -175,10 +146,10 @@ public class SpnegoAuthenticatorTest {
      */
     @Test
     public void testEmptyKeytabPath() {
-        File emptyFolder;
+        Path emptyFolder;
         try {
-            emptyFolder = tmp.newFolder("empty");
-            AppSettings.setProperty("KEYTABS_PATH", emptyFolder.getAbsolutePath());
+            emptyFolder = Files.createTempDirectory("empty");
+            AppSettings.setProperty("KEYTABS_PATH", emptyFolder.toString());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -188,7 +159,7 @@ public class SpnegoAuthenticatorTest {
             auth.authenticateUser();
             fail();
         } catch (IllegalStateException e) {
-            assertEquals("No valid keytabs found in path `" + emptyFolder.getAbsolutePath() + "` as defined in the `KEYTABS_PATH` setting", e.getMessage());
+            assertEquals("No valid keytabs found in path `" + emptyFolder.toString() + "` as defined in the `KEYTABS_PATH` setting", e.getMessage());
         }
     }
 
@@ -212,11 +183,11 @@ public class SpnegoAuthenticatorTest {
      */
     @Test
     public void testInvalidKeytab() {
-        File folder;
+        Path folder;
         try {
-            folder = tmp.newFolder("folder");
-            tmp.newFile("folder/fake.keytab");
-            AppSettings.setProperty("KEYTABS_PATH", folder.getAbsolutePath());
+            folder = Files.createTempDirectory("folder");
+            folder.resolve("fake.keytab").toFile().createNewFile();
+            AppSettings.setProperty("KEYTABS_PATH", folder.toString());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -226,13 +197,13 @@ public class SpnegoAuthenticatorTest {
             auth.authenticateUser();
             fail();
         } catch (IllegalStateException e) {
-            assertEquals("No valid keytabs found in path `" + folder.getAbsolutePath() + "` as defined in the `KEYTABS_PATH` setting", e.getMessage());
+            assertEquals("No valid keytabs found in path `" + folder.toString() + "` as defined in the `KEYTABS_PATH` setting", e.getMessage());
         }
     }
 
     @Test
     public void testHeaderDoesntStartWithNegotiate() {
-        AppSettings.setProperty("KEYTABS_PATH", KEYTABS_PATH);
+        AppSettings.setProperty("KEYTABS_PATH", fakeKDC.getBrokerKeytabDir().toString());
         AppSettings.setProperty("BROKER_SERVICE_NAME", BROKER_NAME);
         AppSettings.setProperty("BROKER_SERVICE_HOSTNAME", BROKER_HOST);
 
@@ -248,7 +219,7 @@ public class SpnegoAuthenticatorTest {
 
     @Test
     public void testInvalidSpnegoToken() {
-        AppSettings.setProperty("KEYTABS_PATH", KEYTABS_PATH);
+        AppSettings.setProperty("KEYTABS_PATH", fakeKDC.getBrokerKeytabDir().toString());
         AppSettings.setProperty("BROKER_SERVICE_NAME", BROKER_NAME);
         AppSettings.setProperty("BROKER_SERVICE_HOSTNAME", BROKER_HOST);
 
@@ -267,13 +238,13 @@ public class SpnegoAuthenticatorTest {
      */
     @Test
     public void testSuccess() {
-        AppSettings.setProperty("KEYTABS_PATH", KEYTABS_PATH);
+        AppSettings.setProperty("KEYTABS_PATH", fakeKDC.getBrokerKeytabDir().toString());
         AppSettings.setProperty("BROKER_SERVICE_NAME", BROKER_NAME);
         AppSettings.setProperty("BROKER_SERVICE_HOSTNAME", BROKER_HOST);
 
         // Let Alice generate a token
-        Subject broker = login("alice");
-        byte[] token = Subject.doAs(broker, (PrivilegedAction<byte[]>) () -> {
+        Subject alice = fakeKDC.login("alice");
+        byte[] token = Subject.doAs(alice, (PrivilegedAction<byte[]>) () -> {
             return generateToken();
         });
 

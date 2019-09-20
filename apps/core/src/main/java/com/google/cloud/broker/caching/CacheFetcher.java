@@ -42,7 +42,7 @@ public abstract class CacheFetcher {
             byte[] encryptedValue = cache.get(cacheKey);
             if (encryptedValue != null) {
                 // Cache hit... Let's load the value.
-                String json = new String(AbstractEncryptionBackend.getInstance().decrypt(getRemoteCacheCryptoKey(), encryptedValue));
+                String json = new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
                 try {
                     result = fromJson(json);
                 } catch (IOException e) {
@@ -59,7 +59,7 @@ public abstract class CacheFetcher {
                 if (encryptedValue != null) {
                     // This time it's a cache hit. The token must have been generated
                     // by a competing thread. So we just load the value.
-                    String json = new String(AbstractEncryptionBackend.getInstance().decrypt(getRemoteCacheCryptoKey(), encryptedValue));
+                    String json = new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
                     try {
                         result = fromJson(json);
                     } catch (IOException e) {
@@ -77,7 +77,7 @@ public abstract class CacheFetcher {
                     } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);
                     }
-                    encryptedValue = AbstractEncryptionBackend.getInstance().encrypt(getRemoteCacheCryptoKey(), json.getBytes());
+                    encryptedValue = AbstractEncryptionBackend.getInstance().encrypt(json.getBytes());
                     cache.set(cacheKey, encryptedValue, getRemoteCacheTime());
                 }
 
@@ -101,8 +101,6 @@ public abstract class CacheFetcher {
     protected abstract int getLocalCacheTime();
 
     protected abstract int getRemoteCacheTime();
-
-    protected abstract String getRemoteCacheCryptoKey();
 
     protected abstract Object computeResult();
 

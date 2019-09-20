@@ -23,7 +23,7 @@ public abstract class AbstractProvider {
     public static AbstractProvider getInstance() {
         if (instance == null) {
             try {
-                String className = AppSettings.requireProperty("PROVIDER");
+                String className = AppSettings.getProperty("PROVIDER", "com.google.cloud.broker.accesstokens.providers.RefreshTokenProvider");
                 Class c = Class.forName(className);
                 Constructor constructor  = c.getConstructor();
                 instance = (AbstractProvider) constructor.newInstance();

@@ -14,8 +14,8 @@ GCP_PROJECT = None
 GCP_REGION = None
 
 # KMS settings
-ENCRYPTION_CRYPTO_KEY_RING = 'broker-key-ring'
-ENCRYPTION_REFRESH_TOKEN_CRYPTO_KEY = 'refresh-token-key'
+ENCRYPTION_KEY_RING = 'broker-key-ring'
+ENCRYPTION_KEY = 'broker-key'
 
 # Domain name
 DOMAIN_NAME = None

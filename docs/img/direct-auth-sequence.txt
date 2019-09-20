@@ -1,0 +1,19 @@
+participant alice\n@YOUR.REALM.COM as Alice
+participant Hadoop Client as Client
+participant GCS Connector as GCSConn
+participant On prem\nKDC as OnPremKDC
+participant Broker as Broker
+participant GCS
+
+Alice -> Client: Submit job
+Client -> GCSConn: Read objects
+GCSConn -> OnPremKDC: Get SPNEGO token
+OnPremKDC -> GCSConn: Return SPNEGO token
+GCSConn -> Broker: Get access token\n(SPNEGO token) [fillcolor="white"]
+Broker -> Broker: Authenticate\nalice@YOUR.REALM.COM\nwith Kerberos/SPNEGO
+Broker -> Broker: Generate new\naccess token for\nalice@your-domain.com
+Broker -> GCSConn: Return access token [fillcolor="white"]
+GCSConn -> GCS: Read objects (access token)[fillcolor="white"]
+GCS -> GCS: Verify access\ncontrol for\nalice@your-domain.com
+GCS -> GCSConn: Return objects [fillcolor="white"]
+GCSConn -> Client: Return objects

@@ -24,7 +24,7 @@ public abstract class AbstractAuthenticationBackend {
     public static AbstractAuthenticationBackend getInstance() {
         if (instance == null) {
             try {
-                String className = AppSettings.requireProperty("AUTHENTICATION_BACKEND");
+                String className = AppSettings.getProperty("AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.SpnegoAuthenticator");
                 Class c = Class.forName(className);
                 Constructor constructor = c.getConstructor();
                 instance = (AbstractAuthenticationBackend) constructor.newInstance();

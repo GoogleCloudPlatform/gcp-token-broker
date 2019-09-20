@@ -35,19 +35,7 @@ public class AppSettings {
 
     private static Properties getInstance() {
         if (instance == null) {
-            String settingsClassName = EnvUtils.getenv().get("APP_SETTINGS_CLASS");
-            if (settingsClassName == null) {
-                instance = new Properties();
-            }
-            else {
-                try {
-                    Class c = Class.forName(settingsClassName);
-                    Constructor constructor = c.getConstructor();
-                    instance = (Properties) constructor.newInstance();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
+            instance = new Properties();
             loadEnvironmentSettings();
         }
         return instance;

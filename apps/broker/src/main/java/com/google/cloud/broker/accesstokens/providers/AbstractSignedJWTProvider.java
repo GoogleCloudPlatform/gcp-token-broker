@@ -11,12 +11,12 @@
 
 package com.google.cloud.broker.accesstokens.providers;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 
-import com.google.common.collect.Lists;
+import com.google.cloud.broker.utils.GoogleCredentialsDetails;
+import com.google.cloud.broker.utils.GoogleCredentialsFactory;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.auth.oauth2.TokenRequest;
 import com.google.api.client.auth.oauth2.TokenResponse;
@@ -29,13 +29,10 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.iam.v1.Iam;
 import com.google.api.services.iam.v1.model.SignJwtRequest;
 import com.google.api.services.iam.v1.model.SignJwtResponse;
-import com.google.auth.oauth2.ComputeEngineCredentials;
-import com.google.auth.oauth2.ServiceAccountCredentials;
 import io.grpc.Status;
 
 import com.google.cloud.broker.accesstokens.AccessToken;
 import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.utils.EnvUtils;
 import com.google.cloud.broker.utils.TimeUtils;
 
 
@@ -51,7 +48,7 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         return brokerIssuer;
     }
 
-    private Iam createIamService(BrokerDetails details) {
+    private Iam createIamService(GoogleCredentialsDetails details) {
         HttpTransport httpTransport;
         JsonFactory jsonFactory;
         try {
@@ -61,50 +58,17 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
             throw new RuntimeException(e);
         }
         GoogleCredential credential = new GoogleCredential();
-        credential.setAccessToken(details.accessToken);
+        credential.setAccessToken(details.getAccessToken());
         return new Iam.Builder(httpTransport, jsonFactory, credential).setApplicationName("GCP Token Broker").build();
-    }
-
-    class BrokerDetails {
-        public String accessToken;
-        public String serviceAccount;
-    }
-
-    private BrokerDetails getBrokerDetails() {
-        BrokerDetails details = new BrokerDetails();
-        String jsonPath = EnvUtils.getenv().get("GOOGLE_APPLICATION_CREDENTIALS");
-        if (jsonPath != null) {
-            // Use the JSON private key if provided
-            try {
-                ServiceAccountCredentials credentials = (ServiceAccountCredentials) ServiceAccountCredentials
-                    .fromStream(new FileInputStream(jsonPath))
-                    .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/iam"));
-                details.serviceAccount = credentials.getAccount();
-                details.accessToken = credentials.refreshAccessToken().getTokenValue();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        else {
-            // Fall back to using the default Compute Engine service account
-            ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
-            details.serviceAccount = credentials.getAccount();
-            try {
-                details.accessToken = credentials.refreshAccessToken().getTokenValue();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return details;
     }
 
     private String getSignedJWT(String googleIdentity, String scope) {
         // Get broker's service account details
-        BrokerDetails details = getBrokerDetails();
+        GoogleCredentialsDetails details = GoogleCredentialsFactory.createCredentialsDetails(true, "https://www.googleapis.com/auth/iam");
 
         // Create the JWT payload
         long iat = TimeUtils.currentTimeMillis() / 1000L;
-        long exp = iat + Long.parseLong(AppSettings.requireProperty("JWT_LIFE"));
+        long exp = iat + Long.parseLong(AppSettings.getProperty("JWT_LIFE", "30"));
         HashMap<String, Object> jwtPayload = new HashMap<>();
         jwtPayload.put("scope", scope);
         jwtPayload.put("aud", "https://www.googleapis.com/oauth2/v4/token");
@@ -113,8 +77,8 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         String serviceAccount;
         if (isBrokerIssuer()) {
             jwtPayload.put("sub", googleIdentity);
-            jwtPayload.put("iss", details.serviceAccount);
-            serviceAccount = details.serviceAccount;
+            jwtPayload.put("iss", details.getEmail());
+            serviceAccount = details.getEmail();
         } else {
             jwtPayload.put("iss", googleIdentity);
             serviceAccount = googleIdentity;

@@ -207,18 +207,8 @@ resource "google_kms_key_ring" "broker_key_ring" {
   depends_on = ["google_project_service.service_kms"]
 }
 
-resource "google_kms_crypto_key" "refresh_token_key" {
-  name            = "refresh-token-key"
-  key_ring        = "${google_kms_key_ring.broker_key_ring.self_link}"
-}
-
-resource "google_kms_crypto_key" "access_token_cache_key" {
-  name            = "access-token-cache-key"
-  key_ring        = "${google_kms_key_ring.broker_key_ring.self_link}"
-}
-
-resource "google_kms_crypto_key" "delegation_token_key" {
-  name            = "delegation-token-key"
+resource "google_kms_crypto_key" "broker_key" {
+  name            = "broker-key"
   key_ring        = "${google_kms_key_ring.broker_key_ring.self_link}"
 }
 
@@ -254,9 +244,16 @@ broker:
   app:
     settings:
       GCP_PROJECT: '${var.gcp_project}'
-      GCP_REGION: '${var.gcp_region}'
+      ENCRYPTION_KEK_URI: '${google_kms_crypto_key.broker_key.self_link}'
+      ENCRYPTION_DEK_URI: ''  # FIXME
       PROXY_USER_WHITELIST: 'hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}'
+      DOMAIN_NAME: '${var.domain}'
+      BROKER_SERVICE_NAME: 'broker'
       BROKER_SERVICE_HOSTNAME: '${var.broker_service_hostname}'
+      KEYTABS_PATH: '/keytabs'
+      TLS_KEY_PATH: '/secrets/tls.pem'
+      TLS_CRT_PATH: '/secrets/tls.crt'
+      CLIENT_SECRET_PATH: '/secrets/client_secret.json'
       REDIS_CACHE_HOST: '${google_redis_instance.cache.host}'
       LOGGING_LEVEL: 'INFO'
       # TODO: Add Kerberos name translation rules
@@ -273,7 +270,7 @@ authorizer:
   app:
     settings:
       GCP_PROJECT: '${var.gcp_project}'
-      GCP_REGION: '${var.gcp_region}'
+      ENCRYPTION_KEY_RING_REGION: '${var.gcp_region}'
       DOMAIN_NAME: '${var.domain}'
   ingress:
     host: '${var.authorizer_hostname}'

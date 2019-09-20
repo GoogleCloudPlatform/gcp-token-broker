@@ -115,6 +115,12 @@ limitations under the License.
             <version>${io.grpc.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.cloud.broker</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

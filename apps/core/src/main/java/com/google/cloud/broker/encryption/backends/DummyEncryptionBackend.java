@@ -18,12 +18,12 @@ package com.google.cloud.broker.encryption.backends;
 public class DummyEncryptionBackend extends AbstractEncryptionBackend {
 
     @Override
-    public byte[] decrypt(String cryptoKey, byte[] cipherText) {
+    public byte[] decrypt(byte[] cipherText) {
         return cipherText;
     }
 
     @Override
-    public byte[] encrypt(String cryptoKey, byte[] plainText) {
+    public byte[] encrypt(byte[] plainText) {
         return plainText;
     }
 

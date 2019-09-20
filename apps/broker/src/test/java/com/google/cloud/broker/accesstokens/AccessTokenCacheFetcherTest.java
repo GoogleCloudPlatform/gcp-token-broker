@@ -32,7 +32,6 @@ public class AccessTokenCacheFetcherTest {
         AppSettings.setProperty("AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.MockAuthenticator");
         AppSettings.setProperty("ACCESS_TOKEN_LOCAL_CACHE_TIME", "1234");
         AppSettings.setProperty("ACCESS_TOKEN_REMOTE_CACHE_TIME", "6789");
-        AppSettings.setProperty("ENCRYPTION_ACCESS_TOKEN_CACHE_CRYPTO_KEY", "My-Crypto-Key");
     }
 
     @Test
@@ -73,13 +72,6 @@ public class AccessTokenCacheFetcherTest {
     public void testGetRemoteCacheTime() {
         AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, GCS);
         assertEquals(6789, fetcher.getRemoteCacheTime());
-        AppSettings.setProperty("ENCRYPTION_ACCESS_TOKEN_CACHE_CRYPTO_KEY", "My-Crypto-Key");
-    }
-
-    @Test
-    public void testGetRemoteCacheCryptoKey() {
-        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, GCS);
-        assertEquals("My-Crypto-Key", fetcher.getRemoteCacheCryptoKey());
     }
 
 }

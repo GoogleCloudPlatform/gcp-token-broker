@@ -39,7 +39,6 @@ public class SessionCacheFetcherTest {
         AppSettings.setProperty("SESSION_MAXIMUM_LIFETIME", SESSION_MAXIMUM_LIFETIME.toString());
         AppSettings.setProperty("DATABASE_BACKEND", "com.google.cloud.broker.database.backends.DummyDatabaseBackend");
         AppSettings.setProperty("ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
-        AppSettings.setProperty("ENCRYPTION_DELEGATION_TOKEN_CRYPTO_KEY", "blah");
     }
 
     private Session createSession() {
@@ -111,17 +110,6 @@ public class SessionCacheFetcherTest {
         SessionCacheFetcher fetcher = new SessionCacheFetcher("xxxx");
         try {
             fetcher.getRemoteCacheTime();
-            fail();
-        } catch(UnsupportedOperationException e) {
-            // Expected
-        }
-    }
-
-    @Test
-    public void testGetRemoteCacheCryptoKey() {
-        SessionCacheFetcher fetcher = new SessionCacheFetcher("xxxx");
-        try {
-            fetcher.getRemoteCacheCryptoKey();
             fail();
         } catch(UnsupportedOperationException e) {
             // Expected

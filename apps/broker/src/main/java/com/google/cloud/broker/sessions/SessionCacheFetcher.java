@@ -38,17 +38,11 @@ public class SessionCacheFetcher extends CacheFetcher {
 
     @Override
     protected int getLocalCacheTime() {
-        return Integer.parseInt(AppSettings.requireProperty("SESSION_LOCAL_CACHE_TIME"));
+        return Integer.parseInt(AppSettings.getProperty("SESSION_LOCAL_CACHE_TIME", "30"));
     }
 
     @Override
     protected int getRemoteCacheTime() {
-        // Remote cache not enabled
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected String getRemoteCacheCryptoKey() {
         // Remote cache not enabled
         throw new UnsupportedOperationException();
     }

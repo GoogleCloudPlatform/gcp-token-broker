@@ -27,6 +27,20 @@ import com.google.cloud.broker.utils.TimeUtils;
 
 public class Session extends CreationTimeModel {
 
+    /**
+     * Expected schema:
+     *
+     * Session:
+     *   id: String            => UUID
+     *   owner: String         => Identity who owns the session (e.g. alice@EXAMPLE.COM)
+     *   renewer: String       => Identity who is allowed to renew/cancel the session (e.g. yarn@FOO.BAR)
+     *   target: String        => Target resource on GCP (e.g. gs://example)
+     *   scope: String         => API scope for the target resource (e.g. https://www.googleapis.com/auth/devstorage.read_write)
+     *   password: String      => Randomly generated password for the session
+     *   expires_at: Long      => Time when the session will expire (in milliseconds)
+     *   creation_time: Long   => Time when the session was created (in milliseconds)
+     */
+
     @JsonCreator
     public Session(@JsonProperty("values") HashMap<String, Object> values) {
         super(values);
@@ -52,9 +66,13 @@ public class Session extends CreationTimeModel {
     public void extendLifetime() {
         long now = TimeUtils.currentTimeMillis();
         long creationTime = (long) getValue("creation_time");
+
+        Long sessionMaximumLifetime = Long.parseLong(AppSettings.getProperty("SESSION_MAXIMUM_LIFETIME", "604800000"));
+        Long sessionRenewPeriod = Long.parseLong(AppSettings.getProperty("SESSION_RENEW_PERIOD", "86400000"));
+
         values.put("expires_at", Math.min(
-            now + Long.parseLong(AppSettings.requireProperty("SESSION_RENEW_PERIOD")),
-            creationTime + Long.parseLong(AppSettings.requireProperty("SESSION_MAXIMUM_LIFETIME"))
+            now + sessionRenewPeriod,
+            creationTime + sessionMaximumLifetime
         ));
     }
 

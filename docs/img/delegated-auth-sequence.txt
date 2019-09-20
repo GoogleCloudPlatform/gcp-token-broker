@@ -1,0 +1,48 @@
+participant alice\n@YOUR.REALM.COM as Alice
+participant Hadoop\nClient as Client
+participant GCS Connector\n(in Hadoop Client) as GCSConnClient
+participant On prem\nKDC as OnPremKDC
+participant Broker as Broker
+participant Yarn\nresource\nmanager as Yarn
+participant Client\nKDC as ClientKDC
+participant Yarn task as Task
+participant GCS Connector\n(in Task) as GCSConnTask
+participant GCS
+
+Alice -> Client: Submit job
+Client -> GCSConnClient: Read objects
+GCSConnClient -> OnPremKDC: Get SPNEGO token
+OnPremKDC -> GCSConnClient: Return SPNEGO token
+GCSConnClient -> Broker: Get session token\n(SPNEGO token) [fillcolor="white"]
+Broker -> Broker: Authenticate\nalice@YOUR.REALM.COM\nwith Kerberos/SPNEGO
+Broker -> Broker: Generate new\nsession token
+Broker -> Broker: Store session\ntoken details in\nbroker database
+Broker -> GCSConnClient: Return session token[fillcolor="white"]
+GCSConnClient -> Client: Return\nsession\ntoken
+Client -> Client: Store\nsession\ntoken in\njob context\nand UGI
+Client -> Yarn: Submit job [fillcolor="white"]
+Yarn -> ClientKDC: Get SPNEGO token
+ClientKDC -> Yarn: Return SPNEGO token
+Yarn -> Broker: Renew session token\n(SPNEGO token)
+Broker -> Broker: Authenticate Yarn\nwith Kerberos/SPNEGO
+Broker -> Broker: Verify Yarn is\nauthorized renewer
+Broker -> Broker: Extend session\ntoken's lifetime
+Yarn -> Task: Submit job[fillcolor="white"]
+Task -> GCSConnTask: Read\nobjects
+GCSConnTask -> GCSConnTask: Retrieve\nsession\ntoken from\nthe UGI[fillcolor="white"]
+GCSConnTask -> Broker: Get access token (session token)[fillcolor="white"]
+Broker -> Broker: Generate new\naccess token for\nalice@your-domain.com
+Broker -> GCSConnTask: Return access token[fillcolor="white"]
+GCSConnTask -> GCS: Read\nobjects
+GCS -> GCS: Verify\naccess\ncontrol\nfor alice\n@your-domain.com
+GCS -> GCSConnTask: Return\nobjects
+GCSConnTask -> Task: Return\nobjects
+Task -> Task: Process\nobjects
+Note over Task: Job runs until\ncompletion...[fillcolor="white"]
+Yarn -> Client: Return job result [fillcolor="white"]
+Yarn -> ClientKDC: Get SPNEGO token
+ClientKDC -> Yarn: Return SPNEGO token
+Yarn -> Broker: Cancel\nsession token\n(SPNEGO token)
+Broker -> Broker: Authenticate Yarn\nwith Kerberos/SPNEGO
+Broker -> Broker: Verify Yarn is\nauthorized renewer
+Broker -> Broker: Delete\nsession token\nfrom database

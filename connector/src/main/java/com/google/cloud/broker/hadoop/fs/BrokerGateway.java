@@ -33,11 +33,11 @@ public final class BrokerGateway {
     protected ManagedChannel managedChannel;
     protected Configuration config;
 
-    public BrokerGateway(Configuration config) throws GSSException {
+    public BrokerGateway(Configuration config) {
         this(config,null);
     }
 
-    public BrokerGateway(Configuration config, String sessionToken) throws GSSException {
+    public BrokerGateway(Configuration config, String sessionToken) {
         this.config = config;
 
         String brokerHostname = config.get("gcp.token.broker.uri.hostname", "localhost");
@@ -49,7 +49,7 @@ public final class BrokerGateway {
         stub = GrpcUtils.newStub(managedChannel);
 
         if (sessionToken != null) {
-            setDelegationToken(sessionToken);
+            setSessionToken(sessionToken);
         }
         else {
             try {
@@ -57,7 +57,8 @@ public final class BrokerGateway {
             } catch (GSSException e) {
                 // Clean up the channel before re-throwing the exception
                 managedChannel.shutdownNow();
-                throw e;
+                throw new RuntimeException(
+                    "User is not logged-in with Kerberos or cannot authenticate with the broker. Kerberos error message: " + e.getMessage());
             }
         }
     }
@@ -95,8 +96,8 @@ public final class BrokerGateway {
         stub = MetadataUtils.attachHeaders(stub, metadata);
     }
 
-    private void setDelegationToken(String sessionToken) {
-        // Set the delegation token in the 'authorization' header
+    private void setSessionToken(String sessionToken) {
+        // Set the session token in the 'authorization' header
         Metadata metadata = new Metadata();
         Metadata.Key<String> key = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
         metadata.put(key, "BrokerSession " + sessionToken);

@@ -31,7 +31,7 @@ import com.google.cloud.broker.protobuf.GetSessionTokenResponse;
 
 public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
 
-    public static final Text KIND = new Text("GCPBrokerDelegationToken");
+    public static final Text KIND = new Text("GCPBrokerSessionToken");
     public static final String BROKER_SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
     private String sessionToken;
 
@@ -51,20 +51,13 @@ public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
         }
 
         GetSessionTokenResponse response = loginUser.doAs((PrivilegedAction<GetSessionTokenResponse>) () -> {
-            BrokerGateway gateway;
-            try {
-                gateway = new BrokerGateway(config);
-            } catch (GSSException e) {
-                throw new RuntimeException(e);
-            }
-
+            BrokerGateway gateway = new BrokerGateway(config);
             GetSessionTokenRequest request = GetSessionTokenRequest.newBuilder()
                 .setScope(BROKER_SCOPE)
                 .setOwner(currentUser.getUserName())
                 .setRenewer(renewer.toString())
                 .setTarget(service.toString())
                 .build();
-
             GetSessionTokenResponse r = gateway.getStub().getSessionToken(request);
             gateway.getManagedChannel().shutdown();
             return r;

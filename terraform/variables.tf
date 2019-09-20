@@ -68,7 +68,6 @@ variable broker_service_cidr {
     default = "10.8.0.0/20"
 }
 
-
 // Authorizer --------------------------------------
 
 variable authorizer_hostname {

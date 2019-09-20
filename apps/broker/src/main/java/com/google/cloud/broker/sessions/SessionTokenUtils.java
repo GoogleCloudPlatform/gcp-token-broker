@@ -63,8 +63,7 @@ public class SessionTokenUtils {
         }
 
         // Decrypt the provided password
-        String cryptoKey = AppSettings.requireProperty("ENCRYPTION_DELEGATION_TOKEN_CRYPTO_KEY");
-        byte[] decryptedPassword = AbstractEncryptionBackend.getInstance().decrypt(cryptoKey, sessionToken.getEncryptedPassword());
+        byte[] decryptedPassword = AbstractEncryptionBackend.getInstance().decrypt(sessionToken.getEncryptedPassword());
 
         // Verify that the provided password matches that of the session
         boolean samePasswords = MessageDigest.isEqual(
@@ -81,10 +80,7 @@ public class SessionTokenUtils {
 
     public static String marshallSessionToken(Session session) {
         String password = session.getValue("password").toString();
-        byte[] encryptedPassword = AbstractEncryptionBackend.getInstance().encrypt(
-            AppSettings.requireProperty("ENCRYPTION_DELEGATION_TOKEN_CRYPTO_KEY"),
-            password.getBytes()
-        );
+        byte[] encryptedPassword = AbstractEncryptionBackend.getInstance().encrypt(password.getBytes());
         JsonObject header = new JsonObject();
         header.addProperty("session_id", session.getValue("id").toString());
         String encodedHeader = Base64.getUrlEncoder().encodeToString(new Gson().toJson(header).getBytes());

@@ -17,6 +17,15 @@ import java.util.HashMap;
 
 public class RefreshToken extends CreationTimeModel {
 
+    /**
+     * Expected schema:
+     *
+     * RefreshToken:
+     *   - id: String            => GSuite email address (e.g. alice@example.com)
+     *   - value: byte[]         => The actual OAuth refresh token (Recommendation: encrypt this value)
+     *   - creation_time: Long   => The time when the object was created (in milliseconds)
+     */
+
     public RefreshToken(HashMap<String, Object> values) {
         super(values);
     }
