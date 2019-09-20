@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static org.junit.Assert.*;
+import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -124,13 +125,8 @@ public class BrokerServerTest {
 
     private Session createSession() {
         // Create a session in the database
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("owner", ALICE);
-        values.put("renewer", "yarn@FOO.BAR");
-        values.put("scope", GCS);
-        values.put("target", MOCK_BUCKET);
-        Session session = new Session(values);
-        Model.save(session);
+        Session session = new Session(null, ALICE, "yarn@FOO.BAR", MOCK_BUCKET, GCS, null, null, null);
+        AbstractDatabaseBackend.getInstance().save(session);
         return session;
     }
 
@@ -154,12 +150,12 @@ public class BrokerServerTest {
 
         // Check that the session was created
         Session session = SessionTokenUtils.getSessionFromRawToken(response.getSessionToken());
-        assertEquals(ALICE, session.getValue("owner"));
-        assertEquals("yarn@FOO.BAR", session.getValue("renewer"));
-        assertEquals(GCS, session.getValue("scope"));
-        assertEquals(MOCK_BUCKET, session.getValue("target"));
-        assertEquals(now, session.getValue("creation_time"));
-        assertEquals(now + SESSION_RENEW_PERIOD, session.getValue("expires_at"));
+        assertEquals(ALICE, session.getOwner());
+        assertEquals("yarn@FOO.BAR", session.getRenewer());
+        assertEquals(GCS, session.getScope());
+        assertEquals(MOCK_BUCKET, session.getTarget());
+        assertEquals(now, session.getCreationTime());
+        assertEquals(now + SESSION_RENEW_PERIOD, session.getExpiresAt().longValue());
     }
 
     @Test
@@ -176,7 +172,7 @@ public class BrokerServerTest {
 
         // Check that the session was deleted
         try {
-            Model.get(Session.class, (String) session.getValue("id"));
+            AbstractDatabaseBackend.getInstance().get(Session.class, session.getId());
             fail("DatabaseObjectNotFound not thrown");
         }
         catch (DatabaseObjectNotFound e) {}
@@ -201,7 +197,7 @@ public class BrokerServerTest {
         }
 
         // Check that the session still exists
-        Model.get(Session.class, (String) session.getValue("id"));
+        AbstractDatabaseBackend.getInstance().get(Session.class, session.getId());
     }
 
     @Test
@@ -226,8 +222,8 @@ public class BrokerServerTest {
             .build());
 
         // Check that the session's lifetime has been extended
-        session = (Session) Model.get(Session.class, (String) session.getValue("id"));
-        assertEquals( newNow + SESSION_RENEW_PERIOD, session.getValue("expires_at"));
+        session = (Session) AbstractDatabaseBackend.getInstance().get(Session.class, session.getId());
+        assertEquals( newNow + SESSION_RENEW_PERIOD, session.getExpiresAt().longValue());
     }
 
     @Test
@@ -252,8 +248,8 @@ public class BrokerServerTest {
             .build());
 
         // Check that the session's lifetime has been extended up to the maximum lifetime
-        session = (Session) Model.get(Session.class, (String) session.getValue("id"));
-        assertEquals( newNow + SESSION_MAXIMUM_LIFETIME, session.getValue("expires_at"));
+        session = (Session) AbstractDatabaseBackend.getInstance().get(Session.class, (String) session.getId());
+        assertEquals( newNow + SESSION_MAXIMUM_LIFETIME, session.getExpiresAt().longValue());
     }
 
     @Test
@@ -275,7 +271,7 @@ public class BrokerServerTest {
         }
 
         // Check that the session still exists
-        Model.get(Session.class, (String) session.getValue("id"));
+        AbstractDatabaseBackend.getInstance().get(Session.class, session.getId());
     }
 
     @Test

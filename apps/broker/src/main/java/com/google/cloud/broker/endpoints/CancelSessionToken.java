@@ -11,14 +11,14 @@
 
 package com.google.cloud.broker.endpoints;
 
-import com.google.cloud.broker.sessions.SessionTokenUtils;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
 
 import com.google.cloud.broker.logging.LoggingUtils;
 import com.google.cloud.broker.authentication.backends.AbstractAuthenticationBackend;
-import com.google.cloud.broker.database.models.Model;
+import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
+import com.google.cloud.broker.sessions.SessionTokenUtils;
 import com.google.cloud.broker.protobuf.CancelSessionTokenRequest;
 import com.google.cloud.broker.protobuf.CancelSessionTokenResponse;
 import com.google.cloud.broker.sessions.Session;
@@ -37,17 +37,17 @@ public class CancelSessionToken {
         Session session = SessionTokenUtils.getSessionFromRawToken(request.getSessionToken());
 
         // Verify that the caller is the authorized renewer for the toke
-        if (!session.getValue("renewer").equals(authenticatedUser)) {
+        if (!session.getRenewer().equals(authenticatedUser)) {
             throw Status.PERMISSION_DENIED.withDescription(String.format("Unauthorized renewer: %s", authenticatedUser)).asRuntimeException();
         }
 
         // Cancel the token
-        Model.delete(session);
+        AbstractDatabaseBackend.getInstance().delete(session);
 
         // Log success message
-        MDC.put("owner", session.getValue("owner").toString());
-        MDC.put("renewer", session.getValue("renewer").toString());
-        MDC.put("session_id", session.getValue("id").toString());
+        MDC.put("owner", session.getOwner());
+        MDC.put("renewer", session.getRenewer());
+        MDC.put("session_id", session.getId());
         LoggingUtils.logSuccess(CancelSessionToken.class.getSimpleName());
 
         // Return response

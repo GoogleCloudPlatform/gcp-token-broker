@@ -15,11 +15,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.datastore.*;
 
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
-import com.google.cloud.broker.database.models.Model;
 
 
 public class CloudDatastoreBackend extends AbstractDatabaseBackend {
@@ -60,18 +60,20 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
         }
 
         // Instantiate a new object
-        return Model.newModelInstance(modelClass, values);
+        return Model.fromMap(modelClass, values);
     }
 
     public void save(Model model) {
-        if (! model.hasValue("id")) {
-            model.setValue("id", UUID.randomUUID().toString());
+        if (model.getDBId() == null) {
+            model.setDBId(UUID.randomUUID().toString());
         }
+
         Datastore datastore = getService();
         KeyFactory keyFactory = datastore.newKeyFactory().setKind(model.getClass().getSimpleName());
-        Key key = keyFactory.newKey((String) model.getValue("id"));
+        Key key = keyFactory.newKey(model.getDBId());
         Entity.Builder builder = Entity.newBuilder(key);
-        for(Map.Entry<String, Object> entry : model.getValues().entrySet()) {
+        Map<String, Object> map = model.toMap();
+        for(Map.Entry<String, Object> entry : map.entrySet()) {
             String name = entry.getKey();
             Object value = entry.getValue();
             if (value instanceof String) {
@@ -96,7 +98,7 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
     public void delete(Model model) {
         Datastore datastore = getService();
         KeyFactory keyFactory = datastore.newKeyFactory().setKind(model.getClass().getSimpleName());
-        Key key = keyFactory.newKey((String) model.getValue("id"));
+        Key key = keyFactory.newKey(model.getDBId());
         datastore.delete(key);
     }
 
