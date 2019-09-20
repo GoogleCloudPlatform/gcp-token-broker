@@ -12,81 +12,48 @@
 package com.google.cloud.broker.authentication.backends;
 
 import javax.security.auth.Subject;
-import javax.security.auth.login.LoginException;
-import java.io.File;
-import java.io.IOException;
 import java.security.PrivilegedAction;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
 
-import com.sun.security.auth.module.Krb5LoginModule;
 import org.ietf.jgss.*;
-
 import static org.junit.Assert.*;
+import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 
 import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.testing.FakeKDC;
 
 
 public class SpnegoAuthenticatorTest {
 
+    private static FakeKDC fakeKDC;
     private static final String REALM = "EXAMPLE.COM";
-    private static final String KEYTABS = "[{\"keytab\": \"/etc/security/keytabs/broker/broker.keytab\", \"principal\": \"broker/testhost@EXAMPLE.COM\"}]";
-    
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    public static final String BROKER = "broker/testhost@" + REALM;
+    public static final String ALICE = "alice@" + REALM;
+
+    @BeforeClass
+    public static void setUpClass() {
+        fakeKDC = new FakeKDC(REALM);
+        fakeKDC.start();
+        fakeKDC.createPrincipal(ALICE);
+        fakeKDC.createPrincipal(BROKER);
+    }
 
     @Before
-    public void setup() {
+    public void setUp() {
         AbstractAuthenticationBackend.reset();
         AppSettings.reset();
         AppSettings.setProperty("AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.SpnegoAuthenticator");
     }
 
-    public static Subject login(String user) {
-        Krb5LoginModule krb5LoginModule = new Krb5LoginModule();
-
-        String principal;
-        String keytab;
-        if (user == "broker") {
-            principal = "broker/testhost@" + REALM;
-            keytab = "/etc/security/keytabs/broker/broker.keytab";
-        }
-        else {
-            principal = user + "@" + REALM;
-            keytab = "/etc/security/keytabs/users/" + user + ".keytab";
-        }
-
-        final Map<String, String> options = new HashMap<String, String>();
-        options.put("keyTab", keytab);
-        options.put("principal", principal);
-        options.put("doNotPrompt", "true");
-        options.put("isInitiator", "true");
-        options.put("refreshKrb5Config", "true");
-        options.put("renewTGT", "true");
-        options.put("storeKey", "true");
-        options.put("useKeyTab", "true");
-        options.put("useTicketCache", "true");
-
-        Subject subject = new Subject();
-        krb5LoginModule.initialize(subject, null,
-            new HashMap<String, String>(),
-            options);
-
-        try {
-            krb5LoginModule.login();
-            krb5LoginModule.commit();
-        } catch (LoginException e) {
-            throw new RuntimeException(e);
-        }
-        return subject;
+    @AfterClass
+    public static void tearDownClass() {
+        fakeKDC.stop();
     }
 
     public static byte[] generateToken() {
@@ -101,7 +68,7 @@ public class SpnegoAuthenticatorTest {
             Oid krb5PrincipalNameType = new Oid(KRB5_PRINCIPAL_NAME_OID);
             Oid spnegoOid = new Oid(SPNEGO_OID);
             GSSManager manager = GSSManager.getInstance();
-            String servicePrincipal = "broker/testhost@" + REALM;
+            String servicePrincipal = BROKER;
             GSSName gssServerName = manager.createName(servicePrincipal , krb5PrincipalNameType, krb5Mechanism);
             GSSContext gssContext = manager.createContext(
                 gssServerName, spnegoOid, null, GSSCredential.DEFAULT_LIFETIME);
@@ -151,7 +118,7 @@ public class SpnegoAuthenticatorTest {
 
     @Test
     public void testHeaderDoesntStartWithNegotiate() {
-        AppSettings.setProperty("KEYTABS", KEYTABS);
+        AppSettings.setProperty("KEYTABS", "[{\"keytab\": \"" + fakeKDC.getKeytabPath(BROKER) + "\", \"principal\": \"" + BROKER + "\"}]");
 
         SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
         try {
@@ -165,7 +132,7 @@ public class SpnegoAuthenticatorTest {
 
     @Test
     public void testInvalidSpnegoToken() {
-        AppSettings.setProperty("KEYTABS", KEYTABS);
+        AppSettings.setProperty("KEYTABS", "[{\"keytab\": \"" + fakeKDC.getKeytabPath(BROKER) + "\", \"principal\": \"" + BROKER + "\"}]");
 
         SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
         try {
@@ -182,11 +149,11 @@ public class SpnegoAuthenticatorTest {
      */
     @Test
     public void testSuccess() {
-        AppSettings.setProperty("KEYTABS", KEYTABS);
+        AppSettings.setProperty("KEYTABS", "[{\"keytab\": \"" + fakeKDC.getKeytabPath(BROKER) + "\", \"principal\": \"" + BROKER + "\"}]");
 
         // Let Alice generate a token
-        Subject broker = login("alice");
-        byte[] token = Subject.doAs(broker, (PrivilegedAction<byte[]>) () -> {
+        Subject alice = fakeKDC.login("alice");
+        byte[] token = Subject.doAs(alice, (PrivilegedAction<byte[]>) () -> {
             return generateToken();
         });
 

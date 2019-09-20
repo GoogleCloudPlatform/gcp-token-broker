@@ -12,78 +12,36 @@
 package com.google.cloud.broker.hadoop.fs;
 
 import javax.security.auth.Subject;
-import javax.security.auth.login.LoginException;
 import java.security.PrivilegedAction;
-import java.util.HashMap;
-import java.util.Map;
 
-import com.sun.security.auth.module.Krb5LoginModule;
 import org.ietf.jgss.*;
 
 import static org.junit.Assert.*;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.cloud.broker.testing.FakeKDC;
 import static com.google.cloud.broker.hadoop.fs.SpnegoUtils.newSPNEGOToken;
+import static com.google.cloud.broker.hadoop.fs.TestingTools.*;
 
 
 public class SpnegoUtilsTest {
 
-    private static final String REALM = "EXAMPLE.COM";
-    private static final String BROKER_PRINCIPAL = "broker/testhost@EXAMPLE.COM";
-
+    private static FakeKDC fakeKDC;
     public static final String TGT_ERROR = "No valid credentials provided (Mechanism level: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt))";
 
-    public static Subject login(String user) {
-        Krb5LoginModule krb5LoginModule = new Krb5LoginModule();
-
-        String principal;
-        String keytab;
-        if (user.equals("broker")) {
-            principal = BROKER_PRINCIPAL;
-            keytab = "/etc/security/keytabs/broker/broker.keytab";
-        }
-        else {
-            principal = user + "@" + REALM;
-            keytab = "/etc/security/keytabs/users/" + user + ".keytab";
-        }
-
-        final Map<String, String> options = new HashMap<String, String>();
-        options.put("keyTab", keytab);
-        options.put("principal", principal);
-        options.put("doNotPrompt", "true");
-        options.put("isInitiator", "true");
-        options.put("refreshKrb5Config", "true");
-        options.put("renewTGT", "true");
-        options.put("storeKey", "true");
-        options.put("useKeyTab", "true");
-        options.put("useTicketCache", "true");
-
-        Subject subject = new Subject();
-        krb5LoginModule.initialize(subject, null,
-            new HashMap<String, String>(),
-            options);
-
-        try {
-            krb5LoginModule.login();
-            krb5LoginModule.commit();
-        } catch (LoginException e) {
-            throw new RuntimeException(e);
-        }
-        return subject;
+    @BeforeClass
+    public static void setUpClass() {
+        fakeKDC = new FakeKDC(REALM);
+        fakeKDC.start();
+        fakeKDC.createPrincipal(ALICE);
+        fakeKDC.createPrincipal(BROKER);
     }
 
-    public static String decryptToken(byte[] token) {
-        try {
-            GSSManager manager = GSSManager.getInstance();
-            Oid spnegoOid = new Oid("1.3.6.1.5.5.2");
-            GSSCredential serverCreds = manager.createCredential(null,
-                GSSCredential.DEFAULT_LIFETIME, spnegoOid, GSSCredential.ACCEPT_ONLY);
-            GSSContext context = manager.createContext((GSSCredential)serverCreds);
-            context.acceptSecContext(token, 0, token.length);
-            return context.getSrcName().toString();
-        } catch (GSSException e) {
-            throw new RuntimeException(e);
-        }
+    @AfterClass
+    public static void tearDownClass() {
+        fakeKDC.stop();
     }
 
     /**
@@ -92,17 +50,17 @@ public class SpnegoUtilsTest {
     @Test
     public void testLoggedIn() {
         // Let a logged-in user generate a token
-        Subject alice = login("alice");
+        Subject alice = fakeKDC.login(ALICE);
         byte[] spnegoToken = Subject.doAs(alice, (PrivilegedAction<byte[]>) () -> {
             try {
-                return newSPNEGOToken(BROKER_PRINCIPAL);
+                return newSPNEGOToken(BROKER);
             } catch (GSSException e) {
                 throw new RuntimeException(e);
             }
         });
 
         // Let the broker decrypt the token and verify the user's identity
-        Subject broker = login("broker");
+        Subject broker = fakeKDC.login(BROKER);
         String decrypted = Subject.doAs(broker, (PrivilegedAction<String>) () ->
             decryptToken(spnegoToken)
         );
@@ -117,7 +75,7 @@ public class SpnegoUtilsTest {
         Subject anonymous = new Subject();
         Subject.doAs(anonymous, (PrivilegedAction<Void>) () -> {
             try {
-                newSPNEGOToken(BROKER_PRINCIPAL);
+                newSPNEGOToken(BROKER);
                 fail();
             } catch (GSSException e) {
                 assertEquals(TGT_ERROR, e.getMessage());
@@ -131,7 +89,7 @@ public class SpnegoUtilsTest {
      */
     @Test
     public void testWrongBrokerPrincipal() {
-        Subject alice = login("alice");
+        Subject alice = fakeKDC.login(ALICE);
         Subject.doAs(alice, (PrivilegedAction<byte[]>) () -> {
             try {
                 newSPNEGOToken("blah/foo@BAR");

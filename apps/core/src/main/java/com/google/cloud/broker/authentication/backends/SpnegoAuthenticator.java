@@ -127,7 +127,7 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
                             GSSCredential.DEFAULT_LIFETIME,
                             spnegoOid,
                             GSSCredential.ACCEPT_ONLY);
-                        GSSContext context = manager.createContext((GSSCredential) serverCredential);
+                        GSSContext context = manager.createContext(serverCredential);
                         byte[] tokenBytes = Base64.getDecoder().decode(spnegoToken.getBytes());
                         context.acceptSecContext(tokenBytes, 0, tokenBytes.length);
                         return context.getSrcName().toString();

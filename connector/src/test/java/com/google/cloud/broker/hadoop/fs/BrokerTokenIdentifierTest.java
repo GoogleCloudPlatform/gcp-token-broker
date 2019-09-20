@@ -1,5 +1,22 @@
+// Copyright 2019 Google LLC
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package com.google.cloud.broker.hadoop.fs;
 
+import javax.security.auth.Subject;
+
+import java.io.IOException;
+import java.security.PrivilegedAction;
+
+import com.google.cloud.broker.testing.FakeKDC;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
@@ -8,10 +25,8 @@ import org.apache.hadoop.io.Text;
 import com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem;
 
 import static org.junit.Assert.*;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -28,18 +43,23 @@ import com.google.cloud.broker.protobuf.GetSessionTokenResponse;
 @PrepareForTest({GrpcUtils.class})  // Classes to be mocked
 public class BrokerTokenIdentifierTest {
 
+    private static FakeKDC fakeKDC;
+
     @Rule
     public static final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
     @BeforeClass
-    public static void setupClass() {
+    public static void setUpClass() {
         TestingTools.initHadoop();
+        fakeKDC = new FakeKDC(REALM);
+        fakeKDC.start();
+        fakeKDC.createPrincipal(ALICE);
+        fakeKDC.createPrincipal(BROKER);
     }
 
-    @Before
-    public void setup() {
-        // Make sure we're logged out before every test
-        TestingTools.logout();
+    @AfterClass
+    public static void tearDownClass() {
+        fakeKDC.stop();
     }
 
     public String getSessionToken(Configuration conf) {
@@ -53,6 +73,11 @@ public class BrokerTokenIdentifierTest {
     }
 
     private static class FakeServer extends TestingTools.FakeBrokerImpl {
+
+        public FakeServer(FakeKDC fakeKDC) {
+            super(fakeKDC);
+        }
+
         @Override
         public void getSessionToken(GetSessionTokenRequest request, StreamObserver<GetSessionTokenResponse> responseObserver) {
             try {
@@ -83,11 +108,13 @@ public class BrokerTokenIdentifierTest {
     }
 
     @Test
-    public void testGetSessionToken() {
-        TestingTools.startServer(new FakeServer(), grpcCleanup);
+    public void testGetSessionToken() throws IOException {
+        TestingTools.startServer(new FakeServer(fakeKDC), grpcCleanup);
         Configuration conf = TestingTools.getBrokerConfig();
-        TestingTools.login(ALICE);
+        Subject alice = fakeKDC.login(ALICE);
+        UserGroupInformation.loginUserFromSubject(alice);
         String token = getSessionToken(conf);
         assertEquals("FakeSessionToken/AuthenticatedUser=" + ALICE + ";Owner=" + ALICE + ";Target=" + MOCK_BUCKET, token);
+        UserGroupInformation.setLoginUser(null);
     }
 }
