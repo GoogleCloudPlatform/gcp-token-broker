@@ -38,7 +38,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         return connectionInstance;
     }
 
-    private void formatStatement(int index, PreparedStatement statement, HashMap<String, Object> values) throws SQLException {
+    private void formatStatement(int index, PreparedStatement statement, Map<String, Object> values) throws SQLException {
         Iterator<Map.Entry<String, Object>> iterator = values.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, Object> entry = iterator.next();
@@ -80,7 +80,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         ResultSet rs = null;
         try {
             String table = modelClass.getSimpleName();
-            String query = "SELECT * FROM " + table + " WHERE id = '" + objectId + "'";
+            String query = "SELECT * FROM " + quote(table) + " WHERE id = '" + objectId + "'";
 
             statement = connection.createStatement();
             rs = statement.executeQuery(query);
@@ -100,7 +100,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             }
 
             // Instantiate a new object
-            return Model.newModelInstance(modelClass, values);
+            return Model.fromMap(modelClass, values);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
@@ -111,11 +111,12 @@ public class JDBCBackend extends AbstractDatabaseBackend {
 
     @Override
     public void save(Model model) {
-        if (!model.hasValue("id")) {
+        if (model.getDBId() == null) {
             // Assign a  unique ID
-            model.setValue("id", UUID.randomUUID().toString());
+            model.setDBId(UUID.randomUUID().toString());
         }
 
+        Map<String, Object> map = model.toMap();
         Connection connection = getConnection();
         PreparedStatement statement = null;
         ResultSet rs = null;
@@ -124,13 +125,13 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             String columns = "";
             String values = "";
             String update = "";
-            Iterator<Map.Entry<String, Object>> iterator = model.getValues().entrySet().iterator();
+            Iterator<Map.Entry<String, Object>> iterator = map.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<String, Object> entry = iterator.next();
                 String column = entry.getKey();
-                columns += column;
+                columns += quote(column);
                 values += "?";
-                update += column + " = ?";
+                update += quote(column) + " = ?";
                 if (iterator.hasNext()) {
                     columns += ", ";
                     values += ", ";
@@ -140,13 +141,13 @@ public class JDBCBackend extends AbstractDatabaseBackend {
 
             // Assemble the query
             String table = model.getClass().getSimpleName();
-            String query = "INSERT INTO " + table + " (" + columns + ") VALUES (" + values + ") " +
+            String query = "INSERT INTO " + quote(table) + " (" + columns + ") VALUES (" + values + ") " +
                            getUpsertStatement() + " " + update;
 
             // Format the statement
             statement = connection.prepareStatement(query);
-            formatStatement(1, statement, model.getValues());  // Format the INSERT values
-            formatStatement(1 + model.getValues().size(), statement, model.getValues());  // Format the UPDATE values
+            formatStatement(1, statement, map);  // Format the INSERT values
+            formatStatement(1 + map.size(), statement, map);  // Format the UPDATE values
 
             // Run the query
             statement.executeUpdate();
@@ -161,31 +162,33 @@ public class JDBCBackend extends AbstractDatabaseBackend {
     @Override
     public void delete(Model model) {
         String table = model.getClass().getSimpleName();
-        String id = model.getValue("id").toString();
-        String query = "DELETE FROM " + table + " WHERE id = '" + id + "'";
+        String id = model.getDBId();
+        String query = "DELETE FROM " + quote(table) + " WHERE id = '" + id + "'";
         runSimpleQuery(query);
     }
 
     @Override
     public void initializeDatabase() {
+        // Note: The tables names and column names are wrapped with quotes to preserve the case. Otherwise some
+        // backends (e.g. Postgres) force the names to be lowercased.
         String blobType = getBlobType();
         runSimpleQuery(
-            "CREATE TABLE IF NOT EXISTS Session (" +
-            "id VARCHAR(255) PRIMARY KEY," +
-            "owner VARCHAR(255)," +
-            "renewer VARCHAR(255)," +
-            "target VARCHAR(255)," +
-            "scope VARCHAR(255)," +
-            "password VARCHAR(255)," +
-            "expires_at BIGINT," +
-            "creation_time BIGINT" +
+            "CREATE TABLE IF NOT EXISTS " + quote("Session") + " (" +
+                quote("id") + " VARCHAR(255) PRIMARY KEY," +
+                quote("owner") + " VARCHAR(255)," +
+                quote("renewer") + " VARCHAR(255)," +
+                quote("target") + " VARCHAR(255)," +
+                quote("scope") + " VARCHAR(255)," +
+                quote("password") + " VARCHAR(255)," +
+                quote("expiresAt") + " BIGINT," +
+                quote("creationTime") + " BIGINT" +
             ");"
         );
         runSimpleQuery(
-            "CREATE TABLE IF NOT EXISTS RefreshToken (" +
-            "id VARCHAR(255) PRIMARY KEY," +
-            "value " + blobType + "," +
-            "creation_time BIGINT" +
+            "CREATE TABLE IF NOT EXISTS " + quote("RefreshToken") + " (" +
+                quote("id") + " VARCHAR(255) PRIMARY KEY," +
+                quote("value") + " " + blobType + "," +
+                quote("creationTime") + " BIGINT" +
             ");"
         );
     }
@@ -194,12 +197,26 @@ public class JDBCBackend extends AbstractDatabaseBackend {
 
     private static final String DIALECT_NOT_SUPPORTED = "Dialect `%s` is not currently supported by the JDBCDatabaseBackend.";
 
-    private String getDialect() {
+    public static String getDialect() {
         String url = AppSettings.requireProperty("DATABASE_JDBC_URL");
         return url.split(":")[1];
     }
 
-    private String getBlobType() {
+    public static String quote(String name) {
+        String dialect = getDialect();
+        switch (dialect) {
+            case "sqlite":
+            case "mariadb":
+            case "mysql":
+                return "`" + name + "`";
+            case "postgresql":
+                return "\"" + name + "\"";
+            default:
+                throw new UnsupportedOperationException(String.format(DIALECT_NOT_SUPPORTED, dialect));
+        }
+    }
+
+    public static String getBlobType() {
         String dialect = getDialect();
         switch (dialect) {
             case "sqlite":
@@ -213,7 +230,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         }
     }
 
-    private String getUpsertStatement() {
+    public static String getUpsertStatement() {
         String dialect = getDialect();
         switch (dialect) {
             case "sqlite":

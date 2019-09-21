@@ -1,3 +1,14 @@
+// Copyright 2019 Google LLC
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package com.google.cloud.broker.hadoop.fs;
 
 import javax.security.auth.Subject;
@@ -5,6 +16,9 @@ import java.io.IOException;
 import java.security.PrivilegedAction;
 import java.util.Base64;
 
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.ietf.jgss.*;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 import io.grpc.*;
@@ -13,10 +27,8 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
 import org.apache.hadoop.conf.Configuration;
 
+import com.google.cloud.broker.testing.FakeKDC;
 import com.google.cloud.broker.protobuf.BrokerGrpc;
-import org.apache.hadoop.security.KerberosAuthException;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.authentication.util.KerberosName;
 
 
 public class TestingTools {
@@ -25,10 +37,14 @@ public class TestingTools {
     public static final String BROKER_HOST = "testhost";
     public static final String BROKER_NAME = "broker";
     public static final String MOCK_BUCKET = "gs://example";
-    public static final String ALICE = "alice@EXAMPLE.COM";
-    public static final String YARN = "yarn/testhost@FOOR.COM";
+    public static final String BROKER = BROKER_NAME + "/" + BROKER_HOST + "@" + REALM;
+    public static final String ALICE = "alice@" + REALM;
+    public static final String YARN = "yarn/testhost@FOO.BAR";
 
 
+    /**
+     * Starts a live instance of a mock implementation of the broker server.
+     */
     public static void startServer(FakeBrokerImpl fakeServer, GrpcCleanupRule grpcCleanup) {
         String serverName = InProcessServerBuilder.generateName();
         try {
@@ -46,31 +62,19 @@ public class TestingTools {
         when(GrpcUtils.newStub(channel)).thenReturn(stub);
     }
 
-
-    public static void login(String user) {
-        String username = user.split("@")[0];
+    public static String decryptToken(byte[] token) {
         try {
-            UserGroupInformation.loginUserFromKeytab(user, "/etc/security/keytabs/users/" + username + ".keytab");
-        }
-        catch (IOException e) {
+            GSSManager manager = GSSManager.getInstance();
+            Oid spnegoOid = new Oid("1.3.6.1.5.5.2");
+            GSSCredential serverCreds = manager.createCredential(null,
+                GSSCredential.DEFAULT_LIFETIME, spnegoOid, GSSCredential.ACCEPT_ONLY);
+            GSSContext context = manager.createContext(serverCreds);
+            context.acceptSecContext(token, 0, token.length);
+            return context.getSrcName().toString();
+        } catch (GSSException e) {
             throw new RuntimeException(e);
         }
     }
-
-
-    public static void logout() {
-        try {
-            UserGroupInformation ugi = UserGroupInformation.getLoginUser();
-            ugi.logoutUserFromKeytab();
-        }
-        catch (KerberosAuthException e) {
-            // No user was in fact logged in. Ignore the error.
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 
     public static Configuration getBrokerConfig() {
         Configuration conf = new Configuration();
@@ -103,16 +107,24 @@ public class TestingTools {
     }
 
 
+    /**
+     * Test implementation of the broker server, including SPNEGO authentication for incoming requests.
+     */
     static class FakeBrokerImpl extends BrokerGrpc.BrokerImplBase {
+        FakeKDC fakeKDC;
+
+        public FakeBrokerImpl(FakeKDC fakeKDC) {
+            this.fakeKDC = fakeKDC;
+        }
 
         protected String authenticateUser () {
             String authorizationHeader = AuthorizationHeaderServerInterceptor.AUTHORIZATION_CONTEXT_KEY.get();
             String spnegoToken = authorizationHeader.split("\\s")[1];
 
             // Let the broker decrypt the token and verify the user's identity
-            Subject broker = SpnegoUtilsTest.login("broker");
+            Subject broker = fakeKDC.login(BROKER);
             return Subject.doAs(broker, (PrivilegedAction<String>) () ->
-                SpnegoUtilsTest.decryptToken(Base64.getDecoder().decode(spnegoToken.getBytes())
+                decryptToken(Base64.getDecoder().decode(spnegoToken.getBytes())
             ));
         }
 

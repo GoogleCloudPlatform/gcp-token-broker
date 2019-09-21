@@ -98,7 +98,7 @@ public class AuthorizerTest extends KdcTestBase {
 
         assertNotNull(refreshToken);
         byte[] decrypted = AbstractEncryptionBackend.getInstance()
-            .decrypt((byte[])refreshToken.getValue(RefreshToken.VALUE));
+            .decrypt((byte[])refreshToken.getValue());
 
         assertEquals(new String(decrypted, Charsets.UTF_8), token);
     }

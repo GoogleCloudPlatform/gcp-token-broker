@@ -31,7 +31,7 @@ public class SessionAuthenticator {
         Session session = (Session) new SessionCacheFetcher(token).fetch();
 
         if (session.isExpired()) {
-            throw Status.UNAUTHENTICATED.withDescription("Expired session ID: " + session.getValue("id")).asRuntimeException();
+            throw Status.UNAUTHENTICATED.withDescription("Expired session ID: " + session.getId()).asRuntimeException();
         }
 
         return session;

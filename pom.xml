@@ -231,6 +231,7 @@ limitations under the License.
     </dependencies>
 
     <modules>
+        <module>apps/common</module>
         <module>apps/authorizer</module>
         <module>apps/broker</module>
         <module>apps/core</module>

@@ -11,35 +11,74 @@
 
 package com.google.cloud.broker.oauth;
 
-import com.google.cloud.broker.database.models.CreationTimeModel;
-import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
 import com.google.cloud.broker.utils.TimeUtils;
-import com.google.common.base.Charsets;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.cloud.broker.database.models.Model;
+
 
 import java.util.HashMap;
+import java.util.Map;
 
-public class RefreshToken extends CreationTimeModel {
-    public static String ID = "id";
-    public static String VALUE = "value";
-    public static String CREATION_TIME = "creation_time";
+public class RefreshToken extends Model {
 
-    /**
-     * Expected schema:
-     *
-     * RefreshToken:
-     *   - id: String            => GSuite email address (e.g. alice@example.com)
-     *   - value: byte[]         => The actual OAuth refresh token (Recommendation: encrypt this value)
-     *   - creation_time: Long   => The time when the object was created (in milliseconds)
-     */
-    public RefreshToken(HashMap<String, Object> values) {
-        super(values);
+    private String id;  // GSuite email address (e.g. alice@example.com)
+    byte[] value;       // The actual OAuth refresh token (Recommendation: encrypt this value)
+    Long creationTime;  // The time when the object was created (in milliseconds)
+
+    public RefreshToken(@JsonProperty("id") String id,
+                        @JsonProperty("value") byte[] value,
+                        @JsonProperty("creationTime") Long creationTime) {
+        this.id = id;
+        this.value = value;
+        this.creationTime = (creationTime==null) ? Long.valueOf(TimeUtils.currentTimeMillis()) : creationTime;
     }
 
-    public static RefreshToken create(String refreshToken, String principal, AbstractEncryptionBackend aead) {
-        HashMap<String,Object> values = new HashMap<>();
-        values.put(ID, principal);
-        values.put(VALUE, aead.encrypt(refreshToken.getBytes(Charsets.UTF_8)));
-        values.put(CREATION_TIME, TimeUtils.currentTimeMillis());
-        return new RefreshToken(values);
+    @Override
+    public Map<String, Object> toMap() {
+        HashMap<String, Object> map = new HashMap<String, Object>();
+        map.put("id", id);
+        map.put("value", value);
+        map.put("creationTime", creationTime);
+        return map;
+    }
+
+    public static Model fromMap(Map<String, Object> map) {
+        return new RefreshToken(
+            (String) map.get("id"),
+            (byte[]) map.get("value"),
+            (Long) map.get("creationTime")
+        );
+    }
+
+    public void setDBId(String id) {
+        setId(id);
+    }
+
+    public String getDBId() {
+        return getId();
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public byte[] getValue() {
+        return value;
+    }
+
+    public void setValue(byte[] value) {
+        this.value = value;
+    }
+
+    public Long getCreationTime() {
+        return creationTime;
+    }
+
+    public void setCreationTime(Long creationTime) {
+        this.creationTime = creationTime;
     }
 }

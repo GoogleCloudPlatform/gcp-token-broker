@@ -22,9 +22,8 @@ import com.google.gson.JsonSyntaxException;
 import io.grpc.Status;
 
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
-import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
-import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 
 
 public class SessionTokenUtils {
@@ -56,7 +55,7 @@ public class SessionTokenUtils {
         // Fetch session from the database
         Session session = null;
         try {
-            session = (Session) Model.get(Session.class, sessionToken.getSessionId());
+            session = (Session) AbstractDatabaseBackend.getInstance().get(Session.class, sessionToken.getSessionId());
         }
         catch (DatabaseObjectNotFound e) {
             throw Status.UNAUTHENTICATED.withDescription("Session token is invalid or has expired").asRuntimeException();
@@ -68,7 +67,7 @@ public class SessionTokenUtils {
         // Verify that the provided password matches that of the session
         boolean samePasswords = MessageDigest.isEqual(
             decryptedPassword,
-            session.getValue("password").toString().getBytes()
+            session.getPassword().getBytes()
         );
         if (! samePasswords) {
             throw Status.UNAUTHENTICATED.withDescription("Invalid session token").asRuntimeException();
@@ -79,10 +78,10 @@ public class SessionTokenUtils {
 
 
     public static String marshallSessionToken(Session session) {
-        String password = session.getValue("password").toString();
+        String password = session.getPassword();
         byte[] encryptedPassword = AbstractEncryptionBackend.getInstance().encrypt(password.getBytes());
         JsonObject header = new JsonObject();
-        header.addProperty("session_id", session.getValue("id").toString());
+        header.addProperty("session_id", session.getId());
         String encodedHeader = Base64.getUrlEncoder().encodeToString(new Gson().toJson(header).getBytes());
         String encodedPassword = Base64.getUrlEncoder().encodeToString(encryptedPassword);
         return encodedHeader + TOKEN_SEPARATOR + encodedPassword;

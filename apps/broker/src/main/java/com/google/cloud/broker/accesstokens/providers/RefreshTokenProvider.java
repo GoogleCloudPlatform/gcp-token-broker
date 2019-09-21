@@ -25,7 +25,7 @@ import com.google.cloud.broker.accesstokens.AccessToken;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
-import com.google.cloud.broker.database.models.Model;
+import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import com.google.cloud.broker.oauth.RefreshToken;
 import com.google.cloud.broker.utils.TimeUtils;
 
@@ -57,14 +57,14 @@ public class RefreshTokenProvider extends AbstractProvider {
         // Fetch refresh token from the database
         RefreshToken refreshToken = null;
         try {
-            refreshToken = (RefreshToken) Model.get(RefreshToken.class, googleIdentity);
+            refreshToken = (RefreshToken) AbstractDatabaseBackend.getInstance().get(RefreshToken.class, googleIdentity);
         }
         catch (DatabaseObjectNotFound e) {
             throw Status.PERMISSION_DENIED.withDescription(String.format(AUTHZ_ERROR_MESSAGE, owner)).asRuntimeException();
         }
 
         // Decrypt the refresh token's value
-        byte[] encryptedValue = (byte[]) refreshToken.getValue("value");
+        byte[] encryptedValue = refreshToken.getValue();
         String decryptedValue = new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
 
         // Load OAuth client secret

@@ -9,29 +9,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.database.models;
+package com.google.cloud.broker.oauth;
 
 import java.util.HashMap;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
 
-import com.google.cloud.broker.oauth.RefreshToken;
+import com.google.cloud.broker.database.models.Model;
 
-public class ModelTest {
+public class RefreshTokenTest {
+
+    // TODO: testToMap
 
     @Test
-    public void testNewModelInstance() {
+    public void testFromMap() {
         HashMap<String, Object> values = new HashMap<String, Object>();
         values.put("id", "alice@example.com");
-        values.put("creation_time", 2222222222222L);
+        values.put("creationTime", 2222222222222L);
         values.put("value", "xyz".getBytes());
-        Model model = Model.newModelInstance(RefreshToken.class, values);
 
-        assertTrue(model instanceof RefreshToken);
-        assertEquals("alice@example.com", model.getValue("id"));
-        assertEquals(2222222222222L, model.getValue("creation_time"));
-        assertArrayEquals("xyz".getBytes(), (byte[]) model.getValue("value"));
+        RefreshToken token = (RefreshToken) Model.fromMap(RefreshToken.class, values);
+        assertEquals("alice@example.com", token.getId());
+        assertEquals(2222222222222L, token.getCreationTime().longValue());
+        assertArrayEquals("xyz".getBytes(), token.getValue());
     }
 
 }

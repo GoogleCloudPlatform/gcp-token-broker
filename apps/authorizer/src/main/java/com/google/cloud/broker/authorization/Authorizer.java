@@ -35,6 +35,7 @@ import com.google.cloud.broker.oauth.RefreshToken;
 import com.google.cloud.broker.oauth.RefreshTokenStore;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
@@ -244,7 +245,7 @@ public class Authorizer implements AutoCloseable {
         public void putRefreshToken(String principal, String refreshToken){
             AbstractEncryptionBackend aead = AbstractEncryptionBackend.getInstance();
             DatabaseRefreshTokenStore db = new DatabaseRefreshTokenStore();
-            db.putRefreshToken(RefreshToken.create(refreshToken, principal, aead));
+            db.putRefreshToken(new RefreshToken(principal, aead.encrypt(refreshToken.getBytes(Charsets.UTF_8)), null));
         }
 
         @Override
