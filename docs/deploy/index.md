@@ -43,7 +43,7 @@ Before you start, you must set up some prerequisites for the demo:
    * [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v0.11.13
    * [Helm](https://docs.helm.sh/using_helm/#installing-helm) v2.14.1
    * [Skaffold](https://github.com/GoogleContainerTools/skaffold#install) v0.32.0
-   * [Google Cloud SDK](https://cloud.google.com/sdk/install) v252.0.0
+   * [Google Cloud SDK](https://cloud.google.com/sdk/install) v267.0.0
 
 ### Deploying the demo architecture
 
@@ -52,12 +52,18 @@ VPCs, firewall rules, etc.), which are automatically deployed using terraform.
 
 Follow these steps to deploy the demo environment to GCP:
 
-1. Log in as the Google user who owns the GCP project:
+1. Check out the latest [released version](https://github.com/GoogleCloudPlatform/gcp-token-broker/blob/master/CHANGES.md)
+   (Replace **`[VERSION_NUMBER]`** with the letter `v` followed by the version number, in one word):
+
+   ```shell
+   git checkout [VERSION_NUMBER]
+   ```
+2. Log in as the Google user who owns the GCP project:
 
    ```shell
    gcloud auth application-default login
    ```
-2. Run the following commands to set some default configuration values for `gcloud`.
+3. Run the following commands to set some default configuration values for `gcloud`.
    Replace **`[your-project-id]`** with your GCP project ID, and **`[your-zone-of-choice]`**
    with your preferred zone (See list of [availables zones](https://cloud.google.com/compute/docs/regions-zones/#available)):
 
@@ -65,12 +71,12 @@ Follow these steps to deploy the demo environment to GCP:
    gcloud config set project [your-project-id]
    gcloud config set compute/zone [your-zone-of-choice]
    ```
-3. Change into the `terraform` directory:
+4. Change into the `terraform` directory:
 
    ```shell
    cd terraform
    ```
-4. Create a `terraform.tfvars` file in the `terraform` directory with the following configuration
+5. Create a `terraform.tfvars` file in the `terraform` directory with the following configuration
    (Update the values as needed. Also make sure to use the same `gcp_zone` as you
    selected in the above step, and its corresponding `gcp_region`):
 
@@ -98,8 +104,8 @@ Follow these steps to deploy the demo environment to GCP:
      generally made of UPPERCASE letters.
    * Replace the `test_users` with the usernames of the three users that you created in the
      [Prerequisites](#prerequisites) section.
-5. Run: `terraform init`
-6. Run: `terraform apply`
+6. Run: `terraform init`
+7. Run: `terraform apply`
 
 ### Configuring the OAuth client
 
@@ -229,7 +235,7 @@ To deploy the broker service, run the following commands **from the root of the 
    cd deploy
    sed -e "s/PROJECT/$PROJECT/" skaffold.yaml.template > skaffold.yaml
    ```
-9.  Deploy to Kubernetes Engine:
+9. Deploy to Kubernetes Engine:
 
    ```shell
    skaffold dev -v info
@@ -238,14 +244,12 @@ To deploy the broker service, run the following commands **from the root of the 
    Note: The first time you run the `skaffold` command, it might take a few
    minutes for the container images to build and get uploaded to the
    container registry.
-
 10. Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
 
     ```shell
     BROKER_POD=$(kubectl get pods --field-selector=status.phase=Running -o name | grep -m1 "broker" | cut -d'/' -f 2)
     kubectl exec -it $BROKER_POD -- bash -c "java -cp /classpath/broker.jar:/classpath/encryption-backend-cloud-kms.jar com.google.cloud.broker.encryption.GenerateDEK"
     ```
-
 11. Wait until an external IP has been assigned to the broker service. You can
     check the status by running the following command in a different terminal,
     and by looking up the `EXTERNAL-IP` value:
