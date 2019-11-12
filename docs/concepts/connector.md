@@ -51,7 +51,13 @@ Port where the broker service is hosted.
 
 ### ```gcp.token.broker.tls.certificate```
 
-TLS certificate for the broker service. Only necessary if `gcp.token.broker.tls.enabled` is `true`.
+Alternative to `gcp.token.broker.tls.certificate.path`. Contents of the TLS certificate for the broker service.
+Used only if `gcp.token.broker.tls.enabled` is `true`.
+
+### ```gcp.token.broker.tls.certificate.path```
+
+Alternative to `gcp.token.broker.tls.certificate`. File path of TLS certificate for the broker service.
+Used only if `gcp.token.broker.tls.enabled` is `true` and `gcp.token.broker.tls.certificate`  is not provided.
 
 ### ```gcp.token.broker.tls.enabled```
 

@@ -11,6 +11,10 @@
 
 package com.google.cloud.broker.hadoop.fs;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.AccessController;
 import java.security.Principal;
 import java.util.Base64;
@@ -43,7 +47,19 @@ public final class BrokerGateway {
         String brokerHostname = config.get("gcp.token.broker.uri.hostname", "localhost");
         int brokerPort = config.getInt("gcp.token.broker.uri.port", 443);
         boolean tlsEnabled = config.getBoolean("gcp.token.broker.tls.enabled", true);
-        String tlsCertificate = config.get("gcp.token.broker.tls.certificate", "");
+        String tlsCertificate = config.get("gcp.token.broker.tls.certificate");
+        if (tlsCertificate == null) {
+            String tlsCerfiticatePath = config.get("gcp.token.broker.tls.certificate.path");
+            if (tlsCerfiticatePath != null) {
+                try {
+                    tlsCertificate = new String(Files.readAllBytes(Paths.get(tlsCerfiticatePath)), StandardCharsets.US_ASCII);
+                } catch (IOException e) {
+                    throw new RuntimeException("Error reading the TLS certificate file: " + e.getMessage());
+                }
+            } else {
+                tlsCertificate = "";
+            }
+        }
 
         managedChannel = GrpcUtils.newManagedChannel(brokerHostname, brokerPort, tlsEnabled, tlsCertificate);
         stub = GrpcUtils.newStub(managedChannel);
