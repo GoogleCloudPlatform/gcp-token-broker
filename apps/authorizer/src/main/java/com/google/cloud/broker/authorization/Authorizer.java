@@ -28,11 +28,10 @@ import com.google.api.client.http.apache.v2.ApacheHttpTransport;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.Key;
+import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
-import com.google.cloud.broker.oauth.DatabaseRefreshTokenStore;
 import com.google.cloud.broker.oauth.GoogleClientSecretsLoader;
 import com.google.cloud.broker.oauth.RefreshToken;
-import com.google.cloud.broker.oauth.RefreshTokenStore;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -50,11 +49,8 @@ import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.security.Constraint;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.security.auth.login.LoginException;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -68,7 +64,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class Authorizer implements AutoCloseable {
-    private static final Logger logger = LoggerFactory.getLogger(Authorizer.class);
     private Server server;
     private static SoySauce soySauce;
     private CallbackServlet callbackServlet;
@@ -242,10 +237,10 @@ public class Authorizer implements AutoCloseable {
             this.opts = opts;
         }
 
-        public void putRefreshToken(String principal, String refreshToken){
+        public void saveRefreshToken(String principal, String refreshTokenString){
             AbstractEncryptionBackend aead = AbstractEncryptionBackend.getInstance();
-            DatabaseRefreshTokenStore db = new DatabaseRefreshTokenStore();
-            db.putRefreshToken(new RefreshToken(principal, aead.encrypt(refreshToken.getBytes(Charsets.UTF_8)), null));
+            RefreshToken refreshToken = new RefreshToken(principal, aead.encrypt(refreshTokenString.getBytes(Charsets.UTF_8)), null);
+            AbstractDatabaseBackend.getInstance().save(refreshToken);
         }
 
         @Override
@@ -285,7 +280,7 @@ public class Authorizer implements AutoCloseable {
             PrintWriter w = resp.getWriter();
 
             // Store Refresh Token for authenticated principal
-            putRefreshToken(req.getUserPrincipal().getName(), credential.getRefreshToken());
+            saveRefreshToken(req.getUserPrincipal().getName(), credential.getRefreshToken());
 
             Map<String, Object> data = ImmutableMap.<String, Object>builder()
                 .put("principal", req.getUserPrincipal().getName())

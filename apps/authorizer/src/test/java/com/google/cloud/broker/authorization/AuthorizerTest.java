@@ -92,7 +92,7 @@ public class AuthorizerTest extends KdcTestBase {
     @Test
     public void testRefreshTokenStore() {
         String token = "abcd";
-        authorizer.getCallbackServlet().putRefreshToken(clientPrincipal, token);
+        authorizer.getCallbackServlet().saveRefreshToken(clientPrincipal, token);
 
         RefreshToken refreshToken = (RefreshToken) AbstractDatabaseBackend.getInstance().get(RefreshToken.class, clientPrincipal);
 
