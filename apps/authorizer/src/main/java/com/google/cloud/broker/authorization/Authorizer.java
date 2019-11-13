@@ -49,6 +49,7 @@ import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.security.Constraint;
+import ch.qos.logback.classic.Level;
 
 import javax.security.auth.login.LoginException;
 import javax.servlet.http.HttpServlet;
@@ -97,7 +98,16 @@ public class Authorizer implements AutoCloseable {
         authorizer.join();
     }
 
+    public static void setLoggingLevel() {
+        Level level = Level.toLevel(AppSettings.getProperty("LOGGING_LEVEL", "INFO"));
+        final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger("org.eclipse.jetty");
+        ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger) logger;
+        logbackLogger.setLevel(level);
+    }
+
     public Authorizer() throws LoginException {
+        setLoggingLevel();
+
         Settings settings = new Settings();
         String redirectUri = settings.callbackUri.toString();
         int opts = ServletContextHandler.GZIP | ServletContextHandler.SECURITY;

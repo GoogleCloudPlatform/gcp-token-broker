@@ -188,29 +188,23 @@ To deploy the broker service, run the following commands **from the root of the 
    mkdir -p apps/extensions/encryption/cloud-kms/target
    curl https://repo1.maven.org/maven2/com/google/cloud/broker/encryption-backend-cloud-kms/${BROKER_VERSION}/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar > apps/extensions/encryption/cloud-kms/target/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar
    ```
-2. Set some environment variables:
-
-   ```shell
-   export PROJECT=$(gcloud info --format='value(config.project)')
-   export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
-   ```
-3. Configure credentials for the cluster:
+2. Configure credentials for the cluster:
 
    ```shell
    gcloud container clusters get-credentials broker
    ```
-4. Create a Kubernetes service account with the cluster admin role for Tiller, the Helm server:
+3. Create a Kubernetes service account with the cluster admin role for Tiller, the Helm server:
 
    ```shell
    kubectl create serviceaccount --namespace kube-system tiller
    kubectl create clusterrolebinding tiller --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
    ```
-5. Install Helm tiller in the cluster:
+4. Install Helm tiller in the cluster:
 
    ```shell
    helm init --service-account tiller
    ```
-6. Create the Broker secrets:
+5. Create the Broker secrets:
 
    ```shell
    kubectl create secret generic broker-secrets \
@@ -218,7 +212,7 @@ To deploy the broker service, run the following commands **from the root of the 
      --from-file=tls.pem=broker-tls.pem \
      --from-file=tls.crt=broker-tls.crt
    ```
-7. Create the Authorizer secrets
+6. Create the Authorizer secrets
 
    ```shell
    openssl rand -base64 32 > authorizer-flask-secret.key
@@ -229,13 +223,14 @@ To deploy the broker service, run the following commands **from the root of the 
      --from-file=tls.key=authorizer-tls.key \
      --from-file=tls.crt=authorizer-tls.crt
    ```
-8. Create the `skaffold.yaml` configuration file:
+7. Create the `skaffold.yaml` configuration file:
 
    ```shell
    cd deploy
+   export PROJECT=$(gcloud info --format='value(config.project)')
    sed -e "s/PROJECT/$PROJECT/" skaffold.yaml.template > skaffold.yaml
    ```
-9. Deploy to Kubernetes Engine:
+8. Deploy to Kubernetes Engine:
 
    ```shell
    skaffold dev -v info
@@ -244,13 +239,13 @@ To deploy the broker service, run the following commands **from the root of the 
    Note: The first time you run the `skaffold` command, it might take a few
    minutes for the container images to build and get uploaded to the
    container registry.
-10. Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
+9.  Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
 
     ```shell
     BROKER_POD=$(kubectl get pods --field-selector=status.phase=Running -o name | grep -m1 "broker" | cut -d'/' -f 2)
     kubectl exec -it $BROKER_POD -- bash -c "java -cp /classpath/broker.jar:/classpath/encryption-backend-cloud-kms.jar com.google.cloud.broker.encryption.GenerateDEK"
     ```
-11. Wait until an external IP has been assigned to the broker service. You can
+10. Wait until an external IP has been assigned to the broker service. You can
     check the status by running the following command in a different terminal,
     and by looking up the `EXTERNAL-IP` value:
 

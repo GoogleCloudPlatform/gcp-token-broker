@@ -292,6 +292,7 @@ authorizer:
       ENCRYPTION_DEK_URI: 'gs://${google_storage_bucket.encryption_bucket.name}/dek.json'
       OAUTH_CLIENT_ID: 'changeit'
       OAUTH_CLIENT_SECRET: 'changeit'
+      LOGGING_LEVEL: 'INFO'
   ingress:
     host: '${var.authorizer_hostname}'
 EOT
