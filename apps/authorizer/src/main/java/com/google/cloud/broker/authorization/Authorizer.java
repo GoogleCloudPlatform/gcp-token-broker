@@ -108,12 +108,18 @@ public class Authorizer implements AutoCloseable {
     public Authorizer() throws LoginException {
         setLoggingLevel();
 
-        Settings settings = new Settings();
-        String redirectUri = settings.callbackUri.toString();
+        URI callbackUri = new GenericUrl(AppSettings.requireProperty(("AUTHORIZER_OAUTH_CALLBACK_URI"))).toURI();
+        String host = AppSettings.getProperty("AUTHORIZER_HOST", "0.0.0.0");
+        int port = Integer.valueOf(AppSettings.getProperty("AUTHORIZER_PORT", "8080"));
+        String principal = AppSettings.requireProperty("AUTHORIZER_PRINCIPAL");
+        String keytabPath = AppSettings.requireProperty("AUTHORIZER_KEYTAB");
+        boolean enableSpnego = Boolean.parseBoolean(AppSettings.getProperty("AUTHORIZER_ENABLE_SPNEGO", "true"));
+
+        String redirectUri = callbackUri.toString();
         int opts = ServletContextHandler.GZIP | ServletContextHandler.SECURITY;
         ServletContextHandler ctx = new ServletContextHandler(opts);
         ctx.setContextPath("/");
-        if (settings.enableSpnego) {
+        if (enableSpnego) {
             // Require authentication
             Constraint constraint = new Constraint();
             constraint.setAuthenticate(true);
@@ -129,7 +135,7 @@ public class Authorizer implements AutoCloseable {
             ConstraintSecurityHandler csh = new ConstraintSecurityHandler();
             csh.addConstraintMapping(cMap);
 
-            LoginService loginService = new Spnego.SpnegoLoginService(settings.principal, settings.keytabPath, "user");
+            LoginService loginService = new Spnego.SpnegoLoginService(principal, keytabPath, "user");
             Spnego.SpnegoLoginAuthenticator authenticator = new Spnego.SpnegoLoginAuthenticator();
 
             csh.setLoginService(loginService);
@@ -143,7 +149,7 @@ public class Authorizer implements AutoCloseable {
 
         ctx.setSessionHandler(new SessionHandler());
 
-        server = new Server(settings.port);
+        server = new Server(port);
         server.setHandler(ctx);
 
         GoogleClientSecrets clientSecrets = GoogleClientSecretsLoader.getSecrets();
@@ -159,7 +165,7 @@ public class Authorizer implements AutoCloseable {
             .setAccessType("offline") // refresh token is needed
             .build();
 
-        ctx.addServlet(new ServletHolder(new LoginServlet(flow, settings.callbackUri.getPath())), "/");
+        ctx.addServlet(new ServletHolder(new LoginServlet(flow, callbackUri.getPath())), "/");
 
         CallbackOptions callbackOptions = new CallbackOptions();
         callbackOptions.flow = flow;
@@ -167,7 +173,7 @@ public class Authorizer implements AutoCloseable {
         callbackServlet = new CallbackServlet(callbackOptions);
 
         ctx.addServlet(new ServletHolder(callbackServlet),
-            settings.callbackUri.getPath());
+            callbackUri.getPath());
 
         server.setStopAtShutdown(true);
     }
@@ -215,24 +221,6 @@ public class Authorizer implements AutoCloseable {
     public void close() throws Exception {
         if (server != null && !server.isStopped()) {
             server.stop();
-        }
-    }
-
-    public static class Settings {
-        URI callbackUri;
-        String host;
-        int port;
-        String principal;
-        String keytabPath;
-        boolean enableSpnego;
-
-        public Settings() {
-            callbackUri = new GenericUrl(AppSettings.requireProperty(("AUTHORIZER_OAUTH_CALLBACK_URI"))).toURI();
-            host = AppSettings.getProperty("AUTHORIZER_HOST", "0.0.0.0");
-            port = Integer.valueOf(AppSettings.getProperty("AUTHORIZER_PORT", "8080"));
-            principal = AppSettings.requireProperty("AUTHORIZER_PRINCIPAL");
-            keytabPath = AppSettings.requireProperty("AUTHORIZER_KEYTAB");
-            enableSpnego = AppSettings.getProperty("AUTHORIZER_ENABLE_SPNEGO", "true").equalsIgnoreCase("true");
         }
     }
 
