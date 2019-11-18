@@ -41,8 +41,8 @@ Before you start, you must set up some prerequisites for the demo:
 5. Install some tools on your local machine (The versions indicated below are the ones that have been officially tested.
    Newer versions might work but are untested):
    * [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v0.11.13
-   * [Helm](https://docs.helm.sh/using_helm/#installing-helm) v2.14.1
-   * [Skaffold](https://github.com/GoogleContainerTools/skaffold#install) v0.32.0
+   * [Helm](https://docs.helm.sh/using_helm/#installing-helm) v2.16.1
+   * [Skaffold](https://github.com/GoogleContainerTools/skaffold#install) v1.0.1
    * [Google Cloud SDK](https://cloud.google.com/sdk/install) v267.0.0
 
 ### Deploying the demo architecture
