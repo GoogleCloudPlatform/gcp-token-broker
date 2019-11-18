@@ -12,8 +12,8 @@
 package com.google.cloud.broker.caching.remote;
 
 import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.utils.InstanceUtils;
 
-import java.lang.reflect.Constructor;
 import java.util.concurrent.locks.Lock;
 
 public abstract class AbstractRemoteCache {
@@ -29,14 +29,8 @@ public abstract class AbstractRemoteCache {
 
     public static AbstractRemoteCache getInstance() {
         if (instance == null) {
-            try {
-                String className = AppSettings.getProperty("REMOTE_CACHE", "com.google.cloud.broker.caching.remote.RedisCache");
-                Class c = Class.forName(className);
-                Constructor constructor  = c.getConstructor();
-                instance = (AbstractRemoteCache) constructor.newInstance();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            String className = AppSettings.getProperty("REMOTE_CACHE", "com.google.cloud.broker.caching.remote.RedisCache");
+            instance = (AbstractRemoteCache) InstanceUtils.invokeConstructor(className);
         }
         return instance;
     }

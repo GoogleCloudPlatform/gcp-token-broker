@@ -11,11 +11,10 @@
 
 package com.google.cloud.broker.database.backends;
 
-import java.lang.reflect.Constructor;
-
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.models.Model;
+import com.google.cloud.broker.utils.InstanceUtils;
 
 
 public abstract class AbstractDatabaseBackend {
@@ -29,14 +28,8 @@ public abstract class AbstractDatabaseBackend {
 
     public static AbstractDatabaseBackend getInstance() {
         if (instance == null) {
-            try {
-                String className = AppSettings.getProperty("DATABASE_BACKEND", "com.google.cloud.broker.database.backends.CloudDatastoreBackend");
-                Class c = Class.forName(className);
-                Constructor constructor = c.getConstructor();
-                instance = (AbstractDatabaseBackend) constructor.newInstance();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            String className = AppSettings.getProperty("DATABASE_BACKEND", "com.google.cloud.broker.database.backends.CloudDatastoreBackend");
+            instance = (AbstractDatabaseBackend) InstanceUtils.invokeConstructor(className);
         }
         return instance;
     }

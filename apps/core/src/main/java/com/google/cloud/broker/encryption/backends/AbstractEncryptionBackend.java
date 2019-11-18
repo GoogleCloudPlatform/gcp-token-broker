@@ -12,8 +12,7 @@
 package com.google.cloud.broker.encryption.backends;
 
 import com.google.cloud.broker.settings.AppSettings;
-
-import java.lang.reflect.Constructor;
+import com.google.cloud.broker.utils.InstanceUtils;
 
 public abstract class AbstractEncryptionBackend {
 
@@ -25,14 +24,8 @@ public abstract class AbstractEncryptionBackend {
 
     public static AbstractEncryptionBackend getInstance() {
         if (instance == null) {
-            try {
-                String className = AppSettings.getProperty("ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.CloudKMSBackend");
-                Class c = Class.forName(className);
-                Constructor constructor  = c.getConstructor();
-                instance = (AbstractEncryptionBackend) constructor.newInstance();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            String className = AppSettings.getProperty("ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.CloudKMSBackend");
+            instance = (AbstractEncryptionBackend) InstanceUtils.invokeConstructor(className);
         }
         return instance;
     }
