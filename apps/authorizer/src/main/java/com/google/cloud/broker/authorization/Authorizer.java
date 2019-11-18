@@ -46,7 +46,6 @@ import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.security.Constraint;
@@ -58,13 +57,10 @@ import javax.security.auth.login.LoginException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Set;
 
@@ -88,7 +84,6 @@ public class Authorizer implements AutoCloseable {
     private static final JacksonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final GoogleClientSecrets CLIENT_SECRETS = GoogleClientSecretsLoader.getSecrets();
     private static final Credential.AccessMethod ACCESS_METHOD = BearerToken.queryParameterAccessMethod();
-    private static final String STATE_PARAM = "state";
     private static final String CODE_PARAM = "code";
     private static final String USER_INFO_URI = "https://www.googleapis.com/oauth2/v2/userinfo";
     private static final String AUTH_SERVER_URL = "https://accounts.google.com/o/oauth2/auth";
@@ -153,8 +148,6 @@ public class Authorizer implements AutoCloseable {
             // Attach to ServletContextHandler
             ctx.setSecurityHandler(csh);
         }
-
-        ctx.setSessionHandler(new SessionHandler());
 
         server = new Server(new InetSocketAddress(host, port));
         server.setHandler(ctx);
@@ -250,22 +243,11 @@ public class Authorizer implements AutoCloseable {
 
         @Override
         protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-            HttpSession session = request.getSession(false);
-            if (session == null){
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
-            }
-            String state = (String) session.getAttribute(STATE_PARAM);
-            String stateParam = request.getParameter(STATE_PARAM);
             String authzCode = request.getParameter(CODE_PARAM);
-            if (state == null || !state.equals(stateParam)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
-            } else if (authzCode == null) {
+            if (authzCode == null) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
-            session.removeAttribute(STATE_PARAM);
 
             final TokenResponse tokenResponse = opts.flow
                 .newTokenRequest(authzCode)
@@ -326,13 +308,9 @@ public class Authorizer implements AutoCloseable {
             }
             // Authorize endpoint: redirect to Google login
             else if (requestUri.equals(AUTHORIZE_URI)) {
-                SecureRandom rng = new SecureRandom();
-                String state = new BigInteger(130, rng).toString(32); // Prevent request forgery
-                request.getSession().setAttribute(STATE_PARAM, state);
                 response.sendRedirect(flow
                     .newAuthorizationUrl()
                     .setRedirectUri(redirectUri)
-                    .setState(state)
                     .build());
             }
             // Return 404 for everything else
