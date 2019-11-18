@@ -63,7 +63,6 @@ function backup_artifacts() {
         exit 1
     fi
     mkdir -p backups/$1
-    cp authorizer-flask-secret.key backups/$1
     cp authorizer-tls.crt backups/$1
     cp authorizer-tls.csr backups/$1
     cp authorizer-tls.key backups/$1
@@ -126,6 +125,10 @@ function set_projects_arg() {
                 ;;
             cloud-datastore)
                 PROJECTS_ARG="--projects apps/core,apps/extensions/database/cloud-datastore"
+                break
+                ;;
+            cloud-kms)
+                PROJECTS_ARG="--projects apps/core,apps/extensions/encryption/cloud-kms"
                 break
                 ;;
             *)
