@@ -17,7 +17,7 @@ It serves two endpoints:
 - `AUTHORIZER_PRINCIPAL` Kerberos principal name in format `HTTP/host.domain.tld@REALM`
 - `AUTHORIZER_OAUTH_CALLBACK_URI` callback URI where authorization token is accepted after login.
 - `OAUTH_CLIENT_SECRET_JSON_PATH`
-- `AUTHORIZER_ENABLE_SPNEGO` boolean value indicating whether to require SPNEGO. Default: "true"
+- `AUTHORIZER_ENABLE_SPNEGO` boolean value indicating whether to require SPNEGO. Default: "false"
 
 
 ## Required Settings from other modules

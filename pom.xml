@@ -88,7 +88,7 @@ limitations under the License.
         <netty.tcnative.version>2.0.25.Final</netty.tcnative.version>
         <redisson.version>3.10.6</redisson.version>
         <javax.annotation.version>1.2</javax.annotation.version>
-        <cloud.datastore.version>1.86.0</cloud.datastore.version>
+        <cloud.datastore.version>1.101.0</cloud.datastore.version>
         <cloud.kms.version>1.22.0</cloud.kms.version>
         <cloud.iam.version>v1-rev20190704-1.30.1</cloud.iam.version>
         <logback.version>1.2.3</logback.version>

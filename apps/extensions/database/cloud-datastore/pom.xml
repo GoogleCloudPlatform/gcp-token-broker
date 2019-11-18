@@ -45,18 +45,40 @@ limitations under the License.
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>${maven.assembly.plugin.version}</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
                 <executions>
                     <execution>
                         <phase>package</phase>
                         <goals>
-                            <goal>single</goal>
+                            <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
+                            <finalName>${project.artifactId}-${project.version}-jar-with-dependencies</finalName>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/maven/**</exclude>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <relocations>
+                                <!-- Shade some dependencies to avoid conflicts with other libraries (e.g. the authorizer) -->
+                                <relocation>
+                                    <pattern>com.google</pattern>
+                                    <shadedPattern>repackaged.datastore</shadedPattern>
+                                    <includes>
+                                        <include>com.google.**</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>com.google.cloud.broker.**</exclude>
+                                    </excludes>
+                                </relocation>
+                            </relocations>
                         </configuration>
                     </execution>
                 </executions>

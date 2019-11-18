@@ -33,25 +33,24 @@ public class TemplateTest {
     @BeforeClass
     public static void setup() {
         SoyFileSet sfs = SoyFileSet.builder()
-            .add(Resources.getResource("callback.soy"))
+            .add(Resources.getResource("index.soy"))
+            .add(Resources.getResource("success.soy"))
             .build();
         soySauce = sfs.compileTemplates();
     }
 
     @Test
-    public void testRenderTemplate() {
+    public void testIndex() {
         Map<String, Object> data = ImmutableMap.<String, Object>builder()
             .put("principal", "user@EXAMPLE.COM")
             .put("email", "user@example.com")
             .put("picture", "https://cdn.example.com/user.jpg")
             .build();
         String content = soySauce
-            .renderTemplate("Authorizer.Templates.Callback.success")
+            .renderTemplate("Authorizer.Templates.success")
             .setData(data)
             .renderHtml()
             .get()
             .getContent();
-        assertTrue(content.equals("<html><head><title>Token Broker Authorizer</title></head><body><h1>Refresh token saved</h1><div><p>Principal: user@EXAMPLE.COM</p><p>Email: user@example.com</p><p><img alt=\"profile\" src=\"https://cdn.example.com/user.jpg\"/></p></div></body></html>"));
-
     }
 }

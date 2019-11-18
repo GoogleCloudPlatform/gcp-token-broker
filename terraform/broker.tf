@@ -284,14 +284,14 @@ authorizer:
   image: 'gcr.io/${var.gcp_project}/authorizer'
   app:
     settings:
+      GCP_PROJECT: '${var.gcp_project}'
       AUTHORIZER_KEYTAB: 'authorizer.keytab'
       AUTHORIZER_PRINCIPAL: 'HTTP/localhost@EXAMPLE.COM'
-      AUTHORIZER_ENABLE_SPNEGO: 'true'
+      AUTHORIZER_ENABLE_SPNEGO: 'false'
+      OAUTH_CLIENT_SECRET_JSON_PATH: '/secrets/client_secret.json'
       AUTHORIZER_OAUTH_CALLBACK_URI: 'https://${var.authorizer_hostname}/oauth2callback'
       ENCRYPTION_KEK_URI: '${google_kms_crypto_key.broker_key.self_link}'
       ENCRYPTION_DEK_URI: 'gs://${google_storage_bucket.encryption_bucket.name}/dek.json'
-      OAUTH_CLIENT_ID: 'changeit'
-      OAUTH_CLIENT_SECRET: 'changeit'
       LOGGING_LEVEL: 'INFO'
   ingress:
     host: '${var.authorizer_hostname}'

@@ -59,7 +59,7 @@ public class AuthorizerTest extends KdcTestBase {
         AppSettings.setProperty("AUTHORIZER_OAUTH_CALLBACK_URI", "http://localhost:8080/oauth2callback");
         AppSettings.setProperty("AUTHORIZER_PRINCIPAL", serverPrincipal);
         AppSettings.setProperty("AUTHORIZER_KEYTAB", serverKeytab.toString());
-        AppSettings.setProperty("AUTHORIZER_ENABLE_SPNEGO", "true");
+        AppSettings.setProperty("AUTHORIZER_ENABLE_SPNEGO", "false");
         AppSettings.setProperty("OAUTH_CLIENT_ID", "FakeClientId");
         AppSettings.setProperty("OAUTH_CLIENT_SECRET", "FakeClientSecret");
         AppSettings.setProperty("ENCRYPTION_BACKEND", DummyEncryptionBackend.class.getCanonicalName());
@@ -76,17 +76,18 @@ public class AuthorizerTest extends KdcTestBase {
     }
 
     /**
-     *
+     * Check that the user is correctly redirected to the Google login page.
      */
     @Test
-    public void testSpnego() throws IOException {
-        HttpGet req = new HttpGet("http://localhost:" + authorizerPort);
+    public void testGoogleRedirect() throws IOException {
+        HttpGet req = new HttpGet("http://localhost:" + authorizerPort + "/authorize");
         req.setHeader(Spnego.SpnegoLoginService.REALM_HEADER, realm);
         HttpResponse response = httpClient.execute(req);
         int statusCode = response.getStatusLine().getStatusCode();
         // Should be redirected to Google OAuth page
         assertEquals(statusCode, 302);
-        assertTrue(response.getHeaders("Location")[0].getValue().startsWith("https://accounts.google.com/o/oauth2/auth?access_type=offline&client_id=FakeClientId&redirect_uri=/oauth2callback&response_type=code&scope=https://www.googleapis.com/auth/devstorage.read_write%20email%20profile&state="));
+        assertTrue(response.getHeaders("Location")[0].getValue().startsWith(
+            "https://accounts.google.com/o/oauth2/auth?access_type=offline&approval_prompt=force&client_id=FakeClientId&redirect_uri=http://localhost:8080/oauth2callback&response_type=code&scope=https://www.googleapis.com/auth/devstorage.read_write%20email%20profile&state="));
     }
 
     @Test

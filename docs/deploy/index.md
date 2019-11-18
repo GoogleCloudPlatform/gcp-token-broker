@@ -134,7 +134,7 @@ Follow these steps to deploy the demo environment to GCP:
    * Leave "Authorized JavaScript origins" blank.
    * For "Authorized redirect URIs":
      - Type the following (Replace **`[your.authorizer.hostname]`** with your authorizer
-       app's fully qualified domain name): `https://[your.authorizer.hostname]/google/auth`
+       app's fully qualified domain name): `https://[your.authorizer.hostname]/oauth2callback`
      - **Press "Enter"** on your keyboard to add the URI to the list.
    * Click "Create".
    * Click "Ok" to close the confirmation popup.
@@ -215,11 +215,8 @@ To deploy the broker service, run the following commands **from the root of the 
 6. Create the Authorizer secrets
 
    ```shell
-   openssl rand -base64 32 > authorizer-flask-secret.key
-
    kubectl create secret generic authorizer-secrets \
      --from-file=client_secret.json \
-     --from-file=authorizer-flask-secret.key \
      --from-file=tls.key=authorizer-tls.key \
      --from-file=tls.crt=authorizer-tls.crt
    ```
