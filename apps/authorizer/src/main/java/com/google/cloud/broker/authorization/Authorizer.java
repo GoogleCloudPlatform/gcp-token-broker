@@ -30,11 +30,6 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.Key;
-import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
-import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
-import com.google.cloud.broker.oauth.GoogleClientSecretsLoader;
-import com.google.cloud.broker.oauth.RefreshToken;
-import com.google.cloud.broker.settings.AppSettings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -45,13 +40,11 @@ import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.LoginService;
-import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.security.Constraint;
 import ch.qos.logback.classic.Level;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.security.auth.login.LoginException;
 import javax.servlet.http.HttpServlet;
@@ -60,17 +53,18 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
-import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
-public class Authorizer implements AutoCloseable {
-    private static final Logger logger = LoggerFactory.getLogger(Authorizer.class);
+import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
+import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
+import com.google.cloud.broker.oauth.GoogleClientSecretsLoader;
+import com.google.cloud.broker.oauth.RefreshToken;
+import com.google.cloud.broker.settings.AppSettings;
 
+public class Authorizer implements AutoCloseable {
     private Server server;
     private static SoySauce soySauce;
-    private CallbackServlet callbackServlet;
-    private GoogleAuthorizationCodeFlow flow;
 
     static {
         SoyFileSet sfs = SoyFileSet.builder()
@@ -92,12 +86,23 @@ public class Authorizer implements AutoCloseable {
         "https://www.googleapis.com/auth/devstorage.read_write",
         "email",
         "profile");
-    private static final String AUTHORIZE_URI = "/authorize";
-
-    private static final URI callbackUri = new GenericUrl(AppSettings.requireProperty(("AUTHORIZER_OAUTH_CALLBACK_URI"))).toURI();
+    private static final GoogleAuthorizationCodeFlow FLOW = new GoogleAuthorizationCodeFlow
+        .Builder(HTTP_TRANSPORT,
+        JSON_FACTORY,
+        CLIENT_SECRETS,
+        SCOPES)
+        .setAuthorizationServerEncodedUrl(AUTH_SERVER_URL)
+        .setTokenServerUrl(new GenericUrl(TOKEN_URL))
+        .setMethod(ACCESS_METHOD)
+        .setAccessType("offline").setApprovalPrompt("force") // "offline" and "force" are both required to get a refresh token
+        .build();
+    private static final String GOOGLE_LOGIN_URI = "/google/login";
+    private static final String GOOGLE_OAUTH2_CALLBACK_URI = "/google/oauth2callback";
     private static final String host = AppSettings.getProperty("AUTHORIZER_HOST", "0.0.0.0");
     private static final int port = Integer.parseInt(AppSettings.getProperty("AUTHORIZER_PORT", "8080"));
     private static final boolean enableSpnego = Boolean.parseBoolean(AppSettings.getProperty("AUTHORIZER_ENABLE_SPNEGO", "false"));
+    @VisibleForTesting
+    AuthorizerServlet servlet;
 
 
     public static void main(String[] args) throws Exception {
@@ -114,6 +119,7 @@ public class Authorizer implements AutoCloseable {
     }
 
     public Authorizer() throws LoginException {
+        // Initialize the logging level
         setLoggingLevel();
 
         int opts = ServletContextHandler.GZIP | ServletContextHandler.SECURITY;
@@ -149,53 +155,35 @@ public class Authorizer implements AutoCloseable {
             ctx.setSecurityHandler(csh);
         }
 
+        // Instantiate the server
         server = new Server(new InetSocketAddress(host, port));
+        servlet = new AuthorizerServlet();
+        ctx.addServlet(new ServletHolder(servlet), "/");
         server.setHandler(ctx);
-
-        flow = new GoogleAuthorizationCodeFlow
-            .Builder(HTTP_TRANSPORT,
-                    JSON_FACTORY,
-                    CLIENT_SECRETS,
-                    SCOPES)
-            .setAuthorizationServerEncodedUrl(AUTH_SERVER_URL)
-            .setTokenServerUrl(new GenericUrl(TOKEN_URL))
-            .setMethod(ACCESS_METHOD)
-            .setAccessType("offline").setApprovalPrompt("force") // "offline" and "force" are both required to get a refresh token
-            .build();
-
-        // Main servlet
-        ctx.addServlet(new ServletHolder(new MainServlet(flow, callbackUri.toString())), "/");
-
-        // OAuth callback servlet
-        CallbackOptions callbackOptions = new CallbackOptions();
-        callbackOptions.flow = flow;
-        callbackOptions.redirectUri = callbackUri.toString();
-        callbackServlet = new CallbackServlet(callbackOptions);
-        ctx.addServlet(new ServletHolder(callbackServlet), callbackUri.getPath());
-
         server.setStopAtShutdown(true);
-    }
 
-    @VisibleForTesting
-    public CallbackServlet getCallbackServlet(){
-        return callbackServlet;
+        // Force the server to respect X-Forwarded-* headers for when requests are
+        // forwarded by a proxy. This makes sure, for example, that the "https" scheme
+        // is preserved when TLS is terminated by a load balancer.
+        for (Connector connector : server.getConnectors()) {
+            ConnectionFactory connectionFactory = connector.getDefaultConnectionFactory();
+            if(connectionFactory instanceof HttpConnectionFactory) {
+                HttpConnectionFactory defaultConnectionFactory = (HttpConnectionFactory) connectionFactory;
+                HttpConfiguration httpConfiguration = defaultConnectionFactory.getHttpConfiguration();
+                httpConfiguration.addCustomizer(new ForwardedRequestCustomizer());
+            }
+        }
     }
 
     public static class UserInfo extends GenericJson {
         @Key
         private String email;
-        public String getEmail() {
+        String getEmail() {
             return email;
-        }
-
-        @Key
-        private String picture;
-        public String getPicture() {
-            return picture;
         }
     }
 
-    public static UserInfo getUserInfo(Credential credential) throws IOException {
+    private static UserInfo getUserInfo(Credential credential) throws IOException {
         HttpRequest request = HTTP_TRANSPORT
             .createRequestFactory(credential)
             .buildGetRequest(new GenericUrl(USER_INFO_URI));
@@ -205,13 +193,13 @@ public class Authorizer implements AutoCloseable {
         return response.parseAs(UserInfo.class);
     }
 
-    public void start() throws Exception {
+    void start() throws Exception {
         if (server != null){
             server.start();
         }
     }
 
-    public void join() throws Exception {
+    private void join() throws Exception {
         if (server != null){
             server.join();
         }
@@ -224,34 +212,60 @@ public class Authorizer implements AutoCloseable {
         }
     }
 
-    public static class CallbackOptions{
-        private GoogleAuthorizationCodeFlow flow;
-        private String redirectUri;
-    }
+    public static class AuthorizerServlet extends HttpServlet {
 
-    public static class CallbackServlet extends HttpServlet {
-        private CallbackOptions opts;
-        public CallbackServlet(CallbackOptions opts) {
-            this.opts = opts;
-        }
-
-        public void saveRefreshToken(String id, String value){
+        /**
+         * Stores the given refresh token in the database.
+         */
+        @VisibleForTesting
+        void saveRefreshToken(String id, String value){
             byte[] encryptedValue = AbstractEncryptionBackend.getInstance().encrypt(value.getBytes());
             RefreshToken refreshToken = new RefreshToken(id, encryptedValue, null);
             AbstractDatabaseBackend.getInstance().save(refreshToken);
         }
 
-        @Override
-        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        /**
+         * Handler for the index page.
+         */
+        private void handleIndex(HttpServletRequest request, HttpServletResponse response) throws IOException {
+            response.setContentType("text/html");
+            Map<String, Object> data = ImmutableMap.<String, Object>builder()
+                .put("GOOGLE_LOGIN_URI", GOOGLE_LOGIN_URI)
+                .build();
+            String content = soySauce
+                .renderTemplate("Authorizer.Templates.index")
+                .setData(data)
+                .renderHtml()
+                .get()
+                .getContent();
+            response.getWriter().write(content);
+        }
+
+        /**
+         * Handler for login redirect endpoint.
+         */
+        private void handleLoginRedirect(HttpServletRequest request, HttpServletResponse response) throws IOException {
+            response.sendRedirect(FLOW
+                .newAuthorizationUrl()
+                .setRedirectUri(((Request) request).getRootURL() + GOOGLE_OAUTH2_CALLBACK_URI)
+                .build());
+        }
+
+        /**
+         * Handler for the OAuth callback endpoint.
+         */
+        private void handleCallback(HttpServletRequest request, HttpServletResponse response) throws IOException {
+            // Ensure that the authorization code is provided
             String authzCode = request.getParameter(CODE_PARAM);
             if (authzCode == null) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
 
-            final TokenResponse tokenResponse = opts.flow
+            // Confirm the authorization with Google
+            final TokenResponse tokenResponse = FLOW
                 .newTokenRequest(authzCode)
-                .setRedirectUri(opts.redirectUri)
+                .setRedirectUri(((Request) request).getRootURL() + GOOGLE_OAUTH2_CALLBACK_URI)
                 .execute();
 
             // Retrieve some details about the Google identity
@@ -262,61 +276,37 @@ public class Authorizer implements AutoCloseable {
             // Save the refresh token in the database
             saveRefreshToken(user.getEmail(), tokenResponse.getRefreshToken());
 
-            Map<String, Object> data = ImmutableMap.<String, Object>builder()
-                .put("email", user.getEmail())
-                .put("picture", user.getPicture())
-                .build();
-
+            // Generate the HTML response
             String content = soySauce
                 .renderTemplate("Authorizer.Templates.success")
-                .setData(data)
                 .renderHtml()
                 .get()
                 .getContent();
-
             PrintWriter out = response.getWriter();
             out.write(content);
-        }
-    }
-
-    public static class MainServlet extends HttpServlet {
-        private GoogleAuthorizationCodeFlow flow;
-        private String redirectUri;
-
-        public MainServlet(GoogleAuthorizationCodeFlow flow, String redirectUri) {
-            this.flow = flow;
-            this.redirectUri = redirectUri;
         }
 
         @Override
         protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
             String requestUri = request.getRequestURI();
-            PrintWriter out = response.getWriter();
             // Index page
-            if (requestUri.equals("/")) {
-                response.setContentType("text/html");
-                Map<String, Object> data = ImmutableMap.<String, Object>builder()
-                    .put("authorizeUri", AUTHORIZE_URI)
-                    .build();
-                String content = soySauce
-                    .renderTemplate("Authorizer.Templates.index")
-                    .setData(data)
-                    .renderHtml()
-                    .get()
-                    .getContent();
-                out.write(content);
-            }
-            // Authorize endpoint: redirect to Google login
-            else if (requestUri.equals(AUTHORIZE_URI)) {
-                response.sendRedirect(flow
-                    .newAuthorizationUrl()
-                    .setRedirectUri(redirectUri)
-                    .build());
-            }
-            // Return 404 for everything else
-            else {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                out.println("<h1>Page not found</h1>");
+            switch (requestUri) {
+                case "/":
+                    handleIndex(request, response);
+                    break;
+                // Login endpoint: redirect to Google login
+                case GOOGLE_LOGIN_URI:
+                    handleLoginRedirect(request, response);
+                    break;
+                // OAuth Callback endpoint: process authorization code returned by Google
+                case GOOGLE_OAUTH2_CALLBACK_URI:
+                    handleCallback(request, response);
+                    break;
+                // Return 404 for everything else
+                default:
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    response.getWriter().println("<h1>Page not found</h1>");
+                    break;
             }
         }
     }

@@ -4,9 +4,12 @@ The authorizer is an SPNEGO-enabled web service.
 
 All endpoints are authenticated by SPNEGO.
 
-It serves two endpoints:
-- `/` redirects user to Google OAuth 2.0 Login
-- `/oauth2callback` accepts OAuth 2.0 authorization token, uses it to obtain a Refresh Token for the authenticated user. The Refresh Token is encrypted and stored in the database.
+It serves three endpoints:
+
+- `/`: Landing page for the Authorizer app.
+- `/google/login`: Redirects user to Google OAuth 2.0 Login
+- `/google/oauth2callback`: Accepts OAuth 2.0 authorization token, uses it to obtain a Refresh Token for the authenticated user.
+  The Refresh Token is then encrypted and stored in the database.
 
 
 # Settings
@@ -15,7 +18,6 @@ It serves two endpoints:
 - `AUTHORIZER_PORT` listen port
 - `AUTHORIZER_KEYTAB` path to keytab containing login principal
 - `AUTHORIZER_PRINCIPAL` Kerberos principal name in format `HTTP/host.domain.tld@REALM`
-- `AUTHORIZER_OAUTH_CALLBACK_URI` callback URI where authorization token is accepted after login.
 - `OAUTH_CLIENT_SECRET_JSON_PATH`
 - `AUTHORIZER_ENABLE_SPNEGO` boolean value indicating whether to require SPNEGO. Default: "false"
 

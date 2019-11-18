@@ -289,7 +289,6 @@ authorizer:
       AUTHORIZER_PRINCIPAL: 'HTTP/localhost@EXAMPLE.COM'
       AUTHORIZER_ENABLE_SPNEGO: 'false'
       OAUTH_CLIENT_SECRET_JSON_PATH: '/secrets/client_secret.json'
-      AUTHORIZER_OAUTH_CALLBACK_URI: 'https://${var.authorizer_hostname}/oauth2callback'
       ENCRYPTION_KEK_URI: '${google_kms_crypto_key.broker_key.self_link}'
       ENCRYPTION_DEK_URI: 'gs://${google_storage_bucket.encryption_bucket.name}/dek.json'
       LOGGING_LEVEL: 'INFO'

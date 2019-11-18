@@ -17,7 +17,7 @@ limitations under the License.
 {namespace Authorizer.Templates}
 
 {template .index}
-  {@param authorizeUri: string}
+  {@param GOOGLE_LOGIN_URI: string}
   <html>
     <head>
       <title>GCP Token Broker</title>
@@ -25,7 +25,7 @@ limitations under the License.
     <body>
       <p>Welcome to the GCP Token Broker authorization page!</p>
       <p>To authorize the broker, click this button then follow the log-in steps:</p>
-      <button onclick="window.location.href = '{$authorizeUri}';">Authorize</button>
+      <button onclick="window.location.href = '{$GOOGLE_LOGIN_URI}';">Authorize</button>
     </body>
   </html>
 {/template}

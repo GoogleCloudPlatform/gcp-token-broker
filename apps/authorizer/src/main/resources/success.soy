@@ -17,8 +17,6 @@ limitations under the License.
 {namespace Authorizer.Templates}
 
 {template .success}
-  {@param email: string}
-  {@param picture: string}
   <html>
     <head>
       <title>Authorization complete</title>
@@ -26,8 +24,6 @@ limitations under the License.
     <body>
       <h1>Authorization complete</h1>
       <p>Congratulations! You are now authorized to use the GCP Token Broker.</p>
-      <p>Email: {$email}</p>
-      <p><img alt="profile" src="{$picture}" /></p>
     </body>
   </html>
 {/template}

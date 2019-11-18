@@ -56,7 +56,6 @@ public class AuthorizerTest extends KdcTestBase {
         AppSettings.reset();
         AppSettings.setProperty("AUTHORIZER_HOST", "localhost");
         AppSettings.setProperty("AUTHORIZER_PORT", String.valueOf(authorizerPort));
-        AppSettings.setProperty("AUTHORIZER_OAUTH_CALLBACK_URI", "http://localhost:8080/oauth2callback");
         AppSettings.setProperty("AUTHORIZER_PRINCIPAL", serverPrincipal);
         AppSettings.setProperty("AUTHORIZER_KEYTAB", serverKeytab.toString());
         AppSettings.setProperty("AUTHORIZER_ENABLE_SPNEGO", "false");
@@ -93,7 +92,7 @@ public class AuthorizerTest extends KdcTestBase {
     @Test
     public void testRefreshTokenStore() {
         String token = "abcd";
-        authorizer.getCallbackServlet().saveRefreshToken(clientPrincipal, token);
+        authorizer.servlet.saveRefreshToken(clientPrincipal, token);
 
         RefreshToken refreshToken = (RefreshToken) AbstractDatabaseBackend.getInstance().get(RefreshToken.class, clientPrincipal);
 
