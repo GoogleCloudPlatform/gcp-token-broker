@@ -37,6 +37,7 @@ import com.google.common.io.Resources;
 import com.google.template.soy.SoyFileSet;
 import com.google.template.soy.jbcsrc.api.SoySauce;
 import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import ch.qos.logback.classic.Level;
@@ -46,6 +47,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.Set;
@@ -64,6 +66,7 @@ public class Authorizer implements AutoCloseable {
         SoyFileSet sfs = SoyFileSet.builder()
             .add(Resources.getResource("index.soy"))
             .add(Resources.getResource("success.soy"))
+            .add(Resources.getResource("server_error.soy"))
             .build();
         soySauce = sfs.compileTemplates();
     }
@@ -126,6 +129,7 @@ public class Authorizer implements AutoCloseable {
         server = new Server(new InetSocketAddress(host, port));
         server.setHandler(ctx);
         server.setStopAtShutdown(true);
+        server.setErrorHandler(new CustomErrorHandler());
 
         // Force the server to respect X-Forwarded-* headers for when requests are
         // forwarded by a proxy. This makes sure, for example, that the "https" scheme
@@ -175,6 +179,20 @@ public class Authorizer implements AutoCloseable {
         if (server != null && !server.isStopped()) {
             server.stop();
         }
+    }
+
+    public static class CustomErrorHandler extends ErrorHandler {
+
+        @Override
+        protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
+            String content = soySauce
+                .renderTemplate("Authorizer.Templates.server_error")
+                .renderHtml()
+                .get()
+                .getContent();
+            writer.write(content);
+        }
+
     }
 
     public static class AuthorizerServlet extends HttpServlet {
