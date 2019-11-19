@@ -16,10 +16,7 @@ It serves three endpoints:
 
 - `AUTHORIZER_HOST` bind address
 - `AUTHORIZER_PORT` listen port
-- `AUTHORIZER_KEYTAB` path to keytab containing login principal
-- `AUTHORIZER_PRINCIPAL` Kerberos principal name in format `HTTP/host.domain.tld@REALM`
 - `OAUTH_CLIENT_SECRET_JSON_PATH`
-- `AUTHORIZER_ENABLE_SPNEGO` boolean value indicating whether to require SPNEGO. Default: "false"
 
 
 ## Required Settings from other modules

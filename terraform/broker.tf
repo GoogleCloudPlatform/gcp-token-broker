@@ -285,9 +285,6 @@ authorizer:
   app:
     settings:
       GCP_PROJECT: '${var.gcp_project}'
-      AUTHORIZER_KEYTAB: 'authorizer.keytab'
-      AUTHORIZER_PRINCIPAL: 'HTTP/localhost@EXAMPLE.COM'
-      AUTHORIZER_ENABLE_SPNEGO: 'false'
       OAUTH_CLIENT_SECRET_JSON_PATH: '/secrets/client_secret.json'
       ENCRYPTION_KEK_URI: '${google_kms_crypto_key.broker_key.self_link}'
       ENCRYPTION_DEK_URI: 'gs://${google_storage_bucket.encryption_bucket.name}/dek.json'

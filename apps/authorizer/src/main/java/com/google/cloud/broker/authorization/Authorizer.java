@@ -36,17 +36,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
 import com.google.template.soy.SoyFileSet;
 import com.google.template.soy.jbcsrc.api.SoySauce;
-import org.eclipse.jetty.security.ConstraintMapping;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.security.DefaultIdentityService;
-import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.security.Constraint;
 import ch.qos.logback.classic.Level;
 
-import javax.security.auth.login.LoginException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -100,7 +94,6 @@ public class Authorizer implements AutoCloseable {
     private static final String GOOGLE_OAUTH2_CALLBACK_URI = "/google/oauth2callback";
     private static final String host = AppSettings.getProperty("AUTHORIZER_HOST", "0.0.0.0");
     private static final int port = Integer.parseInt(AppSettings.getProperty("AUTHORIZER_PORT", "8080"));
-    private static final boolean enableSpnego = Boolean.parseBoolean(AppSettings.getProperty("AUTHORIZER_ENABLE_SPNEGO", "false"));
     @VisibleForTesting
     AuthorizerServlet servlet;
 
@@ -118,47 +111,19 @@ public class Authorizer implements AutoCloseable {
         logbackLogger.setLevel(level);
     }
 
-    public Authorizer() throws LoginException {
+    public Authorizer() {
         // Initialize the logging level
         setLoggingLevel();
 
+        // Initialize the context handler
         int opts = ServletContextHandler.GZIP | ServletContextHandler.SECURITY;
         ServletContextHandler ctx = new ServletContextHandler(opts);
         ctx.setContextPath("/");
-        if (enableSpnego) {
-            // Require authentication
-            Constraint constraint = new Constraint();
-            constraint.setAuthenticate(true);
-            constraint.setName("authn");
-            constraint.setRoles(new String[]{"user"});
-
-            // Require authentication on all paths
-            ConstraintMapping cMap = new ConstraintMapping();
-            cMap.setPathSpec("/*");
-            cMap.setConstraint(constraint);
-
-            // Require authentication on all paths using SPNEGO
-            ConstraintSecurityHandler csh = new ConstraintSecurityHandler();
-            csh.addConstraintMapping(cMap);
-
-            String principal = AppSettings.requireProperty("AUTHORIZER_PRINCIPAL");
-            String keytabPath = AppSettings.requireProperty("AUTHORIZER_KEYTAB");
-            LoginService loginService = new Spnego.SpnegoLoginService(principal, keytabPath, "user");
-            Spnego.SpnegoLoginAuthenticator authenticator = new Spnego.SpnegoLoginAuthenticator();
-
-            csh.setLoginService(loginService);
-            csh.setAuthenticator(authenticator);
-
-            csh.setIdentityService(new DefaultIdentityService());
-
-            // Attach to ServletContextHandler
-            ctx.setSecurityHandler(csh);
-        }
+        servlet = new AuthorizerServlet();
+        ctx.addServlet(new ServletHolder(servlet), "/");
 
         // Instantiate the server
         server = new Server(new InetSocketAddress(host, port));
-        servlet = new AuthorizerServlet();
-        ctx.addServlet(new ServletHolder(servlet), "/");
         server.setHandler(ctx);
         server.setStopAtShutdown(true);
 

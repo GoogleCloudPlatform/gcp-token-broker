@@ -28,6 +28,9 @@ import com.google.common.base.Charsets;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.kerby.util.NetworkUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -38,13 +41,12 @@ import java.io.IOException;
 
 import static org.junit.Assert.*;
 
-public class AuthorizerTest extends KdcTestBase {
+public class AuthorizerTest {
     static {
         Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.WARN);
     }
     private static Authorizer authorizer;
-    private static HttpClient httpClient;
     private static int authorizerPort;
     /**
      * set System property sun.security.krb5.debug=true to enable krb5 debug
@@ -56,9 +58,6 @@ public class AuthorizerTest extends KdcTestBase {
         AppSettings.reset();
         AppSettings.setProperty("AUTHORIZER_HOST", "localhost");
         AppSettings.setProperty("AUTHORIZER_PORT", String.valueOf(authorizerPort));
-        AppSettings.setProperty("AUTHORIZER_PRINCIPAL", serverPrincipal);
-        AppSettings.setProperty("AUTHORIZER_KEYTAB", serverKeytab.toString());
-        AppSettings.setProperty("AUTHORIZER_ENABLE_SPNEGO", "false");
         AppSettings.setProperty("OAUTH_CLIENT_ID", "FakeClientId");
         AppSettings.setProperty("OAUTH_CLIENT_SECRET", "FakeClientSecret");
         AppSettings.setProperty("ENCRYPTION_BACKEND", DummyEncryptionBackend.class.getCanonicalName());
@@ -66,7 +65,6 @@ public class AuthorizerTest extends KdcTestBase {
 
         authorizer = new Authorizer();
         authorizer.start();
-        httpClient = Spnego.httpClient(clientKeytab.toString(), clientPrincipal, serverPrincipal);
     }
 
     @AfterClass
@@ -79,22 +77,23 @@ public class AuthorizerTest extends KdcTestBase {
      */
     @Test
     public void testGoogleRedirect() throws IOException {
-        HttpGet req = new HttpGet("http://localhost:" + authorizerPort + "/authorize");
-        req.setHeader(Spnego.SpnegoLoginService.REALM_HEADER, realm);
+        HttpGet req = new HttpGet("http://localhost:" + authorizerPort + "/google/login");
+        HttpClient httpClient = HttpClientBuilder.create().disableRedirectHandling().build();
         HttpResponse response = httpClient.execute(req);
         int statusCode = response.getStatusLine().getStatusCode();
         // Should be redirected to Google OAuth page
-        assertEquals(statusCode, 302);
-        assertTrue(response.getHeaders("Location")[0].getValue().startsWith(
-            "https://accounts.google.com/o/oauth2/auth?access_type=offline&approval_prompt=force&client_id=FakeClientId&redirect_uri=http://localhost:8080/oauth2callback&response_type=code&scope=https://www.googleapis.com/auth/devstorage.read_write%20email%20profile&state="));
+        assertEquals(302, statusCode);
+        assertEquals(
+            "https://accounts.google.com/o/oauth2/auth?access_type=offline&approval_prompt=force&client_id=FakeClientId&redirect_uri=http://localhost:" + authorizerPort + "/google/oauth2callback&response_type=code&scope=https://www.googleapis.com/auth/devstorage.read_write%20email%20profile",
+            response.getHeaders("Location")[0].getValue());
     }
 
     @Test
     public void testRefreshTokenStore() {
         String token = "abcd";
-        authorizer.servlet.saveRefreshToken(clientPrincipal, token);
+        authorizer.servlet.saveRefreshToken("alice@example.com", token);
 
-        RefreshToken refreshToken = (RefreshToken) AbstractDatabaseBackend.getInstance().get(RefreshToken.class, clientPrincipal);
+        RefreshToken refreshToken = (RefreshToken) AbstractDatabaseBackend.getInstance().get(RefreshToken.class, "alice@example.com");
 
         assertNotNull(refreshToken);
         byte[] decrypted = AbstractEncryptionBackend.getInstance()
