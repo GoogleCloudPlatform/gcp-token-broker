@@ -16,7 +16,7 @@ import com.google.cloud.broker.settings.AppSettings;
 
 public class DomainWideDelegationAuthorityProvider extends AbstractSignedJWTProvider {
 
-    public DomainWideDelegationAuthorityProvider() {
+    DomainWideDelegationAuthorityProvider() {
         super(true);
     }
 
@@ -31,8 +31,7 @@ public class DomainWideDelegationAuthorityProvider extends AbstractSignedJWTProv
             throw new IllegalArgumentException();
         }
         String domain = AppSettings.requireProperty(AppSettings.DOMAIN_NAME);
-        String googleIdentity = String.format("%s@%s", username, domain);
-        return googleIdentity;
+        return String.format("%s@%s", username, domain);
     }
 
 }

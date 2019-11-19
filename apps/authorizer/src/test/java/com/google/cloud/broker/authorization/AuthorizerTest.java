@@ -28,9 +28,7 @@ import com.google.common.base.Charsets;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.kerby.util.NetworkUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -97,7 +95,7 @@ public class AuthorizerTest {
 
         assertNotNull(refreshToken);
         byte[] decrypted = AbstractEncryptionBackend.getInstance()
-            .decrypt((byte[])refreshToken.getValue());
+            .decrypt(refreshToken.getValue());
 
         assertEquals(new String(decrypted, Charsets.UTF_8), token);
     }

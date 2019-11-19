@@ -15,7 +15,7 @@ import com.google.cloud.broker.settings.AppSettings;
 
 public class ShadowServiceAccountProvider extends AbstractSignedJWTProvider {
 
-    public ShadowServiceAccountProvider() {
+    ShadowServiceAccountProvider() {
         super(false);
     }
 

@@ -13,8 +13,6 @@ package com.google.cloud.broker.authentication.backends;
 
 import io.grpc.Status;
 
-import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
-
 /**
  * Used only for testing. Do NOT use in production.
  * This is a dummy authenticator that returns the provided token as the authenticated user. In other terms, to allow

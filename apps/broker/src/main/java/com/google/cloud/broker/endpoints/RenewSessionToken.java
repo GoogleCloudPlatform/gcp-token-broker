@@ -18,7 +18,6 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
 
 import com.google.cloud.broker.authentication.backends.AbstractAuthenticationBackend;
-import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.protobuf.RenewSessionTokenRequest;
 import com.google.cloud.broker.protobuf.RenewSessionTokenResponse;
 import com.google.cloud.broker.sessions.Session;

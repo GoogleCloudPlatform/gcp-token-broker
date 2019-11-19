@@ -88,7 +88,7 @@ public class SessionCacheFetcherTest {
     @Test
     public void testGetCacheKey() {
         SessionCacheFetcher fetcher = new SessionCacheFetcher("xxxx");
-        assertEquals(String.format("session-xxxx"), fetcher.getCacheKey());
+        assertEquals("session-xxxx", fetcher.getCacheKey());
     }
 
     @Test

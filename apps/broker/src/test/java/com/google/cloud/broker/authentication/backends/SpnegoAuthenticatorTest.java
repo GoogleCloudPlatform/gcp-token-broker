@@ -38,8 +38,8 @@ public class SpnegoAuthenticatorTest {
     private static final String REALM = "EXAMPLE.COM";
     private static final String BROKER_HOST = "testhost";
     private static final String BROKER_NAME = "broker";
-    public static final String BROKER = BROKER_NAME + "/" + BROKER_HOST + "@" + REALM;
-    public static final String ALICE = "alice@" + REALM;
+    private static final String BROKER = BROKER_NAME + "/" + BROKER_HOST + "@" + REALM;
+    private static final String ALICE = "alice@" + REALM;
 
     @BeforeClass
     public static void setUpClass() {
@@ -61,7 +61,7 @@ public class SpnegoAuthenticatorTest {
         fakeKDC.stop();
     }
 
-    public static byte[] generateToken() {
+    private static byte[] generateToken() {
         String SPNEGO_OID = "1.3.6.1.5.5.2";
         String KRB5_MECHANISM_OID = "1.2.840.113554.1.2.2";
         String KRB5_PRINCIPAL_NAME_OID = "1.2.840.113554.1.2.2.1";
@@ -73,8 +73,7 @@ public class SpnegoAuthenticatorTest {
             Oid krb5PrincipalNameType = new Oid(KRB5_PRINCIPAL_NAME_OID);
             Oid spnegoOid = new Oid(SPNEGO_OID);
             GSSManager manager = GSSManager.getInstance();
-            String servicePrincipal = BROKER;
-            GSSName gssServerName = manager.createName(servicePrincipal , krb5PrincipalNameType, krb5Mechanism);
+            GSSName gssServerName = manager.createName(BROKER, krb5PrincipalNameType, krb5Mechanism);
             GSSContext gssContext = manager.createContext(
                 gssServerName, spnegoOid, null, GSSCredential.DEFAULT_LIFETIME);
             gssContext.requestMutualAuth(true);

@@ -24,7 +24,6 @@ import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.TimeUtils;
 
 
-
 public class Session extends Model {
 
     private String id;          // UUID
@@ -104,8 +103,8 @@ public class Session extends Model {
 
     public void extendLifetime() {
         long now = TimeUtils.currentTimeMillis();
-        Long sessionMaximumLifetime = Long.parseLong(AppSettings.getProperty(AppSettings.SESSION_MAXIMUM_LIFETIME, "604800000"));
-        Long sessionRenewPeriod = Long.parseLong(AppSettings.getProperty(AppSettings.SESSION_RENEW_PERIOD, "86400000"));
+        long sessionMaximumLifetime = Long.parseLong(AppSettings.getProperty(AppSettings.SESSION_MAXIMUM_LIFETIME, "604800000"));
+        long sessionRenewPeriod = Long.parseLong(AppSettings.getProperty(AppSettings.SESSION_RENEW_PERIOD, "86400000"));
         expiresAt = Math.min(
             now + sessionRenewPeriod,
             creationTime + sessionMaximumLifetime

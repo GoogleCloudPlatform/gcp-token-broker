@@ -52,7 +52,7 @@ public class BrokerServer {
     private static ServerServiceDefinition serviceDefinition = ServerInterceptors.intercept(
         new BrokerImpl(), new AuthorizationHeaderServerInterceptor(), new ClientAddressServerInterceptor());
 
-    public BrokerServer() {
+    private BrokerServer() {
         this.host = AppSettings.getProperty(AppSettings.SERVER_HOST, "0.0.0.0");
         this.port = Integer.parseInt(AppSettings.getProperty(AppSettings.SERVER_PORT, "5000"));
         this.tlsEnabled = Boolean.parseBoolean(AppSettings.getProperty(AppSettings.TLS_ENABLED, "true"));
@@ -69,7 +69,7 @@ public class BrokerServer {
             SslProvider.OPENSSL);
     }
 
-    public static ServerServiceDefinition getServiceDefinition() {
+    static ServerServiceDefinition getServiceDefinition() {
         return serviceDefinition;
     }
 
@@ -77,7 +77,7 @@ public class BrokerServer {
         NettyServerBuilder builder = NettyServerBuilder.forAddress(new InetSocketAddress(host, port))
             .addService(serviceDefinition);
         if (tlsEnabled) {
-            builder = builder.sslContext(getSslContextBuilder().build());
+            builder.sslContext(getSslContextBuilder().build());
         }
         server =  builder.build().start();
         logger.info("Server listening on " + port + "...");
@@ -103,7 +103,7 @@ public class BrokerServer {
     }
 
 
-    public static void setLoggingLevel() {
+    private static void setLoggingLevel() {
         Level level = Level.parse(AppSettings.getProperty(AppSettings.LOGGING_LEVEL, "INFO"));
         Logger root = Logger.getLogger("");
         root.setLevel(level);

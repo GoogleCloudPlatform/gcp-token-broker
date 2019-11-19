@@ -38,7 +38,6 @@ public class SessionTest {
         values.put("password", "abcd");
         values.put("creationTime", 11111111111111L);
         values.put("expiresAt", 2222222222222L);
-        values.put("owner", "alice@EXAMPLE.COM");
 
         Session session = (Session) Model.fromMap(Session.class, values);
         assertEquals("123456789", session.getId());

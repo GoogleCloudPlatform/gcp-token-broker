@@ -43,7 +43,6 @@ import com.google.cloud.broker.utils.EnvUtils;
 import com.google.cloud.broker.utils.TimeUtils;
 import com.google.cloud.broker.sessions.Session;
 import com.google.cloud.broker.sessions.SessionTokenUtils;
-import com.google.cloud.broker.database.models.Model;
 import static com.google.cloud.broker.protobuf.BrokerGrpc.BrokerBlockingStub;
 import com.google.cloud.broker.protobuf.*;
 
@@ -101,10 +100,8 @@ public class BrokerServerTest {
             throw new RuntimeException(e);
         }
 
-        BrokerBlockingStub stub = BrokerGrpc.newBlockingStub(
+        return BrokerGrpc.newBlockingStub(
             grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build()));
-
-        return stub;
     }
 
     public BrokerBlockingStub addSPNEGOTokenToMetadata(BrokerBlockingStub stub, String principal) {

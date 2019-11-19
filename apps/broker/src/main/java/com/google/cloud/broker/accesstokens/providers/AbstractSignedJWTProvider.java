@@ -38,13 +38,13 @@ import com.google.cloud.broker.utils.TimeUtils;
 
 public abstract class AbstractSignedJWTProvider extends AbstractProvider {
 
-    protected boolean brokerIssuer;
+    private boolean brokerIssuer;
 
-    public AbstractSignedJWTProvider(boolean brokerIssuer) {
+    AbstractSignedJWTProvider(boolean brokerIssuer) {
         this.brokerIssuer = brokerIssuer;
     }
 
-    public boolean isBrokerIssuer() {
+    private boolean isBrokerIssuer() {
         return brokerIssuer;
     }
 
@@ -114,7 +114,7 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         return response.getSignedJwt();
     }
 
-    protected AccessToken tradeSignedJWTForAccessToken(String signedJWT) {
+    private AccessToken tradeSignedJWTForAccessToken(String signedJWT) {
         HttpTransport httpTransport;
         JsonFactory jsonFactory;
         TokenResponse response;
