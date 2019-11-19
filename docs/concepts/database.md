@@ -71,5 +71,5 @@ Follow these steps to initialize the database:
 5. Run the following command:
 
    ```shell
-   java com.google.cloud.broker.commands.InitializeDatabase
+   java com.google.cloud.broker.database.InitializeDatabase
    ```
