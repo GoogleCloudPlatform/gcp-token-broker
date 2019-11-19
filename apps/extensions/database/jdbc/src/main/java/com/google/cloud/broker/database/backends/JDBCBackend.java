@@ -24,9 +24,9 @@ import com.google.cloud.broker.settings.AppSettings;
 
 public class JDBCBackend extends AbstractDatabaseBackend {
 
-    protected Connection connectionInstance;
+    private Connection connectionInstance;
 
-    public Connection getConnection() {
+    Connection getConnection() {
         if (connectionInstance == null) {
             String url = AppSettings.requireProperty(AppSettings.DATABASE_JDBC_URL);
             try {
@@ -39,20 +39,15 @@ public class JDBCBackend extends AbstractDatabaseBackend {
     }
 
     private void formatStatement(int index, PreparedStatement statement, Map<String, Object> values) throws SQLException {
-        Iterator<Map.Entry<String, Object>> iterator = values.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<String, Object> entry = iterator.next();
+        for (Map.Entry<String, Object> entry : values.entrySet()) {
             Object value = entry.getValue();
             if (value instanceof String) {
                 statement.setString(index, (String) value);
-            }
-            else if (value instanceof Long) {
+            } else if (value instanceof Long) {
                 statement.setLong(index, (long) value);
-            }
-            else if (value instanceof byte[]) {
+            } else if (value instanceof byte[]) {
                 statement.setBytes(index, (byte[]) value);
-            }
-            else {
+            } else {
                 // TODO extend to other supported types
                 throw new UnsupportedOperationException("Unsupported type: " + value.getClass());
             }
@@ -86,7 +81,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             rs = statement.executeQuery(query);
 
             // No object found
-            if (rs.next() == false) {
+            if (!rs.next()) {
                 throw new DatabaseObjectNotFound(
                         String.format("%s object not found: %s", modelClass.getSimpleName(), objectId));
             }
@@ -119,23 +114,22 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         Map<String, Object> map = model.toMap();
         Connection connection = getConnection();
         PreparedStatement statement = null;
-        ResultSet rs = null;
         try {
             // Assemble the columns and values
-            String columns = "";
-            String values = "";
-            String update = "";
+            StringBuilder columns = new StringBuilder();
+            StringBuilder values = new StringBuilder();
+            StringBuilder update = new StringBuilder();
             Iterator<Map.Entry<String, Object>> iterator = map.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<String, Object> entry = iterator.next();
                 String column = entry.getKey();
-                columns += quote(column);
-                values += "?";
-                update += quote(column) + " = ?";
+                columns.append(quote(column));
+                values.append("?");
+                update.append(quote(column)).append(" = ?");
                 if (iterator.hasNext()) {
-                    columns += ", ";
-                    values += ", ";
-                    update += ", ";
+                    columns.append(", ");
+                    values.append(", ");
+                    update.append(", ");
                 }
             }
 
@@ -154,7 +148,6 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
-            try { if (rs != null) rs.close(); } catch (SQLException e) {throw new RuntimeException(e);}
             try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
         }
     }
@@ -197,12 +190,12 @@ public class JDBCBackend extends AbstractDatabaseBackend {
 
     private static final String DIALECT_NOT_SUPPORTED = "Dialect `%s` is not currently supported by the JDBCDatabaseBackend.";
 
-    public static String getDialect() {
+    private static String getDialect() {
         String url = AppSettings.requireProperty(AppSettings.DATABASE_JDBC_URL);
         return url.split(":")[1];
     }
 
-    public static String quote(String name) {
+    static String quote(String name) {
         String dialect = getDialect();
         switch (dialect) {
             case "sqlite":
@@ -216,7 +209,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         }
     }
 
-    public static String getBlobType() {
+    private static String getBlobType() {
         String dialect = getDialect();
         switch (dialect) {
             case "sqlite":
@@ -230,7 +223,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         }
     }
 
-    public static String getUpsertStatement() {
+    private static String getUpsertStatement() {
         String dialect = getDialect();
         switch (dialect) {
             case "sqlite":

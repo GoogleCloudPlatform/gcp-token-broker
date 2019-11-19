@@ -127,6 +127,10 @@ function set_projects_arg() {
                 PROJECTS_ARG="--projects apps/core,apps/extensions/database/cloud-datastore"
                 break
                 ;;
+            jdbc)
+                PROJECTS_ARG="--projects apps/core,apps/extensions/database/jdbc"
+                break
+                ;;
             cloud-kms)
                 PROJECTS_ARG="--projects apps/core,apps/extensions/encryption/cloud-kms"
                 break
