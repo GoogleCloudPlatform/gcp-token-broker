@@ -28,9 +28,9 @@ public class CloudKMSBackendTest {
 
     @BeforeClass
     public static void setUp(){
-        String projectId = AppSettings.requireProperty("GCP_PROJECT");
-        AppSettings.setProperty(CloudKMSBackend.ENCRYPTION_KEK_URI, "projects/" + projectId + "/locations/global/keyRings/testkeyring/cryptoKeys/testkey");
-        AppSettings.setProperty(CloudKMSBackend.ENCRYPTION_DEK_URI, "gs://" + projectId + "-testbucket/testkey.json");
+        String projectId = AppSettings.requireProperty(AppSettings.GCP_PROJECT);
+        AppSettings.setProperty(AppSettings.ENCRYPTION_KEK_URI, "projects/" + projectId + "/locations/global/keyRings/testkeyring/cryptoKeys/testkey");
+        AppSettings.setProperty(AppSettings.ENCRYPTION_DEK_URI, "gs://" + projectId + "-testbucket/testkey.json");
     }
 
     /**

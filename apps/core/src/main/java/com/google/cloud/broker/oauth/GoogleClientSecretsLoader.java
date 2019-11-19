@@ -26,9 +26,9 @@ import com.google.cloud.broker.settings.AppSettings;
 public class GoogleClientSecretsLoader {
 
     public static GoogleClientSecrets getSecrets() {
-        String jsonPath = AppSettings.getProperty("OAUTH_CLIENT_SECRET_JSON_PATH");
-        String clientId = AppSettings.getProperty("OAUTH_CLIENT_ID");
-        String clientSecret = AppSettings.getProperty("OAUTH_CLIENT_SECRET");
+        String jsonPath = AppSettings.getProperty(AppSettings.OAUTH_CLIENT_SECRET_JSON_PATH);
+        String clientId = AppSettings.getProperty(AppSettings.OAUTH_CLIENT_ID);
+        String clientSecret = AppSettings.getProperty(AppSettings.OAUTH_CLIENT_SECRET);
 
         if (jsonPath != null) {
             // Load the JSON file if provided

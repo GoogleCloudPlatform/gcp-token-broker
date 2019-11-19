@@ -56,12 +56,12 @@ public class AuthorizerTest {
         authorizerPort = NetworkUtil.getServerPort();
 
         AppSettings.reset();
-        AppSettings.setProperty("AUTHORIZER_HOST", "localhost");
-        AppSettings.setProperty("AUTHORIZER_PORT", String.valueOf(authorizerPort));
-        AppSettings.setProperty("OAUTH_CLIENT_ID", "FakeClientId");
-        AppSettings.setProperty("OAUTH_CLIENT_SECRET", "FakeClientSecret");
-        AppSettings.setProperty("ENCRYPTION_BACKEND", DummyEncryptionBackend.class.getCanonicalName());
-        AppSettings.setProperty("DATABASE_BACKEND", DummyDatabaseBackend.class.getCanonicalName());
+        AppSettings.setProperty(AppSettings.AUTHORIZER_HOST, "localhost");
+        AppSettings.setProperty(AppSettings.AUTHORIZER_PORT, String.valueOf(authorizerPort));
+        AppSettings.setProperty(AppSettings.OAUTH_CLIENT_ID, "FakeClientId");
+        AppSettings.setProperty(AppSettings.OAUTH_CLIENT_SECRET, "FakeClientSecret");
+        AppSettings.setProperty(AppSettings.ENCRYPTION_BACKEND, DummyEncryptionBackend.class.getCanonicalName());
+        AppSettings.setProperty(AppSettings.DATABASE_BACKEND, DummyDatabaseBackend.class.getCanonicalName());
 
         authorizer = new Authorizer();
         authorizer.start();

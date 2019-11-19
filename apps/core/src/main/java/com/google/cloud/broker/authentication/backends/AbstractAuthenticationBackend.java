@@ -22,7 +22,7 @@ public abstract class AbstractAuthenticationBackend {
 
     public static AbstractAuthenticationBackend getInstance() {
         if (instance == null) {
-            String className = AppSettings.getProperty("AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.SpnegoAuthenticator");
+            String className = AppSettings.getProperty(AppSettings.AUTHENTICATION_BACKEND, "com.google.cloud.broker.authentication.backends.SpnegoAuthenticator");
             instance = (AbstractAuthenticationBackend) InstanceUtils.invokeConstructor(className);
         }
         return instance;

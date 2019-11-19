@@ -38,12 +38,12 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
 
     @Override
     protected int getLocalCacheTime() {
-        return Integer.parseInt(AppSettings.getProperty("ACCESS_TOKEN_LOCAL_CACHE_TIME", "30"));
+        return Integer.parseInt(AppSettings.getProperty(AppSettings.ACCESS_TOKEN_LOCAL_CACHE_TIME, "30"));
     }
 
     @Override
     protected int getRemoteCacheTime() {
-        return Integer.parseInt(AppSettings.getProperty("ACCESS_TOKEN_REMOTE_CACHE_TIME", "60"));
+        return Integer.parseInt(AppSettings.getProperty(AppSettings.ACCESS_TOKEN_REMOTE_CACHE_TIME, "60"));
     }
 
     @Override

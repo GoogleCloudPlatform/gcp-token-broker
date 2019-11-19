@@ -21,7 +21,7 @@ public class AbstractEncryptionBackendTest {
 
     @Test
     public void testGetInstance() {
-        AppSettings.setProperty("ENCRYPTION_BACKEND", "com.example.DoesNotExist");
+        AppSettings.setProperty(AppSettings.ENCRYPTION_BACKEND, "com.example.DoesNotExist");
         try {
             AbstractEncryptionBackend.getInstance();
             fail();

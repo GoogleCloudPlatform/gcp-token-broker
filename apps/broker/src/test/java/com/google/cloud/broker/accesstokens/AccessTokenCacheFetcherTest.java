@@ -27,10 +27,10 @@ public class AccessTokenCacheFetcherTest {
     @BeforeClass
     public static void setupClass() {
         AppSettings.reset();
-        AppSettings.setProperty("REMOTE_CACHE", "com.google.cloud.broker.caching.remote.RedisCache");
-        AppSettings.setProperty("PROVIDER", "com.google.cloud.broker.accesstokens.providers.MockProvider");
-        AppSettings.setProperty("ACCESS_TOKEN_LOCAL_CACHE_TIME", "1234");
-        AppSettings.setProperty("ACCESS_TOKEN_REMOTE_CACHE_TIME", "6789");
+        AppSettings.setProperty(AppSettings.REMOTE_CACHE, "com.google.cloud.broker.caching.remote.RedisCache");
+        AppSettings.setProperty(AppSettings.PROVIDER, "com.google.cloud.broker.accesstokens.providers.MockProvider");
+        AppSettings.setProperty(AppSettings.ACCESS_TOKEN_LOCAL_CACHE_TIME, "1234");
+        AppSettings.setProperty(AppSettings.ACCESS_TOKEN_REMOTE_CACHE_TIME, "6789");
     }
 
     @Test

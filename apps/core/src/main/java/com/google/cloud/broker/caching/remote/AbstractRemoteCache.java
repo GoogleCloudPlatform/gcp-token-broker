@@ -29,7 +29,7 @@ public abstract class AbstractRemoteCache {
 
     public static AbstractRemoteCache getInstance() {
         if (instance == null) {
-            String className = AppSettings.getProperty("REMOTE_CACHE", "com.google.cloud.broker.caching.remote.RedisCache");
+            String className = AppSettings.getProperty(AppSettings.REMOTE_CACHE, "com.google.cloud.broker.caching.remote.RedisCache");
             instance = (AbstractRemoteCache) InstanceUtils.invokeConstructor(className);
         }
         return instance;

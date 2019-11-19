@@ -44,7 +44,7 @@ public class CloudDatastoreBackendTest {
     }
 
     private static Datastore getService() {
-        String projectId = AppSettings.requireProperty("GCP_PROJECT");
+        String projectId = AppSettings.requireProperty(AppSettings.GCP_PROJECT);
         return DatastoreOptions.newBuilder().setProjectId(projectId).build().getService();
     }
 

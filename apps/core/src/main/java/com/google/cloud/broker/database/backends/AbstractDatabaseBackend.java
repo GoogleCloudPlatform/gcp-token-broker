@@ -28,7 +28,7 @@ public abstract class AbstractDatabaseBackend {
 
     public static AbstractDatabaseBackend getInstance() {
         if (instance == null) {
-            String className = AppSettings.getProperty("DATABASE_BACKEND", "com.google.cloud.broker.database.backends.CloudDatastoreBackend");
+            String className = AppSettings.getProperty(AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.CloudDatastoreBackend");
             instance = (AbstractDatabaseBackend) InstanceUtils.invokeConstructor(className);
         }
         return instance;

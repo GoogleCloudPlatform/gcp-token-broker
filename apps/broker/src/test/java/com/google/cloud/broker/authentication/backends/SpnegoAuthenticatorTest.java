@@ -53,7 +53,7 @@ public class SpnegoAuthenticatorTest {
     public void setUp() {
         AbstractAuthenticationBackend.reset();
         AppSettings.reset();
-        AppSettings.setProperty("AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.SpnegoAuthenticator");
+        AppSettings.setProperty(AppSettings.AUTHENTICATION_BACKEND, "com.google.cloud.broker.authentication.backends.SpnegoAuthenticator");
     }
 
     @AfterClass
@@ -97,7 +97,7 @@ public class SpnegoAuthenticatorTest {
         Path emptyFolder;
         try {
             emptyFolder = Files.createTempDirectory("empty");
-            AppSettings.setProperty("KEYTABS_PATH", emptyFolder.toString());
+            AppSettings.setProperty(AppSettings.KEYTABS_PATH, emptyFolder.toString());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -116,7 +116,7 @@ public class SpnegoAuthenticatorTest {
      */
     @Test
     public void testInexistentKeytabPath() {
-        AppSettings.setProperty("KEYTABS_PATH", "/home/does-not-exist");
+        AppSettings.setProperty(AppSettings.KEYTABS_PATH, "/home/does-not-exist");
         try {
             SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
             auth.authenticateUser();
@@ -135,7 +135,7 @@ public class SpnegoAuthenticatorTest {
         try {
             folder = Files.createTempDirectory("folder");
             folder.resolve("fake.keytab").toFile().createNewFile();
-            AppSettings.setProperty("KEYTABS_PATH", folder.toString());
+            AppSettings.setProperty(AppSettings.KEYTABS_PATH, folder.toString());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -151,9 +151,9 @@ public class SpnegoAuthenticatorTest {
 
     @Test
     public void testHeaderDoesntStartWithNegotiate() {
-        AppSettings.setProperty("KEYTABS_PATH", fakeKDC.getBrokerKeytabDir().toString());
-        AppSettings.setProperty("BROKER_SERVICE_NAME", BROKER_NAME);
-        AppSettings.setProperty("BROKER_SERVICE_HOSTNAME", BROKER_HOST);
+        AppSettings.setProperty(AppSettings.KEYTABS_PATH, fakeKDC.getBrokerKeytabDir().toString());
+        AppSettings.setProperty(AppSettings.BROKER_SERVICE_NAME, BROKER_NAME);
+        AppSettings.setProperty(AppSettings.BROKER_SERVICE_HOSTNAME, BROKER_HOST);
 
         SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
         try {
@@ -167,9 +167,9 @@ public class SpnegoAuthenticatorTest {
 
     @Test
     public void testInvalidSpnegoToken() {
-        AppSettings.setProperty("KEYTABS_PATH", fakeKDC.getBrokerKeytabDir().toString());
-        AppSettings.setProperty("BROKER_SERVICE_NAME", BROKER_NAME);
-        AppSettings.setProperty("BROKER_SERVICE_HOSTNAME", BROKER_HOST);
+        AppSettings.setProperty(AppSettings.KEYTABS_PATH, fakeKDC.getBrokerKeytabDir().toString());
+        AppSettings.setProperty(AppSettings.BROKER_SERVICE_NAME, BROKER_NAME);
+        AppSettings.setProperty(AppSettings.BROKER_SERVICE_HOSTNAME, BROKER_HOST);
 
         SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
         try {
@@ -186,9 +186,9 @@ public class SpnegoAuthenticatorTest {
      */
     @Test
     public void testSuccess() {
-        AppSettings.setProperty("KEYTABS_PATH", fakeKDC.getBrokerKeytabDir().toString());
-        AppSettings.setProperty("BROKER_SERVICE_NAME", BROKER_NAME);
-        AppSettings.setProperty("BROKER_SERVICE_HOSTNAME", BROKER_HOST);
+        AppSettings.setProperty(AppSettings.KEYTABS_PATH, fakeKDC.getBrokerKeytabDir().toString());
+        AppSettings.setProperty(AppSettings.BROKER_SERVICE_NAME, BROKER_NAME);
+        AppSettings.setProperty(AppSettings.BROKER_SERVICE_HOSTNAME, BROKER_HOST);
 
         // Let Alice generate a token
         Subject alice = fakeKDC.login("alice");

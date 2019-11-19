@@ -60,8 +60,6 @@ import java.security.Security;
  */
 public class CloudKMSBackend extends AbstractEncryptionBackend {
 
-    public static final String ENCRYPTION_KEK_URI = "ENCRYPTION_KEK_URI";
-    public static final String ENCRYPTION_DEK_URI = "ENCRYPTION_DEK_URI";
     public static final String MEMORY = "memory";
 
     static {
@@ -84,8 +82,8 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
     private String dekUri;
 
     public CloudKMSBackend(){
-        kekUri = AppSettings.requireProperty(ENCRYPTION_KEK_URI);
-        dekUri = AppSettings.requireProperty(ENCRYPTION_DEK_URI);
+        kekUri = AppSettings.requireProperty(AppSettings.ENCRYPTION_KEK_URI);
+        dekUri = AppSettings.requireProperty(AppSettings.ENCRYPTION_DEK_URI);
 
         if (kekUri.equalsIgnoreCase(MEMORY)) {
             // Experimental feature: Store the KEK in memory instead of Cloud KMS.

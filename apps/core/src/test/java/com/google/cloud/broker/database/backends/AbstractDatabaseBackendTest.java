@@ -21,7 +21,7 @@ public class AbstractDatabaseBackendTest {
 
     @Test
     public void testGetInstance() {
-        AppSettings.setProperty("DATABASE_BACKEND", "com.example.DoesNotExist");
+        AppSettings.setProperty(AppSettings.DATABASE_BACKEND, "com.example.DoesNotExist");
         try {
             AbstractDatabaseBackend.getInstance();
             fail();
