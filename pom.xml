@@ -96,8 +96,6 @@ limitations under the License.
         <logback.contrib.version>0.1.5</logback.contrib.version>
         <jackson.databind.version>2.9.9.3</jackson.databind.version>
         <expiringmap.version>0.5.9</expiringmap.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
         <maven.assembly.plugin.version>3.1.1</maven.assembly.plugin.version>
         <maven.os.plugin.version>1.6.1</maven.os.plugin.version>
         <maven.protobuf.plugin.version>0.5.1</maven.protobuf.plugin.version>
@@ -230,6 +228,27 @@ limitations under the License.
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>9</source>
+                    <target>9</target>
+                    <compilerArgs>
+                        <!-- This is necessary use the Java 9 compiler to compile SpnegoAuthenticator,
+                             which uses classes in the sun.security.krb5.internal.ktab package.
+                             This could potentially be removed if switching to Apache Kerby for all
+                             keytab operations. See: https://github.com/GoogleCloudPlatform/gcp-token-broker/issues/5
+                         -->
+                        <arg>--add-exports</arg><arg>java.security.jgss/sun.security.krb5.internal.ktab=ALL-UNNAMED</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <modules>
         <module>apps/common</module>
