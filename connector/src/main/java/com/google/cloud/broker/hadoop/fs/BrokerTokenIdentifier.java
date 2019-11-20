@@ -32,14 +32,14 @@ import com.google.cloud.broker.protobuf.GetSessionTokenResponse;
 public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
 
     public static final Text KIND = new Text("GCPBrokerSessionToken");
-    public static final String BROKER_SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
+    static final String BROKER_SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
     private String sessionToken;
 
-    public BrokerTokenIdentifier() {
+    BrokerTokenIdentifier() {
         super(KIND);
     }
 
-    public BrokerTokenIdentifier(Configuration config, Text owner, Text renewer, Text realUser, Text service) {
+    BrokerTokenIdentifier(Configuration config, Text owner, Text renewer, Text realUser, Text service) {
         super(KIND, owner, renewer, realUser);
         UserGroupInformation currentUser;
         UserGroupInformation loginUser;

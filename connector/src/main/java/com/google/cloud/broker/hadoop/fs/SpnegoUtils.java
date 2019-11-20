@@ -13,13 +13,13 @@ package com.google.cloud.broker.hadoop.fs;
 
 import org.ietf.jgss.*;
 
-public final class SpnegoUtils {
+final class SpnegoUtils {
 
     private static final String SPNEGO_OID = "1.3.6.1.5.5.2";
     private static final String KRB5_MECHANISM_OID = "1.2.840.113554.1.2.2";
     private static final String KRB5_PRINCIPAL_NAME_OID = "1.2.840.113554.1.2.2.1";
 
-    public static byte[] newSPNEGOToken(String brokerServiceName, String brokerHostname, String brokerRealm) throws GSSException {
+    static byte[] newSPNEGOToken(String brokerServiceName, String brokerHostname, String brokerRealm) throws GSSException {
         // Create GSS context for the broker service and the logged-in user
         Oid krb5Mechanism = new Oid(KRB5_MECHANISM_OID);
         Oid krb5PrincipalNameType = new Oid(KRB5_PRINCIPAL_NAME_OID);

@@ -24,7 +24,7 @@ public class GoogleCredentialsDetails {
     private String accessToken;
     private String email;
 
-    public GoogleCredentialsDetails(GoogleCredentials credentials, String email, String accessToken) {
+    GoogleCredentialsDetails(GoogleCredentials credentials, String email, String accessToken) {
         this.credentials = credentials;
         this.email = email;
         this.accessToken = accessToken;

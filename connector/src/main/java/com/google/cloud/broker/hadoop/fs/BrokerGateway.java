@@ -31,17 +31,17 @@ import org.apache.hadoop.conf.Configuration;
 import com.google.cloud.broker.protobuf.BrokerGrpc;
 
 
-public final class BrokerGateway {
+final class BrokerGateway {
 
-    protected BrokerGrpc.BrokerBlockingStub stub;
-    protected ManagedChannel managedChannel;
-    protected Configuration config;
+    private BrokerGrpc.BrokerBlockingStub stub;
+    private ManagedChannel managedChannel;
+    private Configuration config;
 
-    public BrokerGateway(Configuration config) {
+    BrokerGateway(Configuration config) {
         this(config,null);
     }
 
-    public BrokerGateway(Configuration config, String sessionToken) {
+    BrokerGateway(Configuration config, String sessionToken) {
         this.config = config;
 
         String brokerHostname = config.get("gcp.token.broker.uri.hostname", "localhost");
@@ -79,11 +79,11 @@ public final class BrokerGateway {
         }
     }
 
-    public BrokerGrpc.BrokerBlockingStub getStub() {
+    BrokerGrpc.BrokerBlockingStub getStub() {
         return stub;
     }
 
-    public ManagedChannel getManagedChannel() {
+    ManagedChannel getManagedChannel() {
         return managedChannel;
     }
 

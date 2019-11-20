@@ -26,9 +26,9 @@ import com.google.cloud.broker.settings.AppSettings;
 
 public class RedisCache extends AbstractRemoteCache {
 
-    RedissonClient client;
+    private RedissonClient client;
 
-    public RedisCache() {
+    RedisCache() {
         String host = AppSettings.getProperty(AppSettings.REDIS_CACHE_HOST, "localhost");
         Integer port = Integer.valueOf(AppSettings.getProperty(AppSettings.REDIS_CACHE_PORT, "6379"));
         Config config = new Config();

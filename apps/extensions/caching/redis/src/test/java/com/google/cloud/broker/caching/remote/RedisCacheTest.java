@@ -34,7 +34,7 @@ public class RedisCacheTest {
     @BeforeClass
     public static void setupClass() {
         Config config = new Config();
-        config.useSingleServer().setAddress(String.format("redis://localhost:6379")).setDatabase(0);
+        config.useSingleServer().setAddress("redis://localhost:6379").setDatabase(0);
         client = Redisson.create(config);
         backend = new RedisCache();
     }
