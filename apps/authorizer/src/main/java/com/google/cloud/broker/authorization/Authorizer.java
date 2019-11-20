@@ -108,7 +108,7 @@ public class Authorizer implements AutoCloseable {
     }
 
     private static void setLoggingLevel() {
-        Level level = Level.toLevel(AppSettings.getInstance().getString(AppSettings.AUTHORIZER_LOGGING_LEVEL));
+        Level level = Level.toLevel(AppSettings.getInstance().getString(AppSettings.LOGGING_LEVEL));
         final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger("org.eclipse.jetty");
         ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger) logger;
         logbackLogger.setLevel(level);

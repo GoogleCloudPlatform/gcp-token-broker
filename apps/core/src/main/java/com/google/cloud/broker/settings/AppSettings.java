@@ -23,13 +23,12 @@ public class AppSettings {
 
     public final static String AUTHORIZER_HOST = "AUTHORIZER_HOST";
     public final static String AUTHORIZER_PORT = "AUTHORIZER_PORT";
-    public final static String AUTHORIZER_LOGGING_LEVEL = "AUTHORIZER_LOGGING_LEVEL";
+    public final static String LOGGING_LEVEL = "LOGGING_LEVEL";
     public final static String SERVER_HOST = "SERVER_HOST";
     public final static String SERVER_PORT = "SERVER_PORT";
     public final static String TLS_ENABLED = "TLS_ENABLED";
     public final static String TLS_CRT_PATH = "TLS_CRT_PATH";
     public final static String TLS_KEY_PATH = "TLS_KEY_PATH";
-    public final static String LOGGING_LEVEL = "LOGGING_LEVEL";
     public final static String SESSION_LOCAL_CACHE_TIME = "SESSION_LOCAL_CACHE_TIME";
     public final static String PROVIDER = "PROVIDER";
     public final static String SESSION_MAXIMUM_LIFETIME = "SESSION_MAXIMUM_LIFETIME";
