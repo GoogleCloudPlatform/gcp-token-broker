@@ -13,7 +13,6 @@ package com.google.cloud.broker.hadoop.fs;
 
 import javax.security.auth.Subject;
 import java.io.IOException;
-import java.security.PrivilegedAction;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -78,7 +77,7 @@ public class BrokerAccessTokenProviderTest {
 
     private static class FakeServer extends TestingTools.FakeBrokerImpl {
 
-        public FakeServer(FakeKDC fakeKDC) {
+        FakeServer(FakeKDC fakeKDC) {
             super(fakeKDC);
         }
 

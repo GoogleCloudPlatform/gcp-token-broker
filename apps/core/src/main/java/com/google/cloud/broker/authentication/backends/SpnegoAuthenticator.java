@@ -101,8 +101,7 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
             LoginContext loginContext = new LoginContext(
                     "", new Subject(), null, getConfiguration(principal, keytabFile));
             loginContext.login();
-            Subject subject = loginContext.getSubject();
-            return subject;
+            return loginContext.getSubject();
         } catch (LoginException e) {
             throw new RuntimeException(e);
         }

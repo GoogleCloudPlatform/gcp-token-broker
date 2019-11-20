@@ -60,7 +60,7 @@ import java.security.Security;
  */
 public class CloudKMSBackend extends AbstractEncryptionBackend {
 
-    public static final String MEMORY = "memory";
+    private static final String MEMORY = "memory";
 
     static {
         try {
@@ -77,13 +77,11 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
         }
     }
     private Aead aead;
-    public static KeyTemplate KEY_TEMPLATE = AeadKeyTemplates.AES256_GCM;
-    private String kekUri;
-    private String dekUri;
+    private static KeyTemplate KEY_TEMPLATE = AeadKeyTemplates.AES256_GCM;
 
-    public CloudKMSBackend(){
-        kekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_KEK_URI);
-        dekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_DEK_URI);
+    CloudKMSBackend(){
+        String kekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_KEK_URI);
+        String dekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_DEK_URI);
 
         if (kekUri.equalsIgnoreCase(MEMORY)) {
             // Experimental feature: Store the KEK in memory instead of Cloud KMS.
@@ -124,7 +122,7 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
         }
     }
 
-    public static Storage getStorageClient() {
+    private static Storage getStorageClient() {
         GoogleCredentialsDetails details = GoogleCredentialsFactory
             .createCredentialsDetails(false, "https://www.googleapis.com/auth/devstorage.read_write");
         return StorageOptions.newBuilder()
@@ -133,13 +131,13 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
             .getService();
     }
 
-    public static CloudKMS getKMSClient() {
+    private static CloudKMS getKMSClient() {
         GoogleCredentialsDetails details = GoogleCredentialsFactory
             .createCredentialsDetails(false, "https://www.googleapis.com/auth/cloudkms");
         return new CloudKMS.Builder(Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(), new HttpCredentialsAdapter(details.getCredentials())).build();
     }
 
-    public static KeysetHandle readKeyset(String dekUri, String kekUri, Storage storageClient, CloudKMS kmsClient) {
+    private static KeysetHandle readKeyset(String dekUri, String kekUri, Storage storageClient, CloudKMS kmsClient) {
         try {
             Aead kek = new GcpKmsAead(kmsClient, kekUri);
             CloudStorageKeysetManager keysetManager = new CloudStorageKeysetManager(dekUri, storageClient);
@@ -153,7 +151,7 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
         return generateAndWrite(KEY_TEMPLATE, dekUri, keyUri, getStorageClient(), getKMSClient());
     }
 
-    public static KeysetHandle generateAndWrite(KeyTemplate keyTemplate, String dekUri, String kekUri, Storage storageClient, CloudKMS kmsClient) {
+    private static KeysetHandle generateAndWrite(KeyTemplate keyTemplate, String dekUri, String kekUri, Storage storageClient, CloudKMS kmsClient) {
         try {
             Aead kek = new GcpKmsAead(kmsClient, kekUri);
             CloudStorageKeysetManager keysetManager = new CloudStorageKeysetManager(dekUri, storageClient);
@@ -170,7 +168,7 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
         private URI dekUri;
         private Storage storageClient;
 
-        public CloudStorageKeysetManager(String dekUri, Storage storageClient) {
+        CloudStorageKeysetManager(String dekUri, Storage storageClient) {
             try {
                 this.dekUri = new URI(dekUri);
             } catch (URISyntaxException e) {
@@ -219,7 +217,7 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
         // See https://cloud.google.com/kms/docs/object-hierarchy.
         private final String kekUri;
 
-        public GcpKmsAead(CloudKMS kmsClient, String kekUri) throws GeneralSecurityException {
+        GcpKmsAead(CloudKMS kmsClient, String kekUri) throws GeneralSecurityException {
             this.kmsClient = kmsClient;
             this.kekUri = kekUri;
         }

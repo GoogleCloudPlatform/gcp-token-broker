@@ -14,7 +14,6 @@ package com.google.cloud.broker.hadoop.fs;
 import javax.security.auth.Subject;
 
 import java.io.IOException;
-import java.security.PrivilegedAction;
 
 import com.google.cloud.broker.testing.FakeKDC;
 import io.grpc.StatusRuntimeException;
@@ -74,7 +73,7 @@ public class BrokerTokenIdentifierTest {
 
     private static class FakeServer extends TestingTools.FakeBrokerImpl {
 
-        public FakeServer(FakeKDC fakeKDC) {
+        FakeServer(FakeKDC fakeKDC) {
             super(fakeKDC);
         }
 

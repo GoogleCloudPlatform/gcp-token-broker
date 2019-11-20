@@ -31,21 +31,21 @@ import com.google.cloud.broker.testing.FakeKDC;
 import com.google.cloud.broker.protobuf.BrokerGrpc;
 
 
-public class TestingTools {
+class TestingTools {
 
-    public static final String REALM = "EXAMPLE.COM";
-    public static final String BROKER_HOST = "testhost";
-    public static final String BROKER_NAME = "broker";
-    public static final String MOCK_BUCKET = "gs://example";
-    public static final String BROKER = BROKER_NAME + "/" + BROKER_HOST + "@" + REALM;
-    public static final String ALICE = "alice@" + REALM;
-    public static final String YARN = "yarn/testhost@FOO.BAR";
+    static final String REALM = "EXAMPLE.COM";
+    static final String BROKER_HOST = "testhost";
+    static final String BROKER_NAME = "broker";
+    static final String MOCK_BUCKET = "gs://example";
+    static final String BROKER = BROKER_NAME + "/" + BROKER_HOST + "@" + REALM;
+    static final String ALICE = "alice@" + REALM;
+    static final String YARN = "yarn/testhost@FOO.BAR";
 
 
     /**
      * Starts a live instance of a mock implementation of the broker server.
      */
-    public static void startServer(FakeBrokerImpl fakeServer, GrpcCleanupRule grpcCleanup) {
+    static void startServer(FakeBrokerImpl fakeServer, GrpcCleanupRule grpcCleanup) {
         String serverName = InProcessServerBuilder.generateName();
         try {
             grpcCleanup.register(InProcessServerBuilder.forName(serverName).directExecutor()
@@ -62,7 +62,7 @@ public class TestingTools {
         when(GrpcUtils.newStub(channel)).thenReturn(stub);
     }
 
-    public static String decryptToken(byte[] token) {
+    static String decryptToken(byte[] token) {
         try {
             GSSManager manager = GSSManager.getInstance();
             Oid spnegoOid = new Oid("1.3.6.1.5.5.2");
@@ -76,7 +76,7 @@ public class TestingTools {
         }
     }
 
-    public static Configuration getBrokerConfig() {
+    static Configuration getBrokerConfig() {
         Configuration conf = new Configuration();
         conf.set("gcp.token.broker.uri.hostname", BROKER_HOST);
         conf.set("gcp.token.broker.uri.port", "1234");
@@ -86,7 +86,7 @@ public class TestingTools {
         return conf;
     }
 
-    public static void initHadoop() {
+    static void initHadoop() {
         Configuration conf = new Configuration();
         conf.set("hadoop.security.authentication", "kerberos");
         UserGroupInformation.setConfiguration(conf);
@@ -95,8 +95,8 @@ public class TestingTools {
 
     public static class AuthorizationHeaderServerInterceptor implements ServerInterceptor {
 
-        public static final Metadata.Key<String> AUTHORIZATION_METADATA_KEY = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
-        public static final Context.Key<String> AUTHORIZATION_CONTEXT_KEY = Context.key("AuthorizationHeader");
+        static final Metadata.Key<String> AUTHORIZATION_METADATA_KEY = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
+        static final Context.Key<String> AUTHORIZATION_CONTEXT_KEY = Context.key("AuthorizationHeader");
 
         @Override
         public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall, Metadata metadata, ServerCallHandler<ReqT, RespT> serverCallHandler) {
@@ -113,11 +113,11 @@ public class TestingTools {
     static class FakeBrokerImpl extends BrokerGrpc.BrokerImplBase {
         FakeKDC fakeKDC;
 
-        public FakeBrokerImpl(FakeKDC fakeKDC) {
+        FakeBrokerImpl(FakeKDC fakeKDC) {
             this.fakeKDC = fakeKDC;
         }
 
-        protected String authenticateUser () {
+        String authenticateUser() {
             String authorizationHeader = AuthorizationHeaderServerInterceptor.AUTHORIZATION_CONTEXT_KEY.get();
             String spnegoToken = authorizationHeader.split("\\s")[1];
 

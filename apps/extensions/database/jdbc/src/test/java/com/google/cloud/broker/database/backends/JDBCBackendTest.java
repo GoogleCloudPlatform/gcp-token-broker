@@ -28,12 +28,12 @@ public abstract class JDBCBackendTest {
     // - Check names of tables created by initializeDatabase()
 
 
-    public static void setup(JDBCBackend backend) {
+    static void setup(JDBCBackend backend) {
         // Initialize the database (i.e. create tables) before every test
         backend.initializeDatabase();
     }
 
-    public static void teardown(JDBCBackend backend) {
+    static void teardown(JDBCBackend backend) {
         // Drop tables after every test
         dropTables(backend);
     }
@@ -76,7 +76,7 @@ public abstract class JDBCBackendTest {
     /**
      * Check that the initialization creates the tables
      */
-    public static void testInitializeDatabase(JDBCBackend backend) {
+    static void testInitializeDatabase(JDBCBackend backend) {
         // Check that the database is empty
         dropTables(backend);
         assertEquals(getNumTables(backend), 0);
@@ -91,7 +91,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test saving a new model to the database.
      */
-    public static void testSaveNew(JDBCBackend backend) {
+    static void testSaveNew(JDBCBackend backend) {
         // Check that there are no records
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
@@ -132,7 +132,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test updating an existing model to the database.
      */
-    public static void testUpdate(JDBCBackend backend) {
+    static void testUpdate(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
@@ -174,7 +174,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test saving a model to the database, without specifying an ID. An ID should automatically be assigned.
      */
-    public static void testSaveWithoutID(JDBCBackend backend) {
+    static void testSaveWithoutID(JDBCBackend backend) {
         // Check that there are no records
         Connection connection = backend.getConnection();
         Statement statement = null;
@@ -220,7 +220,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test retrieving a model from the database.
      */
-    public static void testGet(JDBCBackend backend) {
+    static void testGet(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
@@ -247,17 +247,19 @@ public abstract class JDBCBackendTest {
     /**
      * Test retrieving a model that doesn't exist. The DatabaseObjectNotFound exception should be thrown.
      */
-    public static void testGetNotExist(JDBCBackend backend) {
+    static void testGetNotExist(JDBCBackend backend) {
         try {
             backend.get(RefreshToken.class, "whatever");
             fail("DatabaseObjectNotFound not thrown");
-        } catch (DatabaseObjectNotFound e) {}
+        } catch (DatabaseObjectNotFound e) {
+            // Expected
+        }
     }
 
     /**
      * Test deleting a model from the database.
      */
-    public static void testDelete(JDBCBackend backend) {
+    static void testDelete(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;

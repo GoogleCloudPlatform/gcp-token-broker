@@ -22,8 +22,8 @@ import java.util.Map;
 public class RefreshToken extends Model {
 
     private String id;  // GSuite email address (e.g. alice@example.com)
-    byte[] value;       // The actual OAuth refresh token (Recommendation: encrypt this value)
-    Long creationTime;  // The time when the object was created (in milliseconds)
+    private byte[] value;       // The actual OAuth refresh token (Recommendation: encrypt this value)
+    private Long creationTime;  // The time when the object was created (in milliseconds)
 
     public RefreshToken(@JsonProperty("id") String id,
                         @JsonProperty("value") byte[] value,

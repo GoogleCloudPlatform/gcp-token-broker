@@ -29,8 +29,8 @@ import static com.google.cloud.broker.hadoop.fs.TestingTools.*;
 public class SpnegoUtilsTest {
 
     private static FakeKDC fakeKDC;
-    public static final String TGT_ERROR = "No valid credentials provided (Mechanism level: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt))";
-    public static final String SERVER_NOT_FOUND_ERROR = "No valid credentials provided (Mechanism level: No valid credentials provided (Mechanism level: Server not found in Kerberos database (7) - Server not found in Kerberos database))";
+    static final String TGT_ERROR = "No valid credentials provided (Mechanism level: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt))";
+    private static final String SERVER_NOT_FOUND_ERROR = "No valid credentials provided (Mechanism level: No valid credentials provided (Mechanism level: Server not found in Kerberos database (7) - Server not found in Kerberos database))";
 
     @BeforeClass
     public static void setUpClass() {
@@ -101,6 +101,5 @@ public class SpnegoUtilsTest {
             return null;
         });
     }
-
 
 }
