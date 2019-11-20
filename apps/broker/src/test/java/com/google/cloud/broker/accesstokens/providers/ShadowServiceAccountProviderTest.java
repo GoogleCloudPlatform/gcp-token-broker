@@ -11,9 +11,11 @@
 
 package com.google.cloud.broker.accesstokens.providers;
 
+import java.util.Map;
+
 import static org.junit.Assert.*;
+import com.google.cloud.broker.settings.SettingsOverride;
 import org.junit.*;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 
@@ -25,41 +27,54 @@ public class ShadowServiceAccountProviderTest {
 
     private static final String SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
 
-    @Rule
-    public EnvironmentVariables environmentVariables = new EnvironmentVariables();
+    private static SettingsOverride backupSettings;
 
-    @Before
-    public void setup() {
-        AppSettings.reset();
-        environmentVariables.set("APP_SETTING_SHADOW_PROJECT", System.getenv().get("APP_SETTING_GCP_PROJECT"));
-        environmentVariables.set("APP_SETTING_SHADOW_USERNAME_PATTERN", "%s-shadow");
-        environmentVariables.set("APP_SETTING_JWT_LIFE", "30");
+    @BeforeClass
+    public static void setupClass() {
+        // Override settings
+        backupSettings = new SettingsOverride(Map.of(
+            AppSettings.SHADOW_PROJECT, System.getenv().get("APP_SETTING_" + AppSettings.GCP_PROJECT),
+            AppSettings.SHADOW_USERNAME_PATTERN, "%s-shadow",
+            AppSettings.JWT_LIFE, 30
+        ));
+    }
+
+    @AfterClass
+    public static void teardDownClass() throws Exception {
+        // Restore settings
+        backupSettings.restore();
     }
 
     @Test
-    public void testGoogleIdentity() {
-        environmentVariables.set("APP_SETTING_SHADOW_PROJECT", "MY_SHADOW_PROJECT");
-        environmentVariables.set("APP_SETTING_SHADOW_USERNAME_PATTERN", "xxx-%s-XXX");
+    public void testGoogleIdentity() throws Exception {
+        try(SettingsOverride override = new SettingsOverride(Map.of(
+            AppSettings.SHADOW_PROJECT, "MY_SHADOW_PROJECT",
+            AppSettings.SHADOW_USERNAME_PATTERN, "xxx-%s-XXX"
+        ))) {
 
-        ShadowServiceAccountProvider provider = new ShadowServiceAccountProvider();
-        assertEquals("xxx-alice-XXX@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice@EXAMPLE.COM"));
-        assertEquals("xxx-alice-XXX@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice@EXAMPLE.NET"));
-        assertEquals("xxx-alice-XXX@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice"));
+            ShadowServiceAccountProvider provider = new ShadowServiceAccountProvider();
+            assertEquals("xxx-alice-XXX@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice@EXAMPLE.COM"));
+            assertEquals("xxx-alice-XXX@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice@EXAMPLE.NET"));
+            assertEquals("xxx-alice-XXX@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice"));
 
-        try {
-            provider.getGoogleIdentity("");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
+            try {
+                provider.getGoogleIdentity("");
+                fail("IllegalArgumentException not thrown");
+            } catch (IllegalArgumentException e) {
+            }
 
-        try {
-            provider.getGoogleIdentity("@EXAMPLE.NET");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
+            try {
+                provider.getGoogleIdentity("@EXAMPLE.NET");
+                fail("IllegalArgumentException not thrown");
+            } catch (IllegalArgumentException e) {
+            }
 
-        try {
-            provider.getGoogleIdentity("@");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
+            try {
+                provider.getGoogleIdentity("@");
+                fail("IllegalArgumentException not thrown");
+            } catch (IllegalArgumentException e) {
+            }
+        }
     }
 
     @Test

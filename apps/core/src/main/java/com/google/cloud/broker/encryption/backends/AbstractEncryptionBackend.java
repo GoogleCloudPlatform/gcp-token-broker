@@ -23,10 +23,11 @@ public abstract class AbstractEncryptionBackend {
     public abstract byte[] encrypt(byte[] plainText);
 
     public static AbstractEncryptionBackend getInstance() {
-        if (instance == null) {
-            String className = AppSettings.getProperty(AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.CloudKMSBackend");
+        String className = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_BACKEND);
+        if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
             instance = (AbstractEncryptionBackend) InstanceUtils.invokeConstructor(className);
         }
         return instance;
     }
+
 }

@@ -12,8 +12,14 @@
 package com.google.cloud.broker.accesstokens;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.*;
+import com.google.cloud.broker.settings.SettingsOverride;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -24,13 +30,23 @@ public class AccessTokenCacheFetcherTest {
     private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
     private static final String ALICE = "alice@EXAMPLE.COM";
 
+    private static SettingsOverride backupSettings;
+
     @BeforeClass
     public static void setupClass() {
-        AppSettings.reset();
-        AppSettings.setProperty(AppSettings.REMOTE_CACHE, "com.google.cloud.broker.caching.remote.RedisCache");
-        AppSettings.setProperty(AppSettings.PROVIDER, "com.google.cloud.broker.accesstokens.providers.MockProvider");
-        AppSettings.setProperty(AppSettings.ACCESS_TOKEN_LOCAL_CACHE_TIME, "1234");
-        AppSettings.setProperty(AppSettings.ACCESS_TOKEN_REMOTE_CACHE_TIME, "6789");
+        // Override settings
+        backupSettings = new SettingsOverride(Map.of(
+            AppSettings.REMOTE_CACHE, "com.google.cloud.broker.caching.remote.RedisCache",
+            AppSettings.PROVIDER, "com.google.cloud.broker.accesstokens.providers.MockProvider",
+            AppSettings.ACCESS_TOKEN_LOCAL_CACHE_TIME, "1234",
+            AppSettings.ACCESS_TOKEN_REMOTE_CACHE_TIME, "6789"
+        ));
+    }
+
+    @AfterClass
+    public static void teardownClass() throws Exception {
+        // Restore settings
+        backupSettings.restore();
     }
 
     @Test

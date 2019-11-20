@@ -67,6 +67,7 @@ limitations under the License.
     </distributionManagement>
 
     <properties>
+        <config.version>1.4.0</config.version>
         <apache.kerby.version>2.0.0</apache.kerby.version>
         <conscrypt.version>2.1.0</conscrypt.version>
         <google.guava.version>28.1-jre</google.guava.version>

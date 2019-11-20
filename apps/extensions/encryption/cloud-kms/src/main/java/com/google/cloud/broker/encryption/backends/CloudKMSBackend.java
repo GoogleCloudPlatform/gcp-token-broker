@@ -82,8 +82,8 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
     private String dekUri;
 
     public CloudKMSBackend(){
-        kekUri = AppSettings.requireProperty(AppSettings.ENCRYPTION_KEK_URI);
-        dekUri = AppSettings.requireProperty(AppSettings.ENCRYPTION_DEK_URI);
+        kekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_KEK_URI);
+        dekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_DEK_URI);
 
         if (kekUri.equalsIgnoreCase(MEMORY)) {
             // Experimental feature: Store the KEK in memory instead of Cloud KMS.

@@ -11,10 +11,13 @@
 
 package com.google.cloud.broker.settings;
 
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.Config;
+
 import com.google.cloud.broker.utils.EnvUtils;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 public class AppSettings {
 
@@ -58,52 +61,34 @@ public class AppSettings {
     public final static String ENCRYPTION_DEK_URI = "ENCRYPTION_DEK_URI";
     public final static String ENCRYPTION_KEK_URI = "ENCRYPTION_KEK_URI";
 
-    private static Properties instance = null;
+    private static Config instance;
+    static {
+        reset(); // Initialize instance
+    }
 
     public AppSettings() {}
 
-    private static void loadEnvironmentSettings() {
+    private static Map<String, String> loadEnvironmentSettings() {
         // Override default settings with potential environment variables
         Map<String, String> env = EnvUtils.getenv();
+        Map<String, String> result = new HashMap<>();
         for (Map.Entry<String, String> entry : env.entrySet()) {
             if (entry.getKey().startsWith("APP_SETTING_")) {
-                setProperty(entry.getKey().substring("APP_SETTING_".length()), entry.getValue());
+                result.put(entry.getKey().substring("APP_SETTING_".length()), entry.getValue());
             }
         }
+        return result;
     }
 
-    private static Properties getInstance() {
-        if (instance == null) {
-            instance = new Properties();
-            loadEnvironmentSettings();
-        }
+    public static Config getInstance() {
         return instance;
     }
 
-    public static String getProperty(String key) {
-        return getInstance().getProperty(key);
+    static void setInstance(Config newInstance) {
+        instance = newInstance;
     }
 
-    public static String getProperty(String key, String defaultValue) {
-        return getInstance().getProperty(key, defaultValue);
-    }
-
-    /**
-     * Same as getProperty(key), but throw an exception if the key doesn't exist.
-     */
-    public static String requireProperty(String key) {
-        String value = getInstance().getProperty(key);
-        if (value == null) {
-            throw new IllegalStateException(String.format("The `%s` setting is not set", key));
-        }
-        return value;
-    }
-
-    public static void setProperty(String key, String value) {
-        getInstance().setProperty(key, value);
-    }
-
-    public static void reset() {
-        instance = null;
+    static void reset() {
+        setInstance(ConfigFactory.parseMap(loadEnvironmentSettings()).withFallback(ConfigFactory.load()));
     }
 }

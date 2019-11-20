@@ -1,7 +1,11 @@
 package com.google.cloud.broker.validation;
 
+import java.util.Map;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import com.google.cloud.broker.settings.SettingsOverride;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -14,9 +18,6 @@ import com.google.cloud.broker.settings.AppSettings;
 
 public class ValidationTest {
 
-    @ClassRule
-    public static final EnvironmentVariables environmentVariables = new EnvironmentVariables();
-
     private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
     private static final String BIGQUERY = "https://www.googleapis.com/auth/bigquery";
     private static final String BIGTABLE = "https://www.googleapis.com/auth/bigtable.data.readonly";
@@ -26,11 +27,21 @@ public class ValidationTest {
     private static final String PRESTO = "presto/testhost@EXAMPLE.COM";
     private static final String SPARK = "spark/testhost@EXAMPLE.COM";
 
+    private SettingsOverride backupSettings;
+
     @Before
     public void setup() {
-        AppSettings.reset();
-        environmentVariables.set("APP_SETTING_SCOPE_WHITELIST", GCS + "," + BIGQUERY);
-        environmentVariables.set("APP_SETTING_PROXY_USER_WHITELIST", HIVE + "," + PRESTO);
+        // Override settings
+        backupSettings = new SettingsOverride(Map.of(
+            AppSettings.SCOPE_WHITELIST, GCS + "," + BIGQUERY,
+            AppSettings.PROXY_USER_WHITELIST, HIVE + "," + PRESTO
+        ));
+    }
+
+    @After
+    public void teardDown() throws Exception {
+        // Restore settings
+        backupSettings.restore();
     }
 
     @Test

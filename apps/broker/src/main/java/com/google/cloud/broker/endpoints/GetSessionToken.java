@@ -12,6 +12,7 @@
 package com.google.cloud.broker.endpoints;
 
 import com.google.cloud.broker.logging.LoggingUtils;
+import com.google.cloud.broker.settings.AppSettings;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
 

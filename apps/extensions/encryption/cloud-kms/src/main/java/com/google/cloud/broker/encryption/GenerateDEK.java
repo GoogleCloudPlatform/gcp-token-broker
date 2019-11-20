@@ -29,8 +29,8 @@ public class GenerateDEK {
         String dekUri = null;
         String kekUri = null;
         if (args.length == 0) {
-            dekUri = AppSettings.requireProperty(AppSettings.ENCRYPTION_DEK_URI);
-            kekUri = AppSettings.requireProperty(AppSettings.ENCRYPTION_KEK_URI);
+            dekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_DEK_URI);
+            kekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_KEK_URI);
         }
         else if (args.length == 2) {
             dekUri = args[0];

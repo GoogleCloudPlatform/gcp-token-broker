@@ -24,6 +24,7 @@ import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
 import com.google.cloud.broker.encryption.backends.DummyEncryptionBackend;
 import com.google.cloud.broker.oauth.RefreshToken;
 import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.common.base.Charsets;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -36,6 +37,7 @@ import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -46,28 +48,36 @@ public class AuthorizerTest {
     }
     private static Authorizer authorizer;
     private static int authorizerPort;
+
+    private static SettingsOverride backupSettings;
+
     /**
      * set System property sun.security.krb5.debug=true to enable krb5 debug
      */
     @BeforeClass
-    public static void setup() throws Exception {
+    public static void setupClass() throws Exception {
         authorizerPort = NetworkUtil.getServerPort();
 
-        AppSettings.reset();
-        AppSettings.setProperty(AppSettings.AUTHORIZER_HOST, "localhost");
-        AppSettings.setProperty(AppSettings.AUTHORIZER_PORT, String.valueOf(authorizerPort));
-        AppSettings.setProperty(AppSettings.OAUTH_CLIENT_ID, "FakeClientId");
-        AppSettings.setProperty(AppSettings.OAUTH_CLIENT_SECRET, "FakeClientSecret");
-        AppSettings.setProperty(AppSettings.ENCRYPTION_BACKEND, DummyEncryptionBackend.class.getCanonicalName());
-        AppSettings.setProperty(AppSettings.DATABASE_BACKEND, DummyDatabaseBackend.class.getCanonicalName());
+        // Override settings
+        backupSettings = new SettingsOverride(Map.of(
+            AppSettings.AUTHORIZER_HOST, "localhost",
+            AppSettings.AUTHORIZER_PORT, String.valueOf(authorizerPort),
+            AppSettings.OAUTH_CLIENT_ID, "FakeClientId",
+            AppSettings.OAUTH_CLIENT_SECRET, "FakeClientSecret",
+            AppSettings.ENCRYPTION_BACKEND, DummyEncryptionBackend.class.getCanonicalName(),
+            AppSettings.DATABASE_BACKEND, DummyDatabaseBackend.class.getCanonicalName()
+        ));
 
         authorizer = new Authorizer();
         authorizer.start();
     }
 
     @AfterClass
-    public static void teardown() throws Exception {
+    public static void teardownClass() throws Exception {
         authorizer.close();
+
+        // Restore settings
+        backupSettings.restore();
     }
 
     /**

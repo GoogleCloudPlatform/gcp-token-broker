@@ -103,8 +103,8 @@ public class Session extends Model {
 
     public void extendLifetime() {
         long now = TimeUtils.currentTimeMillis();
-        long sessionMaximumLifetime = Long.parseLong(AppSettings.getProperty(AppSettings.SESSION_MAXIMUM_LIFETIME, "604800000"));
-        long sessionRenewPeriod = Long.parseLong(AppSettings.getProperty(AppSettings.SESSION_RENEW_PERIOD, "86400000"));
+        long sessionMaximumLifetime = AppSettings.getInstance().getLong(AppSettings.SESSION_MAXIMUM_LIFETIME);
+        long sessionRenewPeriod = AppSettings.getInstance().getLong(AppSettings.SESSION_RENEW_PERIOD);
         expiresAt = Math.min(
             now + sessionRenewPeriod,
             creationTime + sessionMaximumLifetime

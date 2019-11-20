@@ -95,8 +95,8 @@ public class Authorizer implements AutoCloseable {
         .build();
     private static final String GOOGLE_LOGIN_URI = "/google/login";
     private static final String GOOGLE_OAUTH2_CALLBACK_URI = "/google/oauth2callback";
-    private static final String host = AppSettings.getProperty(AppSettings.AUTHORIZER_HOST, "0.0.0.0");
-    private static final int port = Integer.parseInt(AppSettings.getProperty(AppSettings.AUTHORIZER_PORT, "8080"));
+    private static final String host = AppSettings.getInstance().getString(AppSettings.AUTHORIZER_HOST);
+    private static final int port = AppSettings.getInstance().getInt(AppSettings.AUTHORIZER_PORT);
     @VisibleForTesting
     AuthorizerServlet servlet;
 
@@ -108,7 +108,7 @@ public class Authorizer implements AutoCloseable {
     }
 
     private static void setLoggingLevel() {
-        Level level = Level.toLevel(AppSettings.getProperty(AppSettings.AUTHORIZER_LOGGING_LEVEL, "INFO"));
+        Level level = Level.toLevel(AppSettings.getInstance().getString(AppSettings.AUTHORIZER_LOGGING_LEVEL));
         final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger("org.eclipse.jetty");
         ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger) logger;
         logbackLogger.setLevel(level);

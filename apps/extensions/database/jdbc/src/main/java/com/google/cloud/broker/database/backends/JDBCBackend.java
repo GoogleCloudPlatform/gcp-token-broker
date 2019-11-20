@@ -28,7 +28,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
 
     Connection getConnection() {
         if (connectionInstance == null) {
-            String url = AppSettings.requireProperty(AppSettings.DATABASE_JDBC_URL);
+            String url = AppSettings.getInstance().getString(AppSettings.DATABASE_JDBC_URL);
             try {
                 connectionInstance = DriverManager.getConnection(url);
             } catch (Exception e) {
@@ -191,7 +191,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
     private static final String DIALECT_NOT_SUPPORTED = "Dialect `%s` is not currently supported by the JDBCDatabaseBackend.";
 
     private static String getDialect() {
-        String url = AppSettings.requireProperty(AppSettings.DATABASE_JDBC_URL);
+        String url = AppSettings.getInstance().getString(AppSettings.DATABASE_JDBC_URL);
         return url.split(":")[1];
     }
 

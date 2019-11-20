@@ -20,15 +20,11 @@ public abstract class AbstractProvider {
     private static AbstractProvider instance;
 
     public static AbstractProvider getInstance() {
-        if (instance == null) {
-            String className = AppSettings.getProperty(AppSettings.PROVIDER, "com.google.cloud.broker.accesstokens.providers.RefreshTokenProvider");
+        String className = AppSettings.getInstance().getString(AppSettings.PROVIDER);
+        if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
             instance = (AbstractProvider) InstanceUtils.invokeConstructor(className);
         }
         return instance;
-    }
-
-    public static void reset() {
-        instance = null;
     }
 
     public abstract AccessToken getAccessToken(String owner, String scope);

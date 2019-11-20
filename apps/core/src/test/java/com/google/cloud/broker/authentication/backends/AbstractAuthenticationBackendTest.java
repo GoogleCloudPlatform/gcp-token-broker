@@ -11,6 +11,9 @@
 
 package com.google.cloud.broker.authentication.backends;
 
+import java.util.Map;
+
+import com.google.cloud.broker.settings.SettingsOverride;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -20,13 +23,14 @@ import com.google.cloud.broker.settings.AppSettings;
 public class AbstractAuthenticationBackendTest {
 
     @Test
-    public void testGetInstance() {
-        AppSettings.setProperty(AppSettings.AUTHENTICATION_BACKEND, "com.example.DoesNotExist");
-        try {
-            AbstractAuthenticationBackend.getInstance();
-            fail();
-        } catch (RuntimeException e) {
-            assertEquals("java.lang.ClassNotFoundException: com.example.DoesNotExist", e.getMessage());
+    public void testGetInstance() throws Exception {
+        try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.AUTHENTICATION_BACKEND, "com.example.DoesNotExist"))) {
+            try {
+                AbstractAuthenticationBackend.getInstance();
+                fail();
+            } catch (RuntimeException e) {
+                assertEquals("java.lang.ClassNotFoundException: com.example.DoesNotExist", e.getMessage());
+            }
         }
     }
 

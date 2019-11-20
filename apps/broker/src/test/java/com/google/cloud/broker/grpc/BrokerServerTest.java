@@ -68,23 +68,25 @@ public class BrokerServerTest {
 
     @BeforeClass
     public static void setupClass() {
-        AppSettings.reset();
+        // Note: Here we're changing the environment variables instead of using the SettingsOverride class,
+        // to let the test settings apply both to the main thread and to the thread where the test server
+        // is running.
         HashMap<String, String> env = new HashMap(System.getenv());
-        env.put("APP_SETTING_PROVIDER", "com.google.cloud.broker.accesstokens.providers.MockProvider");
-        env.put("APP_SETTING_DATABASE_BACKEND", "com.google.cloud.broker.database.backends.DummyDatabaseBackend");
-        env.put("APP_SETTING_REMOTE_CACHE", "com.google.cloud.broker.caching.remote.DummyCache");
-        env.put("APP_SETTING_ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
-        env.put("APP_SETTING_AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.MockAuthenticator");
-        env.put("APP_SETTING_SCOPE_WHITELIST", "https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/bigquery");
-        env.put("APP_SETTING_PROXY_USER_WHITELIST", "hive@FOO.BAR");
-        env.put("APP_SETTING_SESSION_RENEW_PERIOD", SESSION_RENEW_PERIOD.toString());
-        env.put("APP_SESSION_MAXIMUM_LIFETIME", SESSION_MAXIMUM_LIFETIME.toString());
+        env.put("APP_SETTING_" + AppSettings.PROVIDER, "com.google.cloud.broker.accesstokens.providers.MockProvider");
+        env.put("APP_SETTING_" + AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend");
+        env.put("APP_SETTING_" + AppSettings.REMOTE_CACHE, "com.google.cloud.broker.caching.remote.DummyCache");
+        env.put("APP_SETTING_" + AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
+        env.put("APP_SETTING_" + AppSettings.AUTHENTICATION_BACKEND, "com.google.cloud.broker.authentication.backends.MockAuthenticator");
+        env.put("APP_SETTING_" + AppSettings.SCOPE_WHITELIST, "https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/bigquery");
+        env.put("APP_SETTING_" + AppSettings.PROXY_USER_WHITELIST, "hive@FOO.BAR");
+        env.put("APP_SETTING_" + AppSettings.SESSION_RENEW_PERIOD, SESSION_RENEW_PERIOD.toString());
+        env.put("APP_SESSION_" + AppSettings.SESSION_MAXIMUM_LIFETIME, SESSION_MAXIMUM_LIFETIME.toString());
         mockStatic(EnvUtils.class);
         when(EnvUtils.getenv()).thenReturn(env);
     }
 
     @After
-    public void teardown() {
+    public void tearDown() {
         // Clear the database
         ConcurrentMap<String, Object> map = DummyDatabaseBackend.getMap();
         map.clear();

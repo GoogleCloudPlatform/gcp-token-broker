@@ -38,7 +38,7 @@ public class SessionCacheFetcher extends CacheFetcher {
 
     @Override
     protected int getLocalCacheTime() {
-        return Integer.parseInt(AppSettings.getProperty(AppSettings.SESSION_LOCAL_CACHE_TIME, "30"));
+        return AppSettings.getInstance().getInt(AppSettings.SESSION_LOCAL_CACHE_TIME);
     }
 
     @Override

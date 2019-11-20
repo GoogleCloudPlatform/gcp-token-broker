@@ -12,8 +12,14 @@
 package com.google.cloud.broker.sessions;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.*;
+import com.google.cloud.broker.settings.SettingsOverride;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -29,15 +35,24 @@ public class SessionCacheFetcherTest {
     private static final Long SESSION_RENEW_PERIOD = 80000000L;
     private static final Long SESSION_MAXIMUM_LIFETIME = 80000000L;
 
+    private static SettingsOverride backupSettings;
 
     @BeforeClass
     public static void setupClass() {
-        AppSettings.reset();
-        AppSettings.setProperty(AppSettings.SESSION_LOCAL_CACHE_TIME, "1234");
-        AppSettings.setProperty(AppSettings.SESSION_RENEW_PERIOD, SESSION_RENEW_PERIOD.toString());
-        AppSettings.setProperty(AppSettings.SESSION_MAXIMUM_LIFETIME, SESSION_MAXIMUM_LIFETIME.toString());
-        AppSettings.setProperty(AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend");
-        AppSettings.setProperty(AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
+        // Override settings
+        backupSettings = new SettingsOverride(Map.of(
+            AppSettings.SESSION_LOCAL_CACHE_TIME, "1234",
+            AppSettings.SESSION_RENEW_PERIOD, SESSION_RENEW_PERIOD.toString(),
+            AppSettings.SESSION_MAXIMUM_LIFETIME, SESSION_MAXIMUM_LIFETIME.toString(),
+            AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend",
+            AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend"
+        ));
+    }
+
+    @AfterClass
+    public static void teardownClass() throws Exception {
+        // Restore settings
+        backupSettings.restore();
     }
 
     private Session createSession() {

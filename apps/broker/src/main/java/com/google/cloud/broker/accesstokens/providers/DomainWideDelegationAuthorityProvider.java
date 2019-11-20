@@ -30,7 +30,7 @@ public class DomainWideDelegationAuthorityProvider extends AbstractSignedJWTProv
         if (username.length() == 0) {
             throw new IllegalArgumentException();
         }
-        String domain = AppSettings.requireProperty(AppSettings.DOMAIN_NAME);
+        String domain = AppSettings.getInstance().getString(AppSettings.DOMAIN_NAME);
         return String.format("%s@%s", username, domain);
     }
 

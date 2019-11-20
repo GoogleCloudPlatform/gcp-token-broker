@@ -11,10 +11,14 @@
 
 package com.google.cloud.broker.accesstokens.providers;
 
+import java.util.Map;
+
 import static org.junit.Assert.*;
 
+import com.google.cloud.broker.settings.SettingsOverride;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import org.junit.AfterClass;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.ClassRule;
 import org.junit.BeforeClass;
@@ -29,14 +33,21 @@ public class DomainWideDelegationAuthorityProviderTest {
 
     private static final String SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
 
-    @ClassRule
-    public static final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+    private static SettingsOverride backupSettings;
 
     @BeforeClass
     public static void setupClass() {
-        AppSettings.reset();
-        environmentVariables.set("APP_SETTING_DOMAIN_NAME", "example.com");
-        environmentVariables.set("APP_SETTING_JWT_LIFE", "30");
+        // Override settings
+        backupSettings = new SettingsOverride(Map.of(
+            AppSettings.DOMAIN_NAME, "example.com",
+            AppSettings.JWT_LIFE, "30"
+        ));
+    }
+
+    @AfterClass
+    public static void teardDownClass() throws Exception {
+        // Restore settings
+        backupSettings.restore();
     }
 
     @Test

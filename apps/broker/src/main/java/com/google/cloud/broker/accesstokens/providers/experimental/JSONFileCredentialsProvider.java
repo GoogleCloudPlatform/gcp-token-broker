@@ -41,7 +41,7 @@ public class JSONFileCredentialsProvider extends AbstractProvider {
     @Override
     public AccessToken getAccessToken(String owner, String scope) {
         try {
-            String basedir = AppSettings.getProperty(AppSettings.JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR, "");
+            String basedir = AppSettings.getInstance().getString(AppSettings.JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR);
             Path path = Paths.get(basedir, owner.split("@")[0] + ".json");
             GoogleCredentials credentials = GoogleCredentials.fromStream(new ByteArrayInputStream(Files.readAllBytes(path)));
             com.google.auth.oauth2.AccessToken token = credentials
