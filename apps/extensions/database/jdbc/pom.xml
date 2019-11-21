@@ -40,19 +40,19 @@ limitations under the License.
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
-            <version>${sqlite.jdbc.version}</version>
+            <version>${org.xerial.sqlite-jdbc.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>${postgresql.jdbc.version}</version>
+            <version>${org.postgresql.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
-            <version>${mariadb.jdbc.version}</version>
+            <version>${org.mariadb.jdbc.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

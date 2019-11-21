@@ -68,18 +68,12 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
         } catch (GeneralSecurityException e) {
             throw new RuntimeException("Failed to register Tink Aead",e);
         }
-        try {
-            if (!Security.getProviders()[0].getName().equals("Conscrypt")) {
-                Security.insertProviderAt(Conscrypt.newProvider(), 1);
-            }
-        } catch (NoClassDefFoundError e) {
-            throw new RuntimeException("Unable to configure Conscrypt JCE Provider", e);
-        }
     }
     private Aead aead;
     private static KeyTemplate KEY_TEMPLATE = AeadKeyTemplates.AES256_GCM;
 
-    CloudKMSBackend(){
+
+    public CloudKMSBackend(){
         String kekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_KEK_URI);
         String dekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_DEK_URI);
 

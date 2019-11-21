@@ -320,6 +320,7 @@ Run the following commands **from the root of the repository**:
      --single-node \
      --no-address \
      --zone ${ZONE} \
+     --region ${REGION} \
      --subnet client-subnet \
      --image-version 1.4 \
      --bucket ${PROJECT}-staging \

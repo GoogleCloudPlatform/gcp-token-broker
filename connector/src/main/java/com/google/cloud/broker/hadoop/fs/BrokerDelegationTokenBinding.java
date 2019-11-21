@@ -23,7 +23,7 @@ import com.google.cloud.hadoop.fs.gcs.auth.AbstractDelegationTokenBinding;
 
 public class BrokerDelegationTokenBinding extends AbstractDelegationTokenBinding {
 
-    BrokerDelegationTokenBinding() {
+    public BrokerDelegationTokenBinding() {
         super(BrokerTokenIdentifier.KIND);
     }
 
