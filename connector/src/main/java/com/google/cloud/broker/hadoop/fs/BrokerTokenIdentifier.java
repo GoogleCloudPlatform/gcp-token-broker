@@ -35,11 +35,11 @@ public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
     static final String BROKER_SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
     private String sessionToken;
 
-    BrokerTokenIdentifier() {
+    public BrokerTokenIdentifier() {
         super(KIND);
     }
 
-    BrokerTokenIdentifier(Configuration config, Text owner, Text renewer, Text realUser, Text service) {
+    public BrokerTokenIdentifier(Configuration config, Text owner, Text renewer, Text realUser, Text service) {
         super(KIND, owner, renewer, realUser);
         UserGroupInformation currentUser;
         UserGroupInformation loginUser;

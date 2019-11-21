@@ -79,7 +79,8 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
     private Aead aead;
     private static KeyTemplate KEY_TEMPLATE = AeadKeyTemplates.AES256_GCM;
 
-    CloudKMSBackend(){
+
+    public CloudKMSBackend(){
         String kekUri = AppSettings.requireProperty(AppSettings.ENCRYPTION_KEK_URI);
         String dekUri = AppSettings.requireProperty(AppSettings.ENCRYPTION_DEK_URI);
 
