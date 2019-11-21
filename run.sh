@@ -72,6 +72,7 @@ function backup_artifacts() {
     cp broker-tls.pem backups/$1
     cp broker.keytab backups/$1
     cp client_secret.json backups/$1
+    cp kerberos-config.yaml backups/$1
 }
 
 
@@ -133,6 +134,10 @@ function set_projects_arg() {
                 ;;
             cloud-kms)
                 PROJECTS_ARG="--projects apps/core,apps/extensions/encryption/cloud-kms"
+                break
+                ;;
+            redis)
+                PROJECTS_ARG="--projects apps/core,apps/extensions/caching/redis"
                 break
                 ;;
             *)
