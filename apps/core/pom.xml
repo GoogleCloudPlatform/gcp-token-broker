@@ -32,7 +32,7 @@ limitations under the License.
       <dependency>
         <groupId>com.typesafe</groupId>
         <artifactId>config</artifactId>
-        <version>${config.version}</version>
+        <version>${com.typesafe.config.version}</version>
       </dependency>
       <dependency>
           <groupId>io.grpc</groupId>

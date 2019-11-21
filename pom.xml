@@ -67,7 +67,7 @@ limitations under the License.
     </distributionManagement>
 
     <properties>
-        <config.version>1.4.0</config.version>
+        <com.typesafe.config.version>1.4.0</com.typesafe.config.version>
         <org.apache.kerby.version>2.0.0</org.apache.kerby.version>
         <org.conscrypt.version>2.2.1</org.conscrypt.version>
         <com.google.guava.version>28.1-jre</com.google.guava.version>
