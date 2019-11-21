@@ -32,7 +32,7 @@ limitations under the License.
         <dependency>
             <groupId>org.apache.kerby</groupId>
             <artifactId>kerb-simplekdc</artifactId>
-            <version>${apache.kerby.version}</version>
+            <version>${org.apache.kerby.version}</version>
         </dependency>
     </dependencies>
 

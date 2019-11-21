@@ -38,27 +38,27 @@ limitations under the License.
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-kms</artifactId>
-            <version>${cloud.kms.version}</version>
+            <version>${google-cloud-kms.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.crypto.tink</groupId>
             <artifactId>tink</artifactId>
-            <version>${google.tink.version}</version>
+            <version>${com.google.crypto.tink.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-cloudkms</artifactId>
-            <version>${google.cloud.kms.api.version}</version>
+            <version>${google-api-services-cloudkms.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
-            <version>${google.cloud.storage.version}</version>
+            <version>${google-cloud-storage.version}</version>
         </dependency>
         <dependency>
             <groupId>org.conscrypt</groupId>
             <artifactId>conscrypt-openjdk-uber</artifactId>
-            <version>${conscrypt.version}</version>
+            <version>${org.conscrypt.version}</version>
         </dependency>
     </dependencies>
 
