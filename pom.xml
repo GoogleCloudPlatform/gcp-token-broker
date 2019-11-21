@@ -235,16 +235,8 @@ limitations under the License.
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>9</source>
-                    <target>9</target>
-                    <compilerArgs>
-                        <!-- This is necessary use the Java 9 compiler to compile SpnegoAuthenticator,
-                             which uses classes in the sun.security.krb5.internal.ktab package.
-                             This could potentially be removed if switching to Apache Kerby for all
-                             keytab operations. See: https://github.com/GoogleCloudPlatform/gcp-token-broker/issues/5
-                         -->
-                        <arg>--add-exports</arg><arg>java.security.jgss/sun.security.krb5.internal.ktab=ALL-UNNAMED</arg>
-                    </compilerArgs>
+                    <source>8</source>
+                    <target>8</target>
                 </configuration>
             </plugin>
         </plugins>
