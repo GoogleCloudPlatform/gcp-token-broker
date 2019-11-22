@@ -52,7 +52,7 @@ set -eo pipefail
 
 MODULE=""
 PROJECTS_ARG=""
-
+CONTAINER="broker-dev"
 
 # Creates a directory and copies some files to it.
 # The copied files are keytabs and secrets created for the
@@ -99,7 +99,7 @@ function build_packages() {
     validate_project_var
 
     set -x
-    docker exec -it broker-dev bash -c "mvn package -DskipTests ${PROJECTS_ARG}"
+    docker exec -it S{CONTAINER} bash -c "mvn package -DskipTests ${PROJECTS_ARG}"
 }
 
 
@@ -189,15 +189,22 @@ function run_tests() {
 
     GCP_OPTIONS="--env APP_SETTING_GCP_PROJECT=${PROJECT} --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json"
     set -x
-    docker exec -it ${GCP_OPTIONS} broker-dev bash -c "mvn test ${PROJECTS_ARG} ${MVN_VARS}"
+    docker exec -it ${GCP_OPTIONS} ${CONTAINER} bash -c "mvn test ${PROJECTS_ARG} ${MVN_VARS}"
 }
 
 
-# Starts a development container
-function start_dev() {
+# Initializes a development container
+function init_dev() {
     set -x
-	docker run -it -v $PWD:/base -w /base -p 7070:7070 --detach --name broker-dev ubuntu:18.04 && \
+	docker run -it -v $PWD:/base -w /base -p 7070:7070 --detach --name ${CONTAINER} ubuntu:18.04 && \
 	${docker_cmd} "apps/broker/install-dev.sh"
+}
+
+# Restart the development container, in case the container was previously stopped.
+function restart_dev {
+    set -x
+    docker start ${CONTAINER}
+    docker exec -it ${CONTAINER} bash -c "/restart-services.sh"
 }
 
 
@@ -213,14 +220,23 @@ case "$1" in
         run_tests $@
         break
         ;;
-    start_dev)
+    init_dev)
         shift
-        start_dev
+        init_dev
+        break
+        ;;
+    restart_dev)
+        shift
+        restart_dev
         break
         ;;
     backup_artifacts)
         shift
         backup_artifacts $@
         break
+        ;;
+    *)
+        echo "Error: Unsupported command: '$1'" >&2
+        exit 1
         ;;
 esac
