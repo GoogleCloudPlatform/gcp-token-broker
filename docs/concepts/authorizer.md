@@ -1,26 +1,37 @@
 # Authorizer
 
-The authorizer is an SPNEGO-enabled web service.
+The Authorizer is a Web UI that walks users through an OAuth 2.0 flow to collect OAuth refresh tokens.
 
-All endpoints are authenticated by SPNEGO.
+It is necessary for your users to use the Authorizer if you choose to use the [`RefreshTokenProvider`](providers.md#refresh-token-provider).
 
-It serves three endpoints:
+When users complete the OAuth flow, the Authorizer obtains a refresh token, [encrypts](encryption.md) it,
+and stores it in the [database](database.md). At that point the user is fully authorized to use the broker service.
+It is only necessary for each user to go through the flow once.
+
+The Authorizer application serves three endpoints:
 
 - `/`: Landing page for the Authorizer app.
-- `/google/login`: Redirects user to Google OAuth 2.0 Login
-- `/google/oauth2callback`: Accepts OAuth 2.0 authorization token, uses it to obtain a Refresh Token for the authenticated user.
-  The Refresh Token is then encrypted and stored in the database.
+- `/google/login`: Redirects the user to the Google login page.
+- `/google/oauth2callback`: Receives the OAuth 2.0 authorization code from Google, then uses it to
+  obtain a refresh token for the authenticated Google user. The refresh token is then encrypted
+  and stored in the database.
 
+## Running the Authorizer
 
-# Settings
+To run the Authorizer:
 
-- `AUTHORIZER_HOST` bind address
-- `AUTHORIZER_PORT` listen port
-- `OAUTH_CLIENT_SECRET_JSON_PATH`
+1. Retrieve the JAR file for the Authorizer package from [Maven Central](https://search.maven.org/search?q=g:com.google.cloud.broker%20AND%20a:authorizer):
+   ```xml
+   <groupId>com.google.cloud.broker</groupId>
+   <artifactId>authorizer</artifactId>
+   ```
+2. Retrieve all the JAR files from Maven Central for the [encryption backend](encryption.md#encryption-backends) and
+   [database backend](database.md#database-backends)) that you wish to use for your deployment.
+3. Place all the JAR files in the `CLASSPATH`.
+4. Configure the [settings](settings.md) in your environment.
+5. [Initialize the database](database.md#database-initialization).
+6. Run the following command:
 
-
-## Required Settings from other modules
-
-- `DATABASE_BACKEND` Default: JDBCBackend
-- `DATABASE_JDBC_URL` JDBC URL in format `jdbc:dialect:...`
-- `ENCRYPTION_BACKEND` The authorizer encrypts all refresh tokens before storing them in the database.
+   ```shell
+   com.google.cloud.broker.authorization.Authorizer
+   ```
