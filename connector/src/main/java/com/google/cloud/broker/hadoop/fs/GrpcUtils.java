@@ -54,5 +54,4 @@ class GrpcUtils {
             .withDeadlineAfter(DEADLINE_MILLISECONDS, TimeUnit.MILLISECONDS);
     }
 
-
 }

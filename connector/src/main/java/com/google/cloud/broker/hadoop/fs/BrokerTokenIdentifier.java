@@ -16,7 +16,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.security.PrivilegedAction;
 
-import org.ietf.jgss.GSSException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;

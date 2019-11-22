@@ -15,15 +15,13 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-import com.google.cloud.broker.settings.SettingsOverride;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import org.junit.AfterClass;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
-import org.junit.ClassRule;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
 
 public class DomainWideDelegationAuthorityProviderTest {

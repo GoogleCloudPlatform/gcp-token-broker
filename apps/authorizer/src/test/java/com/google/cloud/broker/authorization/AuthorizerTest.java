@@ -16,8 +16,23 @@
 
 package com.google.cloud.broker.authorization;
 
+import java.io.IOException;
+import java.util.Map;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import com.google.common.base.Charsets;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.kerby.util.NetworkUtil;
+import org.slf4j.LoggerFactory;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import static org.junit.Assert.*;
+
 import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
@@ -25,21 +40,6 @@ import com.google.cloud.broker.encryption.backends.DummyEncryptionBackend;
 import com.google.cloud.broker.oauth.RefreshToken;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.settings.SettingsOverride;
-import com.google.common.base.Charsets;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.kerby.util.NetworkUtil;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Map;
-
-import static org.junit.Assert.*;
 
 public class AuthorizerTest {
     static {

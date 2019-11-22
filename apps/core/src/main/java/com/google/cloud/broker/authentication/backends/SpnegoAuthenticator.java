@@ -143,22 +143,20 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
         String authenticatedUser = null;
 
         for (Subject login : logins) {
-            authenticatedUser = Subject.doAs(login, new PrivilegedAction<String>() {
-                public String run() {
-                    try {
-                        GSSManager manager = GSSManager.getInstance();
-                        Oid spnegoOid = new Oid("1.3.6.1.5.5.2");
-                        GSSCredential serverCredential = manager.createCredential(null,
-                            GSSCredential.DEFAULT_LIFETIME,
-                            spnegoOid,
-                            GSSCredential.ACCEPT_ONLY);
-                        GSSContext context = manager.createContext(serverCredential);
-                        byte[] tokenBytes = Base64.getDecoder().decode(spnegoToken.getBytes());
-                        context.acceptSecContext(tokenBytes, 0, tokenBytes.length);
-                        return context.getSrcName().toString();
-                    } catch (GSSException e) {
-                        return null;
-                    }
+            authenticatedUser = Subject.doAs(login, (PrivilegedAction<String>) () -> {
+                try {
+                    GSSManager manager = GSSManager.getInstance();
+                    Oid spnegoOid = new Oid("1.3.6.1.5.5.2");
+                    GSSCredential serverCredential = manager.createCredential(null,
+                        GSSCredential.DEFAULT_LIFETIME,
+                        spnegoOid,
+                        GSSCredential.ACCEPT_ONLY);
+                    GSSContext context = manager.createContext(serverCredential);
+                    byte[] tokenBytes = Base64.getDecoder().decode(spnegoToken.getBytes());
+                    context.acceptSecContext(tokenBytes, 0, tokenBytes.length);
+                    return context.getSrcName().toString();
+                } catch (GSSException e) {
+                    return null;
                 }
             });
             if (authenticatedUser != null) {

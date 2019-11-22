@@ -4,16 +4,14 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import com.google.cloud.broker.settings.SettingsOverride;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 
+import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
 
 public class ValidationTest {

@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static org.junit.Assert.*;
-import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -37,6 +36,7 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 
 import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
 import com.google.cloud.broker.utils.EnvUtils;

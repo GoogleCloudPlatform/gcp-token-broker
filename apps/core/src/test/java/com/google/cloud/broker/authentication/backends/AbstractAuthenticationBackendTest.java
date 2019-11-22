@@ -13,10 +13,10 @@ package com.google.cloud.broker.authentication.backends;
 
 import java.util.Map;
 
-import com.google.cloud.broker.settings.SettingsOverride;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
 
 

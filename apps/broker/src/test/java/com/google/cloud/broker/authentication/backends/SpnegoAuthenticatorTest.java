@@ -18,7 +18,6 @@ import java.security.PrivilegedAction;
 import java.util.Base64;
 import java.util.Map;
 
-import com.google.cloud.broker.settings.SettingsOverride;
 import org.ietf.jgss.*;
 import static org.junit.Assert.*;
 import org.junit.AfterClass;
@@ -28,6 +27,7 @@ import org.junit.Test;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 
+import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.testing.FakeKDC;
 

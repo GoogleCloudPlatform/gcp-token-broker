@@ -142,10 +142,8 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         // Get signed JWT
         String signedJWT = getSignedJWT(owner, scope);
 
-        // Obtain new access token for the owner
-        AccessToken accessToken = tradeSignedJWTForAccessToken(signedJWT);
-
-        return accessToken;
+        // Obtain and return new access token for the owner
+        return tradeSignedJWTForAccessToken(signedJWT);
     }
 
     public abstract String getGoogleIdentity(String owner);

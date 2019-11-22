@@ -15,12 +15,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import static org.junit.Assert.*;
-import com.google.cloud.broker.settings.SettingsOverride;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 
+import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
 

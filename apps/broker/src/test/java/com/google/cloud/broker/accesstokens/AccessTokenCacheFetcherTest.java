@@ -12,17 +12,14 @@
 package com.google.cloud.broker.accesstokens;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.*;
-import com.google.cloud.broker.settings.SettingsOverride;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
 
 public class AccessTokenCacheFetcherTest {

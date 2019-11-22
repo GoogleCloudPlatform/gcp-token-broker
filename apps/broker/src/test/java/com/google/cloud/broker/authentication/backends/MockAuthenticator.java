@@ -27,8 +27,7 @@ public class MockAuthenticator extends AbstractAuthenticationBackend {
         if (! authorizationHeader.startsWith("Negotiate ")) {
             throw Status.UNAUTHENTICATED.asRuntimeException();
         }
-        String token = authorizationHeader.split("\\s")[1];
-        return token;
+        return authorizationHeader.split("\\s")[1];
     }
 
 }

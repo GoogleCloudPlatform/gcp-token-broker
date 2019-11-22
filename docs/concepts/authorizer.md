@@ -33,5 +33,5 @@ To run the Authorizer:
 6. Run the following command:
 
    ```shell
-   com.google.cloud.broker.authorization.Authorizer
+   java com.google.cloud.broker.authorization.Authorizer
    ```
