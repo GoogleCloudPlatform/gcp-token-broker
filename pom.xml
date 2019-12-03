@@ -99,6 +99,7 @@ limitations under the License.
         <maven.os.plugin.version>1.6.1</maven.os.plugin.version>
         <maven.protobuf.plugin.version>0.5.1</maven.protobuf.plugin.version>
         <maven.javadoc.plugin.version>3.1.0</maven.javadoc.plugin.version>
+        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -233,6 +234,7 @@ limitations under the License.
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
                 <configuration>
                     <source>8</source>
                     <target>8</target>
