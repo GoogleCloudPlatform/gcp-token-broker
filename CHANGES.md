@@ -1,3 +1,17 @@
+## 0.5.1 (XXXX)
+
+- Decoupled the broker URI from the broker kerberos principal name. This includes the following changes:
+  * On the broker side:
+    - The `BROKER_SERVICE_HOSTNAME` and `BROKER_SERVICE_NAME` are removed.
+    - The `KEYTABS_PATH` setting is replaced with `KEYTABS`.
+    - The new `KEYTABS` setting is a JSON-formatted list of keytab/principal pairs. Those are used by the broker
+      to log in at launch time.
+  * On the connector side:
+    - The `gcp.token.broker.{realm|servicename}` and `gcp.token.broker.uri.hostname` are removed in favor of a
+      new `gcp.token.broker.kerberos.principal` setting.
+    - The `gcp.token.broker.uri.{hostname|port}` and `gcp.token.broker.tls.enabled` settings are removed in
+      favor of a new `gcp.token.broker.uri` setting.
+
 ## 0.5.0 (November 22, 2019)
 
 - Rewrote Authorizer app from Python to Java.
