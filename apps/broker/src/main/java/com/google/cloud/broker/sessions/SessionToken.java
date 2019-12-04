@@ -11,21 +11,21 @@
 
 package com.google.cloud.broker.sessions;
 
-public class SessionToken {
+class SessionToken {
 
     private String sessionId;
     private byte[] encryptedPassword;
 
-    public SessionToken(String sessionId, byte[] encryptedPassword) {
+    SessionToken(String sessionId, byte[] encryptedPassword) {
         this.sessionId = sessionId;
         this.encryptedPassword = encryptedPassword;
     }
 
-    public String getSessionId() {
+    String getSessionId() {
         return sessionId;
     }
 
-    public byte[] getEncryptedPassword() {
+    byte[] getEncryptedPassword() {
         return encryptedPassword;
     }
 

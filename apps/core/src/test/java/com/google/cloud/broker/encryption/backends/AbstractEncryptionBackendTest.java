@@ -11,22 +11,26 @@
 
 package com.google.cloud.broker.encryption.backends;
 
+import java.util.Map;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
 
 
 public class AbstractEncryptionBackendTest {
 
     @Test
-    public void testGetInstance() {
-        AppSettings.setProperty("ENCRYPTION_BACKEND", "com.example.DoesNotExist");
-        try {
-            AbstractEncryptionBackend.getInstance();
-            fail();
-        } catch (RuntimeException e) {
-            assertEquals("java.lang.ClassNotFoundException: com.example.DoesNotExist", e.getMessage());
+    public void testGetInstance() throws Exception {
+        try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.ENCRYPTION_BACKEND, "com.example.DoesNotExist"))) {
+            try {
+                AbstractEncryptionBackend.getInstance();
+                fail();
+            } catch (RuntimeException e) {
+                assertEquals("java.lang.ClassNotFoundException: com.example.DoesNotExist", e.getMessage());
+            }
         }
     }
 

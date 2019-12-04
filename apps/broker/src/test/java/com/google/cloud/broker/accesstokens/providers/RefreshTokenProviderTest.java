@@ -11,17 +11,16 @@
 
 package com.google.cloud.broker.accesstokens.providers;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import static org.junit.Assert.*;
-import org.junit.After;
+import org.junit.*;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
-import org.junit.ClassRule;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 
+import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
 
@@ -36,11 +35,21 @@ public class RefreshTokenProviderTest {
     @ClassRule
     public static final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
+    private static SettingsOverride backupSettings;
+
     @BeforeClass
     public static void setupClass() {
-        AppSettings.reset();
-        environmentVariables.set("APP_SETTING_DOMAIN_NAME", "example.com");
-        environmentVariables.set("APP_SETTING_DATABASE_BACKEND", "com.google.cloud.broker.database.backends.DummyDatabaseBackend");
+        // Override settings
+        backupSettings = new SettingsOverride(Map.of(
+            AppSettings.DOMAIN_NAME, "example.com",
+            AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend"
+        ));
+    }
+
+    @AfterClass
+    public static void teardDownClass() throws Exception {
+        // Restore settings
+        backupSettings.restore();
     }
 
     @After

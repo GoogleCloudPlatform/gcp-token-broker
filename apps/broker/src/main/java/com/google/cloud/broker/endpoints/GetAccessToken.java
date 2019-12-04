@@ -48,17 +48,17 @@ public class GetAccessToken {
         else {
             // A session token was provided. The client is using delegated authentication.
             Validation.validateScope(request.getScope());
-            if (!request.getTarget().equals(session.getValue("target"))) {
+            if (!request.getTarget().equals(session.getTarget())) {
                 throw Status.PERMISSION_DENIED
                     .withDescription("Target mismatch")
                     .asRuntimeException();
             }
-            if (!request.getScope().equals(session.getValue("scope"))) {
+            if (!request.getScope().equals(session.getScope())) {
                 throw Status.PERMISSION_DENIED
                     .withDescription("Scope mismatch")
                     .asRuntimeException();
             }
-            String sessionOwner = session.getValue("owner").toString();
+            String sessionOwner = session.getOwner();
             String sessionOwnerUsername = sessionOwner.split("@")[0];
             if (!request.getOwner().equals(sessionOwner) && !request.getOwner().equals(sessionOwnerUsername)) {
                 throw Status.PERMISSION_DENIED
@@ -77,7 +77,7 @@ public class GetAccessToken {
         }
         else {
             MDC.put("auth_mode", "delegated");
-            MDC.put("session_id", session.getValue("id").toString());
+            MDC.put("session_id", session.getId());
         }
         LoggingUtils.logSuccess(GetAccessToken.class.getSimpleName());
 

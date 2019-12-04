@@ -14,11 +14,11 @@ package com.google.cloud.broker.database.backends;
 import static org.junit.Assert.*;
 
 import java.sql.*;
-import java.util.HashMap;
 import java.util.UUID;
 
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.oauth.RefreshToken;
+import static com.google.cloud.broker.database.backends.JDBCBackend.quote;
 
 
 public abstract class JDBCBackendTest {
@@ -28,12 +28,12 @@ public abstract class JDBCBackendTest {
     // - Check names of tables created by initializeDatabase()
 
 
-    public static void setup(JDBCBackend backend) {
+    static void setup(JDBCBackend backend) {
         // Initialize the database (i.e. create tables) before every test
         backend.initializeDatabase();
     }
 
-    public static void teardown(JDBCBackend backend) {
+    static void teardown(JDBCBackend backend) {
         // Drop tables after every test
         dropTables(backend);
     }
@@ -46,7 +46,7 @@ public abstract class JDBCBackendTest {
         for (String table: tables) {
             try {
                 statement = connection.createStatement();
-                statement.executeUpdate("DROP TABLE " + table);
+                statement.executeUpdate("DROP TABLE " + quote(table));
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             } finally {
@@ -76,7 +76,7 @@ public abstract class JDBCBackendTest {
     /**
      * Check that the initialization creates the tables
      */
-    public static void testInitializeDatabase(JDBCBackend backend) {
+    static void testInitializeDatabase(JDBCBackend backend) {
         // Check that the database is empty
         dropTables(backend);
         assertEquals(getNumTables(backend), 0);
@@ -91,13 +91,13 @@ public abstract class JDBCBackendTest {
     /**
      * Test saving a new model to the database.
      */
-    public static void testSaveNew(JDBCBackend backend) {
+    static void testSaveNew(JDBCBackend backend) {
         // Check that there are no records
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
         ResultSet rs = null;
         try {
-            String query = "SELECT * from RefreshToken;";
+            String query = "SELECT * from " + quote("RefreshToken");
             statement = connection.prepareStatement(query);
             rs = statement.executeQuery();
             assertFalse(rs.next());
@@ -109,20 +109,16 @@ public abstract class JDBCBackendTest {
         }
 
         // Create a new record
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("id", "alice@example.com");
-        values.put("creation_time", 1111111111111L);
-        values.put("value", "abcd".getBytes());
-        RefreshToken token = new RefreshToken(values);
+        RefreshToken token = new RefreshToken("alice@example.com", "abcd".getBytes(), 1111111111111L);
         backend.save(token);
 
         // Check that the record was correctly created
         try {
-            String query = "SELECT * from RefreshToken WHERE id = 'alice@example.com'";
+            String query = "SELECT * from " + quote("RefreshToken") + " WHERE id='alice@example.com'";
             statement = connection.prepareStatement(query);
             rs = statement.executeQuery();
             assertTrue(rs.next());
-            assertEquals(rs.getObject("creation_time"), 1111111111111L);
+            assertEquals(rs.getObject("creationTime"), 1111111111111L);
             assertArrayEquals((byte[]) rs.getObject("value"), "abcd".getBytes());
             assertFalse(rs.next());
         } catch (SQLException e) {
@@ -136,12 +132,12 @@ public abstract class JDBCBackendTest {
     /**
      * Test updating an existing model to the database.
      */
-    public static void testUpdate(JDBCBackend backend) {
+    static void testUpdate(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
         try {
-            String query = "INSERT INTO RefreshToken (id, creation_time, value) VALUES (?, ?, ?);";
+            String query = "INSERT INTO " + quote("RefreshToken") + " (id, " + quote("creationTime") + " , value) VALUES (?, ?, ?);";
             statement = connection.prepareStatement(query);
             statement.setString(1, "alice@example.com");
             statement.setLong(2, 1111111111111L);
@@ -154,21 +150,17 @@ public abstract class JDBCBackendTest {
         }
 
         // Update the record with the same ID but different values
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("id", "alice@example.com");
-        values.put("creation_time", 2222222222222L);
-        values.put("value", "xyz".getBytes());
-        RefreshToken token = new RefreshToken(values);
+        RefreshToken token = new RefreshToken("alice@example.com", "xyz".getBytes(), 2222222222222L);
         backend.save(token);
 
         // Check that the record was updated
         ResultSet rs = null;
         try {
-            String query = "SELECT * from RefreshToken WHERE id = 'alice@example.com'";
+            String query = "SELECT * from " + quote("RefreshToken") + " WHERE id='alice@example.com'";
             statement = connection.prepareStatement(query);
             rs = statement.executeQuery();
             assertTrue(rs.next());
-            assertEquals(rs.getObject("creation_time"), 2222222222222L);
+            assertEquals(rs.getObject("creationTime"), 2222222222222L);
             assertArrayEquals((byte[]) rs.getObject("value"), "xyz".getBytes());
             assertFalse(rs.next());
         } catch (SQLException e) {
@@ -182,13 +174,13 @@ public abstract class JDBCBackendTest {
     /**
      * Test saving a model to the database, without specifying an ID. An ID should automatically be assigned.
      */
-    public static void testSaveWithoutID(JDBCBackend backend) {
+    static void testSaveWithoutID(JDBCBackend backend) {
         // Check that there are no records
         Connection connection = backend.getConnection();
         Statement statement = null;
         ResultSet rs = null;
         try {
-            String query = "SELECT * from RefreshToken;";
+            String query = "SELECT * from " + quote("RefreshToken");
             statement = connection.createStatement();
             rs = statement.executeQuery(query);
             assertFalse(rs.next());
@@ -200,19 +192,16 @@ public abstract class JDBCBackendTest {
         }
 
         // Create a new record without specifying an ID
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("creation_time", 1111111111111L);
-        values.put("value", "abcd".getBytes());
-        RefreshToken token = new RefreshToken(values);
+        RefreshToken token = new RefreshToken(null, "abcd".getBytes(), 1111111111111L);
         backend.save(token);
 
         // Check that the record was correctly created
         try {
-            String query = "SELECT * from RefreshToken;";
+            String query = "SELECT * from " + quote("RefreshToken");
             statement = connection.createStatement();
             rs = statement.executeQuery(query);
             assertTrue(rs.next());
-            assertEquals(rs.getObject("creation_time"), 1111111111111L);
+            assertEquals(rs.getObject("creationTime"), 1111111111111L);
             assertArrayEquals((byte[]) rs.getObject("value"), "abcd".getBytes());
 
             // Check that the ID is a valid UUID
@@ -231,12 +220,12 @@ public abstract class JDBCBackendTest {
     /**
      * Test retrieving a model from the database.
      */
-    public static void testGet(JDBCBackend backend) {
+    static void testGet(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
         try {
-            String query = "INSERT INTO RefreshToken (id, creation_time, value) VALUES (?, ?, ?);";
+            String query = "INSERT INTO " + quote("RefreshToken") + " (id, " + quote("creationTime") + " , value) VALUES (?, ?, ?);";
             statement = connection.prepareStatement(query);
             statement.setString(1, "alice@example.com");
             statement.setLong(2, 1111111111111L);
@@ -250,30 +239,32 @@ public abstract class JDBCBackendTest {
 
         // Check that the record is correctly retrieved
         RefreshToken token = (RefreshToken) backend.get(RefreshToken.class, "alice@example.com");
-        assertEquals(token.getValue("id"), "alice@example.com");
-        assertEquals(token.getValue("creation_time"), 1111111111111L);
-        assertArrayEquals((byte[]) token.getValue("value"), "abcd".getBytes());
+        assertEquals(token.getId(), "alice@example.com");
+        assertArrayEquals(token.getValue(), "abcd".getBytes());
+        assertEquals(token.getCreationTime().longValue(), 1111111111111L);
     }
 
     /**
      * Test retrieving a model that doesn't exist. The DatabaseObjectNotFound exception should be thrown.
      */
-    public static void testGetNotExist(JDBCBackend backend) {
+    static void testGetNotExist(JDBCBackend backend) {
         try {
             backend.get(RefreshToken.class, "whatever");
             fail("DatabaseObjectNotFound not thrown");
-        } catch (DatabaseObjectNotFound e) {}
+        } catch (DatabaseObjectNotFound e) {
+            // Expected
+        }
     }
 
     /**
      * Test deleting a model from the database.
      */
-    public static void testDelete(JDBCBackend backend) {
+    static void testDelete(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
         try {
-            String query = "INSERT INTO RefreshToken (id, creation_time, value) VALUES (?, ?, ?);";
+            String query = "INSERT INTO " + quote("RefreshToken") + " (id, " + quote("creationTime") + " , value) VALUES (?, ?, ?);";
             statement = connection.prepareStatement(query);
             statement.setString(1, "alice@example.com");
             statement.setLong(2, 1111111111111L);
@@ -286,15 +277,13 @@ public abstract class JDBCBackendTest {
         }
 
         // Delete the record
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("id", "alice@example.com");
-        RefreshToken token = new RefreshToken(values);
+        RefreshToken token = new RefreshToken("alice@example.com", null, null);
         backend.delete(token);
 
         // Check that the record was deleted
         ResultSet rs = null;
         try {
-            String query = "SELECT * from RefreshToken WHERE id='alice@example.com';";
+            String query = "SELECT * from " + quote("RefreshToken") + " WHERE id='alice@example.com';";
             statement = connection.prepareStatement(query);
             rs = statement.executeQuery();
             assertFalse(rs.next());

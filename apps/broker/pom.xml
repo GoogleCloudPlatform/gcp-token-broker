@@ -20,7 +20,7 @@ limitations under the License.
     <parent>
         <groupId>com.google.cloud.broker</groupId>
         <artifactId>broker-parent</artifactId>
-        <version>0.4.1</version>
+        <version>0.5.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -53,12 +53,12 @@ limitations under the License.
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-tcnative-boringssl-static</artifactId>
-            <version>${netty.tcnative.version}</version>
+            <version>${netty-tcnative-boringssl-static.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>javax.annotation-api</artifactId>
-            <version>${javax.annotation.version}</version>
+            <version>${javax.annotation-api.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -71,24 +71,24 @@ limitations under the License.
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-iam</artifactId>
-            <version>${cloud.iam.version}</version>
+            <version>${google-api-services-iam.version}</version>
         </dependency>
 
         <!-- For logging -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
+            <version>${ch.qos.logback.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback.contrib</groupId>
             <artifactId>logback-json-classic</artifactId>
-            <version>${logback.contrib.version}</version>
+            <version>${ch.qos.logback.contrib.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback.contrib</groupId>
             <artifactId>logback-jackson</artifactId>
-            <version>${logback.contrib.version}</version>
+            <version>${ch.qos.logback.contrib.version}</version>
         </dependency>
 
         <!-- Testing dependencies -->

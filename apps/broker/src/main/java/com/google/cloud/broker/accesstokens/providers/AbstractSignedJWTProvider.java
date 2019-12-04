@@ -15,8 +15,8 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 
-import com.google.cloud.broker.utils.GoogleCredentialsDetails;
-import com.google.cloud.broker.utils.GoogleCredentialsFactory;
+import com.google.cloud.broker.oauth.GoogleCredentialsDetails;
+import com.google.cloud.broker.oauth.GoogleCredentialsFactory;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.auth.oauth2.TokenRequest;
 import com.google.api.client.auth.oauth2.TokenResponse;
@@ -38,13 +38,13 @@ import com.google.cloud.broker.utils.TimeUtils;
 
 public abstract class AbstractSignedJWTProvider extends AbstractProvider {
 
-    protected boolean brokerIssuer;
+    private boolean brokerIssuer;
 
-    public AbstractSignedJWTProvider(boolean brokerIssuer) {
+    AbstractSignedJWTProvider(boolean brokerIssuer) {
         this.brokerIssuer = brokerIssuer;
     }
 
-    public boolean isBrokerIssuer() {
+    private boolean isBrokerIssuer() {
         return brokerIssuer;
     }
 
@@ -68,7 +68,7 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
 
         // Create the JWT payload
         long iat = TimeUtils.currentTimeMillis() / 1000L;
-        long exp = iat + Long.parseLong(AppSettings.getProperty("JWT_LIFE", "30"));
+        long exp = iat + AppSettings.getInstance().getLong(AppSettings.JWT_LIFE);
         HashMap<String, Object> jwtPayload = new HashMap<>();
         jwtPayload.put("scope", scope);
         jwtPayload.put("aud", "https://www.googleapis.com/oauth2/v4/token");
@@ -114,7 +114,7 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         return response.getSignedJwt();
     }
 
-    protected AccessToken tradeSignedJWTForAccessToken(String signedJWT) {
+    private AccessToken tradeSignedJWTForAccessToken(String signedJWT) {
         HttpTransport httpTransport;
         JsonFactory jsonFactory;
         TokenResponse response;
@@ -142,10 +142,8 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         // Get signed JWT
         String signedJWT = getSignedJWT(owner, scope);
 
-        // Obtain new access token for the owner
-        AccessToken accessToken = tradeSignedJWTForAccessToken(signedJWT);
-
-        return accessToken;
+        // Obtain and return new access token for the owner
+        return tradeSignedJWTForAccessToken(signedJWT);
     }
 
     public abstract String getGoogleIdentity(String owner);

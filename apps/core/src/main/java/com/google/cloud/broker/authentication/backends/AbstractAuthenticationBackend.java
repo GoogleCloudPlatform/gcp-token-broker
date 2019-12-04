@@ -11,10 +11,9 @@
 
 package com.google.cloud.broker.authentication.backends;
 
-import java.lang.reflect.Constructor;
-
 import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
 import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.utils.InstanceUtils;
 
 
 public abstract class AbstractAuthenticationBackend {
@@ -22,21 +21,11 @@ public abstract class AbstractAuthenticationBackend {
     private static AbstractAuthenticationBackend instance;
 
     public static AbstractAuthenticationBackend getInstance() {
-        if (instance == null) {
-            try {
-                String className = AppSettings.getProperty("AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.SpnegoAuthenticator");
-                Class c = Class.forName(className);
-                Constructor constructor = c.getConstructor();
-                instance = (AbstractAuthenticationBackend) constructor.newInstance();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        String className = AppSettings.getInstance().getString(AppSettings.AUTHENTICATION_BACKEND);
+        if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
+            instance = (AbstractAuthenticationBackend) InstanceUtils.invokeConstructor(className);
         }
         return instance;
-    }
-
-    public static void reset() {
-        instance = null;
     }
 
     public String authenticateUser() {

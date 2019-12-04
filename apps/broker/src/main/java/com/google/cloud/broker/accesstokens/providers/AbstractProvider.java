@@ -13,29 +13,18 @@ package com.google.cloud.broker.accesstokens.providers;
 
 import com.google.cloud.broker.accesstokens.AccessToken;
 import com.google.cloud.broker.settings.AppSettings;
-
-import java.lang.reflect.Constructor;
+import com.google.cloud.broker.utils.InstanceUtils;
 
 public abstract class AbstractProvider {
 
     private static AbstractProvider instance;
 
     public static AbstractProvider getInstance() {
-        if (instance == null) {
-            try {
-                String className = AppSettings.getProperty("PROVIDER", "com.google.cloud.broker.accesstokens.providers.RefreshTokenProvider");
-                Class c = Class.forName(className);
-                Constructor constructor  = c.getConstructor();
-                instance = (AbstractProvider) constructor.newInstance();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        String className = AppSettings.getInstance().getString(AppSettings.PROVIDER);
+        if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
+            instance = (AbstractProvider) InstanceUtils.invokeConstructor(className);
         }
         return instance;
-    }
-
-    public static void reset() {
-        instance = null;
     }
 
     public abstract AccessToken getAccessToken(String owner, String scope);

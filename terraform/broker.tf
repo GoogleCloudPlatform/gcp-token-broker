@@ -92,6 +92,22 @@ resource "google_compute_firewall" "broker_allow_http" {
   ]
 }
 
+// Encryption ------------------------------------------------
+
+// Bucket to store data the encryption key (DEK) for the CloudKMS encryption backend
+
+resource "google_storage_bucket" "encryption_bucket" {
+  name = "${var.gcp_project}-encryption"
+  depends_on = ["google_project_service.service_compute"]  # Dependency required: https://github.com/terraform-providers/terraform-provider-google/issues/1089
+  force_destroy = true
+}
+
+resource "google_storage_bucket_iam_member" "encryption_bucket_perms" {
+  bucket = "${google_storage_bucket.encryption_bucket.name}"
+  role = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.broker.email}"
+}
+
 // NAT gateway -----------------------------------------------
 
 resource "google_compute_router" "broker" {
@@ -245,13 +261,13 @@ broker:
     settings:
       GCP_PROJECT: '${var.gcp_project}'
       ENCRYPTION_KEK_URI: '${google_kms_crypto_key.broker_key.self_link}'
-      ENCRYPTION_DEK_URI: ''  # FIXME
+      ENCRYPTION_DEK_URI: 'gs://${google_storage_bucket.encryption_bucket.name}/dek.json'
       PROXY_USER_WHITELIST: 'hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}'
       DOMAIN_NAME: '${var.domain}'
       KEYTABS: '{"keytab": "/keytabs/broker.keytab", "principal": "broker/${var.broker_service_hostname}@${local.dataproc_realm}""}'
       TLS_KEY_PATH: '/secrets/tls.pem'
       TLS_CRT_PATH: '/secrets/tls.crt'
-      CLIENT_SECRET_PATH: '/secrets/client_secret.json'
+      OAUTH_CLIENT_SECRET_JSON_PATH: '/secrets/client_secret.json'
       REDIS_CACHE_HOST: '${google_redis_instance.cache.host}'
       LOGGING_LEVEL: 'INFO'
   service:
@@ -267,8 +283,10 @@ authorizer:
   app:
     settings:
       GCP_PROJECT: '${var.gcp_project}'
-      ENCRYPTION_KEY_RING_REGION: '${var.gcp_region}'
-      DOMAIN_NAME: '${var.domain}'
+      OAUTH_CLIENT_SECRET_JSON_PATH: '/secrets/client_secret.json'
+      ENCRYPTION_KEK_URI: '${google_kms_crypto_key.broker_key.self_link}'
+      ENCRYPTION_DEK_URI: 'gs://${google_storage_bucket.encryption_bucket.name}/dek.json'
+      LOGGING_LEVEL: 'INFO'
   ingress:
     host: '${var.authorizer_hostname}'
 EOT

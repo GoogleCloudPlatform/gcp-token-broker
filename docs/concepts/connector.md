@@ -27,11 +27,7 @@ For more information, see the documentation about [authentication](authenticatio
 
 This section contains all the available Hadoop configuration properties for the broker connector.
 
-### `gcp.token.broker.tls.certificate`
-
-TLS certificate for the broker service. Only necessary if `https` is specified in the `gcp.token.broker.uri` property.
-
-### `dkerberos.principal`
+### `gcp.token.broker.kerberos.principal`
 
 Full name for the broker's Kerberos service principal.
 
@@ -39,4 +35,15 @@ Full name for the broker's Kerberos service principal.
 
 Default: `https://localhost:443`
 
-URI for the broker server. If `https` is specified, then you must also provide `gcp.token.broker.tls.certificate`.
+URI for the broker server. If `https` is specified, then you must also provide `gcp.token.broker.tls.certificate`
+or `gcp.token.broker.tls.certificate.path`.
+
+### ```gcp.token.broker.tls.certificate```
+
+Alternative to `gcp.token.broker.tls.certificate.path`. Contents of the TLS certificate for the broker service.
+Used only if `gcp.token.broker.tls.enabled` is `true`.
+
+### ```gcp.token.broker.tls.certificate.path```
+
+Alternative to `gcp.token.broker.tls.certificate`. File path of TLS certificate for the broker service.
+Used only if `gcp.token.broker.tls.enabled` is `true` and `gcp.token.broker.tls.certificate`  is not provided.

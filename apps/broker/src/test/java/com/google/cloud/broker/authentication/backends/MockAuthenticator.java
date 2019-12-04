@@ -13,8 +13,6 @@ package com.google.cloud.broker.authentication.backends;
 
 import io.grpc.Status;
 
-import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
-
 /**
  * Used only for testing. Do NOT use in production.
  * This is a dummy authenticator that returns the provided token as the authenticated user. In other terms, to allow
@@ -29,8 +27,7 @@ public class MockAuthenticator extends AbstractAuthenticationBackend {
         if (! authorizationHeader.startsWith("Negotiate ")) {
             throw Status.UNAUTHENTICATED.asRuntimeException();
         }
-        String token = authorizationHeader.split("\\s")[1];
-        return token;
+        return authorizationHeader.split("\\s")[1];
     }
 
 }

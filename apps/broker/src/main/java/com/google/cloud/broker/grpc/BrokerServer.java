@@ -52,15 +52,15 @@ public class BrokerServer {
     private static ServerServiceDefinition serviceDefinition = ServerInterceptors.intercept(
         new BrokerImpl(), new AuthorizationHeaderServerInterceptor(), new ClientAddressServerInterceptor());
 
-    public BrokerServer() {
-        this.host = AppSettings.getProperty("SERVER_HOST", "0.0.0.0");
-        this.port = Integer.parseInt(AppSettings.getProperty("SERVER_PORT", "5000"));
-        this.tlsEnabled = Boolean.parseBoolean(AppSettings.getProperty("TLS_ENABLED", "true"));
+    private BrokerServer() {
+        this.host = AppSettings.getInstance().getString(AppSettings.SERVER_HOST);
+        this.port = AppSettings.getInstance().getInt(AppSettings.SERVER_PORT);
+        this.tlsEnabled = AppSettings.getInstance().getBoolean(AppSettings.TLS_ENABLED);
     }
 
     private SslContextBuilder getSslContextBuilder() {
-        String certChainFilePath = AppSettings.requireProperty("TLS_CRT_PATH");
-        String privateKeyFilePath = AppSettings.requireProperty("TLS_KEY_PATH");
+        String certChainFilePath = AppSettings.getInstance().getString(AppSettings.TLS_CRT_PATH);
+        String privateKeyFilePath = AppSettings.getInstance().getString(AppSettings.TLS_KEY_PATH);
         SslContextBuilder sslClientContextBuilder = SslContextBuilder.forServer(
             new File(certChainFilePath),
             new File(privateKeyFilePath));
@@ -69,7 +69,7 @@ public class BrokerServer {
             SslProvider.OPENSSL);
     }
 
-    public static ServerServiceDefinition getServiceDefinition() {
+    static ServerServiceDefinition getServiceDefinition() {
         return serviceDefinition;
     }
 
@@ -77,7 +77,7 @@ public class BrokerServer {
         NettyServerBuilder builder = NettyServerBuilder.forAddress(new InetSocketAddress(host, port))
             .addService(serviceDefinition);
         if (tlsEnabled) {
-            builder = builder.sslContext(getSslContextBuilder().build());
+            builder.sslContext(getSslContextBuilder().build());
         }
         server =  builder.build().start();
         logger.info("Server listening on " + port + "...");
@@ -103,8 +103,8 @@ public class BrokerServer {
     }
 
 
-    public static void setLoggingLevel() {
-        Level level = Level.parse(AppSettings.getProperty("LOGGING_LEVEL", "INFO"));
+    private static void setLoggingLevel() {
+        Level level = Level.parse(AppSettings.getInstance().getString(AppSettings.LOGGING_LEVEL));
         Logger root = Logger.getLogger("");
         root.setLevel(level);
         for (Handler handler : root.getHandlers()) {

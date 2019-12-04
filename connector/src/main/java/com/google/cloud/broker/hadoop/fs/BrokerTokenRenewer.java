@@ -14,7 +14,6 @@ package com.google.cloud.broker.hadoop.fs;
 import java.io.IOException;
 import java.security.PrivilegedAction;
 
-import org.ietf.jgss.GSSException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenRenewer;

@@ -1,6 +1,20 @@
+## 0.5.0 (XXX)
+
+- Rewrote Authorizer app from Python to Java.
+- Refactored settings system to use the Typesafe Config library.
+- Made the Cloud KMS encryption backend use envelope encryption. The backend now requires
+  both the `ENCRYPTION_KEK_URI` and `ENCRYPTION_DEK_URI` settings. To generate the data
+  encryption key (DEK), use the newly added `GenerateDEK` command.
+- Added `TLS_CRT_PATH` setting to allow passing the broker server's TLS certificate as a file.
+- Moved the `InitializeDatabase` command to the `com.google.cloud.broker.database` package.
+- Renamed `CLIENT_SECRET_PATH` setting to `OAUTH_CLIENT_SECRET_JSON_PATH`.
+- Introduced the `OAUTH_CLIENT_ID` and `OAUTH_CLIENT_SECRET` settings as an alternative
+  to `OAUTH_CLIENT_SECRET_JSON_PATH`.
+
+
 ## 0.4.1 (August 16, 2019)
 
-- Make shadow service account's username pattern configurable.
+- Made shadow service account's username pattern configurable.
 
 ## 0.4.0 (August 8, 2019)
 
@@ -32,7 +46,7 @@
 
 ## 0.2.0 (May 17, 2019)
 
-- Rewrote server application from Python to Java.
+- Rewrote the broker server application from Python to Java.
 - Simplified KDC trust topology. Now the Broker service does not
   require its own KDC and does not require any connectivity with the
   origin KDC or AD. Also, it is now required to upload a separate

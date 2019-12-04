@@ -47,3 +47,5 @@ client_secret*.json
 .idea
 *.iml
 
+# Backup artifacts
+# backups/**

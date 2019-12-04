@@ -16,7 +16,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.security.PrivilegedAction;
 
-import org.ietf.jgss.GSSException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -32,7 +31,7 @@ import com.google.cloud.broker.protobuf.GetSessionTokenResponse;
 public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
 
     public static final Text KIND = new Text("GCPBrokerSessionToken");
-    public static final String BROKER_SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
+    static final String BROKER_SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
     private String sessionToken;
 
     public BrokerTokenIdentifier() {

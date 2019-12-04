@@ -28,9 +28,10 @@ JSON-formatted list of keytabs and principals for the broker service to log in w
 [{"keytab": "/home/broker/foo.keytab", "principal": "foo/bar@BAZ"}]
 ```
 
-### `CLIENT_SECRET_PATH`
+### `OAUTH_CLIENT_SECRET_JSON_PATH`
 
-Path to the OAuth client ID JSON file used by the [Authorizer](authorizer.md) app and the [refresh token provider](providers.md#refresh-token-provider).
+Path to the OAuth client secret JSON file used by the [Authorizer](authorizer.md) app and the [refresh token provider](providers.md#refresh-token-provider)
+to generate and use refresh tokens.
 
 ### `DATABASE_BACKEND`
 

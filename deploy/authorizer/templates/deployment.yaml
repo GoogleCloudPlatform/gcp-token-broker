@@ -31,7 +31,10 @@ spec:
       containers:
       - name: {{ .Chart.Name }}-container
         image: {{ .Values.authorizer.image }}
-        command: ['python3', 'app.py']
+        env:
+        - name: JAVA_OPTS
+          value: {{ .Values.authorizer.app.javaOpts }}
+        command: ['java', '-cp', '/classpath/authorizer.jar:/classpath/database-backend-cloud-datastore.jar:/classpath/encryption-backend-cloud-kms.jar', 'com.google.cloud.broker.authorization.Authorizer']
         ports:
         - containerPort: {{ .Values.authorizer.app.port }}
         envFrom:

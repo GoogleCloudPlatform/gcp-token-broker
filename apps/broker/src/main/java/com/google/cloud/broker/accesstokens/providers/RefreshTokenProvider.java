@@ -11,25 +11,21 @@
 
 package com.google.cloud.broker.accesstokens.providers;
 
-import java.io.File;
-import java.io.InputStream;
 import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.json.JsonFactory;
+import com.google.cloud.broker.oauth.GoogleClientSecretsLoader;
 import io.grpc.Status;
 
 import com.google.cloud.broker.accesstokens.AccessToken;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
-import com.google.cloud.broker.database.models.Model;
+import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import com.google.cloud.broker.oauth.RefreshToken;
 import com.google.cloud.broker.utils.TimeUtils;
 
@@ -38,7 +34,7 @@ public class RefreshTokenProvider extends AbstractProvider {
 
     private static String AUTHZ_ERROR_MESSAGE = "GCP Token Broker authorization is invalid or has expired for user: %s";
 
-    public String getGoogleIdentity(String owner) {
+    String getGoogleIdentity(String owner) {
         String username;
         try {
             username = owner.split("@")[0];
@@ -48,9 +44,8 @@ public class RefreshTokenProvider extends AbstractProvider {
         if (username.length() == 0) {
             throw new IllegalArgumentException();
         }
-        String domain = AppSettings.requireProperty("DOMAIN_NAME");
-        String googleIdentity = String.format("%s@%s", username, domain);
-        return googleIdentity;
+        String domain = AppSettings.getInstance().getString(AppSettings.DOMAIN_NAME);
+        return String.format("%s@%s", username, domain);
     }
 
     @Override
@@ -61,26 +56,18 @@ public class RefreshTokenProvider extends AbstractProvider {
         // Fetch refresh token from the database
         RefreshToken refreshToken = null;
         try {
-            refreshToken = (RefreshToken) Model.get(RefreshToken.class, googleIdentity);
+            refreshToken = (RefreshToken) AbstractDatabaseBackend.getInstance().get(RefreshToken.class, googleIdentity);
         }
         catch (DatabaseObjectNotFound e) {
             throw Status.PERMISSION_DENIED.withDescription(String.format(AUTHZ_ERROR_MESSAGE, owner)).asRuntimeException();
         }
 
         // Decrypt the refresh token's value
-        byte[] encryptedValue = (byte[]) refreshToken.getValue("value");
+        byte[] encryptedValue = refreshToken.getValue();
         String decryptedValue = new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
 
         // Load OAuth client secret
-        File secretJson = new java.io.File(AppSettings.requireProperty("CLIENT_SECRET_PATH"));
-        JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-        GoogleClientSecrets clientSecrets;
-        try {
-            InputStream in = new FileInputStream(secretJson);
-            clientSecrets = GoogleClientSecrets.load(jsonFactory, new InputStreamReader(in));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        GoogleClientSecrets clientSecrets = GoogleClientSecretsLoader.getSecrets();
 
         // Generate a new access token
         TokenResponse response = null;

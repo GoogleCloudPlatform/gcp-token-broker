@@ -23,20 +23,20 @@ import com.google.cloud.broker.settings.AppSettings;
  * Command-line utility that generates a new data encryption key (DEK) and stores it in GCS
  */
 public class GenerateDEK {
-    private static String USAGE = "[dekUri] [kekURI]";
 
     public static void main(String[] args) {
         String dekUri = null;
         String kekUri = null;
         if (args.length == 0) {
-            dekUri = AppSettings.requireProperty("ENCRYPTION_DEK_URI");
-            kekUri = AppSettings.requireProperty("ENCRYPTION_KEK_URI");
+            dekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_DEK_URI);
+            kekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_KEK_URI);
         }
         else if (args.length == 2) {
             dekUri = args[0];
             kekUri = args[1];
         }
         else {
+            String USAGE = "[dekUri] [kekURI]";
             System.err.println(USAGE);
             System.exit(1);
         }

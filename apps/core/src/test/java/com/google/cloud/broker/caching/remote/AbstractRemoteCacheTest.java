@@ -11,22 +11,26 @@
 
 package com.google.cloud.broker.caching.remote;
 
+import java.util.Map;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
 
 
 public class AbstractRemoteCacheTest {
 
     @Test
-    public void testGetInstance() {
-        AppSettings.setProperty("REMOTE_CACHE", "com.example.DoesNotExist");
-        try {
-            AbstractRemoteCache.getInstance();
-            fail();
-        } catch (RuntimeException e) {
-            assertEquals("java.lang.ClassNotFoundException: com.example.DoesNotExist", e.getMessage());
+    public void testGetInstance() throws Exception {
+        try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.REMOTE_CACHE, "com.example.DoesNotExist"))) {
+            try {
+                AbstractRemoteCache.getInstance();
+                fail();
+            } catch (RuntimeException e) {
+                assertEquals("java.lang.ClassNotFoundException: com.example.DoesNotExist", e.getMessage());
+            }
         }
     }
 

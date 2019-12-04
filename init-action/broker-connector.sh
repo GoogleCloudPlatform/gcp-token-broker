@@ -37,11 +37,14 @@ DATAPROC_REALM=$(sudo cat /etc/krb5.conf | grep "default_realm" | awk '{print $N
 readonly early_init="$(/usr/share/google/get_metadata_value attributes/dataproc-option-run-init-actions-early || echo 'false')"
 
 readonly broker_version="$(/usr/share/google/get_metadata_value attributes/broker-version)"
-readonly broker_tls_certificate="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-tls-certificate)"
 readonly broker_uri="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-uri)"
 readonly broker_kerberos_principal="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-kerberos-principal)"
+readonly broker_connector_jar="$(/usr/share/google/get_metadata_value attributes/broker-connector-jar)"
 readonly origin_realm="$(/usr/share/google/get_metadata_value attributes/origin-realm)"
 readonly test_users="$(/usr/share/google/get_metadata_value attributes/test-users)"
+set +x
+readonly broker_tls_certificate="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-tls-certificate)"
+set -x
 
 function set_property_in_xml() {
   bdconfig set_property \
@@ -75,9 +78,11 @@ function restart_worker_services() {
 # Set some hadoop config properties
 set_property_core_site "fs.gs.system.bucket" ""
 set_property_core_site "fs.gs.delegation.token.binding" "com.google.cloud.broker.hadoop.fs.BrokerDelegationTokenBinding"
-set_property_core_site "gcp.token.broker.tls.certificate" "$broker_tls_certificate"
 set_property_core_site "gcp.token.broker.uri" "$broker_uri"
 set_property_core_site "gcp.token.broker.kerberos.principal" "$broker_kerberos_principal"
+set +x
+set_property_core_site "gcp.token.broker.tls.certificate" "$broker_tls_certificate"
+set -x
 
 # Get connector's lib directory
 if [[ -d ${DATAPROC_LIB_DIR} ]]; then
@@ -93,7 +98,11 @@ cd ${lib_dir}
 rm -f "gcs-connector-"*
 
 # Download the JARs
-wget https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${broker_version}/broker-connector-hadoop2-${broker_version}.jar
+if [[ -n "${broker_connector_jar}" ]]; then
+  gsutil cp ${broker_connector_jar} .
+else
+  wget https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${broker_version}/broker-connector-hadoop2-${broker_version}.jar
+fi
 wget https://repo1.maven.org/maven2/com/google/cloud/bigdataoss/gcs-connector/${GCS_CONN_VERSION}/gcs-connector-${GCS_CONN_VERSION}-shaded.jar
 
 # Update version-less connector link if present

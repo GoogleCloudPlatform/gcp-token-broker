@@ -13,7 +13,10 @@ package com.google.cloud.broker.caching.remote;
 
 import static org.junit.Assert.*;
 
+import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.settings.SettingsOverride;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.redisson.Redisson;
@@ -23,6 +26,7 @@ import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.ByteArrayCodec;
 import org.redisson.config.Config;
 
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
 
@@ -30,13 +34,27 @@ public class RedisCacheTest {
 
     private static RedissonClient client;
     private static RedisCache backend;
+    private static SettingsOverride backupSettings;
 
     @BeforeClass
     public static void setupClass() {
+        // Override settings
+        backupSettings = new SettingsOverride(Map.of(
+            AppSettings.REDIS_CACHE_HOST, "localhost",
+            AppSettings.REDIS_CACHE_PORT, 6379,
+            AppSettings.REDIS_CACHE_DB, 0
+        ));
+
         Config config = new Config();
-        config.useSingleServer().setAddress(String.format("redis://localhost:6379")).setDatabase(0);
+        config.useSingleServer().setAddress("redis://localhost:6379").setDatabase(0);
         client = Redisson.create(config);
         backend = new RedisCache();
+    }
+
+    @AfterClass
+    public static void teardDownClass() throws Exception {
+        // Restore settings
+        backupSettings.restore();
     }
 
     @After

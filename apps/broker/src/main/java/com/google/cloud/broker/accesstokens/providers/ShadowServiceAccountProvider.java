@@ -15,13 +15,13 @@ import com.google.cloud.broker.settings.AppSettings;
 
 public class ShadowServiceAccountProvider extends AbstractSignedJWTProvider {
 
-    public ShadowServiceAccountProvider() {
+    ShadowServiceAccountProvider() {
         super(false);
     }
 
     public String getGoogleIdentity(String owner) {
-        String shadowProject = AppSettings.requireProperty("SHADOW_PROJECT");
-        String shadowPattern = AppSettings.getProperty("SHADOW_USERNAME_PATTERN","%s-shadow");
+        String shadowProject = AppSettings.getInstance().getString(AppSettings.SHADOW_PROJECT);
+        String shadowPattern = AppSettings.getInstance().getString(AppSettings.SHADOW_USERNAME_PATTERN);
         String username;
         try {
             username = owner.split("@")[0];

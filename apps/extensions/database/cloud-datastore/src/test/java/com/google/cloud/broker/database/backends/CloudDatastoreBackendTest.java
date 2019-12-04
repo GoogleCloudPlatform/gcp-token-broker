@@ -44,7 +44,7 @@ public class CloudDatastoreBackendTest {
     }
 
     private static Datastore getService() {
-        String projectId = AppSettings.requireProperty("GCP_PROJECT");
+        String projectId = AppSettings.getInstance().getString(AppSettings.GCP_PROJECT);
         return DatastoreOptions.newBuilder().setProjectId(projectId).build().getService();
     }
 
@@ -61,10 +61,7 @@ public class CloudDatastoreBackendTest {
 
         // Create a new record
         HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("id", "alice@example.com");
-        values.put("creation_time", 1564094282994L);
-        values.put("value", "abcd".getBytes());
-        RefreshToken token = new RefreshToken(values);
+        RefreshToken token = new RefreshToken("alice@example.com", "abcd".getBytes(), 1564094282994L);
         CloudDatastoreBackend backend = new CloudDatastoreBackend();
         backend.save(token);
 
@@ -72,7 +69,7 @@ public class CloudDatastoreBackendTest {
         KeyFactory keyFactory = datastore.newKeyFactory().setKind("RefreshToken");
         Key key = keyFactory.newKey("alice@example.com");
         Entity entity = datastore.get(key);
-        assertEquals(entity.getValue("creation_time").get(), 1564094282994L);
+        assertEquals(entity.getValue("creationTime").get(), 1564094282994L);
         assertArrayEquals(((Blob) entity.getValue("value").get()).toByteArray(), "abcd".getBytes());
     }
 
@@ -86,17 +83,14 @@ public class CloudDatastoreBackendTest {
         KeyFactory keyFactory = datastore.newKeyFactory().setKind("RefreshToken");
         Key key = keyFactory.newKey("alice@example.com");
         Entity.Builder builder = Entity.newBuilder(key);
-        builder.set("creation_time", 1564094282994L);
+        builder.set("creationTime", 1564094282994L);
         builder.set("value", Blob.copyFrom("abcd".getBytes()));
         Entity entity = builder.build();
         datastore.put(entity);
 
         // Update the record with the same ID but different values
         HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("id", "alice@example.com");
-        values.put("creation_time", 2222222222222L);
-        values.put("value", "xyz".getBytes());
-        RefreshToken token = new RefreshToken(values);
+        RefreshToken token = new RefreshToken("alice@example.com", "xyz".getBytes(), 2222222222222L);
         CloudDatastoreBackend backend = new CloudDatastoreBackend();
         backend.save(token);
 
@@ -104,7 +98,7 @@ public class CloudDatastoreBackendTest {
         keyFactory = datastore.newKeyFactory().setKind("RefreshToken");
         key = keyFactory.newKey("alice@example.com");
         entity = datastore.get(key);
-        assertEquals(entity.getValue("creation_time").get(), 2222222222222L);
+        assertEquals(entity.getValue("creationTime").get(), 2222222222222L);
         assertArrayEquals(((Blob) entity.getValue("value").get()).toByteArray(), "xyz".getBytes());
     }
 
@@ -120,10 +114,7 @@ public class CloudDatastoreBackendTest {
         assertFalse(entities.hasNext());
 
         // Create a new record without specifying an ID
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("creation_time", 1564094282994L);
-        values.put("value", "abcd".getBytes());
-        RefreshToken token = new RefreshToken(values);
+        RefreshToken token = new RefreshToken(null, "abcd".getBytes(), 1564094282994L);
         CloudDatastoreBackend backend = new CloudDatastoreBackend();
         backend.save(token);
 
@@ -131,7 +122,7 @@ public class CloudDatastoreBackendTest {
         query = Query.newEntityQueryBuilder().setKind("RefreshToken").build();
         entities = datastore.run(query);
         Entity entity = entities.next();
-        assertEquals(entity.getValue("creation_time").get(), 1564094282994L);
+        assertEquals(entity.getValue("creationTime").get(), 1564094282994L);
         assertArrayEquals(((Blob) entity.getValue("value").get()).toByteArray(), "abcd".getBytes());
         assertFalse(entities.hasNext());
 
@@ -150,7 +141,7 @@ public class CloudDatastoreBackendTest {
         KeyFactory keyFactory = datastore.newKeyFactory().setKind("RefreshToken");
         Key key = keyFactory.newKey("alice@example.com");
         Entity.Builder builder = Entity.newBuilder(key);
-        builder.set("creation_time", 1564094282994L);
+        builder.set("creationTime", 1564094282994L);
         builder.set("value", Blob.copyFrom("abcd".getBytes()));
         Entity entity = builder.build();
         datastore.put(entity);
@@ -158,9 +149,9 @@ public class CloudDatastoreBackendTest {
         // Check that the record is correctly retrieved
         CloudDatastoreBackend backend = new CloudDatastoreBackend();
         RefreshToken token = (RefreshToken) backend.get(RefreshToken.class, "alice@example.com");
-        assertEquals(token.getValue("id"), "alice@example.com");
-        assertEquals(token.getValue("creation_time"), 1564094282994L);
-        assertArrayEquals((byte[]) token.getValue("value"), "abcd".getBytes());
+        assertEquals(token.getId(), "alice@example.com");
+        assertEquals(token.getCreationTime().longValue(), 1564094282994L);
+        assertArrayEquals(token.getValue(), "abcd".getBytes());
     }
 
     /**
@@ -182,15 +173,13 @@ public class CloudDatastoreBackendTest {
         KeyFactory keyFactory = datastore.newKeyFactory().setKind("RefreshToken");
         Key key = keyFactory.newKey("alice@example.com");
         Entity.Builder builder = Entity.newBuilder(key);
-        builder.set("creation_time", 1564094282994L);
+        builder.set("creationTime", 1564094282994L);
         builder.set("value", Blob.copyFrom("abcd".getBytes()));
         Entity entity = builder.build();
         datastore.put(entity);
 
         // Delete the record
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("id", "alice@example.com");
-        RefreshToken token = new RefreshToken(values);
+        RefreshToken token = new RefreshToken("alice@example.com", null, null);
         CloudDatastoreBackend backend = new CloudDatastoreBackend();
         backend.delete(token);
 

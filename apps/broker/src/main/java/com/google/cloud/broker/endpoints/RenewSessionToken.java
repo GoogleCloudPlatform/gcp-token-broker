@@ -11,13 +11,13 @@
 
 package com.google.cloud.broker.endpoints;
 
+import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import com.google.cloud.broker.sessions.SessionTokenUtils;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
 
 import com.google.cloud.broker.authentication.backends.AbstractAuthenticationBackend;
-import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.protobuf.RenewSessionTokenRequest;
 import com.google.cloud.broker.protobuf.RenewSessionTokenResponse;
 import com.google.cloud.broker.sessions.Session;
@@ -37,23 +37,23 @@ public class RenewSessionToken {
         Session session = SessionTokenUtils.getSessionFromRawToken(request.getSessionToken());
 
         // Verify that the caller is the authorized renewer for the toke
-        if (!session.getValue("renewer").equals(authenticatedUser)) {
+        if (!session.getRenewer().equals(authenticatedUser)) {
             throw Status.PERMISSION_DENIED.withDescription(String.format("Unauthorized renewer: %s", authenticatedUser)).asRuntimeException();
         }
 
         // Extend session's lifetime
         session.extendLifetime();
-        Model.save(session);
+        AbstractDatabaseBackend.getInstance().save(session);
 
         // Log success message
-        MDC.put("owner", session.getValue("owner").toString());
-        MDC.put("renewer", session.getValue("renewer").toString());
-        MDC.put("session_id", session.getValue("id").toString());
+        MDC.put("owner", session.getOwner());
+        MDC.put("renewer", session.getRenewer());
+        MDC.put("session_id", session.getId());
         LoggingUtils.logSuccess(RenewSessionToken.class.getSimpleName());
 
         // Return response
         RenewSessionTokenResponse response = RenewSessionTokenResponse.newBuilder()
-            .setExpiresAt((long) session.getValue("expires_at"))
+            .setExpiresAt(session.getExpiresAt())
             .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();

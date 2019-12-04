@@ -11,22 +11,26 @@
 
 package com.google.cloud.broker.database.backends;
 
+import java.util.Map;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
 
 
 public class AbstractDatabaseBackendTest {
 
     @Test
-    public void testGetInstance() {
-        AppSettings.setProperty("DATABASE_BACKEND", "com.example.DoesNotExist");
-        try {
-            AbstractDatabaseBackend.getInstance();
-            fail();
-        } catch (RuntimeException e) {
-            assertEquals("java.lang.ClassNotFoundException: com.example.DoesNotExist", e.getMessage());
+    public void testGetInstance() throws Exception {
+        try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.DATABASE_BACKEND, "com.example.DoesNotExist"))) {
+            try {
+                AbstractDatabaseBackend.getInstance();
+                fail();
+            } catch (RuntimeException e) {
+                assertEquals("java.lang.ClassNotFoundException: com.example.DoesNotExist", e.getMessage());
+            }
         }
     }
 

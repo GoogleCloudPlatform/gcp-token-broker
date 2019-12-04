@@ -44,7 +44,7 @@ Let's take an example:
 <img src="../img/access-example-users.svg">
 
 This provider requires that you set the following settings: [`DOMAIN_NAME`](settings.md#DOMAIN_NAME), and
-[`CLIENT_SECRET_PATH`](settings.md#CLIENT_SECRET_PATH).
+[`OAUTH_CLIENT_SECRET_JSON_PATH`](settings.md#OAUTH_CLIENT_SECRET_JSON_PATH).
 
 ## Service account provider
 

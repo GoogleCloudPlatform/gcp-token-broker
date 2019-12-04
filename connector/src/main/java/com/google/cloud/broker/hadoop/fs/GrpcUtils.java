@@ -23,22 +23,19 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 
 import com.google.cloud.broker.protobuf.BrokerGrpc;
 
-public class GrpcUtils {
+class GrpcUtils {
 
-    // Timeout for RPC calls
-    private static int DEADLINE_MILLISECONDS = 20*1000;
-
-    public static ManagedChannel newManagedChannel(String brokerHostname, int brokerPort, boolean useTLS, String tlsCertificate) {
+    static ManagedChannel newManagedChannel(String brokerHostname, int brokerPort, boolean useTLS, String tlsCertificate) {
         // Create the gRPC stub
         NettyChannelBuilder builder = NettyChannelBuilder.forAddress(brokerHostname, brokerPort);
         if (!useTLS) {
-            builder = builder.usePlaintext();
+            builder.usePlaintext();
         }
         else if (!tlsCertificate.equals("")) {
             // A certificate is provided, so add it to the stub's build
             InputStream inputStream = new ByteArrayInputStream(tlsCertificate.getBytes());
             try {
-                builder = builder.sslContext(GrpcSslContexts.forClient()
+                builder.sslContext(GrpcSslContexts.forClient()
                     .trustManager(inputStream).build());
             } catch (SSLException e) {
                 throw new RuntimeException(e);
@@ -46,16 +43,15 @@ public class GrpcUtils {
                 throw new IllegalArgumentException("The provided certificate for the broker service is invalid");
             }
         }
-        ManagedChannel managedChannel = builder
+        return builder
             .executor(Executors.newSingleThreadExecutor())
             .build();
-        return managedChannel;
     }
 
-    public static BrokerGrpc.BrokerBlockingStub newStub(ManagedChannel managedChannel) {
+    static BrokerGrpc.BrokerBlockingStub newStub(ManagedChannel managedChannel) {
+        int DEADLINE_MILLISECONDS = 20 * 1000; // Timeout for RPC calls
         return BrokerGrpc.newBlockingStub(managedChannel)
             .withDeadlineAfter(DEADLINE_MILLISECONDS, TimeUnit.MILLISECONDS);
     }
-
 
 }

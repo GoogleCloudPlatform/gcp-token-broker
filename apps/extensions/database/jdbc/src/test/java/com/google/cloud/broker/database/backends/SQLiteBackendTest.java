@@ -11,24 +11,32 @@
 
 package com.google.cloud.broker.database.backends;
 
+import java.util.Map;
+
+import com.google.cloud.broker.settings.SettingsOverride;
 import org.junit.*;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
 import com.google.cloud.broker.settings.AppSettings;
 
 
 public class SQLiteBackendTest extends JDBCBackendTest {
 
-    @ClassRule
-    public static final EnvironmentVariables environmentVariables = new EnvironmentVariables();
-
     private static JDBCBackend backend;
+    private static SettingsOverride backupSettings;
 
     @BeforeClass
     public static void setupClass() {
-        AppSettings.reset();
-        environmentVariables.set("APP_SETTING_DATABASE_JDBC_URL", "jdbc:sqlite::memory:");
         backend = new JDBCBackend();
+        // Override settings
+        backupSettings = new SettingsOverride(Map.of(
+            AppSettings.DATABASE_JDBC_URL, "jdbc:sqlite::memory:"
+        ));
+    }
+
+    @AfterClass
+    public static void teardDownClass() throws Exception {
+        // Restore settings
+        backupSettings.restore();
     }
 
     @Before

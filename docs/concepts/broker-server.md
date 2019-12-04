@@ -19,7 +19,7 @@ To run the server:
 1. Retrieve the JAR file for the broker server package from [Maven Central](https://search.maven.org/search?q=g:com.google.cloud.broker%20AND%20a:broker):
    ```xml
    <groupId>com.google.cloud.broker</groupId>
-   <artifactId>cache-backend-redis</artifactId>
+   <artifactId>broker</artifactId>
    ```
 2. Retrieve all the JAR files from Maven Central for the broker extensions (i.e. the [encryption backend](encryption.md#encryption-backends),
    [database backend](database.md#database-backends), [remote cache backends](caching.md#remote-cache-backends))

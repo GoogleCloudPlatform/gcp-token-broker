@@ -12,6 +12,7 @@
 package com.google.cloud.broker.settings;
 
 import static org.junit.Assert.*;
+import com.typesafe.config.ConfigException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
@@ -22,30 +23,33 @@ public class AppSettingsTest {
     public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
     @Test
-    public void testrequireProperty() {
-        try {
-            AppSettings.requireProperty("xxxx");
-            fail();
-        } catch (IllegalStateException e) {
-            assertEquals("The `xxxx` setting is not set", e.getMessage());
-        }
-    }
-
-    @Test
     public void testEnvironmentVariables() {
-        assertEquals(null, AppSettings.getProperty("FOO"));
+        // Check that the test variable doesn't exist in the environment yet
+        try {
+            AppSettings.getInstance().getString("FOO");
+            fail();
+        } catch (ConfigException.Missing e) {
+            // Expected
+        }
 
+        // Set the test environment variable and reload the settings
         environmentVariables.set("APP_SETTING_FOO", "BAR");
         AppSettings.reset();
-        assertEquals("BAR", AppSettings.getProperty("FOO"));
-    }
 
-    @Test
-    public void testReset() {
-        AppSettings.setProperty("foo", "bar");
-        assertEquals("bar", AppSettings.getProperty("foo"));
+        // Check that the test setting has been loaded
+        assertEquals("BAR", AppSettings.getInstance().getString("FOO"));
+
+        // Remove the test environment variable and reload the settings
+        environmentVariables.clear("APP_SETTING_FOO");
         AppSettings.reset();
-        assertEquals(null, AppSettings.getProperty("foo"));
+
+        // Check that the test setting is gone
+        try {
+            AppSettings.getInstance().getString("FOO");
+            fail();
+        } catch (ConfigException.Missing e) {
+            // Expected
+        }
     }
 
 }

@@ -36,13 +36,13 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 
 import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
 import com.google.cloud.broker.utils.EnvUtils;
 import com.google.cloud.broker.utils.TimeUtils;
 import com.google.cloud.broker.sessions.Session;
 import com.google.cloud.broker.sessions.SessionTokenUtils;
-import com.google.cloud.broker.database.models.Model;
 import static com.google.cloud.broker.protobuf.BrokerGrpc.BrokerBlockingStub;
 import com.google.cloud.broker.protobuf.*;
 
@@ -68,23 +68,25 @@ public class BrokerServerTest {
 
     @BeforeClass
     public static void setupClass() {
-        AppSettings.reset();
+        // Note: Here we're changing the environment variables instead of using the SettingsOverride class,
+        // to let the test settings apply both to the main thread and to the thread where the test server
+        // is running.
         HashMap<String, String> env = new HashMap(System.getenv());
-        env.put("APP_SETTING_PROVIDER", "com.google.cloud.broker.accesstokens.providers.MockProvider");
-        env.put("APP_SETTING_DATABASE_BACKEND", "com.google.cloud.broker.database.backends.DummyDatabaseBackend");
-        env.put("APP_SETTING_REMOTE_CACHE", "com.google.cloud.broker.caching.remote.DummyCache");
-        env.put("APP_SETTING_ENCRYPTION_BACKEND", "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
-        env.put("APP_SETTING_AUTHENTICATION_BACKEND", "com.google.cloud.broker.authentication.backends.MockAuthenticator");
-        env.put("APP_SETTING_SCOPE_WHITELIST", "https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/bigquery");
-        env.put("APP_SETTING_PROXY_USER_WHITELIST", "hive@FOO.BAR");
-        env.put("APP_SETTING_SESSION_RENEW_PERIOD", SESSION_RENEW_PERIOD.toString());
-        env.put("APP_SESSION_MAXIMUM_LIFETIME", SESSION_MAXIMUM_LIFETIME.toString());
+        env.put("APP_SETTING_" + AppSettings.PROVIDER, "com.google.cloud.broker.accesstokens.providers.MockProvider");
+        env.put("APP_SETTING_" + AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend");
+        env.put("APP_SETTING_" + AppSettings.REMOTE_CACHE, "com.google.cloud.broker.caching.remote.DummyCache");
+        env.put("APP_SETTING_" + AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
+        env.put("APP_SETTING_" + AppSettings.AUTHENTICATION_BACKEND, "com.google.cloud.broker.authentication.backends.MockAuthenticator");
+        env.put("APP_SETTING_" + AppSettings.SCOPE_WHITELIST, "https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/bigquery");
+        env.put("APP_SETTING_" + AppSettings.PROXY_USER_WHITELIST, "hive@FOO.BAR");
+        env.put("APP_SETTING_" + AppSettings.SESSION_RENEW_PERIOD, SESSION_RENEW_PERIOD.toString());
+        env.put("APP_SESSION_" + AppSettings.SESSION_MAXIMUM_LIFETIME, SESSION_MAXIMUM_LIFETIME.toString());
         mockStatic(EnvUtils.class);
         when(EnvUtils.getenv()).thenReturn(env);
     }
 
     @After
-    public void teardown() {
+    public void tearDown() {
         // Clear the database
         ConcurrentMap<String, Object> map = DummyDatabaseBackend.getMap();
         map.clear();
@@ -100,10 +102,8 @@ public class BrokerServerTest {
             throw new RuntimeException(e);
         }
 
-        BrokerBlockingStub stub = BrokerGrpc.newBlockingStub(
+        return BrokerGrpc.newBlockingStub(
             grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build()));
-
-        return stub;
     }
 
     public BrokerBlockingStub addSPNEGOTokenToMetadata(BrokerBlockingStub stub, String principal) {
@@ -124,13 +124,8 @@ public class BrokerServerTest {
 
     private Session createSession() {
         // Create a session in the database
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("owner", ALICE);
-        values.put("renewer", "yarn@FOO.BAR");
-        values.put("scope", GCS);
-        values.put("target", MOCK_BUCKET);
-        Session session = new Session(values);
-        Model.save(session);
+        Session session = new Session(null, ALICE, "yarn@FOO.BAR", MOCK_BUCKET, GCS, null, null, null);
+        AbstractDatabaseBackend.getInstance().save(session);
         return session;
     }
 
@@ -154,12 +149,12 @@ public class BrokerServerTest {
 
         // Check that the session was created
         Session session = SessionTokenUtils.getSessionFromRawToken(response.getSessionToken());
-        assertEquals(ALICE, session.getValue("owner"));
-        assertEquals("yarn@FOO.BAR", session.getValue("renewer"));
-        assertEquals(GCS, session.getValue("scope"));
-        assertEquals(MOCK_BUCKET, session.getValue("target"));
-        assertEquals(now, session.getValue("creation_time"));
-        assertEquals(now + SESSION_RENEW_PERIOD, session.getValue("expires_at"));
+        assertEquals(ALICE, session.getOwner());
+        assertEquals("yarn@FOO.BAR", session.getRenewer());
+        assertEquals(GCS, session.getScope());
+        assertEquals(MOCK_BUCKET, session.getTarget());
+        assertEquals(now, session.getCreationTime());
+        assertEquals(now + SESSION_RENEW_PERIOD, session.getExpiresAt().longValue());
     }
 
     @Test
@@ -176,7 +171,7 @@ public class BrokerServerTest {
 
         // Check that the session was deleted
         try {
-            Model.get(Session.class, (String) session.getValue("id"));
+            AbstractDatabaseBackend.getInstance().get(Session.class, session.getId());
             fail("DatabaseObjectNotFound not thrown");
         }
         catch (DatabaseObjectNotFound e) {}
@@ -201,7 +196,7 @@ public class BrokerServerTest {
         }
 
         // Check that the session still exists
-        Model.get(Session.class, (String) session.getValue("id"));
+        AbstractDatabaseBackend.getInstance().get(Session.class, session.getId());
     }
 
     @Test
@@ -226,8 +221,8 @@ public class BrokerServerTest {
             .build());
 
         // Check that the session's lifetime has been extended
-        session = (Session) Model.get(Session.class, (String) session.getValue("id"));
-        assertEquals( newNow + SESSION_RENEW_PERIOD, session.getValue("expires_at"));
+        session = (Session) AbstractDatabaseBackend.getInstance().get(Session.class, session.getId());
+        assertEquals( newNow + SESSION_RENEW_PERIOD, session.getExpiresAt().longValue());
     }
 
     @Test
@@ -252,8 +247,8 @@ public class BrokerServerTest {
             .build());
 
         // Check that the session's lifetime has been extended up to the maximum lifetime
-        session = (Session) Model.get(Session.class, (String) session.getValue("id"));
-        assertEquals( newNow + SESSION_MAXIMUM_LIFETIME, session.getValue("expires_at"));
+        session = (Session) AbstractDatabaseBackend.getInstance().get(Session.class, (String) session.getId());
+        assertEquals( newNow + SESSION_MAXIMUM_LIFETIME, session.getExpiresAt().longValue());
     }
 
     @Test
@@ -275,7 +270,7 @@ public class BrokerServerTest {
         }
 
         // Check that the session still exists
-        Model.get(Session.class, (String) session.getValue("id"));
+        AbstractDatabaseBackend.getInstance().get(Session.class, session.getId());
     }
 
     @Test

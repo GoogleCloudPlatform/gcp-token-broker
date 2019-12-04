@@ -11,17 +11,16 @@
 
 package com.google.cloud.broker.endpoints;
 
-import java.util.HashMap;
-
 import com.google.cloud.broker.logging.LoggingUtils;
+import com.google.cloud.broker.settings.AppSettings;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
 
-import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.sessions.Session;
 import com.google.cloud.broker.sessions.SessionTokenUtils;
 import com.google.cloud.broker.validation.Validation;
 import com.google.cloud.broker.authentication.backends.AbstractAuthenticationBackend;
+import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import com.google.cloud.broker.protobuf.GetSessionTokenRequest;
 import com.google.cloud.broker.protobuf.GetSessionTokenResponse;
 
@@ -40,13 +39,8 @@ public class GetSessionToken {
         Validation.validateImpersonator(authenticatedUser, request.getOwner());
 
         // Create session
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("owner", request.getOwner());
-        values.put("renewer", request.getRenewer());
-        values.put("target", request.getTarget());
-        values.put("scope", request.getScope());
-        Session session = new Session(values);
-        Model.save(session);
+        Session session = new Session(null, request.getOwner(), request.getRenewer(), request.getTarget(), request.getScope(), null, null, null);
+        AbstractDatabaseBackend.getInstance().save(session);
 
         // Generate session token
         String sessionToken = SessionTokenUtils.marshallSessionToken(session);
@@ -54,7 +48,7 @@ public class GetSessionToken {
         // Log success message
         MDC.put("owner", request.getOwner());
         MDC.put("renewer", request.getRenewer());
-        MDC.put("session_id", session.getValue("id").toString());
+        MDC.put("session_id", session.getId());
         LoggingUtils.logSuccess(GetSessionToken.class.getSimpleName());
 
         // Return response

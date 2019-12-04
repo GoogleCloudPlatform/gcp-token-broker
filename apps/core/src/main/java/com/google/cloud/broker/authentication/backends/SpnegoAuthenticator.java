@@ -41,12 +41,12 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
 
     private void initLogin() {
         // Parse the JSON-formatted setting
-        String keytabs = AppSettings.getProperty("KEYTABS");
+        String keytabs = AppSettings.getInstance().getString(AppSettings.KEYTABS);
         Iterator<JsonNode> iterator;
         try {
             iterator = new ObjectMapper().readTree(keytabs).elements();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new IllegalArgumentException("Invalid `" + AppSettings.KEYTABS + "` setting");
         }
 
         // Log in each individual principal
@@ -56,7 +56,7 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
             JsonNode keytab = item.get("keytab");
 
             if (principal == null || keytab == null) {
-                throw new IllegalArgumentException("Invalid `KEYTABS` setting");
+                throw new IllegalArgumentException("Invalid `" + AppSettings.KEYTABS + "` setting");
             }
 
             File keytabFile = new File(keytab.asText());
@@ -65,7 +65,7 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
         }
 
         if (logins.size() == 0) {
-            throw new IllegalArgumentException("Invalid `KEYTABS` setting");
+            throw new IllegalArgumentException("Invalid `" + AppSettings.KEYTABS + "` setting");
         }
     }
 
@@ -75,8 +75,7 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
             LoginContext loginContext = new LoginContext(
                     "", new Subject(), null, getConfiguration(principal, keytabFile));
             loginContext.login();
-            Subject subject = loginContext.getSubject();
-            return subject;
+            return loginContext.getSubject();
         } catch (LoginException e) {
             throw new RuntimeException("Failed login for principal `" + principal + "` with keytab `" + keytabFile.getPath() + "`");
         }
@@ -118,22 +117,20 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
         String authenticatedUser = null;
 
         for (Subject login : logins) {
-            authenticatedUser = Subject.doAs(login, new PrivilegedAction<String>() {
-                public String run() {
-                    try {
-                        GSSManager manager = GSSManager.getInstance();
-                        Oid spnegoOid = new Oid("1.3.6.1.5.5.2");
-                        GSSCredential serverCredential = manager.createCredential(null,
-                            GSSCredential.DEFAULT_LIFETIME,
-                            spnegoOid,
-                            GSSCredential.ACCEPT_ONLY);
-                        GSSContext context = manager.createContext(serverCredential);
-                        byte[] tokenBytes = Base64.getDecoder().decode(spnegoToken.getBytes());
-                        context.acceptSecContext(tokenBytes, 0, tokenBytes.length);
-                        return context.getSrcName().toString();
-                    } catch (GSSException e) {
-                        return null;
-                    }
+            authenticatedUser = Subject.doAs(login, (PrivilegedAction<String>) () -> {
+                try {
+                    GSSManager manager = GSSManager.getInstance();
+                    Oid spnegoOid = new Oid("1.3.6.1.5.5.2");
+                    GSSCredential serverCredential = manager.createCredential(null,
+                        GSSCredential.DEFAULT_LIFETIME,
+                        spnegoOid,
+                        GSSCredential.ACCEPT_ONLY);
+                    GSSContext context = manager.createContext(serverCredential);
+                    byte[] tokenBytes = Base64.getDecoder().decode(spnegoToken.getBytes());
+                    context.acceptSecContext(tokenBytes, 0, tokenBytes.length);
+                    return context.getSrcName().toString();
+                } catch (GSSException e) {
+                    return null;
                 }
             });
             if (authenticatedUser != null) {

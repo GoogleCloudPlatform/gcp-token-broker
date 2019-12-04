@@ -22,16 +22,18 @@ public class SessionAuthenticator {
     public Session authenticateSession() {
         String authorizationHeader = AuthorizationHeaderServerInterceptor.AUTHORIZATION_CONTEXT_KEY.get();
 
+        // Make sure this is indeed
         if (! authorizationHeader.startsWith("BrokerSession ")) {
             return null;
         }
 
+        // Extract the session token from the authorization header
         String token = authorizationHeader.split("\\s")[1];
 
         Session session = (Session) new SessionCacheFetcher(token).fetch();
 
         if (session.isExpired()) {
-            throw Status.UNAUTHENTICATED.withDescription("Expired session ID: " + session.getValue("id")).asRuntimeException();
+            throw Status.UNAUTHENTICATED.withDescription("Expired session ID: " + session.getId()).asRuntimeException();
         }
 
         return session;
