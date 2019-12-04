@@ -103,14 +103,21 @@ public class SpnegoAuthenticatorTest {
      */
     @Test
     public void testMisformattedJSONSetting() throws Exception {
-        try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, "[{\"foo\": \"bar\"}]"))) {
-            try {
-                SpnegoAuthenticator auth = new SpnegoAuthenticator();
-                auth.authenticateUser();
-                fail();
-            } catch (Exception e) {
-                assertEquals(IllegalArgumentException.class, e.getClass());
-                assertEquals("Invalid `KEYTABS` setting", e.getMessage());
+        String[] options = {
+            "foobar",                     // Invalid JSON
+            "[{\"keytab\": \"bar\"}]",    // Missing principal
+            "[{\"principal\": \"bar\"}]"  // Missing keytab
+        };
+        for (String option: options ) {
+            try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, option))) {
+                try {
+                    SpnegoAuthenticator auth = new SpnegoAuthenticator();
+                    auth.authenticateUser();
+                    fail();
+                } catch (Exception e) {
+                    assertEquals(IllegalArgumentException.class, e.getClass());
+                    assertEquals("Invalid `KEYTABS` setting", e.getMessage());
+                }
             }
         }
     }
