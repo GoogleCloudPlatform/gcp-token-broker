@@ -47,5 +47,5 @@ client_secret*.json
 .idea
 *.iml
 
-# Backup artifacts
-# backups/**
+# Backup artifacts for the demo deployment
+backups/**
