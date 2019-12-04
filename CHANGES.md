@@ -1,4 +1,4 @@
-## 0.5.0 (XXX)
+## 0.5.0 (November 22, 2019)
 
 - Rewrote Authorizer app from Python to Java.
 - Refactored settings system to use the Typesafe Config library.
