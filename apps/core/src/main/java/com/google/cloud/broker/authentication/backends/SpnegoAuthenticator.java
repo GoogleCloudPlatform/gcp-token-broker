@@ -9,7 +9,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.apps.brokerservice.authentication.backends;
+package com.google.cloud.broker.authentication.backends;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,6 +60,10 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
             }
 
             File keytabFile = new File(keytab.asText());
+            if (! keytabFile.exists()) {
+                throw new IllegalArgumentException("Keytab `" + keytab.asText() + "` in `" + AppSettings.KEYTABS + "` setting does not exist");
+            }
+
             Subject subject = principalLogin(principal.asText(), keytabFile);
             logins.add(subject);
         }
@@ -77,7 +81,7 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
             loginContext.login();
             return loginContext.getSubject();
         } catch (LoginException e) {
-            throw new RuntimeException("Failed login for principal `" + principal + "` with keytab `" + keytabFile.getPath() + "`");
+            throw new RuntimeException("Failed login for principal `" + principal + "` with keytab `" + keytabFile.getPath() + "`. Error message: " + e.getMessage());
         }
     }
 
@@ -92,7 +96,7 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
                 options.put("doNotPrompt", "true");
                 options.put("useKeyTab", "true");
                 options.put("storeKey", "true");
-                options.put("isInitiator", "true");
+                options.put("isInitiator", "false");
                 return new AppConfigurationEntry[] {
                     new AppConfigurationEntry(
                         "com.sun.security.auth.module.Krb5LoginModule",

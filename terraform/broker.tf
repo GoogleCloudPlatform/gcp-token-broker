@@ -264,7 +264,7 @@ broker:
       ENCRYPTION_DEK_URI: 'gs://${google_storage_bucket.encryption_bucket.name}/dek.json'
       PROXY_USER_WHITELIST: 'hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}'
       DOMAIN_NAME: '${var.domain}'
-      KEYTABS: '{"keytab": "/keytabs/broker.keytab", "principal": "broker/${var.broker_service_hostname}@${local.dataproc_realm}""}'
+      KEYTABS: '[{"keytab": "/keytabs/broker.keytab", "principal": "broker/${var.broker_service_hostname}@${local.dataproc_realm}"}]'
       TLS_KEY_PATH: '/secrets/tls.pem'
       TLS_CRT_PATH: '/secrets/tls.crt'
       OAUTH_CLIENT_SECRET_JSON_PATH: '/secrets/client_secret.json'

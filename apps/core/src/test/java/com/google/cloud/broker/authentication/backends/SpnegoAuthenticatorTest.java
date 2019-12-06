@@ -53,31 +53,33 @@ public class SpnegoAuthenticatorTest {
         fakeKDC.stop();
     }
 
-    private static byte[] generateToken() {
-        String SPNEGO_OID = "1.3.6.1.5.5.2";
-        String KRB5_MECHANISM_OID = "1.2.840.113554.1.2.2";
-        String KRB5_PRINCIPAL_NAME_OID = "1.2.840.113554.1.2.2.1";
+    private static String generateSpnegoToken(String principal) {
+        Subject subject = fakeKDC.login(principal);
+        return Subject.doAs(subject, (PrivilegedAction<String>) () -> {
+            String SPNEGO_OID = "1.3.6.1.5.5.2";
+            String KRB5_MECHANISM_OID = "1.2.840.113554.1.2.2";
+            String KRB5_PRINCIPAL_NAME_OID = "1.2.840.113554.1.2.2.1";
+            byte[] token;
+            try {
+                // Create GSS context for the broker service and the logged-in user
+                Oid krb5Mechanism = new Oid(KRB5_MECHANISM_OID);
+                Oid krb5PrincipalNameType = new Oid(KRB5_PRINCIPAL_NAME_OID);
+                Oid spnegoOid = new Oid(SPNEGO_OID);
+                GSSManager manager = GSSManager.getInstance();
+                GSSName gssServerName = manager.createName(BROKER, krb5PrincipalNameType, krb5Mechanism);
+                GSSContext gssContext = manager.createContext(
+                    gssServerName, spnegoOid, null, GSSCredential.DEFAULT_LIFETIME);
+                gssContext.requestMutualAuth(true);
+                gssContext.requestCredDeleg(true);
 
-        byte[] token;
-        try {
-            // Create GSS context for the broker service and the logged-in user
-            Oid krb5Mechanism = new Oid(KRB5_MECHANISM_OID);
-            Oid krb5PrincipalNameType = new Oid(KRB5_PRINCIPAL_NAME_OID);
-            Oid spnegoOid = new Oid(SPNEGO_OID);
-            GSSManager manager = GSSManager.getInstance();
-            GSSName gssServerName = manager.createName(BROKER, krb5PrincipalNameType, krb5Mechanism);
-            GSSContext gssContext = manager.createContext(
-                gssServerName, spnegoOid, null, GSSCredential.DEFAULT_LIFETIME);
-            gssContext.requestMutualAuth(true);
-            gssContext.requestCredDeleg(true);
-
-            // Generate the SPNEGO token
-            token = new byte[0];
-            token = gssContext.initSecContext(token, 0, token.length);
-            return token;
-        } catch (GSSException e) {
-            throw new RuntimeException(e);
-        }
+                // Generate the SPNEGO token
+                token = new byte[0];
+                token = gssContext.initSecContext(token, 0, token.length);
+                return Base64.getEncoder().encodeToString(token);
+            } catch (GSSException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     /**
@@ -85,14 +87,14 @@ public class SpnegoAuthenticatorTest {
      */
     @Test
     public void testInexistentKeytabPath() throws Exception {
-        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, "[{\"keytab\": \"/home/does-not-exist\", \"principal\": \"blah\"}]"))) {
+        String json = "[{\"keytab\": \"/home/does-not-exist\", \"principal\": \"blah\"}]";
+        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, json))) {
             try {
                 SpnegoAuthenticator auth = new SpnegoAuthenticator();
                 auth.authenticateUser();
                 fail();
-            } catch (RuntimeException e) {
-                assertEquals(RuntimeException.class, e.getClass());
-                assertEquals("Failed login for principal `blah` with keytab `/home/does-not-exist`", e.getMessage());
+            } catch (IllegalArgumentException e) {
+                assertEquals("Keytab `/home/does-not-exist` in `KEYTABS` setting does not exist", e.getMessage());
             }
         }
     }
@@ -114,32 +116,35 @@ public class SpnegoAuthenticatorTest {
                     SpnegoAuthenticator auth = new SpnegoAuthenticator();
                     auth.authenticateUser();
                     fail();
-                } catch (Exception e) {
-                    assertEquals(IllegalArgumentException.class, e.getClass());
+                } catch (IllegalArgumentException e) {
                     assertEquals("Invalid `KEYTABS` setting", e.getMessage());
                 }
             }
         }
     }
 
+    @Test
     public void testInvalidKeytab() throws Exception {
         Path fakeKeytab = Files.createTempFile("fake", "keytab");
-        try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, "[{\"keytab\": \"" + fakeKeytab.toString() + "\", \"principal\": \"blah\"}]"))) {
+        String json = "[{\"keytab\": \"" + fakeKeytab.toString() + "\", \"principal\": \"blah\"}]";
+        try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, json))) {
             try {
+                String token = generateSpnegoToken("alice");
                 SpnegoAuthenticator auth = new SpnegoAuthenticator();
-                auth.authenticateUser();
+                auth.authenticateUser("Negotiate " + token);
                 fail();
-            } catch (IllegalStateException e) {
-                assertEquals("Failed login for principal `blah` with keytab `" + fakeKeytab.toString() + "`", e.getMessage());
+            } catch (StatusRuntimeException e) {
+                assertEquals(Status.UNAUTHENTICATED.getCode(), e.getStatus().getCode());
+                assertEquals("UNAUTHENTICATED: SPNEGO authentication failed", e.getMessage());
             }
         }
     }
 
     @Test
     public void testHeaderDoesntStartWithNegotiate() throws Exception {
-        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, "[{\"keytab\": \"" + fakeKDC.getKeytabPath(BROKER) + "\", \"principal\": \"" + BROKER + "\"}]"))) {
-
-            SpnegoAuthenticator auth = (SpnegoAuthenticator) AbstractAuthenticationBackend.getInstance();
+        String json = "[{\"keytab\": \"" + fakeKDC.getKeytabPath(BROKER) + "\", \"principal\": \"" + BROKER + "\"}]";
+        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, json))) {
+            SpnegoAuthenticator auth = new SpnegoAuthenticator();
             try {
                 auth.authenticateUser("xxx");
                 fail();
@@ -152,7 +157,8 @@ public class SpnegoAuthenticatorTest {
 
     @Test
     public void testInvalidSpnegoToken() throws Exception {
-        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, "[{\"keytab\": \"" + fakeKDC.getKeytabPath(BROKER) + "\", \"principal\": \"" + BROKER + "\"}]"))) {
+        String json = "[{\"keytab\": \"" + fakeKDC.getKeytabPath(BROKER) + "\", \"principal\": \"" + BROKER + "\"}]";
+        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, json))) {
             SpnegoAuthenticator auth = new SpnegoAuthenticator();
             try {
                 auth.authenticateUser("Negotiate xxx");
@@ -169,16 +175,11 @@ public class SpnegoAuthenticatorTest {
      */
     @Test
     public void testSuccess() throws Exception {
-        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, "[{\"keytab\": \"" + fakeKDC.getKeytabPath(BROKER) + "\", \"principal\": \"" + BROKER + "\"}]"))) {
-            // Let Alice generate a token
-            Subject alice = fakeKDC.login("alice");
-            byte[] token = Subject.doAs(alice, (PrivilegedAction<byte[]>) () -> {
-                return generateToken();
-            });
-            // Let the SpnegoAuthenticator decrypt the token and authenticate Alice
-            String encodedToken = Base64.getEncoder().encodeToString(token);
+        String json = "[{\"keytab\": \"" + fakeKDC.getKeytabPath(BROKER) + "\", \"principal\": \"" + BROKER + "\"}]";
+        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, json))) {
+            String token = generateSpnegoToken("alice");
             SpnegoAuthenticator auth = new SpnegoAuthenticator();
-            String authenticateUser = auth.authenticateUser("Negotiate " + encodedToken);
+            String authenticateUser = auth.authenticateUser("Negotiate " + token);
             assertEquals("alice@EXAMPLE.COM", authenticateUser);
         }
     }
