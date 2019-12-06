@@ -12,6 +12,8 @@
 package com.google.cloud.broker.hadoop.fs;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -19,7 +21,6 @@ import java.nio.file.Paths;
 import io.grpc.ManagedChannel;
 import io.grpc.Metadata;
 import io.grpc.stub.MetadataUtils;
-import com.google.api.client.http.GenericUrl;
 import com.google.common.io.BaseEncoding;
 import org.ietf.jgss.GSSException;
 import org.apache.hadoop.conf.Configuration;
@@ -49,11 +50,11 @@ final class BrokerGateway {
 
         // Extract the host and port from the URI
         String brokerUri = config.get(CONFIG_URI);
-        GenericUrl url;
+        URL url;
         try {
-            url = new GenericUrl(brokerUri);
+            url = new URL(brokerUri);
         }
-        catch (IllegalArgumentException e) {
+        catch (MalformedURLException e) {
             throw new RuntimeException("Invalid value for property `" + CONFIG_URI + "`");
         }
         String host = url.getHost();
@@ -61,15 +62,15 @@ final class BrokerGateway {
 
         // Determine if TLS should be used
         boolean useTLS;
-        String scheme = url.getScheme();
-        if (scheme.equals("http")) {
+        String protocol = url.getProtocol();
+        if (protocol.equals("http")) {
             useTLS = false;
         }
-        else if (scheme.equals("https")) {
+        else if (protocol.equals("https")) {
             useTLS = true;
         }
         else {
-            throw new RuntimeException("Incorrect URI scheme `" + scheme + " ` in `" + CONFIG_URI + "` property: " + brokerUri);
+            throw new RuntimeException("Incorrect URI scheme `" + protocol + " ` in `" + CONFIG_URI + "` property: " + brokerUri);
         }
 
         String tlsCertificate = config.get(CONFIG_CERTIFICATE);
