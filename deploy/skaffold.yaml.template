@@ -13,10 +13,10 @@ apiVersion: skaffold/v1
 kind: Config
 build:
   artifacts:
-  - image: gcr.io/PROJECT/broker
+  - image: gcr.io/PROJECT/broker-server
     context: ../
     docker:
-      dockerfile: ./apps/broker/Dockerfile
+      dockerfile: ./apps/broker-server/Dockerfile
   - image: gcr.io/PROJECT/authorizer
     context: ../
     docker:
@@ -24,10 +24,10 @@ build:
 deploy:
   helm:
     releases:
-    - name: broker
-      chartPath: ./broker
+    - name: broker-server
+      chartPath: ./broker-server
       values:
-        broker.image: gcr.io/PROJECT/broker
+        broker.image: gcr.io/PROJECT/broker-server
       valuesFiles:
         - ./values_override.yaml
     - name: authorizer

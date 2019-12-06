@@ -124,7 +124,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>com.google.cloud.broker.authorization.Authorizer</mainClass>
+                                    <mainClass>com.google.cloud.broker.apps.authorizer.Authorizer</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>

@@ -256,7 +256,7 @@ resource "local_file" "helm_values" {
 
 # Broker config -----------------------
 broker:
-  image: 'gcr.io/${var.gcp_project}/broker'
+  image: 'gcr.io/${var.gcp_project}/broker-server'
   app:
     settings:
       GCP_PROJECT: '${var.gcp_project}'

@@ -179,8 +179,8 @@ To deploy the broker service, run the following commands **from the root of the 
 
    ```
    export BROKER_VERSION=$(cat VERSION)
-   mkdir -p apps/broker/target
-   curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker/${BROKER_VERSION}/broker-${BROKER_VERSION}-jar-with-dependencies.jar > apps/broker/target/broker-${BROKER_VERSION}-jar-with-dependencies.jar
+   mkdir -p apps/broker-server/target
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker/${BROKER_VERSION}/broker-${BROKER_VERSION}-jar-with-dependencies.jar > apps/broker-server/target/broker-${BROKER_VERSION}-jar-with-dependencies.jar
    mkdir -p apps/extensions/caching/redis/target
    curl https://repo1.maven.org/maven2/com/google/cloud/broker/cache-backend-redis/${BROKER_VERSION}/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar > apps/extensions/caching/redis/target/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar
    mkdir -p apps/extensions/database/cloud-datastore/target
@@ -362,7 +362,7 @@ The broker service needs a keytab to authenticate incoming requests.
 3. Restart the broker Kubernetes pods:
 
    ```shell
-   helm upgrade --recreate-pods -f deploy/values_override.yaml broker deploy/broker
+   helm upgrade --recreate-pods -f deploy/values_override.yaml broker-server deploy/broker-server
    ```
 4. You are now ready to do some testing. Refer to the [tutorials](../tutorials/index.md) section to run
    some sample Hadoop jobs and try out the broker's functionality.
@@ -407,7 +407,7 @@ To build the containers:
 
 ```shell
 # Broker service
-docker build -f ./apps/broker/Dockerfile -t gcr.io/$PROJECT/broker .
+docker build -f ./apps/broker-server/Dockerfile -t gcr.io/$PROJECT/broker .
 docker push gcr.io/$PROJECT/broker
 
 # Authorizer
@@ -417,7 +417,7 @@ docker push gcr.io/$PROJECT/authorizer
 
 To deploy with Helm and Kubernetes:
 ```shell
-helm install -f deploy/values_override.yaml --name broker deploy/broker
+helm install -f deploy/values_override.yaml --name broker-server deploy/broker-server
 helm install -f deploy/values_override.yaml --name authorizer deploy/authorizer
 ```
 
@@ -446,7 +446,7 @@ of workers in multiple, combinable ways:
   following command:
 
   ```shell
-  helm upgrade -f <VALUE_FILE.yaml> broker deploy/broker
+  helm upgrade -f <VALUE_FILE.yaml> broker-server deploy/broker-server
   ```
 * Number of threads, i.e. the number of gRPC server instances running in each container,
   by changing the `NUM_SERVER_THREADS` broker setting.

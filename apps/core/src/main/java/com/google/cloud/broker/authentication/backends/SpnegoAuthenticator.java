@@ -9,7 +9,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.authentication.backends;
+package com.google.cloud.broker.apps.brokerservice.authentication.backends;
 
 import java.io.File;
 import java.io.IOException;

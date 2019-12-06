@@ -115,7 +115,7 @@ Follow these steps to run the test suite:
 
     ```shell
     docker exec -it \
-      broker-dev bash -c "mvn test --projects apps/core,apps/broker \
+      broker-dev bash -c "mvn test --projects apps/core,apps/broker-server \
       -DfailIfNoTests=false -Dtest=ValidationTest"
     ```
 
@@ -124,7 +124,7 @@ Follow these steps to run the test suite:
 
     ```shell
     docker exec -it \
-      broker-dev bash -c "mvn test --projects apps/core,apps/broker \
+      broker-dev bash -c "mvn test --projects apps/core,apps/broker-server \
       -DfailIfNoTests=false -Dtest=ValidationTest#testValidateScope"
     ```
 
@@ -149,5 +149,5 @@ Other tests do not need those variables.
    docker exec -it broker-dev bash -c "python3 -m http.server 7070"
    ```
 4. You can now browse the coverage reports for each component, for example:
-   * Broker service: http://localhost:7070/apps/broker/target/site/jacoco/index.html
+   * Broker service: http://localhost:7070/apps/broker-server/target/site/jacoco/index.html
    * Cloud Datastore backend: http://localhost:7070/apps/extensions/database/cloud-datastore/target/site/jacoco/index.html

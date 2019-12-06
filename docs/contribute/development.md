@@ -11,7 +11,7 @@ You can use docker to create a container dedicated for development tasks.
 2. Install the required dependencies in the container:
 
    ```shell
-   docker exec -it broker-dev bash -- apps/broker/install-dev.sh
+   docker exec -it broker-dev bash -- apps/broker-server/install-dev.sh
    ```
 
 This installs all the dependencies needed to build packages and run the tests.

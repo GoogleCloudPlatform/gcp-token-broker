@@ -44,22 +44,32 @@ limitations under the License.
         <artifactId>google-auth-library-oauth2-http</artifactId>
         <version>0.17.1</version>
       </dependency>
-        <dependency>
-            <groupId>com.google.api-client</groupId>
-            <artifactId>google-api-client</artifactId>
-            <version>1.30.3</version>
-        </dependency>
+      <dependency>
+        <groupId>com.google.api-client</groupId>
+        <artifactId>google-api-client</artifactId>
+        <version>1.30.3</version>
+      </dependency>
+
       <!-- For local cache -->
       <dependency>
         <groupId>net.jodah</groupId>
         <artifactId>expiringmap</artifactId>
         <version>${net.jodah.expiringmap.version}</version>
       </dependency>
+
       <!-- For cache serialization/deserialization -->
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
         <version>${jackson-databind.version}</version>
+      </dependency>
+
+      <!-- Testing dependencies -->
+      <dependency>
+        <groupId>com.google.cloud.broker</groupId>
+        <artifactId>common</artifactId>
+        <version>${project.parent.version}</version>
+        <scope>test</scope>
       </dependency>
     </dependencies>
 

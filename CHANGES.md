@@ -1,5 +1,7 @@
 ## 0.5.1 (XXXX)
 
+- Moved providers to the `com.google.cloud.broker.apps.brokerserver.accesstokens.providers` package.
+- Renamed the broker service's Maven artifact from `broker` to `broker-server`.
 - Decoupled the broker URI from the broker kerberos principal name. This includes the following changes:
   * On the broker side:
     - The `BROKER_SERVICE_HOSTNAME` and `BROKER_SERVICE_NAME` are removed.

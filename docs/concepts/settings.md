@@ -81,7 +81,7 @@ Base level for application logs.
 
 ### `PROVIDER`
 
-Default: `com.google.cloud.broker.accesstokens.providers.RefreshTokenProvider`
+Default: `com.google.cloud.broker.apps.brokerserver.accesstokens.providers.RefreshTokenProvider`
 
 Access token [provider](providers.md) backend class.
 

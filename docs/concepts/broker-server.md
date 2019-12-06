@@ -30,5 +30,5 @@ To run the server:
 6. Run the following command:
 
    ```shell
-   java com.google.cloud.broker.grpc.BrokerServer
+   java com.google.cloud.broker.apps.brokerserver.BrokerServer
    ```

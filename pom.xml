@@ -246,7 +246,7 @@ limitations under the License.
     <modules>
         <module>apps/common</module>
         <module>apps/authorizer</module>
-        <module>apps/broker</module>
+        <module>apps/broker-server</module>
         <module>apps/core</module>
         <module>apps/extensions/database/jdbc</module>
         <module>apps/extensions/database/cloud-datastore</module>
