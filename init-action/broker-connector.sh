@@ -36,7 +36,8 @@ DATAPROC_REALM=$(sudo cat /etc/krb5.conf | grep "default_realm" | awk '{print $N
 # This will affect whether nodemanager should be restarted
 readonly early_init="$(/usr/share/google/get_metadata_value attributes/dataproc-option-run-init-actions-early || echo 'false')"
 
-readonly broker_version="$(/usr/share/google/get_metadata_value attributes/broker-version)"
+readonly connector_jar_gcs="$(/usr/share/google/get_metadata_value attributes/connector-jar-gcs)"
+readonly connector_jar_url="$(/usr/share/google/get_metadata_value attributes/connector-jar-url)"
 readonly broker_uri="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-uri)"
 readonly broker_kerberos_principal="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-kerberos-principal)"
 readonly broker_connector_jar="$(/usr/share/google/get_metadata_value attributes/broker-connector-jar)"
@@ -98,10 +99,15 @@ cd ${lib_dir}
 rm -f "gcs-connector-"*
 
 # Download the JARs
-if [[ -n "${broker_connector_jar}" ]]; then
-  gsutil cp ${broker_connector_jar} .
+if [[ -n "${connector_jar_gcs}" ]]; then
+  gsutil cp ${connector_jar_gcs} .
 else
-  wget https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${broker_version}/broker-connector-hadoop2-${broker_version}.jar
+  if [[ -n "${connector_jar_url}" ]]; then
+    wget ${connector_jar_url}
+  else
+    echo "Error: Please provide either connector-jar-url or connector-jar-gcs metadata." >&2
+    exit 1
+  fi
 fi
 wget https://repo1.maven.org/maven2/com/google/cloud/bigdataoss/gcs-connector/${GCS_CONN_VERSION}/gcs-connector-${GCS_CONN_VERSION}-shaded.jar
 
@@ -132,8 +138,8 @@ done
 
 # Create broker principal and keytab
 if [[ "${ROLE}" == 'Master' ]]; then
-  kadmin.local -q "addprinc -randkey broker/${broker_uri_hostname}"
-  kadmin.local -q "ktadd -k /etc/security/keytab/broker.keytab broker/${broker_uri_hostname}"
+  kadmin.local -q "addprinc -randkey ${broker_kerberos_principal}"
+  kadmin.local -q "ktadd -k /etc/security/keytab/broker.keytab ${broker_kerberos_principal}"
 fi
 
 # Restart services ---------------------------------------------------------------

@@ -300,6 +300,8 @@ Run the following commands **from the root of the repository**:
    export BROKER_URI="https://${BROKER_HOSTNAME}:443"
    export BROKER_PRINCIPAL="broker/${BROKER_HOSTNAME}"
    export BROKER_VERSION=$(cat VERSION)
+   export INIT_ACTION="gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh"
+   export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${BROKER_VERSION}/broker-connector-hadoop2-${BROKER_VERSION}.jar"
    ```
 
 3. Create the Kerberos configuration file for Dataproc:
@@ -328,13 +330,13 @@ Run the following commands **from the root of the repository**:
      --bucket ${PROJECT}-staging \
      --scopes cloud-platform \
      --service-account "dataproc@${PROJECT}.iam.gserviceaccount.com" \
-     --initialization-actions gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh \
      --kerberos-config-file kerberos-config.yaml \
-     --metadata "broker-version=${BROKER_VERSION}" \
      --metadata "gcp-token-broker-tls-certificate=$(cat broker-tls.crt)" \
      --metadata "gcp-token-broker-uri=${BROKER_URI}" \
      --metadata "gcp-token-broker-kerberos-principal=${BROKER_PRINCIPAL}" \
-     --metadata "origin-realm=${REALM}"
+     --metadata "origin-realm=${REALM}" \
+     --initialization-actions ${INIT_ACTION} \
+     --metadata "connector-jar-url=${CONNECTOR_JAR_URL}"
    ```
 
    *Note:* The command creates a [single-node](https://cloud.google.com/dataproc/docs/concepts/configuring-clusters/single-node-clusters)
