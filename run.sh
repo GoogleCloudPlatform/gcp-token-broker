@@ -62,6 +62,7 @@ function backup_artifacts() {
         echo "Please provide a directory name"
         exit 1
     fi
+    set -x
     mkdir -p backups/$1
     cp authorizer-tls.crt backups/$1
     cp authorizer-tls.csr backups/$1
@@ -73,6 +74,8 @@ function backup_artifacts() {
     cp broker.keytab backups/$1
     cp client_secret.json backups/$1
     cp kerberos-config.yaml backups/$1
+    cp deploy/values_override.yaml backups/$1
+    cp deploy/skaffold.yaml backups/$1
 }
 
 
@@ -99,7 +102,7 @@ function build_packages() {
     validate_project_var
 
     set -x
-    docker exec -it S{CONTAINER} bash -c "mvn package -DskipTests ${PROJECTS_ARG}"
+    docker exec -it ${CONTAINER} bash -c "mvn package -DskipTests ${PROJECTS_ARG}"
 }
 
 
@@ -109,11 +112,11 @@ function set_projects_arg() {
     if [[ -n "${MODULE}" ]]; then
         case "${MODULE}" in
             core)
-                PROJECTS_ARG="--projects apps/core"
+                PROJECTS_ARG="--projects apps/common,apps/core"
                 break
                 ;;
-            broker)
-                PROJECTS_ARG="--projects apps/common,apps/core,apps/broker"
+            broker-server)
+                PROJECTS_ARG="--projects apps/common,apps/core,apps/broker-server"
                 break
                 ;;
             authorizer)
@@ -193,11 +196,21 @@ function run_tests() {
 }
 
 
+function dependency() {
+    set -x
+    docker exec -it ${CONTAINER} bash -c "mvn dependency:tree"
+}
+
+function ssh_function() {
+    set -x
+    docker exec -it ${CONTAINER} bash
+}
+
 # Initializes a development container
 function init_dev() {
     set -x
 	docker run -it -v $PWD:/base -w /base -p 7070:7070 --detach --name ${CONTAINER} ubuntu:18.04 && \
-	${docker_cmd} "apps/broker/install-dev.sh"
+	docker exec -it ${CONTAINER} bash -c "apps/broker-server/install-dev.sh"
 }
 
 # Restart the development container, in case the container was previously stopped.
@@ -210,6 +223,11 @@ function restart_dev {
 
 # Route to the requested action
 case "$1" in
+    ssh)
+        shift
+        ssh_function
+        break
+        ;;
     build)
         shift
         build_packages $@
@@ -233,6 +251,11 @@ case "$1" in
     backup_artifacts)
         shift
         backup_artifacts $@
+        break
+        ;;
+    dependency)
+        shift
+        dependency
         break
         ;;
     *)
