@@ -22,10 +22,10 @@ Default: `com.google.cloud.broker.authentication.backends.SpnegoAuthenticator`
 
 ### `KEYTABS`
 
-JSON-formatted list of keytabs and principals for the broker service to log in with. For example:
+List of principal/keytab pairs for the broker service to log in with. For example:
 
-```json
-[{"keytab": "/home/broker/foo.keytab", "principal": "foo/bar@BAZ"}]
+```
+[{principal=broker/example.com@MYREALM, keytab=/etc/security/broker.keytab}, {principal=broker/foo@BAR, keytab=/etc/security/broker-foobar.keytab}]
 ```
 
 ### `OAUTH_CLIENT_SECRET_JSON_PATH`

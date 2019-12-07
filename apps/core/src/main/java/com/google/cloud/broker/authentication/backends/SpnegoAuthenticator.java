@@ -12,7 +12,6 @@
 package com.google.cloud.broker.authentication.backends;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.security.PrivilegedAction;
 import javax.security.auth.Subject;
@@ -21,8 +20,9 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.login.Configuration;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigFactory;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSContext;
@@ -37,39 +37,41 @@ import com.google.cloud.broker.settings.AppSettings;
 public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
 
     private ArrayList<Subject> logins = new ArrayList<Subject>();
-
+    private final static String INVALID_SETTING = "Invalid `" + AppSettings.KEYTABS + "` setting";
 
     private void initLogin() {
-        // Parse the JSON-formatted setting
-        String keytabs = AppSettings.getInstance().getString(AppSettings.KEYTABS);
-        Iterator<JsonNode> iterator;
+        // Parse the keytabs setting
+        List<? extends Config> keytabs;
+
         try {
-            iterator = new ObjectMapper().readTree(keytabs).elements();
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Invalid `" + AppSettings.KEYTABS + "` setting");
+            keytabs = ConfigFactory.parseString(AppSettings.KEYTABS + "=" + AppSettings.getInstance().getString(AppSettings.KEYTABS)).getConfigList(AppSettings.KEYTABS);
+        } catch (ConfigException e) {
+            throw new IllegalArgumentException(INVALID_SETTING + " -- Error: " + e.getMessage());
         }
 
         // Log in each individual principal
-        while (iterator.hasNext()) {
-            JsonNode item = iterator.next();
-            JsonNode principal = item.get("principal");
-            JsonNode keytab = item.get("keytab");
-
-            if (principal == null || keytab == null) {
-                throw new IllegalArgumentException("Invalid `" + AppSettings.KEYTABS + "` setting");
+        for (Config item : keytabs) {
+            String principal;
+            String keytab;
+            try {
+                principal = item.getString("principal");
+                keytab = item.getString("keytab");
+            } catch (ConfigException e) {
+                throw new IllegalArgumentException(INVALID_SETTING + " -- Error: " + e.getMessage());
             }
 
-            File keytabFile = new File(keytab.asText());
-            if (! keytabFile.exists()) {
-                throw new IllegalArgumentException("Keytab `" + keytab.asText() + "` in `" + AppSettings.KEYTABS + "` setting does not exist");
+
+            File keytabFile = new File(keytab);
+            if (!keytabFile.exists()) {
+                throw new IllegalArgumentException("Keytab `" + keytab + "` in `" + AppSettings.KEYTABS + "` setting does not exist");
             }
 
-            Subject subject = principalLogin(principal.asText(), keytabFile);
+            Subject subject = principalLogin(principal, keytabFile);
             logins.add(subject);
         }
 
         if (logins.size() == 0) {
-            throw new IllegalArgumentException("Invalid `" + AppSettings.KEYTABS + "` setting");
+            throw new IllegalArgumentException(INVALID_SETTING);
         }
     }
 

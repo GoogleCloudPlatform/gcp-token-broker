@@ -6,7 +6,7 @@
   * On the broker side:
     - The `BROKER_SERVICE_HOSTNAME` and `BROKER_SERVICE_NAME` are removed.
     - The `KEYTABS_PATH` setting is replaced with `KEYTABS`.
-    - The new `KEYTABS` setting is a JSON-formatted list of keytab/principal pairs. Those are used by the broker
+    - The new `KEYTABS` setting is a list of keytab/principal pairs. Those are used by the broker
       to log in at launch time.
   * On the connector side:
     - The `gcp.token.broker.{realm|servicename}` and `gcp.token.broker.uri.hostname` are removed in favor of a
