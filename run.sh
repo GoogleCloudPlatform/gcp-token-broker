@@ -197,6 +197,11 @@ function run_tests() {
     docker exec -it ${ENV_VARS} ${CONTAINER} bash -c "mvn test ${PROJECTS_ARG} ${MVN_VARS}"
 }
 
+function mvn() {
+    set -x
+    docker exec -it ${CONTAINER} bash -c "mvn $@"
+}
+
 function clean() {
     set -x
     docker exec -it ${CONTAINER} bash -c "mvn clean"
@@ -232,6 +237,11 @@ case "$1" in
     ssh)
         shift
         ssh_function
+        break
+        ;;
+    mvn)
+        shift
+        mvn $@
         break
         ;;
     build)
