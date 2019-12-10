@@ -45,11 +45,6 @@
             <version>1.30.2</version>
         </dependency>
         <dependency>
-            <groupId>com.google.auth</groupId>
-            <artifactId>google-auth-library-oauth2-http</artifactId>
-            <version>0.17.1</version>
-        </dependency>
-        <dependency>
             <groupId>com.google.template</groupId>
             <artifactId>soy</artifactId>
             <version>2019-08-22</version>
@@ -71,11 +66,6 @@
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-security</artifactId>
-            <version>${org.eclipse.jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
             <version>${org.eclipse.jetty.version}</version>
         </dependency>
@@ -83,16 +73,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${ch.qos.logback.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback.contrib</groupId>
-            <artifactId>logback-json-classic</artifactId>
-            <version>${ch.qos.logback.contrib.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback.contrib</groupId>
-            <artifactId>logback-jackson</artifactId>
-            <version>${ch.qos.logback.contrib.version}</version>
         </dependency>
 
         <!-- Testing dependencies -->

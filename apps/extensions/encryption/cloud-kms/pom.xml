@@ -36,11 +36,6 @@ limitations under the License.
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.cloud</groupId>
-            <artifactId>google-cloud-kms</artifactId>
-            <version>${google-cloud-kms.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.google.crypto.tink</groupId>
             <artifactId>tink</artifactId>
             <version>${com.google.crypto.tink.version}</version>

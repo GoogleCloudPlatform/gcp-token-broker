@@ -51,11 +51,6 @@ limitations under the License.
             <version>${io.grpc.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-tcnative-boringssl-static</artifactId>
-            <version>${netty-tcnative-boringssl-static.version}</version>
-        </dependency>
-        <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>javax.annotation-api</artifactId>
             <version>${javax.annotation-api.version}</version>
@@ -75,11 +70,6 @@ limitations under the License.
         </dependency>
 
         <!-- For logging -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${ch.qos.logback.version}</version>
-        </dependency>
         <dependency>
             <groupId>ch.qos.logback.contrib</groupId>
             <artifactId>logback-json-classic</artifactId>
