@@ -34,7 +34,7 @@ public class AccessTokenCacheFetcherTest {
         // Override settings
         backupSettings = new SettingsOverride(Map.of(
             AppSettings.REMOTE_CACHE, "com.google.cloud.broker.caching.remote.RedisCache",
-            AppSettings.PROVIDER, "com.google.cloud.broker.apps.brokerserver.accesstokens.providers.MockProvider",
+            AppSettings.PROVIDER_BACKEND, "com.google.cloud.broker.apps.brokerserver.accesstokens.providers.MockProvider",
             AppSettings.ACCESS_TOKEN_LOCAL_CACHE_TIME, "1234",
             AppSettings.ACCESS_TOKEN_REMOTE_CACHE_TIME, "6789"
         ));

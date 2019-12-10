@@ -169,7 +169,7 @@ function run_tests() {
                 shift 2
                 ;;
             -t|--test)
-                TEST=$2
+                SPECIFIC_TEST=$2
                 shift 2
                 ;;
             -p|--project)
@@ -183,18 +183,24 @@ function run_tests() {
         esac
     done
 
-    if [[ -n "${TEST}" ]]; then
-        MVN_VARS="-DfailIfNoTests=false -Dtest=${TEST}"
+    MVN_VARS="-Dgcp-project=${PROJECT}"
+
+    if [[ -n "${SPECIFIC_TEST}" ]]; then
+        MVN_VARS="${MVN_VARS} -DfailIfNoTests=false -Dtest=${SPECIFIC_TEST}"
     fi
 
     set_projects_arg
     validate_project_var
 
-    GCP_OPTIONS="--env APP_SETTING_GCP_PROJECT=${PROJECT} --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json"
+    ENV_VARS="--env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json"
     set -x
-    docker exec -it ${GCP_OPTIONS} ${CONTAINER} bash -c "mvn test ${PROJECTS_ARG} ${MVN_VARS}"
+    docker exec -it ${ENV_VARS} ${CONTAINER} bash -c "mvn test ${PROJECTS_ARG} ${MVN_VARS}"
 }
 
+function clean() {
+    set -x
+    docker exec -it ${CONTAINER} bash -c "mvn clean"
+}
 
 function dependency() {
     set -x
@@ -231,6 +237,11 @@ case "$1" in
     build)
         shift
         build_packages $@
+        break
+        ;;
+    clean)
+        shift
+        clean
         break
         ;;
     test)

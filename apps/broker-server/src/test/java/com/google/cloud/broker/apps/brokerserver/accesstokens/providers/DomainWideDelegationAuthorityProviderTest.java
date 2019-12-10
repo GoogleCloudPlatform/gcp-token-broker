@@ -37,8 +37,7 @@ public class DomainWideDelegationAuthorityProviderTest {
     public static void setupClass() {
         // Override settings
         backupSettings = new SettingsOverride(Map.of(
-            AppSettings.DOMAIN_NAME, "example.com",
-            AppSettings.JWT_LIFE, "30"
+            AppSettings.GSUITE_DOMAIN, "example.com"
         ));
     }
 

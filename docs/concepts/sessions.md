@@ -55,10 +55,10 @@ The `RenewSessionToken` endpoint requires [direct authentication](authentication
 the caller is correctly authenticated with the renewer's credentials.
 
 If authentication is successful, then the session's `expires_at` value in the session's [database](database.md) record
-extended to [`SESSION_RENEW_PERIOD`](settings.md#SESSION_RENEW_PERIOD) millisesonds in the future from now.
+extended to [`sessions.renew-period`](settings.md#sessions.renew-period) millisesonds in the future from now.
 
 A session can be renewed/extended any number of times, until the session's lifetime reaches the
-[`SESSION_MAXIMUM_LIFETIME`](settings.md#SESSION_MAXIMUM_LIFETIME) value, at which point the token becomes obsolete and
+[`sessions.maximum-lifetime`](settings.md#sessions.maximum-lifetime) value, at which point the token becomes obsolete and
 inoperable.
 
 ## Session cancellation

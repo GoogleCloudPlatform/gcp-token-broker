@@ -22,12 +22,11 @@ import java.io.IOException;
 import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
-import com.google.cloud.broker.utils.EnvUtils;
 
 public class GoogleCredentialsFactory {
 
     public static GoogleCredentialsDetails createCredentialsDetails(boolean generateAccessToken, String... scopes) {
-        String jsonPath = EnvUtils.getenv().get("GOOGLE_APPLICATION_CREDENTIALS");
+        String jsonPath = System.getenv().get("GOOGLE_APPLICATION_CREDENTIALS");
         GoogleCredentials credentials;
         String email;
         String accessToken = null;

@@ -1,12 +1,13 @@
-## 0.5.1 (XXXX)
+## 0.6.0 (XXXX)
 
+- Renamed all settings to fit better Typesafe Config conventions. Settings can now be passed as configuration files.
 - Moved providers to the `com.google.cloud.broker.apps.brokerserver.accesstokens.providers` package.
 - Renamed the broker service's Maven artifact from `broker` to `broker-server`.
 - Decoupled the broker URI from the broker kerberos principal name. This includes the following changes:
   * On the broker side:
     - The `BROKER_SERVICE_HOSTNAME` and `BROKER_SERVICE_NAME` are removed.
-    - The `KEYTABS_PATH` setting is replaced with `KEYTABS`.
-    - The new `KEYTABS` setting is a list of keytab/principal pairs. Those are used by the broker
+    - The `KEYTABS_PATH` setting is replaced with `authentication.spnego.keytabs`.
+    - The new `authentication.spnego.keytabs` setting is a list of keytab/principal pairs. Those are used by the broker
       to log in at launch time.
   * On the connector side:
     - The `gcp.token.broker.{realm|servicename}` and `gcp.token.broker.uri.hostname` are removed in favor of a

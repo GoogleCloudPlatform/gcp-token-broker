@@ -32,10 +32,10 @@ public class ShadowServiceAccountProviderTest {
     @BeforeClass
     public static void setupClass() {
         // Override settings
+        String projectId = AppSettings.getInstance().getString(AppSettings.GCP_PROJECT);
         backupSettings = new SettingsOverride(Map.of(
-            AppSettings.SHADOW_PROJECT, System.getenv().get("APP_SETTING_" + AppSettings.GCP_PROJECT),
-            AppSettings.SHADOW_USERNAME_PATTERN, "%s-shadow",
-            AppSettings.JWT_LIFE, 30
+            AppSettings.SHADOW_PROJECT, projectId,
+            AppSettings.SHADOW_USERNAME_PATTERN, "%s-shadow"
         ));
     }
 

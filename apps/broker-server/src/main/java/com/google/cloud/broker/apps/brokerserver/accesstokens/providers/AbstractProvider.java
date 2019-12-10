@@ -20,7 +20,7 @@ public abstract class AbstractProvider {
     private static AbstractProvider instance;
 
     public static AbstractProvider getInstance() {
-        String className = AppSettings.getInstance().getString(AppSettings.PROVIDER);
+        String className = AppSettings.getInstance().getString(AppSettings.PROVIDER_BACKEND);
         if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
             instance = (AbstractProvider) InstanceUtils.invokeConstructor(className);
         }

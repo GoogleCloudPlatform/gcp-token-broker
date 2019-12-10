@@ -71,7 +71,7 @@ resource "google_storage_bucket" "demo_bucket" {
 resource "google_storage_bucket_iam_member" "demo_bucket_perms_user" {
   bucket = "${google_storage_bucket.demo_bucket.name}"
   role        = "roles/storage.admin"
-  member      = "user:${element(var.test_users, 0)}@${var.domain}"
+  member      = "user:${element(var.test_users, 0)}@${var.gsuite_domain}"
 }
 
 resource "google_storage_bucket_iam_member" "demo_bucket_perms_svcacct" {

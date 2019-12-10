@@ -258,18 +258,18 @@ resource "local_file" "helm_values" {
 broker:
   image: 'gcr.io/${var.gcp_project}/broker-server'
   app:
-    settings:
-      GCP_PROJECT: '${var.gcp_project}'
-      ENCRYPTION_KEK_URI: '${google_kms_crypto_key.broker_key.self_link}'
-      ENCRYPTION_DEK_URI: 'gs://${google_storage_bucket.encryption_bucket.name}/dek.json'
-      PROXY_USER_WHITELIST: 'hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}'
-      DOMAIN_NAME: '${var.domain}'
-      KEYTABS: '[{keytab=/keytabs/broker.keytab, principal="broker/${var.broker_service_hostname}@${local.dataproc_realm}"}]'
-      TLS_KEY_PATH: '/secrets/tls.pem'
-      TLS_CRT_PATH: '/secrets/tls.crt'
-      OAUTH_CLIENT_SECRET_JSON_PATH: '/secrets/client_secret.json'
-      REDIS_CACHE_HOST: '${google_redis_instance.cache.host}'
-      LOGGING_LEVEL: 'INFO'
+    settings: |-
+      gcp-project = "${var.gcp_project}"
+      gsuite-domain = "${var.gsuite_domain}"
+      encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
+      encryption.cloud-kms.dek-uri = "gs://${google_storage_bucket.encryption_bucket.name}/dek.json"
+      proxy-users.whitelist = "hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}"
+      authentication.spnego.keytabs = [{keytab="/keytabs/broker.keytab", principal="broker/${var.broker_service_hostname}@${local.dataproc_realm}"}]
+      server.tls.private-key-path = "/secrets/tls.pem"
+      server.tls.certificate-path = "/secrets/tls.crt"
+      oauth.client-secret-json-path = "/secrets/client_secret.json"
+      remote-cache.redis.host = "${google_redis_instance.cache.host}"
+      logging.level = "INFO"
   service:
     port: '${var.broker_service_port}'
     loadBalancerIP: '${var.broker_service_ip}'
@@ -281,12 +281,12 @@ broker:
 authorizer:
   image: 'gcr.io/${var.gcp_project}/authorizer'
   app:
-    settings:
-      GCP_PROJECT: '${var.gcp_project}'
-      OAUTH_CLIENT_SECRET_JSON_PATH: '/secrets/client_secret.json'
-      ENCRYPTION_KEK_URI: '${google_kms_crypto_key.broker_key.self_link}'
-      ENCRYPTION_DEK_URI: 'gs://${google_storage_bucket.encryption_bucket.name}/dek.json'
-      LOGGING_LEVEL: 'INFO'
+    settings: |-
+      gcp-project = "${var.gcp_project}"
+      oauth.client-secret-json-path = "/secrets/client_secret.json"
+      encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
+      encryption.cloud-kms.dek-uri = "gs://${google_storage_bucket.encryption_bucket.name}/dek.json"
+      logging.level = "INFO"
   ingress:
     host: '${var.authorizer_hostname}'
 EOT

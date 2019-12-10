@@ -97,18 +97,16 @@ Follow these steps to run the test suite:
 
     ```shell
     docker exec -it \
-      --env APP_SETTING_GCP_PROJECT=${PROJECT} \
       --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
-      broker-dev bash -c "mvn test"
+      broker-dev bash -c "mvn test -Dgcp-project=${PROJECT}"
     ```
 
     To run the tests for a specific component, for example the Cloud Datastore database backend:
 
     ```shell
     docker exec -it \
-      --env APP_SETTING_GCP_PROJECT=${PROJECT} \
       --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
-      broker-dev bash -c "mvn test --projects apps/core,apps/extensions/database/cloud-datastore"
+      broker-dev bash -c "mvn test -Dgcp-project=${PROJECT} --projects apps/core,apps/extensions/database/cloud-datastore"
     ```
 
     To run a specific test class, pass the `-DfailIfNoTests=false -Dtest=[NAME_OF_TEST_CLASS]` properties, for example:
@@ -128,7 +126,7 @@ Follow these steps to run the test suite:
       -DfailIfNoTests=false -Dtest=ValidationTest#testValidateScope"
     ```
 
-**Note:** The `APP_SETTING_GCP_PROJECT` and `GOOGLE_APPLICATION_CREDENTIALS` environment variables
+**Note:** The `gcp-project` property and `GOOGLE_APPLICATION_CREDENTIALS` environment variable
 are only necessary for the tests that rely on GCP APIs (e.g. for the Cloud Datastore backend).
 Other tests do not need those variables.
 
@@ -139,9 +137,8 @@ Other tests do not need those variables.
 
    ```shell
       docker exec -it \
-        --env APP_SETTING_GCP_PROJECT=${PROJECT} \
         --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
-        broker-dev bash -c "mvn test -P test-coverage"
+        broker-dev bash -c "mvn test -Dgcp-project=${PROJECT} -P test-coverage"
    ```
 3. Start a web server inside the container:
 

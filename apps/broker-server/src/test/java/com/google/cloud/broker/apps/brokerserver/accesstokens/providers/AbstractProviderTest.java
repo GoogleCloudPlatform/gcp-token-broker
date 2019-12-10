@@ -24,7 +24,7 @@ public class AbstractProviderTest {
 
     @Test
     public void testGetInstance() throws Exception {
-        try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.PROVIDER, "com.example.DoesNotExist"))) {
+        try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.PROVIDER_BACKEND, "com.example.DoesNotExist"))) {
             try {
                 AbstractProvider.getInstance();
                 fail();

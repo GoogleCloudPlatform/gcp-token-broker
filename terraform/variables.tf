@@ -27,7 +27,7 @@ variable datastore_region {
 variable origin_realm {
 }
 
-variable domain {
+variable gsuite_domain {
 }
 
 // Broker --------------------------------------

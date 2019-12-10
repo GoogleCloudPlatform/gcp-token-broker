@@ -221,12 +221,6 @@ limitations under the License.
             <version>${org.powermock.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.github.stefanbirkner</groupId>
-            <artifactId>system-rules</artifactId>
-            <version>${com.github.stefanbirkner.system-rules.version}</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>

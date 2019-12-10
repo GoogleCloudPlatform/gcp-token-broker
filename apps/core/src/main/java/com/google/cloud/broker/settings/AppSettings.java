@@ -14,67 +14,47 @@ package com.google.cloud.broker.settings;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.Config;
 
-import com.google.cloud.broker.utils.EnvUtils;
-
-import java.util.HashMap;
-import java.util.Map;
-
 public class AppSettings {
 
-    public final static String AUTHORIZER_HOST = "AUTHORIZER_HOST";
-    public final static String AUTHORIZER_PORT = "AUTHORIZER_PORT";
-    public final static String LOGGING_LEVEL = "LOGGING_LEVEL";
-    public final static String SERVER_HOST = "SERVER_HOST";
-    public final static String SERVER_PORT = "SERVER_PORT";
-    public final static String TLS_ENABLED = "TLS_ENABLED";
-    public final static String TLS_CRT_PATH = "TLS_CRT_PATH";
-    public final static String TLS_KEY_PATH = "TLS_KEY_PATH";
-    public final static String SESSION_LOCAL_CACHE_TIME = "SESSION_LOCAL_CACHE_TIME";
-    public final static String PROVIDER = "PROVIDER";
-    public final static String SESSION_MAXIMUM_LIFETIME = "SESSION_MAXIMUM_LIFETIME";
-    public final static String SESSION_RENEW_PERIOD = "SESSION_RENEW_PERIOD";
-    public final static String PROXY_USER_WHITELIST = "PROXY_USER_WHITELIST";
-    public final static String SCOPE_WHITELIST = "SCOPE_WHITELIST";
-    public final static String ACCESS_TOKEN_LOCAL_CACHE_TIME = "ACCESS_TOKEN_LOCAL_CACHE_TIME";
-    public final static String ACCESS_TOKEN_REMOTE_CACHE_TIME = "ACCESS_TOKEN_REMOTE_CACHE_TIME";
-    public final static String REMOTE_CACHE = "REMOTE_CACHE";
-    public final static String JWT_LIFE = "JWT_LIFE";
-    public final static String SHADOW_PROJECT = "SHADOW_PROJECT";
-    public final static String SHADOW_USERNAME_PATTERN = "SHADOW_USERNAME_PATTERN";
-    public final static String JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR = "JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR";
-    public final static String DATABASE_BACKEND = "DATABASE_BACKEND";
-    public final static String ENCRYPTION_BACKEND = "ENCRYPTION_BACKEND";
-    public final static String REDIS_CACHE_HOST = "REDIS_CACHE_HOST";
-    public final static String REDIS_CACHE_PORT = "REDIS_CACHE_PORT";
-    public final static String REDIS_CACHE_DB = "REDIS_CACHE_DB";
-    public final static String AUTHENTICATION_BACKEND = "AUTHENTICATION_BACKEND";
-    public final static String OAUTH_CLIENT_SECRET_JSON_PATH = "OAUTH_CLIENT_SECRET_JSON_PATH";
-    public final static String OAUTH_CLIENT_ID = "OAUTH_CLIENT_ID";
-    public final static String OAUTH_CLIENT_SECRET = "OAUTH_CLIENT_SECRET";
-    public final static String KEYTABS = "KEYTABS";
-    public final static String DOMAIN_NAME = "DOMAIN_NAME";
-    public final static String GCP_PROJECT = "GCP_PROJECT";
-    public final static String DATABASE_JDBC_URL = "DATABASE_JDBC_URL";
-    public final static String ENCRYPTION_DEK_URI = "ENCRYPTION_DEK_URI";
-    public final static String ENCRYPTION_KEK_URI = "ENCRYPTION_KEK_URI";
+    public final static String GCP_PROJECT = "gcp-project";
+    public final static String GSUITE_DOMAIN = "gsuite-domain";
+    public final static String AUTHORIZER_HOST = "authorizer.host";
+    public final static String AUTHORIZER_PORT = "authorizer.port";
+    public final static String LOGGING_LEVEL = "logging.level";
+    public final static String SERVER_HOST = "server.host";
+    public final static String SERVER_PORT = "server.port";
+    public final static String TLS_ENABLED = "server.tls.enabled";
+    public final static String TLS_CERTIFICATE_PATH = "server.tls.certificate-path";
+    public final static String TLS_PRIVATE_KEY_PATH = "server.tls.private-key-path";
+    public final static String SESSION_LOCAL_CACHE_TIME = "sessions.local-cache-time";
+    public final static String SESSION_MAXIMUM_LIFETIME = "sessions.maximum-lifetime";
+    public final static String SESSION_RENEW_PERIOD = "sessions.renew-period";
+    public final static String PROXY_USER_WHITELIST = "proxy-users.whitelist";
+    public final static String SCOPE_WHITELIST = "scopes.whitelist";
+    public final static String PROVIDER_BACKEND = "provider.backend";
+    public final static String ACCESS_TOKEN_LOCAL_CACHE_TIME = "provider.access-tokens.local-cache-time";
+    public final static String ACCESS_TOKEN_REMOTE_CACHE_TIME = "provider.access-tokens.remote-cache-time";
+    public final static String SHADOW_PROJECT = "provider.shadow-service-accounts.project";
+    public final static String SHADOW_USERNAME_PATTERN = "provider.shadow-service-accounts.username-pattern";
+    public final static String JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR = "provider.json-file-credentials.base-dir";
+    public final static String DATABASE_BACKEND = "database.backend";
+    public final static String DATABASE_JDBC_URL = "database.jdbc.driver-url";
+    public final static String REMOTE_CACHE = "remote-cache.backend";
+    public final static String REDIS_CACHE_HOST = "remote-cache.redis.host";
+    public final static String REDIS_CACHE_PORT = "remote-cache.redis.port";
+    public final static String REDIS_CACHE_DB = "remote-cache.redis.db";
+    public final static String OAUTH_CLIENT_ID = "oauth.client-id";
+    public final static String OAUTH_CLIENT_SECRET = "oauth.client-secret";
+    public final static String OAUTH_CLIENT_SECRET_JSON_PATH = "oauth.client-secret-json-path";
+    public final static String AUTHENTICATION_BACKEND = "authentication.backend";
+    public final static String KEYTABS = "authentication.spnego.keytabs";
+    public final static String ENCRYPTION_BACKEND = "encryption.backend";
+    public final static String ENCRYPTION_DEK_URI = "encryption.cloud-kms.dek-uri";
+    public final static String ENCRYPTION_KEK_URI = "encryption.cloud-kms.kek-uri";
 
     private static Config instance;
     static {
         reset(); // Initialize instance
-    }
-
-    public AppSettings() {}
-
-    private static Map<String, String> loadEnvironmentSettings() {
-        // Override default settings with potential environment variables
-        Map<String, String> env = EnvUtils.getenv();
-        Map<String, String> result = new HashMap<>();
-        for (Map.Entry<String, String> entry : env.entrySet()) {
-            if (entry.getKey().startsWith("APP_SETTING_")) {
-                result.put(entry.getKey().substring("APP_SETTING_".length()), entry.getValue());
-            }
-        }
-        return result;
     }
 
     public static Config getInstance() {
@@ -86,6 +66,7 @@ public class AppSettings {
     }
 
     static void reset() {
-        setInstance(ConfigFactory.parseMap(loadEnvironmentSettings()).withFallback(ConfigFactory.load()));
+        ConfigFactory.invalidateCaches();
+        setInstance(ConfigFactory.load());
     }
 }

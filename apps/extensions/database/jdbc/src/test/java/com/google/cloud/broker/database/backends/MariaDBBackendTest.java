@@ -15,15 +15,11 @@ import java.util.Map;
 
 import com.google.cloud.broker.settings.SettingsOverride;
 import org.junit.*;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
 import com.google.cloud.broker.settings.AppSettings;
 
 
 public class MariaDBBackendTest extends JDBCBackendTest {
-
-    @ClassRule
-    public static final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
     private static JDBCBackend backend;
     private static SettingsOverride backupSettings;

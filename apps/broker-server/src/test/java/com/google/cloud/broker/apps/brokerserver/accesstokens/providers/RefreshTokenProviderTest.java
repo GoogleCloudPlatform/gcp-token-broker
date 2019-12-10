@@ -16,7 +16,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import static org.junit.Assert.*;
 import org.junit.*;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 
@@ -32,16 +31,13 @@ public class RefreshTokenProviderTest {
 
     private static final String SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
 
-    @ClassRule
-    public static final EnvironmentVariables environmentVariables = new EnvironmentVariables();
-
     private static SettingsOverride backupSettings;
 
     @BeforeClass
     public static void setupClass() {
         // Override settings
         backupSettings = new SettingsOverride(Map.of(
-            AppSettings.DOMAIN_NAME, "example.com",
+            AppSettings.GSUITE_DOMAIN, "example.com",
             AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend"
         ));
     }

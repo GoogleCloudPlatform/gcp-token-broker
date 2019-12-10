@@ -16,8 +16,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.PrivilegedAction;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigObject;
 import org.ietf.jgss.*;
 import static org.junit.Assert.*;
 import org.junit.AfterClass;
@@ -87,31 +91,17 @@ public class SpnegoAuthenticatorTest {
      */
     @Test
     public void testInexistentKeytabPath() throws Exception {
-        String json = "[{keytab=/home/does-not-exist, principal=blah}]";
-        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, json))) {
+        List<Map<String, String>> config = List.of(Map.of(
+            "keytab", "/home/does-not-exist",
+            "principal", "blah"
+        ));
+        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, config))) {
             try {
                 SpnegoAuthenticator auth = new SpnegoAuthenticator();
                 auth.authenticateUser();
                 fail();
             } catch (IllegalArgumentException e) {
-                assertEquals("Keytab `/home/does-not-exist` in `KEYTABS` setting does not exist", e.getMessage());
-            }
-        }
-    }
-
-
-    /**
-     * Check that an exception is thrown if the setting is misformatted.
-     */
-    @Test
-    public void testMisformattedSetting() throws Exception {
-        try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, "foobar"))) {
-            try {
-                SpnegoAuthenticator auth = new SpnegoAuthenticator();
-                auth.authenticateUser();
-                fail();
-            } catch (IllegalArgumentException e) {
-                assertEquals("Invalid `KEYTABS` setting -- Error: String: 1: KEYTABS has type STRING rather than LIST", e.getMessage());
+                assertEquals("Keytab `/home/does-not-exist` in `authentication.spnego.keytabs` setting does not exist", e.getMessage());
             }
         }
     }
@@ -121,18 +111,18 @@ public class SpnegoAuthenticatorTest {
      */
     @Test
     public void testMissingValue() throws Exception {
-        String[] configs = {
-            "[{keytab=bar}]",    // Missing principal
-            "[{principal=bar}]"  // Missing keytab
-        };
-        for (String config: configs ) {
+        List<List<Map<String, String>>> configs = List.of(
+            List.of(Map.of("keytab", "bar")),    // Missing principal
+            List.of(Map.of("principal", "bar"))  // Missing keytab
+        );
+        for (List<Map<String, String>> config: configs) {
             try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, config))) {
                 try {
                     SpnegoAuthenticator auth = new SpnegoAuthenticator();
                     auth.authenticateUser();
                     fail();
                 } catch (IllegalArgumentException e) {
-                    assertTrue(e.getMessage().startsWith("Invalid `KEYTABS` setting -- Error: String: 1: No configuration setting found for key"));
+                    assertTrue(e.getMessage().startsWith("Invalid `authentication.spnego.keytabs` setting -- Error: hardcoded value: No configuration setting found for key"));
                 }
             }
         }
@@ -140,8 +130,11 @@ public class SpnegoAuthenticatorTest {
 
     @Test
     public void testInvalidKeytab() throws Exception {
-        Path fakeKeytab = Files.createTempFile("fake", "keytab");
-        String config = "[{keytab=" + fakeKeytab.toString() + ", principal=blah}]";
+        Path fakeKeytab = Files.createTempFile("fake", ".keytab");
+        List<Map<String, String>> config = List.of(Map.of(
+            "keytab", fakeKeytab.toString(),
+            "principal", "blah"
+        ));
         try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, config))) {
             try {
                 String token = generateSpnegoToken("alice");
@@ -157,7 +150,10 @@ public class SpnegoAuthenticatorTest {
 
     @Test
     public void testHeaderDoesntStartWithNegotiate() throws Exception {
-        String config = "[{keytab=" + fakeKDC.getKeytabPath(BROKER) + ", principal=\"" + BROKER + "\"}]";
+        List<Map<String, String>> config = List.of(Map.of(
+            "keytab", fakeKDC.getKeytabPath(BROKER).toString(),
+            "principal", BROKER
+        ));
         try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, config))) {
             SpnegoAuthenticator auth = new SpnegoAuthenticator();
             try {
@@ -172,7 +168,10 @@ public class SpnegoAuthenticatorTest {
 
     @Test
     public void testInvalidSpnegoToken() throws Exception {
-        String config = "[{keytab=" + fakeKDC.getKeytabPath(BROKER) + ", principal=\"" + BROKER + "\"}]";
+        List<Map<String, String>> config = List.of(Map.of(
+            "keytab", fakeKDC.getKeytabPath(BROKER).toString(),
+            "principal", BROKER
+        ));
         try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, config))) {
             SpnegoAuthenticator auth = new SpnegoAuthenticator();
             try {
@@ -190,7 +189,10 @@ public class SpnegoAuthenticatorTest {
      */
     @Test
     public void testSuccess() throws Exception {
-        String config = "[{keytab=" + fakeKDC.getKeytabPath(BROKER) + ", principal=\"" + BROKER + "\"}]";
+        List<Map<String, String>> config = List.of(Map.of(
+            "keytab", fakeKDC.getKeytabPath(BROKER).toString(),
+            "principal", BROKER
+        ));
         try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, config))) {
             String token = generateSpnegoToken("alice");
             SpnegoAuthenticator auth = new SpnegoAuthenticator();

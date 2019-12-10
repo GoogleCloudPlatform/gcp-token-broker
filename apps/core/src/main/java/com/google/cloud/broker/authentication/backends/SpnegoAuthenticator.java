@@ -22,7 +22,6 @@ import javax.security.auth.login.Configuration;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigFactory;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSContext;
@@ -41,13 +40,7 @@ public class SpnegoAuthenticator extends AbstractAuthenticationBackend {
 
     private void initLogin() {
         // Parse the keytabs setting
-        List<? extends Config> keytabs;
-
-        try {
-            keytabs = ConfigFactory.parseString(AppSettings.KEYTABS + "=" + AppSettings.getInstance().getString(AppSettings.KEYTABS)).getConfigList(AppSettings.KEYTABS);
-        } catch (ConfigException e) {
-            throw new IllegalArgumentException(INVALID_SETTING + " -- Error: " + e.getMessage());
-        }
+        List<? extends Config> keytabs = AppSettings.getInstance().getConfigList(AppSettings.KEYTABS);
 
         // Log in each individual principal
         for (Config item : keytabs) {

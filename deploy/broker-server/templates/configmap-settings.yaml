@@ -19,6 +19,4 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 data:
-  {{- range $key, $val := .Values.broker.app.settings }}
-  {{ printf "APP_SETTING_%s" $key }}: {{ $val | quote }}
-  {{- end}}
+  application.conf: {{ .Values.broker.app.settings| quote }}

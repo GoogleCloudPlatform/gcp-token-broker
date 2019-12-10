@@ -62,8 +62,8 @@ public class BrokerServer {
     }
 
     private SslContextBuilder getSslContextBuilder() {
-        String certChainFilePath = AppSettings.getInstance().getString(AppSettings.TLS_CRT_PATH);
-        String privateKeyFilePath = AppSettings.getInstance().getString(AppSettings.TLS_KEY_PATH);
+        String certChainFilePath = AppSettings.getInstance().getString(AppSettings.TLS_CERTIFICATE_PATH);
+        String privateKeyFilePath = AppSettings.getInstance().getString(AppSettings.TLS_PRIVATE_KEY_PATH);
         SslContextBuilder sslClientContextBuilder = SslContextBuilder.forServer(
             new File(certChainFilePath),
             new File(privateKeyFilePath));

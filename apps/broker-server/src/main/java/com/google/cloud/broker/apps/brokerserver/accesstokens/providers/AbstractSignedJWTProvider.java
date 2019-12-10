@@ -67,8 +67,9 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         GoogleCredentialsDetails details = GoogleCredentialsFactory.createCredentialsDetails(true, "https://www.googleapis.com/auth/iam");
 
         // Create the JWT payload
+        long jwtLifetime = 30;
         long iat = TimeUtils.currentTimeMillis() / 1000L;
-        long exp = iat + AppSettings.getInstance().getLong(AppSettings.JWT_LIFE);
+        long exp = iat + jwtLifetime;
         HashMap<String, Object> jwtPayload = new HashMap<>();
         jwtPayload.put("scope", scope);
         jwtPayload.put("aud", "https://www.googleapis.com/oauth2/v4/token");
