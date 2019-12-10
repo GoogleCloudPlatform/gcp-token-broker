@@ -64,7 +64,7 @@ public class BrokerServerTest {
     private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
     private static final String MOCK_BUCKET = "gs://example";
     private static final Long SESSION_RENEW_PERIOD = 80000000L;
-    private static final Long SESSION_MAXIMUM_LIFETIME = 80000000L;
+    private static final Long SESSION_MAXIMUM_LIFETIME = 160000000L;
 
     @Rule
     public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
@@ -250,8 +250,8 @@ public class BrokerServerTest {
             .build());
 
         // Check that the session's lifetime has been extended up to the maximum lifetime
-        session = (Session) AbstractDatabaseBackend.getInstance().get(Session.class, (String) session.getId());
-        assertEquals( newNow + SESSION_MAXIMUM_LIFETIME, session.getExpiresAt().longValue());
+        session = (Session) AbstractDatabaseBackend.getInstance().get(Session.class, session.getId());
+        assertEquals(now + SESSION_MAXIMUM_LIFETIME, session.getExpiresAt().longValue());
     }
 
     @Test
