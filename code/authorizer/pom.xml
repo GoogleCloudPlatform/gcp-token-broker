@@ -75,6 +75,16 @@
             <version>${ch.qos.logback.version}</version>
         </dependency>
 
+        <!--
+        Fix the warning "Illegal reflective access by com.google.protobuf.UnsafeUtil"
+        caused by the soy library using an old version of protobuf-java.
+         -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>3.11.1</version>
+        </dependency>
+
         <!-- Testing dependencies -->
         <dependency>
             <groupId>org.apache.kerby</groupId>
