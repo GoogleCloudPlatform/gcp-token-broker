@@ -112,35 +112,35 @@ function set_projects_arg() {
     if [[ -n "${MODULE}" ]]; then
         case "${MODULE}" in
             core)
-                PROJECTS_ARG="--projects apps/common,apps/core"
+                PROJECTS_ARG="--projects code/common,code/core"
                 break
                 ;;
             broker-server)
-                PROJECTS_ARG="--projects apps/common,apps/core,apps/broker-server"
+                PROJECTS_ARG="--projects code/common,code/core,code/broker-server"
                 break
                 ;;
             authorizer)
-                PROJECTS_ARG="--projects apps/core,apps/authorizer"
+                PROJECTS_ARG="--projects code/core,code/authorizer"
                 break
                 ;;
             connector)
-                PROJECTS_ARG="--projects apps/common,connector"
+                PROJECTS_ARG="--projects code/common,code/connector"
                 break
                 ;;
             cloud-datastore)
-                PROJECTS_ARG="--projects apps/core,apps/extensions/database/cloud-datastore"
+                PROJECTS_ARG="--projects code/core,code/extensions/database/cloud-datastore"
                 break
                 ;;
             jdbc)
-                PROJECTS_ARG="--projects apps/core,apps/extensions/database/jdbc"
+                PROJECTS_ARG="--projects code/core,code/extensions/database/jdbc"
                 break
                 ;;
             cloud-kms)
-                PROJECTS_ARG="--projects apps/core,apps/extensions/encryption/cloud-kms"
+                PROJECTS_ARG="--projects code/core,code/extensions/encryption/cloud-kms"
                 break
                 ;;
             redis)
-                PROJECTS_ARG="--projects apps/core,apps/extensions/caching/redis"
+                PROJECTS_ARG="--projects code/core,code/extensions/caching/redis"
                 break
                 ;;
             *)
@@ -221,7 +221,7 @@ function ssh_function() {
 function init_dev() {
     set -x
 	docker run -it -v $PWD:/base -w /base -p 7070:7070 --detach --name ${CONTAINER} ubuntu:18.04 && \
-	docker exec -it ${CONTAINER} bash -c "apps/broker-server/install-dev.sh"
+	docker exec -it ${CONTAINER} bash -c "code/broker-server/install-dev.sh"
 }
 
 # Restart the development container, in case the container was previously stopped.

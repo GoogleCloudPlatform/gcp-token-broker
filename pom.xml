@@ -238,15 +238,15 @@ limitations under the License.
     </build>
 
     <modules>
-        <module>apps/common</module>
-        <module>apps/authorizer</module>
-        <module>apps/broker-server</module>
-        <module>apps/core</module>
-        <module>apps/extensions/database/jdbc</module>
-        <module>apps/extensions/database/cloud-datastore</module>
-        <module>apps/extensions/encryption/cloud-kms</module>
-        <module>apps/extensions/caching/redis</module>
-        <module>connector</module>
+        <module>code/common</module>
+        <module>code/authorizer</module>
+        <module>code/broker-server</module>
+        <module>code/core</module>
+        <module>code/extensions/database/jdbc</module>
+        <module>code/extensions/database/cloud-datastore</module>
+        <module>code/extensions/encryption/cloud-kms</module>
+        <module>code/extensions/caching/redis</module>
+        <module>code/connector</module>
     </modules>
 
 </project>

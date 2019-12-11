@@ -179,14 +179,14 @@ To deploy the broker service, run the following commands **from the root of the 
 
    ```
    export BROKER_VERSION=$(cat VERSION)
-   mkdir -p apps/broker-server/target
-   curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker/${BROKER_VERSION}/broker-${BROKER_VERSION}-jar-with-dependencies.jar > apps/broker-server/target/broker-${BROKER_VERSION}-jar-with-dependencies.jar
-   mkdir -p apps/extensions/caching/redis/target
-   curl https://repo1.maven.org/maven2/com/google/cloud/broker/cache-backend-redis/${BROKER_VERSION}/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar > apps/extensions/caching/redis/target/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar
-   mkdir -p apps/extensions/database/cloud-datastore/target
-   curl https://repo1.maven.org/maven2/com/google/cloud/broker/database-backend-cloud-datastore/${BROKER_VERSION}/database-backend-cloud-datastore-${BROKER_VERSION}-jar-with-dependencies.jar > apps/extensions/database/cloud-datastore/target/database-backend-cloud-datastore-${BROKER_VERSION}-jar-with-dependencies.jar
-   mkdir -p apps/extensions/encryption/cloud-kms/target
-   curl https://repo1.maven.org/maven2/com/google/cloud/broker/encryption-backend-cloud-kms/${BROKER_VERSION}/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar > apps/extensions/encryption/cloud-kms/target/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar
+   mkdir -p code/broker-server/target
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker/${BROKER_VERSION}/broker-${BROKER_VERSION}-jar-with-dependencies.jar > code/broker-server/target/broker-${BROKER_VERSION}-jar-with-dependencies.jar
+   mkdir -p code/extensions/caching/redis/target
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/cache-backend-redis/${BROKER_VERSION}/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar > code/extensions/caching/redis/target/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar
+   mkdir -p code/extensions/database/cloud-datastore/target
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/database-backend-cloud-datastore/${BROKER_VERSION}/database-backend-cloud-datastore-${BROKER_VERSION}-jar-with-dependencies.jar > code/extensions/database/cloud-datastore/target/database-backend-cloud-datastore-${BROKER_VERSION}-jar-with-dependencies.jar
+   mkdir -p code/extensions/encryption/cloud-kms/target
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/encryption-backend-cloud-kms/${BROKER_VERSION}/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar > code/extensions/encryption/cloud-kms/target/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar
    ```
 2. Configure credentials for the cluster:
 
@@ -409,11 +409,11 @@ To build the containers:
 
 ```shell
 # Broker service
-docker build -f ./apps/broker-server/Dockerfile -t gcr.io/$PROJECT/broker .
+docker build -f ./code/broker-server/Dockerfile -t gcr.io/$PROJECT/broker .
 docker push gcr.io/$PROJECT/broker
 
 # Authorizer
-docker build -f ./apps/authorizer/Dockerfile -t gcr.io/$PROJECT/authorizer .
+docker build -f ./code/authorizer/Dockerfile -t gcr.io/$PROJECT/authorizer .
 docker push gcr.io/$PROJECT/authorizer
 ```
 

@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source "/base/apps/broker-server/install.sh"
+source "/base/code/broker-server/install.sh"
 
 # Maven and its dependencies
 apt-get install -y libatomic1 maven
