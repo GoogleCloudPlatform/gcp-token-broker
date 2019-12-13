@@ -13,7 +13,7 @@ package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.HashMap;
+import java.util.*;
 
 import com.google.cloud.broker.oauth.GoogleCredentialsDetails;
 import com.google.cloud.broker.oauth.GoogleCredentialsFactory;
@@ -32,7 +32,6 @@ import com.google.api.services.iam.v1.model.SignJwtResponse;
 import io.grpc.Status;
 
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
-import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.TimeUtils;
 
 
@@ -139,12 +138,15 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
     }
 
     @Override
-    public AccessToken getAccessToken(String owner, String scope) {
+    public AccessToken getAccessToken(String owner, String scope, String target) {
         // Get signed JWT
         String signedJWT = getSignedJWT(owner, scope);
 
         // Obtain and return new access token for the owner
-        return tradeSignedJWTForAccessToken(signedJWT);
+        AccessToken accessToken = tradeSignedJWTForAccessToken(signedJWT);
+
+        // Obtain a bounded access token
+        return getBoundedAccessToken(target, accessToken);
     }
 
     public abstract String getGoogleIdentity(String owner);

@@ -75,7 +75,7 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
             GetAccessTokenRequest request = GetAccessTokenRequest.newBuilder()
                 .setScope(BrokerTokenIdentifier.BROKER_SCOPE)
                 .setOwner(currentUser.getUserName())
-                .setTarget(service.toString())
+                .setTarget(BrokerTokenIdentifier.getURI(service))
                 .build();
             GetAccessTokenResponse r = gateway.getStub().getAccessToken(request);
             gateway.getManagedChannel().shutdown();

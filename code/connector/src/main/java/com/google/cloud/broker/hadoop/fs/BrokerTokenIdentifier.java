@@ -38,6 +38,14 @@ public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
         super(KIND);
     }
 
+    public static String getURI(Text service) {
+        String uri = service.toString();
+        if (uri.startsWith("gs://")) {
+            uri = "//storage.googleapis.com/projects/_/buckets/" + uri.substring(5);
+        }
+        return uri;
+    }
+
     public BrokerTokenIdentifier(Configuration config, Text owner, Text renewer, Text realUser, Text service) {
         super(KIND, owner, renewer, realUser);
         UserGroupInformation currentUser;
@@ -55,7 +63,7 @@ public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
                 .setScope(BROKER_SCOPE)
                 .setOwner(currentUser.getUserName())
                 .setRenewer(renewer.toString())
-                .setTarget(service.toString())
+                .setTarget(getURI(service))
                 .build();
             GetSessionTokenResponse r = gateway.getStub().getSessionToken(request);
             gateway.getManagedChannel().shutdown();

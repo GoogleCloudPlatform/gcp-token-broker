@@ -30,6 +30,7 @@ public class RefreshTokenProviderTest {
     // - Happy path.
 
     private static final String SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
+    private static final String TARGET = "//storage.googleapis.com/projects/_/buckets/example";
 
     private static SettingsOverride backupSettings;
 
@@ -81,7 +82,7 @@ public class RefreshTokenProviderTest {
     public void testUnauthorized() {
         RefreshTokenProvider provider = new RefreshTokenProvider();
         try {
-            provider.getAccessToken("bob@EXAMPLE.COM", SCOPE);
+            provider.getAccessToken("bob@EXAMPLE.COM", SCOPE, TARGET);
             fail("StatusRuntimeException not thrown");
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());

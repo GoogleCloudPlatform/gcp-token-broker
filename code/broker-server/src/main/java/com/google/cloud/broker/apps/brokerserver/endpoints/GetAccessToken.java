@@ -69,7 +69,8 @@ public class GetAccessToken {
             }
         }
 
-        AccessToken accessToken = (AccessToken) new AccessTokenCacheFetcher(request.getOwner(), request.getScope()).fetch();
+        AccessToken accessToken = (AccessToken) new AccessTokenCacheFetcher(
+            request.getOwner(), request.getScope(), request.getTarget()).fetch();
 
         // Log success message
         MDC.put("owner", request.getOwner());

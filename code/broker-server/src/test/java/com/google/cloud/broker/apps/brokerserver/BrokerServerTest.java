@@ -65,7 +65,7 @@ public class BrokerServerTest {
 
     private static final String ALICE = "alice@EXAMPLE.COM";
     private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
-    private static final String MOCK_BUCKET = "gs://example";
+    private static final String MOCK_BUCKET = "//storage.googleapis.com/projects/_/buckets/example";
     private static final Long SESSION_RENEW_PERIOD = 80000000L;
     private static final Long SESSION_MAXIMUM_LIFETIME = 160000000L;
 
@@ -300,7 +300,7 @@ public class BrokerServerTest {
             .setScope(GCS)
             .setTarget(MOCK_BUCKET)
             .build());
-        assertEquals("FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scope=" + GCS, response.getAccessToken());
+        assertEquals("FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scope=" + GCS + ";Target=" + MOCK_BUCKET, response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
 
@@ -321,7 +321,7 @@ public class BrokerServerTest {
             .setTarget(MOCK_BUCKET)
             .build());
 
-        assertEquals("FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scope=" + GCS, response.getAccessToken());
+        assertEquals("FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scope=" + GCS + ";Target=" + MOCK_BUCKET, response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
 

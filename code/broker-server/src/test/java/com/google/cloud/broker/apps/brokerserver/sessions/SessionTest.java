@@ -23,7 +23,7 @@ public class SessionTest {
     private static final String ALICE = "alice@EXAMPLE.COM";
     private static final String YARN = "yarn@FOO.BAR";
     private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
-    private static final String MOCK_BUCKET = "gs://example";
+    private static final String MOCK_BUCKET = "//storage.googleapis.com/projects/_/buckets/example";
 
     // TODO: testToMap
 

@@ -49,7 +49,7 @@ public class RefreshTokenProvider extends AbstractProvider {
     }
 
     @Override
-    public AccessToken getAccessToken(String owner, String scope) {
+    public AccessToken getAccessToken(String owner, String scope, String target) {
         // Map the Google identity
         String googleIdentity = getGoogleIdentity(owner);
 
@@ -83,9 +83,11 @@ public class RefreshTokenProvider extends AbstractProvider {
             throw Status.PERMISSION_DENIED.withDescription(String.format(AUTHZ_ERROR_MESSAGE, owner)).asRuntimeException();
         }
 
-        return new AccessToken(
+        AccessToken accessToken = new AccessToken(
             response.getAccessToken(),
                 TimeUtils.currentTimeMillis() + response.getExpiresInSeconds() * 1000);
+
+        return getBoundedAccessToken(target, accessToken);
     }
 
 }

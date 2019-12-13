@@ -24,16 +24,18 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
 
     private String owner;
     private String scope;
+    private String target;
 
 
-    public AccessTokenCacheFetcher(String owner, String scope) {
+    public AccessTokenCacheFetcher(String owner, String scope, String target) {
         this.owner = owner;
         this.scope = scope;
+        this.target = target;
     }
 
     @Override
     protected String getCacheKey() {
-        return String.format("access-token-%s-%s", owner, scope);
+        return String.format("access-token-%s-%s-%s", owner, scope, target);
     }
 
     @Override
@@ -48,7 +50,7 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
 
     @Override
     protected Object computeResult() {
-        return AbstractProvider.getInstance().getAccessToken(owner, scope);
+        return AbstractProvider.getInstance().getAccessToken(owner, scope, target);
     }
 
     @Override
