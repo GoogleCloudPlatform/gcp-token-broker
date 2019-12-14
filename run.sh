@@ -199,7 +199,8 @@ function run_tests() {
 
 function mvn() {
     set -x
-    docker exec -it ${CONTAINER} bash -c "mvn $@"
+    ARGS="$@"
+    docker exec -it ${CONTAINER} bash -c "mvn ${ARGS}"
 }
 
 function clean() {
