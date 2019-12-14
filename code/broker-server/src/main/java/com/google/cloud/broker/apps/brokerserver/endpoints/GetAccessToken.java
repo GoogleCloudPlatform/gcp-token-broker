@@ -74,6 +74,7 @@ public class GetAccessToken {
         // Log success message
         MDC.put("owner", request.getOwner());
         MDC.put("scope", request.getScope());
+        MDC.put("target", request.getTarget());
         if (session == null) {
             MDC.put("auth_mode", "direct");
         }
