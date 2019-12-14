@@ -24,7 +24,7 @@ set -xeuo pipefail
 # used as-is in production.
 #####################################################################
 
-GCS_CONN_VERSION="hadoop2-2.0.0-RC2"
+GCS_CONN_VERSION="hadoop2-2.0.0"
 ROLE="$(/usr/share/google/get_metadata_value attributes/dataproc-role)"
 WORKER_COUNT="$(/usr/share/google/get_metadata_value attributes/dataproc-worker-count)"
 HADOOP_CONF_DIR="/etc/hadoop/conf"
@@ -77,7 +77,6 @@ function restart_worker_services() {
 }
 
 # Set some hadoop config properties
-set_property_core_site "fs.gs.system.bucket" ""
 set_property_core_site "fs.gs.delegation.token.binding" "com.google.cloud.broker.hadoop.fs.BrokerDelegationTokenBinding"
 set_property_core_site "gcp.token.broker.uri" "$broker_uri"
 set_property_core_site "gcp.token.broker.kerberos.principal" "$broker_kerberos_principal"
