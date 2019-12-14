@@ -18,22 +18,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
-import com.google.cloud.broker.oauth.GoogleCredentialsDetails;
-import com.google.cloud.broker.oauth.GoogleCredentialsFactory;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.grpc.Status;
-import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
 public abstract class AbstractProvider {
@@ -98,7 +93,7 @@ public abstract class AbstractProvider {
         }
 
         // Submit the request
-        AbstractSignedJWTProvider.AccessTokenResponse accessTokenResponse;
+        AccessTokenResponse accessTokenResponse;
         try {
             CloseableHttpResponse response = httpClient.execute(httpPost);
             if (response.getStatusLine().getStatusCode() != 200) {
