@@ -26,7 +26,7 @@ limitations under the License.
 
     <artifactId>broker-server</artifactId>
 
-    <name>GCP Token Broker</name>
+    <name>GCP Token Broker Server Application</name>
     <description>Service to enable end-to-end Kerberos security and Cloud IAM integration for Hadoop workloads on Google Cloud Platform (GCP).</description>
 
     <dependencies>
