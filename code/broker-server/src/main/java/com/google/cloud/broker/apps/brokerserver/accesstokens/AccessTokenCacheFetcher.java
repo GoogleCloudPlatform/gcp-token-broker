@@ -15,9 +15,11 @@ import java.io.IOException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.google.cloud.broker.authentication.backends.AbstractAuthenticationBackend;
 import com.google.cloud.broker.apps.brokerserver.accesstokens.providers.AbstractProvider;
 import com.google.cloud.broker.caching.CacheFetcher;
 import com.google.cloud.broker.settings.AppSettings;
+import io.grpc.Status;
 
 
 public class AccessTokenCacheFetcher extends CacheFetcher {
@@ -48,7 +50,14 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
 
     @Override
     protected Object computeResult() {
-        return AbstractProvider.getInstance().getAccessToken(owner, scope);
+        String googleIdentity;
+        try {
+            googleIdentity = AbstractAuthenticationBackend.getInstance().translateName(owner);
+        }
+        catch (IllegalArgumentException e) {
+            throw Status.PERMISSION_DENIED.withDescription("Principal `" + owner + "` cannot be matched to a Google identity.").asRuntimeException();
+        }
+        return AbstractProvider.getInstance().getAccessToken(googleIdentity, scope);
     }
 
     @Override

@@ -260,7 +260,6 @@ broker:
   app:
     settings: |-
       gcp-project = "${var.gcp_project}"
-      gsuite-domain = "${var.gsuite_domain}"
       encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
       encryption.cloud-kms.dek-uri = "gs://${google_storage_bucket.encryption_bucket.name}/dek.json"
       proxy-users.whitelist = "hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}"
@@ -270,6 +269,7 @@ broker:
       oauth.client-secret-json-path = "/secrets/client_secret.json"
       remote-cache.redis.host = "${google_redis_instance.cache.host}"
       logging.level = "INFO"
+      # TODO: Add Kerberos name translation rules
   service:
     port: '${var.broker_service_port}'
     loadBalancerIP: '${var.broker_service_ip}'

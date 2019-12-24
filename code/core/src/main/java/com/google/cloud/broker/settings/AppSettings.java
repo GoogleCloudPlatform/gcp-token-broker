@@ -17,7 +17,6 @@ import com.typesafe.config.Config;
 public class AppSettings {
 
     public final static String GCP_PROJECT = "gcp-project";
-    public final static String GSUITE_DOMAIN = "gsuite-domain";
     public final static String AUTHORIZER_HOST = "authorizer.host";
     public final static String AUTHORIZER_PORT = "authorizer.port";
     public final static String LOGGING_LEVEL = "logging.level";
@@ -48,6 +47,8 @@ public class AppSettings {
     public final static String OAUTH_CLIENT_SECRET_JSON_PATH = "oauth.client-secret-json-path";
     public final static String AUTHENTICATION_BACKEND = "authentication.backend";
     public final static String KEYTABS = "authentication.spnego.keytabs";
+    public final static String KERBEROS_NAME_TRANSLATION_RULES = "authentication.spnego.kerberos-name-translation-rules";
+    public final static String SHORTNAME_TRANSLATION_RULES = "authentication.spnego.short-name-translation-rules";
     public final static String ENCRYPTION_BACKEND = "encryption.backend";
     public final static String ENCRYPTION_DEK_URI = "encryption.cloud-kms.dek-uri";
     public final static String ENCRYPTION_KEK_URI = "encryption.cloud-kms.kek-uri";

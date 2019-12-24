@@ -40,6 +40,7 @@ public class SpnegoAuthenticatorTest {
     private static final String BROKER_HOST = "testhost";
     private static final String BROKER = "broker/" + BROKER_HOST + "@" + REALM;
     private static final String ALICE = "alice@" + REALM;
+    private static SettingsOverride backupSettings;
 
     @BeforeClass
     public static void setUpClass() {
@@ -47,11 +48,23 @@ public class SpnegoAuthenticatorTest {
         fakeKDC.start();
         fakeKDC.createPrincipal(ALICE);
         fakeKDC.createPrincipal(BROKER);
+        // Override settings
+        backupSettings = new SettingsOverride(Map.of(
+            AppSettings.KERBEROS_NAME_TRANSLATION_RULES, "RULE:[1:$1@$0](.*\\Q@EXAMPLE.COM\\E)s/(.*)\\Q@EXAMPLE.COM\\E/$1@altostrat.com/\n" +
+                "RULE:[2:$1@$0](.*\\Q@EXAMPLE.COM\\E)s/(.*)\\Q@EXAMPLE.COM\\E/$1@altostrat.com/\n" +
+                "RULE:[1:$1@$0](.*\\Q-app@FOO.ORG\\E)s/(.*)\\Q-app@FOO.ORG\\E/robot-$1@altostrat.org/\n" +
+                "RULE:[1:$1@$0](.*\\Q@FOO.ORG\\E)s/(.*)\\Q@FOO.ORG\\E/$1@altostrat.org/\n",
+            AppSettings.SHORTNAME_TRANSLATION_RULES, "RULE:(.*-hello)s/(.*)-hello/$1-bonjour@altostrat.net/\n" +
+                "RULE:(.*-lowercase)s/(.*)/$1@altostrat.com.au/L\n" +
+                "RULE:s/(.*)/$1@altostrat.com/\n"
+        ));
     }
 
     @AfterClass
-    public static void tearDownClass() {
+    public static void tearDownClass() throws Exception {
         fakeKDC.stop();
+        // Restore settings
+        backupSettings.restore();
     }
 
     private static String generateSpnegoToken(String principal) {
@@ -82,6 +95,49 @@ public class SpnegoAuthenticatorTest {
             }
         });
     }
+
+    @Test
+    public void testTranslateKerberosName() {
+        SpnegoAuthenticator auth = new SpnegoAuthenticator();
+        assertEquals("alice@altostrat.com", auth.translateName("alice@EXAMPLE.COM"));
+        assertEquals("hive@altostrat.com", auth.translateName("hive/example.com@EXAMPLE.COM"));
+        assertEquals("robot-yarn@altostrat.org", auth.translateName("yarn-app@FOO.ORG"));
+        assertEquals("bob@altostrat.org", auth.translateName("bob@FOO.ORG"));
+    }
+
+    @Test
+    public void testTranslateShortName() {
+        SpnegoAuthenticator auth = new SpnegoAuthenticator();
+        assertEquals("alice@altostrat.com", auth.translateName("alice"));
+        assertEquals("john-bonjour@altostrat.net", auth.translateName("john-hello"));
+        assertEquals("marie-lowercase@altostrat.com.au", auth.translateName("MaRiE-lowercase"));
+    }
+
+    @Test
+    public void testTranslateNameInvalid() {
+        SpnegoAuthenticator auth = new SpnegoAuthenticator();
+        try {
+            auth.translateName("alice@BLAH.NET");
+            fail();
+        } catch (IllegalArgumentException e) {}
+        try {
+            auth.translateName(null);
+            fail();
+        } catch (IllegalArgumentException e) {}
+        try {
+            auth.translateName("");
+            fail();
+        } catch (IllegalArgumentException e) {}
+        try {
+            auth.translateName("@EXAMPLE.COM");
+            fail();
+        } catch (IllegalArgumentException e) {}
+        try {
+            auth.translateName("@");
+            fail();
+        } catch (IllegalArgumentException e) {}
+    }
+
 
     /**
      * Check that an exception is thrown if the keytab doesn't exist.

@@ -243,6 +243,7 @@ limitations under the License.
         <module>code/authorizer</module>
         <module>code/broker-server</module>
         <module>code/core</module>
+        <module>code/extensions/authentication/spnego</module>
         <module>code/extensions/database/jdbc</module>
         <module>code/extensions/database/cloud-datastore</module>
         <module>code/extensions/encryption/cloud-kms</module>

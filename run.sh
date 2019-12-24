@@ -127,6 +127,10 @@ function set_projects_arg() {
                 PROJECTS_ARG="--projects code/common,code/connector"
                 break
                 ;;
+            spnego)
+                PROJECTS_ARG="--projects code/core,code/extensions/authentication/spnego"
+                break
+                ;;
             cloud-datastore)
                 PROJECTS_ARG="--projects code/core,code/extensions/database/cloud-datastore"
                 break

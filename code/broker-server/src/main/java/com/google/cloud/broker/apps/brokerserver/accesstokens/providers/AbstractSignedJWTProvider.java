@@ -62,7 +62,7 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         return new Iam.Builder(httpTransport, jsonFactory, credential).setApplicationName("GCP Token Broker").build();
     }
 
-    private String getSignedJWT(String owner, String scope) {
+    private String getSignedJWT(String googleIdentity, String scope) {
         // Get broker's service account details
         GoogleCredentialsDetails details = GoogleCredentialsFactory.createCredentialsDetails(true, "https://www.googleapis.com/auth/iam");
 
@@ -76,7 +76,6 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
         jwtPayload.put("iat", iat);
         jwtPayload.put("exp", exp);
         String serviceAccount;
-        String googleIdentity = getGoogleIdentity(owner);
         if (isBrokerIssuer()) {
             jwtPayload.put("sub", googleIdentity);
             jwtPayload.put("iss", details.getEmail());
@@ -139,13 +138,12 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
     }
 
     @Override
-    public AccessToken getAccessToken(String owner, String scope) {
+    public AccessToken getAccessToken(String googleIdentity, String scope) {
         // Get signed JWT
-        String signedJWT = getSignedJWT(owner, scope);
+        String signedJWT = getSignedJWT(googleIdentity, scope);
 
         // Obtain and return new access token for the owner
         return tradeSignedJWTForAccessToken(signedJWT);
     }
 
-    public abstract String getGoogleIdentity(String owner);
 }

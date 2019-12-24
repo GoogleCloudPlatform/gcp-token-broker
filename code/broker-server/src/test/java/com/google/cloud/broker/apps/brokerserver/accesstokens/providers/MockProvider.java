@@ -8,7 +8,7 @@ import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 public class MockProvider extends AbstractProvider {
 
     @Override
-    public AccessToken getAccessToken(String owner, String scope) {
-        return new AccessToken("FakeAccessToken/Owner=" + owner.toLowerCase() + ";Scope=" + scope, 999999999L);
+    public AccessToken getAccessToken(String googleIdentity, String scope) {
+        return new AccessToken("FakeAccessToken/GoogleIdentity=" + googleIdentity + ";Scope=" + scope, 999999999L);
     }
 }

@@ -25,12 +25,11 @@ public class RefreshTokenTest {
     @Test
     public void testFromMap() {
         HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("id", "alice@example.com");
+        values.put("id", "alice@altostrat.com");
         values.put("creationTime", 2222222222222L);
         values.put("value", "xyz".getBytes());
-
         RefreshToken token = (RefreshToken) Model.fromMap(RefreshToken.class, values);
-        assertEquals("alice@example.com", token.getId());
+        assertEquals("alice@altostrat.com", token.getId());
         assertEquals(2222222222222L, token.getCreationTime().longValue());
         assertArrayEquals("xyz".getBytes(), token.getValue());
     }

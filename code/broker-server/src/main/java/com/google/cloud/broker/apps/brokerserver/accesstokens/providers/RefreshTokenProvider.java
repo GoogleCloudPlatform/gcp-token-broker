@@ -32,34 +32,17 @@ import com.google.cloud.broker.utils.TimeUtils;
 
 public class RefreshTokenProvider extends AbstractProvider {
 
-    private static String AUTHZ_ERROR_MESSAGE = "GCP Token Broker authorization is invalid or has expired for user: %s";
-
-    String getGoogleIdentity(String owner) {
-        String username;
-        try {
-            username = owner.split("@")[0];
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw new IllegalArgumentException();
-        }
-        if (username.length() == 0) {
-            throw new IllegalArgumentException();
-        }
-        String domain = AppSettings.getInstance().getString(AppSettings.GSUITE_DOMAIN);
-        return String.format("%s@%s", username, domain);
-    }
+    private static String AUTHZ_ERROR_MESSAGE = "GCP Token Broker authorization is invalid or has expired for identity: %s";
 
     @Override
-    public AccessToken getAccessToken(String owner, String scope) {
-        // Map the Google identity
-        String googleIdentity = getGoogleIdentity(owner);
-
+    public AccessToken getAccessToken(String googleIdentity, String scope) {
         // Fetch refresh token from the database
         RefreshToken refreshToken = null;
         try {
             refreshToken = (RefreshToken) AbstractDatabaseBackend.getInstance().get(RefreshToken.class, googleIdentity);
         }
         catch (DatabaseObjectNotFound e) {
-            throw Status.PERMISSION_DENIED.withDescription(String.format(AUTHZ_ERROR_MESSAGE, owner)).asRuntimeException();
+            throw Status.PERMISSION_DENIED.withDescription(String.format(AUTHZ_ERROR_MESSAGE, googleIdentity)).asRuntimeException();
         }
 
         // Decrypt the refresh token's value
@@ -80,7 +63,7 @@ public class RefreshTokenProvider extends AbstractProvider {
                 clientSecrets.getDetails().getClientSecret()
             ).execute();
         } catch (IOException e) {
-            throw Status.PERMISSION_DENIED.withDescription(String.format(AUTHZ_ERROR_MESSAGE, owner)).asRuntimeException();
+            throw Status.PERMISSION_DENIED.withDescription(String.format(AUTHZ_ERROR_MESSAGE, googleIdentity)).asRuntimeException();
         }
 
         return new AccessToken(

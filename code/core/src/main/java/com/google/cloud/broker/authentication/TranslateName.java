@@ -9,13 +9,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
+package com.google.cloud.broker.authentication;
 
+import com.google.cloud.broker.authentication.backends.AbstractAuthenticationBackend;
 
-public class DomainWideDelegationAuthorityProvider extends AbstractSignedJWTProvider {
+public class TranslateName {
 
-    DomainWideDelegationAuthorityProvider() {
-        super(true);
+    public static void main(String[] args) {
+        System.out.println(AbstractAuthenticationBackend.getInstance().translateName(args[1]));
     }
 
 }
