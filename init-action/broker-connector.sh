@@ -24,7 +24,7 @@ set -xeuo pipefail
 # used as-is in production.
 #####################################################################
 
-GCS_CONN_VERSION="hadoop2-2.0.0-RC2"
+GCS_CONN_VERSION="hadoop2-2.0.0"
 ROLE="$(/usr/share/google/get_metadata_value attributes/dataproc-role)"
 WORKER_COUNT="$(/usr/share/google/get_metadata_value attributes/dataproc-worker-count)"
 HADOOP_CONF_DIR="/etc/hadoop/conf"
@@ -36,13 +36,16 @@ DATAPROC_REALM=$(sudo cat /etc/krb5.conf | grep "default_realm" | awk '{print $N
 # This will affect whether nodemanager should be restarted
 readonly early_init="$(/usr/share/google/get_metadata_value attributes/dataproc-option-run-init-actions-early || echo 'false')"
 
-readonly broker_version="$(/usr/share/google/get_metadata_value attributes/broker-version)"
-readonly broker_tls_enabled="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-tls-enabled)"
-readonly broker_tls_certificate="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-tls-certificate)"
-readonly broker_uri_hostname="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-uri-hostname)"
-readonly broker_uri_port="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-uri-port)"
+readonly connector_jar_gcs="$(/usr/share/google/get_metadata_value attributes/connector-jar-gcs)"
+readonly connector_jar_url="$(/usr/share/google/get_metadata_value attributes/connector-jar-url)"
+readonly broker_uri="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-uri)"
+readonly broker_kerberos_principal="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-kerberos-principal)"
+readonly broker_connector_jar="$(/usr/share/google/get_metadata_value attributes/broker-connector-jar)"
 readonly origin_realm="$(/usr/share/google/get_metadata_value attributes/origin-realm)"
 readonly test_users="$(/usr/share/google/get_metadata_value attributes/test-users)"
+set +x
+readonly broker_tls_certificate="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-tls-certificate)"
+set -x
 
 function set_property_in_xml() {
   bdconfig set_property \
@@ -74,13 +77,12 @@ function restart_worker_services() {
 }
 
 # Set some hadoop config properties
-set_property_core_site "fs.gs.system.bucket" ""
 set_property_core_site "fs.gs.delegation.token.binding" "com.google.cloud.broker.hadoop.fs.BrokerDelegationTokenBinding"
-set_property_core_site "gcp.token.broker.tls.enabled" "$broker_tls_enabled"
+set_property_core_site "gcp.token.broker.uri" "$broker_uri"
+set_property_core_site "gcp.token.broker.kerberos.principal" "$broker_kerberos_principal"
+set +x
 set_property_core_site "gcp.token.broker.tls.certificate" "$broker_tls_certificate"
-set_property_core_site "gcp.token.broker.uri.hostname" "$broker_uri_hostname"
-set_property_core_site "gcp.token.broker.uri.port" "$broker_uri_port"
-set_property_core_site "gcp.token.broker.realm" "$DATAPROC_REALM"
+set -x
 
 # Get connector's lib directory
 if [[ -d ${DATAPROC_LIB_DIR} ]]; then
@@ -96,7 +98,16 @@ cd ${lib_dir}
 rm -f "gcs-connector-"*
 
 # Download the JARs
-wget https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${broker_version}/broker-connector-hadoop2-${broker_version}.jar
+if [[ -n "${connector_jar_gcs}" ]]; then
+  gsutil cp ${connector_jar_gcs} .
+else
+  if [[ -n "${connector_jar_url}" ]]; then
+    wget ${connector_jar_url}
+  else
+    echo "Error: Please provide either connector-jar-url or connector-jar-gcs metadata." >&2
+    exit 1
+  fi
+fi
 wget https://repo1.maven.org/maven2/com/google/cloud/bigdataoss/gcs-connector/${GCS_CONN_VERSION}/gcs-connector-${GCS_CONN_VERSION}-shaded.jar
 
 # Update version-less connector link if present
@@ -126,8 +137,8 @@ done
 
 # Create broker principal and keytab
 if [[ "${ROLE}" == 'Master' ]]; then
-  kadmin.local -q "addprinc -randkey broker/${broker_uri_hostname}"
-  kadmin.local -q "ktadd -k /etc/security/keytab/broker.keytab broker/${broker_uri_hostname}"
+  kadmin.local -q "addprinc -randkey ${broker_kerberos_principal}"
+  kadmin.local -q "ktadd -k /etc/security/keytab/broker.keytab ${broker_kerberos_principal}"
 fi
 
 # Restart services ---------------------------------------------------------------

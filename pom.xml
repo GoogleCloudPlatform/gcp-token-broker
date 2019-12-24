@@ -19,7 +19,7 @@ limitations under the License.
 
     <groupId>com.google.cloud.broker</groupId>
     <artifactId>broker-parent</artifactId>
-    <version>0.4.1</version>
+    <version>0.6.0</version>
     <packaging>pom</packaging>
 
     <name>GCP Token Broker Parent</name>
@@ -67,37 +67,40 @@ limitations under the License.
     </distributionManagement>
 
     <properties>
-        <apache.kerby.version>2.0.0</apache.kerby.version>
+        <com.typesafe.config.version>1.4.0</com.typesafe.config.version>
+        <org.apache.kerby.version>2.0.0</org.apache.kerby.version>
+        <org.conscrypt.version>2.2.1</org.conscrypt.version>
+        <com.google.guava.version>28.1-jre</com.google.guava.version>
+        <org.eclipse.jetty.version>9.4.23.v20191118</org.eclipse.jetty.version>
         <hadoop2.version>2.9.2</hadoop2.version>
         <hadoop3.version>3.1.1</hadoop3.version>
         <junit.version>4.13-beta-3</junit.version>
-        <powermock.version>2.0.2</powermock.version>
-        <sqlite.jdbc.version>3.28.0</sqlite.jdbc.version>
-        <postgresql.jdbc.version>42.2.5</postgresql.jdbc.version>
-        <mariadb.jdbc.version>2.4.2</mariadb.jdbc.version>
-        <system.rules.version>1.19.0</system.rules.version>
-        <io.grpc.version>1.22.1</io.grpc.version>
-        <conscrypt.version>2.1.0</conscrypt.version>
-        <google.tink.version>1.3.0-rc1</google.tink.version>
-        <google.cloud.kms.api.version>v1-rev89-1.25.0</google.cloud.kms.api.version>
-        <google.cloud.storage.version>1.88.0</google.cloud.storage.version>
+        <org.powermock.version>2.0.2</org.powermock.version>
+        <org.xerial.sqlite-jdbc.version>3.28.0</org.xerial.sqlite-jdbc.version>
+        <org.postgresql.version>42.2.8.jre7</org.postgresql.version>
+        <org.mariadb.jdbc.version>2.5.1</org.mariadb.jdbc.version>
+        <com.github.stefanbirkner.system-rules.version>1.19.0</com.github.stefanbirkner.system-rules.version>
+        <io.grpc.version>1.25.0</io.grpc.version>
+        <com.google.crypto.tink.version>1.3.0-rc1</com.google.crypto.tink.version>
+        <google-api-services-cloudkms.version>v1-rev20191009-1.30.3</google-api-services-cloudkms.version>
+        <google-cloud-storage.version>1.101.0</google-cloud-storage.version>
         <protoc.version>3.7.0</protoc.version>
-        <netty.tcnative.version>2.0.25.Final</netty.tcnative.version>
-        <redisson.version>3.10.6</redisson.version>
-        <javax.annotation.version>1.2</javax.annotation.version>
-        <cloud.datastore.version>1.86.0</cloud.datastore.version>
-        <cloud.kms.version>1.22.0</cloud.kms.version>
-        <cloud.iam.version>v1-rev20190704-1.30.1</cloud.iam.version>
-        <logback.version>1.2.3</logback.version>
-        <logback.contrib.version>0.1.5</logback.contrib.version>
-        <jackson.databind.version>2.9.9.3</jackson.databind.version>
-        <expiringmap.version>0.5.9</expiringmap.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <netty-tcnative-boringssl-static.version>2.0.27.Final</netty-tcnative-boringssl-static.version>
+        <org.redisson.version>3.11.5</org.redisson.version>
+        <javax.annotation-api.version>1.3.2</javax.annotation-api.version>
+        <google-cloud-datastore.version>1.101.0</google-cloud-datastore.version>
+        <google-cloud-kms.version>1.35.0</google-cloud-kms.version>
+        <google-api-services-iam.version>v1-rev20191108-1.30.3</google-api-services-iam.version>
+        <ch.qos.logback.version>1.2.3</ch.qos.logback.version>
+        <ch.qos.logback.contrib.version>0.1.5</ch.qos.logback.contrib.version>
+        <jackson-databind.version>2.10.1</jackson-databind.version>
+        <net.jodah.expiringmap.version>0.5.9</net.jodah.expiringmap.version>
         <maven.assembly.plugin.version>3.1.1</maven.assembly.plugin.version>
         <maven.os.plugin.version>1.6.1</maven.os.plugin.version>
         <maven.protobuf.plugin.version>0.5.1</maven.protobuf.plugin.version>
         <maven.javadoc.plugin.version>3.1.0</maven.javadoc.plugin.version>
+        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
+        <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -210,33 +213,42 @@ limitations under the License.
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-junit4</artifactId>
-            <version>${powermock.version}</version>
+            <version>${org.powermock.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito2</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.stefanbirkner</groupId>
-            <artifactId>system-rules</artifactId>
-            <version>${system.rules.version}</version>
+            <version>${org.powermock.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <modules>
-        <module>apps/common</module>
-        <module>apps/broker</module>
-        <module>apps/core</module>
-        <module>apps/extensions/authentication/spnego</module>
-        <module>apps/extensions/database/jdbc</module>
-        <module>apps/extensions/database/cloud-datastore</module>
-        <module>apps/extensions/encryption/cloud-kms</module>
-        <module>apps/extensions/caching/redis</module>
-        <module>connector</module>
+        <module>code/common</module>
+        <module>code/authorizer</module>
+        <module>code/broker-server</module>
+        <module>code/core</module>
+        <module>code/extensions/authentication/spnego</module>
+        <module>code/extensions/database/jdbc</module>
+        <module>code/extensions/database/cloud-datastore</module>
+        <module>code/extensions/encryption/cloud-kms</module>
+        <module>code/extensions/caching/redis</module>
+        <module>code/connector</module>
     </modules>
 
 </project>

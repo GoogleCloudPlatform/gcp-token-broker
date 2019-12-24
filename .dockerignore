@@ -1,6 +1,8 @@
 .git/
 
-connector/**
+# Ignore connector since it's client-side code
+code/connector/**
+
 deploy/**
 img/**
 init-action/**

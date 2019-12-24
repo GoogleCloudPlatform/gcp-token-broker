@@ -6,13 +6,13 @@ The broker service can use three different providers to generate access tokens f
 - Shadow service accounts provider (`ShadowServiceAccountProvider`)
 - Domain-wide delegation authority provider (`DomainWideDelegationAuthorityProvider`)
 
-You can specify which provider you'd like to use by setting the [`PROVIDER`](settings.md#PROVIDER) setting to the provider's class path.
+You can specify which provider you'd like to use by setting the [`provider.backend`](settings.md#provider.backend) setting to the provider's class path.
 
 All providers are included in the [broker server](broker-server.md) package.
 
 ## Refresh token provider
 
-Class path: `com.google.cloud.broker.accesstokens.providers.RefreshTokenProvider`
+Class path: `com.google.cloud.broker.apps.brokerserver.accesstokens.providers.RefreshTokenProvider`
 
 A refresh token is used in OAuth flows to generate new access tokens for Google identities.
 
@@ -43,12 +43,12 @@ Let's take an example:
 
 <img src="../img/access-example-users.svg">
 
-This provider requires that you set the following settings: [`DOMAIN_NAME`](settings.md#DOMAIN_NAME), and
-[`CLIENT_SECRET_PATH`](settings.md#CLIENT_SECRET_PATH).
+This provider requires that you set the following settings: [`gsuite-domain`](settings.md#gsuite-domain), and
+[`oauth.client-secret-json-path`](settings.md#oauth.client-secret-json-path).
 
 ## Service account provider
 
-Class path: `com.google.cloud.broker.accesstokens.providers.ShadowServiceAccountProvider`
+Class path: `com.google.cloud.broker.apps.brokerserver.accesstokens.providers.ShadowServiceAccountProvider`
 
 The shadow service accounts approach leverages a Cloud IAM feature called [short-lived service account credentials](https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials).
 This feature allows a given service account to obtain access tokens on behalf of other service accounts.
@@ -75,12 +75,12 @@ To use the `ShadowServiceAccountProvider`, follow this procedure:
   role for all shadow service accounts that are expected to use the Hadoop platform (e.g. if creating a broker for Hive,
   then only give that role for the Hive users' shadow service accounts). This essentially controls what users can be impersonated.
 
-This provider requires that you set the following settings: [`SHADOW_PROJECT`](settings.md#SHADOW_PROJECT),
-[`SHADOW_USERNAME_PATTERN`](settings.md#SHADOW_USERNAME_PATTERN), and [`JWT_LIFE`](settings.md#JWT_LIFE).
+This provider requires that you set the following settings: [`provider.shadow-service-accounts.project`](settings.md#provider.shadow-service-accounts.project),
+[`provider.shadow-service-accounts.username-pattern`](settings.md#provider.shadow-service-accounts.username-pattern).
 
 ## Domain-wide delegation authority provider
 
-Class path: `com.google.cloud.broker.accesstokens.providers.DomainWideDelegationAuthorityProvider`
+Class path: `com.google.cloud.broker.apps.brokerserver.accesstokens.providers.DomainWideDelegationAuthorityProvider`
 
 In GSuite domains, the domain administrator can grant third-party applications with domain-wide access to its users' data — this is
 referred as [domain-wide delegation of authority](https://developers.google.com/admin-sdk/directory/v1/guides/delegation). To delegate
@@ -105,4 +105,4 @@ Then in the Google Admin console, add the service account ID and set the require
 
 At that point, the service account is allowed to impersonate any user in the organization's domain and obtain access tokens for those users, although only for the specified API scopes.
 
-This provider requires that you set the following settings: [`DOMAIN_NAME`](settings.md#DOMAIN_NAME) and [`JWT_LIFE`](settings.md#JWT_LIFE).
+This provider requires that you set the following settings: [`gsuite-domain`](settings.md#gsuite-domain).

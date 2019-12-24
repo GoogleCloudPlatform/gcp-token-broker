@@ -10,8 +10,8 @@
 # limitations under the License.
 
 resource "google_service_account" "test_user_serviceaccount" {
-  count = "${length(var.test_users)}-svc-acct"
-  account_id = "${element(var.test_users, count.index)}"
+  count = "${length(var.test_users)}"
+  account_id = "${element(var.test_users, count.index)}-svc-acct"
   display_name = "${element(var.test_users, count.index)}'s service account"
 }
 

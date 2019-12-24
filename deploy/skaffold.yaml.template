@@ -9,25 +9,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: skaffold/v1beta7
+apiVersion: skaffold/v1
 kind: Config
 build:
   artifacts:
-  - image: gcr.io/PROJECT/broker
+  - image: gcr.io/PROJECT/broker-server
     context: ../
     docker:
-      dockerfile: ./apps/broker/Dockerfile
+      dockerfile: ./code/broker-server/Dockerfile
   - image: gcr.io/PROJECT/authorizer
     context: ../
     docker:
-      dockerfile: ./apps/authorizer/Dockerfile
+      dockerfile: ./code/authorizer/Dockerfile
 deploy:
   helm:
     releases:
-    - name: broker
-      chartPath: ./broker
+    - name: broker-server
+      chartPath: ./broker-server
       values:
-        broker.image: gcr.io/PROJECT/broker
+        broker.image: gcr.io/PROJECT/broker-server
       valuesFiles:
         - ./values_override.yaml
     - name: authorizer

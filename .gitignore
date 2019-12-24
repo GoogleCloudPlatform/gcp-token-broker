@@ -21,13 +21,9 @@ service-account-key.json
 kerberos-config.yaml
 
 # Java artifacts
+*.jar
 **/target/**
 dependency-reduced-pom.xml
-
-# Python artifacts
-.pytest_cache
-__pycache__
-*.pyc
 
 # Redis artifacts
 dump.rdb
@@ -47,3 +43,5 @@ client_secret*.json
 .idea
 *.iml
 
+# Backup artifacts for the demo deployment
+backups/**

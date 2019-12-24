@@ -92,6 +92,22 @@ resource "google_compute_firewall" "broker_allow_http" {
   ]
 }
 
+// Encryption ------------------------------------------------
+
+// Bucket to store data the encryption key (DEK) for the CloudKMS encryption backend
+
+resource "google_storage_bucket" "encryption_bucket" {
+  name = "${var.gcp_project}-encryption"
+  depends_on = ["google_project_service.service_compute"]  # Dependency required: https://github.com/terraform-providers/terraform-provider-google/issues/1089
+  force_destroy = true
+}
+
+resource "google_storage_bucket_iam_member" "encryption_bucket_perms" {
+  bucket = "${google_storage_bucket.encryption_bucket.name}"
+  role = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.broker.email}"
+}
+
 // NAT gateway -----------------------------------------------
 
 resource "google_compute_router" "broker" {
@@ -240,22 +256,19 @@ resource "local_file" "helm_values" {
 
 # Broker config -----------------------
 broker:
-  image: 'gcr.io/${var.gcp_project}/broker'
+  image: 'gcr.io/${var.gcp_project}/broker-server'
   app:
-    settings:
-      GCP_PROJECT: '${var.gcp_project}'
-      ENCRYPTION_KEK_URI: '${google_kms_crypto_key.broker_key.self_link}'
-      ENCRYPTION_DEK_URI: ''  # FIXME
-      PROXY_USER_WHITELIST: 'hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}'
-      DOMAIN_NAME: '${var.domain}'
-      BROKER_SERVICE_NAME: 'broker'
-      BROKER_SERVICE_HOSTNAME: '${var.broker_service_hostname}'
-      KEYTABS_PATH: '/keytabs'
-      TLS_KEY_PATH: '/secrets/tls.pem'
-      TLS_CRT_PATH: '/secrets/tls.crt'
-      CLIENT_SECRET_PATH: '/secrets/client_secret.json'
-      REDIS_CACHE_HOST: '${google_redis_instance.cache.host}'
-      LOGGING_LEVEL: 'INFO'
+    settings: |-
+      gcp-project = "${var.gcp_project}"
+      encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
+      encryption.cloud-kms.dek-uri = "gs://${google_storage_bucket.encryption_bucket.name}/dek.json"
+      proxy-users.whitelist = "hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}"
+      authentication.spnego.keytabs = [{keytab="/keytabs/broker.keytab", principal="broker/${var.broker_service_hostname}@${local.dataproc_realm}"}]
+      server.tls.private-key-path = "/secrets/tls.pem"
+      server.tls.certificate-path = "/secrets/tls.crt"
+      oauth.client-secret-json-path = "/secrets/client_secret.json"
+      remote-cache.redis.host = "${google_redis_instance.cache.host}"
+      logging.level = "INFO"
       # TODO: Add Kerberos name translation rules
   service:
     port: '${var.broker_service_port}'
@@ -268,10 +281,12 @@ broker:
 authorizer:
   image: 'gcr.io/${var.gcp_project}/authorizer'
   app:
-    settings:
-      GCP_PROJECT: '${var.gcp_project}'
-      ENCRYPTION_KEY_RING_REGION: '${var.gcp_region}'
-      DOMAIN_NAME: '${var.domain}'
+    settings: |-
+      gcp-project = "${var.gcp_project}"
+      oauth.client-secret-json-path = "/secrets/client_secret.json"
+      encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
+      encryption.cloud-kms.dek-uri = "gs://${google_storage_bucket.encryption_bucket.name}/dek.json"
+      logging.level = "INFO"
   ingress:
     host: '${var.authorizer_hostname}'
 EOT

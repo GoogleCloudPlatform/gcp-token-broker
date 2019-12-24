@@ -8,7 +8,7 @@ The broker uses a database to store different types of information:
 
 ## Database backends
 
-To select a database backend, set the [`DATABASE_BACKEND`](settings.md#DATABASE_BACKEND) setting
+To select a database backend, set the [`database.backend`](settings.md#database.backend) setting
 to the backend's class path.
 
 Below is the list of available database backends:
@@ -27,7 +27,7 @@ This backend is available as a separate [package on Maven Central](https://searc
 <artifactId>database-backend-cloud-datastore</artifactId>
 ```
 
-This backend requires that you set the following setting: [`GCP_PROJECT`](settings.md#GCP_PROJECT).
+This backend requires that you set the following setting: [`gcp-project`](settings.md#gcp-project).
 
 This backend doesn't require initializing the database, as the tables (i.e. "[kinds](https://cloud.google.com/datastore/docs/concepts/entities#kinds_and_identifiers)")
 will automatically be created when the first records are inserted.
@@ -45,7 +45,7 @@ This is available as a separate [package on Maven Central](https://search.maven.
 <artifactId>database-backend-jdbc</artifactId>
 ```
 
-This backend requires that you set the following setting: [`DATABASE_JDBC_URL`](settings.md#DATABASE_JDBC_URL).
+This backend requires that you set the following setting: [`database.jdbc.driver-url`](settings.md#database.jdbc.driver-url).
 
 ### Dummy database backend
 
@@ -71,5 +71,5 @@ Follow these steps to initialize the database:
 5. Run the following command:
 
    ```shell
-   java com.google.cloud.broker.commands.InitializeDatabase
+   java com.google.cloud.broker.database.InitializeDatabase
    ```
