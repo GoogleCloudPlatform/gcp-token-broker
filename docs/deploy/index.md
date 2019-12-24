@@ -85,14 +85,14 @@ Follow these steps to deploy the demo environment to GCP:
    gcp_region = "us-west1"
    gcp_zone = "us-west1-a"
    datastore_region = "us-west2"
-   domain = "[your.domain.name]"
+   gsuite_domain = "[your.domain.name]"
    authorizer_hostname = "[your.authorizer.hostname]"
    origin_realm = "[YOUR.REALM.NAME]"
    test_users = ["alice", "bob", "john"]
    ```
 
    Notes:
-   * `domain` is the domain name (e.g. "your-domain.com") that you registered in the [Prerequisites](#prerequisites)
+   * `gsuite_domain` is the domain name (e.g. "your-domain.com") that you registered in the [Prerequisites](#prerequisites)
      section for your GSuite organization.
    * `datastore_region` is the region for your Cloud Datastore database. See the list of
      [available regions](https://cloud.google.com/datastore/docs/locations#location-r) for Cloud Datastore.
