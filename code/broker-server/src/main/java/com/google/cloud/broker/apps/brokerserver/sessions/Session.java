@@ -43,14 +43,18 @@ public class Session extends Model {
                    @JsonProperty("password") String password,
                    @JsonProperty("expiresAt") Long expiresAt,
                    @JsonProperty("creationTime") Long creationTime) {
-        this.id = id;
-        this.owner = owner;
-        this.renewer = renewer;
-        this.target = target;
-        this.scope = scope;
-        this.expiresAt = expiresAt;
-        this.creationTime = (creationTime==null) ? Long.valueOf(TimeUtils.currentTimeMillis()) : creationTime;
-        this.password = (password==null) ? generateRandomPassword() : password;
+        setId(id);
+        setOwner(owner);
+        setRenewer(renewer);
+        setTarget(target);
+        setScope(scope);
+        setExpiresAt(expiresAt);
+        setCreationTime(
+            (creationTime==null) ? Long.valueOf(TimeUtils.currentTimeMillis()) : creationTime
+        );
+        setPassword(
+            (password==null) ? generateRandomPassword() : password
+        );
         if (expiresAt==null) {
             extendLifetime();
         }
