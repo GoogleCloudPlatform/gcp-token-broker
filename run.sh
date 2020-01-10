@@ -102,7 +102,7 @@ function build_packages() {
     validate_project_var
 
     set -x
-    docker exec -it ${CONTAINER} bash -c "mvn package -DskipTests ${PROJECTS_ARG}"
+    docker exec -it ${CONTAINER} bash -c "mvn clean package -DskipTests ${PROJECTS_ARG}"
 }
 
 
