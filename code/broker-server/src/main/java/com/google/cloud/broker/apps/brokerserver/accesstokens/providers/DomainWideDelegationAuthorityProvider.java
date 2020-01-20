@@ -16,7 +16,7 @@ import com.google.cloud.broker.settings.AppSettings;
 
 public class DomainWideDelegationAuthorityProvider extends AbstractSignedJWTProvider {
 
-    DomainWideDelegationAuthorityProvider() {
+    public DomainWideDelegationAuthorityProvider() {
         super(true);
     }
 
