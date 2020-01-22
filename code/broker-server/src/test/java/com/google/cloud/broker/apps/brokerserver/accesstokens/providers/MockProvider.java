@@ -10,9 +10,10 @@ import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 public class MockProvider extends AbstractProvider {
 
     @Override
-    public AccessToken getAccessToken(String owner, Collection<String> scopes) {
+    public AccessToken getAccessToken(String googleIdentity, Collection<String> scopes) {
         return new AccessToken(
-            "FakeAccessToken/Owner=" + owner.toLowerCase() + ";Scopes=" + String.join(",", scopes),
+            "FakeAccessToken/GoogleIdentity=" + googleIdentity + ";Scopes=" + String.join(",", scopes),
             999999999L);
+    }
 
 }

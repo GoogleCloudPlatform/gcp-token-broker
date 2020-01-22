@@ -176,6 +176,10 @@ function run_tests() {
                 PROJECT=$2
                 shift 2
                 ;;
+            -gd|--gsuite-domain)
+                GSUITE_DOMAIN=$2
+                shift 2
+                ;;
             *)
                 echo "Error: Unsupported argument: '$1'" >&2
                 exit 1
@@ -187,6 +191,10 @@ function run_tests() {
 
     if [[ -n "${SPECIFIC_TEST}" ]]; then
         MVN_VARS="${MVN_VARS} -DfailIfNoTests=false -Dtest=${SPECIFIC_TEST}"
+    fi
+
+    if [[ -n "${GSUITE_DOMAIN}" ]]; then
+        MVN_VARS="${MVN_VARS} -Dgsuite-domain=${GSUITE_DOMAIN}"
     fi
 
     set_projects_arg

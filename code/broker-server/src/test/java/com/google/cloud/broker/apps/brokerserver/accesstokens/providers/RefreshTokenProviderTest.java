@@ -39,8 +39,8 @@ public class RefreshTokenProviderTest {
     public static void setupClass() {
         // Override settings
         backupSettings = new SettingsOverride(Map.of(
-            AppSettings.GSUITE_DOMAIN, "example.com",
-            AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend"
+            AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend",
+            AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper"
         ));
     }
 
@@ -58,36 +58,14 @@ public class RefreshTokenProviderTest {
     }
 
     @Test
-    public void testGoogleIdentity() {
-        RefreshTokenProvider provider = new RefreshTokenProvider();
-        assertEquals("alice@example.com", provider.getGoogleIdentity("alice@EXAMPLE.COM"));
-        assertEquals("alice@example.com", provider.getGoogleIdentity("alice@EXAMPLE.NET"));
-        assertEquals("alice@example.com", provider.getGoogleIdentity("alice"));
-        try {
-            provider.getGoogleIdentity("");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
-
-        try {
-            provider.getGoogleIdentity("@EXAMPLE.NET");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
-
-        try {
-            provider.getGoogleIdentity("@");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
-    }
-
-    @Test
     public void testUnauthorized() {
         RefreshTokenProvider provider = new RefreshTokenProvider();
         try {
-            provider.getAccessToken("bob@EXAMPLE.com", SCOPES);
+            provider.getAccessToken("bob@example.com", SCOPES);
             fail("StatusRuntimeException not thrown");
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("GCP Token Broker authorization is invalid or has expired for user: bob@EXAMPLE.COM", e.getStatus().getDescription());
+            assertEquals("GCP Token Broker authorization is invalid or has expired for identity: bob@example.com", e.getStatus().getDescription());
         }
     }
 

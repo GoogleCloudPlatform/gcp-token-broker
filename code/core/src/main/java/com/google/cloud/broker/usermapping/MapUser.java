@@ -9,13 +9,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
+package com.google.cloud.broker.usermapping;
 
+public class MapUser {
 
-public class DomainWideDelegationAuthorityProvider extends AbstractSignedJWTProvider {
-
-    public DomainWideDelegationAuthorityProvider() {
-        super(true);
+    public static void main(String[] args) {
+        System.out.println(AbstractUserMapper.getInstance().map(args[1]));
     }
 
 }

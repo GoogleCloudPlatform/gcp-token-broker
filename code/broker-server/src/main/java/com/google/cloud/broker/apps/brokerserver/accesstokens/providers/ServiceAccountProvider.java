@@ -12,10 +12,21 @@
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
 
-public class DomainWideDelegationAuthorityProvider extends AbstractSignedJWTProvider {
+import java.util.Collection;
 
-    public DomainWideDelegationAuthorityProvider() {
-        super(true);
+import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
+
+public class ServiceAccountProvider extends AbstractSignedJWTProvider {
+
+    public ServiceAccountProvider() {
+        super(false);
     }
 
+    @Override
+    public AccessToken getAccessToken(String googleIdentity, Collection<String> scopes) {
+        if (! googleIdentity.endsWith(".iam.gserviceaccount.com")) {
+            throw new IllegalArgumentException("Google identity `" + googleIdentity + "` is not a service account");
+        }
+        return super.getAccessToken(googleIdentity, scopes);
+    }
 }

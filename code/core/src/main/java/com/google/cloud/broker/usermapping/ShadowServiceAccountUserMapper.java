@@ -9,22 +9,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
+package com.google.cloud.broker.usermapping;
 
 import com.google.cloud.broker.settings.AppSettings;
 
-public class ShadowServiceAccountProvider extends AbstractSignedJWTProvider {
+public class ShadowServiceAccountUserMapper extends AbstractUserMapper {
+    @Override
+    public String map(String name) {
 
-    public ShadowServiceAccountProvider() {
-        super(false);
-    }
-
-    public String getGoogleIdentity(String owner) {
         String shadowProject = AppSettings.getInstance().getString(AppSettings.SHADOW_PROJECT);
         String shadowPattern = AppSettings.getInstance().getString(AppSettings.SHADOW_USERNAME_PATTERN);
         String username;
         try {
-            username = owner.split("@")[0];
+            username = name.split("@")[0];
         } catch (ArrayIndexOutOfBoundsException e) {
             throw new IllegalArgumentException();
         }
@@ -33,5 +30,4 @@ public class ShadowServiceAccountProvider extends AbstractSignedJWTProvider {
         }
         return String.format(shadowPattern, username) + "@" + shadowProject + ".iam.gserviceaccount.com";
     }
-
 }

@@ -9,26 +9,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
+package com.google.cloud.broker.usermapping;
 
-import java.util.Collection;
-
-import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
 
-public abstract class AbstractProvider {
+public abstract class AbstractUserMapper {
 
-    private static AbstractProvider instance;
+    private static AbstractUserMapper instance;
 
-    public static AbstractProvider getInstance() {
-        String className = AppSettings.getInstance().getString(AppSettings.PROVIDER_BACKEND);
+    public static AbstractUserMapper getInstance() {
+        String className = AppSettings.getInstance().getString(AppSettings.USER_MAPPER);
         if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
-            instance = (AbstractProvider) InstanceUtils.invokeConstructor(className);
+            instance = (AbstractUserMapper) InstanceUtils.invokeConstructor(className);
         }
         return instance;
     }
 
-    public abstract AccessToken getAccessToken(String googleIdentity, Collection<String> scopes);
-
+    abstract public String map(String name);
 }

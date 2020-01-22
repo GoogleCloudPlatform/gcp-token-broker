@@ -37,20 +37,20 @@ import io.grpc.Status;
  */
 public class JSONFileCredentialsProvider extends AbstractProvider {
 
-    private static String AUTHZ_ERROR_MESSAGE = "GCP Token Broker authorization is invalid or has expired for user: %s";
+    private static String AUTHZ_ERROR_MESSAGE = "GCP Token Broker authorization is invalid or has expired for identity: %s";
 
     @Override
-    public AccessToken getAccessToken(String owner, Collection<String> scopes) {
+    public AccessToken getAccessToken(String googleIdentity, Collection<String> scopes) {
         try {
             String basedir = AppSettings.getInstance().getString(AppSettings.JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR);
-            Path path = Paths.get(basedir, owner.split("@")[0] + ".json");
+            Path path = Paths.get(basedir, googleIdentity.split("@")[0] + ".json");
             GoogleCredentials credentials = GoogleCredentials.fromStream(new ByteArrayInputStream(Files.readAllBytes(path)));
             com.google.auth.oauth2.AccessToken token = credentials
                     .createScoped(scopes)
                     .refreshAccessToken();
             return new AccessToken(token.getTokenValue(), token.getExpirationTime().getTime());
         } catch (NoSuchFileException e) {
-            throw Status.PERMISSION_DENIED.withDescription(String.format(AUTHZ_ERROR_MESSAGE, owner)).asRuntimeException();
+            throw Status.PERMISSION_DENIED.withDescription(String.format(AUTHZ_ERROR_MESSAGE, googleIdentity)).asRuntimeException();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

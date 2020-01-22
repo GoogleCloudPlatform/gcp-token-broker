@@ -17,6 +17,7 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 import com.google.cloud.broker.settings.SettingsOverride;
+import com.google.cloud.broker.usermapping.ShadowServiceAccountUserMapper;
 import org.junit.*;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -25,7 +26,7 @@ import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 
 
-public class ShadowServiceAccountProviderTest {
+public class ServiceAccountProviderTest {
 
     private static Collection<String> SCOPES = Collections.singleton("https://www.googleapis.com/auth/devstorage.read_write");
 
@@ -48,50 +49,20 @@ public class ShadowServiceAccountProviderTest {
     }
 
     @Test
-    public void testGoogleIdentity() throws Exception {
-        try(SettingsOverride override = new SettingsOverride(Map.of(
-            AppSettings.SHADOW_PROJECT, "MY_SHADOW_PROJECT",
-            AppSettings.SHADOW_USERNAME_PATTERN, "xxx-%s-XXX"
-        ))) {
-
-            ShadowServiceAccountProvider provider = new ShadowServiceAccountProvider();
-            assertEquals("xxx-alice-XXX@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice@EXAMPLE.COM"));
-            assertEquals("xxx-alice-XXX@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice@EXAMPLE.NET"));
-            assertEquals("xxx-alice-XXX@MY_SHADOW_PROJECT.iam.gserviceaccount.com", provider.getGoogleIdentity("alice"));
-
-            try {
-                provider.getGoogleIdentity("");
-                fail("IllegalArgumentException not thrown");
-            } catch (IllegalArgumentException e) {
-            }
-
-            try {
-                provider.getGoogleIdentity("@EXAMPLE.NET");
-                fail("IllegalArgumentException not thrown");
-            } catch (IllegalArgumentException e) {
-            }
-
-            try {
-                provider.getGoogleIdentity("@");
-                fail("IllegalArgumentException not thrown");
-            } catch (IllegalArgumentException e) {
-            }
-        }
-    }
-
-    @Test
     public void testSuccess() {
-        ShadowServiceAccountProvider provider = new ShadowServiceAccountProvider();
-        AccessToken accessToken = provider.getAccessToken("alice@EXAMPLE.COM", SCOPES);
+        ServiceAccountProvider provider = new ServiceAccountProvider();
+        ShadowServiceAccountUserMapper mapper = new ShadowServiceAccountUserMapper();
+        AccessToken accessToken = provider.getAccessToken(mapper.map("alice@EXAMPLE.COM"), SCOPES);
         assertTrue(accessToken.getValue().length() > 0);
         assertTrue(accessToken.getExpiresAt() > 0);
     }
 
     @Test
     public void testUnauthorized() {
-        ShadowServiceAccountProvider provider = new ShadowServiceAccountProvider();
+        ServiceAccountProvider provider = new ServiceAccountProvider();
+        ShadowServiceAccountUserMapper mapper = new ShadowServiceAccountUserMapper();
         try {
-            provider.getAccessToken("bob@EXAMPLE.COM", SCOPES);
+            provider.getAccessToken(mapper.map("bob@EXAMPLE.COM"), SCOPES);
             fail("StatusRuntimeException not thrown");
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());

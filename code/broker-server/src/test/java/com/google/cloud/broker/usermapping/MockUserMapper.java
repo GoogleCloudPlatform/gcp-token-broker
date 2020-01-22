@@ -9,13 +9,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
+package com.google.cloud.broker.usermapping;
 
+public class MockUserMapper extends AbstractUserMapper {
 
-public class DomainWideDelegationAuthorityProvider extends AbstractSignedJWTProvider {
-
-    public DomainWideDelegationAuthorityProvider() {
-        super(true);
+    @Override
+    public String map(String name) {
+        return name.split("@")[0] + "@altostrat.com";
     }
 
 }

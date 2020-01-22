@@ -51,6 +51,7 @@ public class AppSettings {
     public final static String ENCRYPTION_BACKEND = "encryption.backend";
     public final static String ENCRYPTION_DEK_URI = "encryption.cloud-kms.dek-uri";
     public final static String ENCRYPTION_KEK_URI = "encryption.cloud-kms.kek-uri";
+    public final static String USER_MAPPER = "user-mapping.mapper";
 
     private static Config instance;
     static {

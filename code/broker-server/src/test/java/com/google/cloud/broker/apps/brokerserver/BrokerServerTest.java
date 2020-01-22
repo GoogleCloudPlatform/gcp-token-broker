@@ -85,6 +85,7 @@ public class BrokerServerTest {
         map.put(AppSettings.PROXY_USER_WHITELIST, "\"hive@FOO.BAR\"");
         map.put(AppSettings.SESSION_RENEW_PERIOD, SESSION_RENEW_PERIOD.toString());
         map.put(AppSettings.SESSION_MAXIMUM_LIFETIME, SESSION_MAXIMUM_LIFETIME.toString());
+        map.put(AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper");
 
         // Keep reference to old config file, if any
         configFileBackup = System.getProperty("config.file");
@@ -296,7 +297,7 @@ public class BrokerServerTest {
             .setScope(GCS)
             .setTarget(MOCK_BUCKET)
             .build());
-        assertEquals("FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scopes=" + GCS, response.getAccessToken());
+        assertEquals("FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + GCS, response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
 
@@ -317,7 +318,7 @@ public class BrokerServerTest {
             .setTarget(MOCK_BUCKET)
             .build());
 
-        assertEquals("FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scopes=" + GCS, response.getAccessToken());
+        assertEquals("FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + GCS, response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
 
