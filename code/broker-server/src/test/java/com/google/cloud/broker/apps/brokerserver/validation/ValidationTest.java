@@ -21,11 +21,6 @@ public class ValidationTest {
     private static final String BIGQUERY = "https://www.googleapis.com/auth/bigquery";
     private static final String BIGTABLE = "https://www.googleapis.com/auth/bigtable.data.readonly";
 
-    private static final String ALICE = "alice@EXAMPLE.COM";
-    private static final String HIVE = "hive/testhost@EXAMPLE.COM";
-    private static final String PRESTO = "presto/testhost@EXAMPLE.COM";
-    private static final String SPARK = "spark/testhost@EXAMPLE.COM";
-
     private SettingsOverride backupSettings;
 
     @Before
@@ -54,20 +49,6 @@ public class ValidationTest {
         } catch (StatusRuntimeException e) {
             assertEquals(Status.INVALID_ARGUMENT.getCode(), e.getStatus().getCode());
             assertEquals("Request must provide the `my-param` parameter", e.getStatus().getDescription());
-        }
-    }
-
-    @Test
-    public void testValidateImpersonator() {
-        Validation.validateImpersonator(ALICE, ALICE);
-        Validation.validateImpersonator(HIVE, ALICE);
-        Validation.validateImpersonator(PRESTO, ALICE);
-        try {
-            Validation.validateImpersonator(SPARK, ALICE);
-            fail("StatusRuntimeException not thrown");
-        } catch (StatusRuntimeException e) {
-            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("spark/testhost@EXAMPLE.COM is not a whitelisted impersonator", e.getStatus().getDescription());
         }
     }
 

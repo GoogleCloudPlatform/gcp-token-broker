@@ -11,13 +11,14 @@
 
 package com.google.cloud.broker.apps.brokerserver.endpoints;
 
-import com.google.cloud.broker.apps.brokerserver.logging.LoggingUtils;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
 
+import com.google.cloud.broker.apps.brokerserver.logging.LoggingUtils;
 import com.google.cloud.broker.apps.brokerserver.sessions.Session;
 import com.google.cloud.broker.apps.brokerserver.sessions.SessionTokenUtils;
 import com.google.cloud.broker.apps.brokerserver.validation.Validation;
+import com.google.cloud.broker.apps.brokerserver.validation.ProxyUserValidation;
 import com.google.cloud.broker.authentication.backends.AbstractAuthenticationBackend;
 import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 
@@ -37,7 +38,7 @@ public class GetSessionToken {
         Validation.validateParameterNotEmpty("scope", request.getScope());
         Validation.validateParameterNotEmpty("target", request.getTarget());
 
-        Validation.validateImpersonator(authenticatedUser, request.getOwner());
+        ProxyUserValidation.validateImpersonator(authenticatedUser, request.getOwner());
 
         // Create session
         Session session = new Session(null, request.getOwner(), request.getRenewer(), request.getTarget(), request.getScope(), null, null, null);
