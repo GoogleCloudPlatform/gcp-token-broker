@@ -180,7 +180,7 @@ To deploy the broker service, run the following commands **from the root of the 
    ```
    export BROKER_VERSION=$(cat VERSION)
    mkdir -p code/broker-server/target
-   curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker/${BROKER_VERSION}/broker-${BROKER_VERSION}-jar-with-dependencies.jar > code/broker-server/target/broker-${BROKER_VERSION}-jar-with-dependencies.jar
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker-server/${BROKER_VERSION}/broker-server-${BROKER_VERSION}-jar-with-dependencies.jar > code/broker-server/target/broker-${BROKER_VERSION}-jar-with-dependencies.jar
    mkdir -p code/extensions/caching/redis/target
    curl https://repo1.maven.org/maven2/com/google/cloud/broker/cache-backend-redis/${BROKER_VERSION}/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar > code/extensions/caching/redis/target/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar
    mkdir -p code/extensions/database/cloud-datastore/target
