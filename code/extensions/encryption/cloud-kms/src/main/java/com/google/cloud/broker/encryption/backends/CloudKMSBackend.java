@@ -50,6 +50,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.Channels;
 import java.security.GeneralSecurityException;
+import java.util.Collections;
 
 
 /**
@@ -60,6 +61,8 @@ import java.security.GeneralSecurityException;
 public class CloudKMSBackend extends AbstractEncryptionBackend {
 
     private static final String MEMORY = "memory";
+    private static final String GCS_API = "https://www.googleapis.com/auth/devstorage.read_write";
+    private static final String KMS_API = "https://www.googleapis.com/auth/cloudkms";
 
     static {
         try {
@@ -117,7 +120,7 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
 
     private static Storage getStorageClient() {
         GoogleCredentialsDetails details = GoogleCredentialsFactory
-            .createCredentialsDetails(false, "https://www.googleapis.com/auth/devstorage.read_write");
+            .createCredentialsDetails(Collections.singleton(GCS_API), false);
         return StorageOptions.newBuilder()
             .setCredentials(details.getCredentials())
             .build()
@@ -126,7 +129,7 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
 
     private static CloudKMS getKMSClient() {
         GoogleCredentialsDetails details = GoogleCredentialsFactory
-            .createCredentialsDetails(false, "https://www.googleapis.com/auth/cloudkms");
+            .createCredentialsDetails(Collections.singleton(KMS_API), false);
         return new CloudKMS.Builder(
             Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(), new HttpCredentialsAdapter(details.getCredentials())
         ).setApplicationName(Constants.APPLICATION_NAME).build();

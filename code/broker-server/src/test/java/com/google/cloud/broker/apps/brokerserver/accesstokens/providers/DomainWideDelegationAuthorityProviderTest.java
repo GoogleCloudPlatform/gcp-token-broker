@@ -12,6 +12,8 @@
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
 import java.util.Map;
+import java.util.Collection;
+import java.util.Collections;
 
 import static org.junit.Assert.*;
 
@@ -29,7 +31,7 @@ public class DomainWideDelegationAuthorityProviderTest {
     // TODO: Still needs tests:
     // - Happy path
 
-    private static final String SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
+    private static final Collection<String> SCOPES = Collections.singleton("https://www.googleapis.com/auth/devstorage.read_write");
 
     private static SettingsOverride backupSettings;
 
@@ -73,8 +75,8 @@ public class DomainWideDelegationAuthorityProviderTest {
     public void testUnauthorized() {
         DomainWideDelegationAuthorityProvider provider = new DomainWideDelegationAuthorityProvider();
         try {
-            provider.getAccessToken("bob@EXAMPLE.COM", SCOPE);
-            fail("StatusRuntimeException not thrown");
+            provider.getAccessToken("bob@EXAMPLE.com", SCOPES);
+            fail();
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
         }

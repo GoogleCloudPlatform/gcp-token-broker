@@ -11,9 +11,7 @@
 
 package com.google.cloud.broker.apps.brokerserver.validation;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import io.grpc.Status;
 
@@ -47,15 +45,14 @@ public class Validation {
     }
 
     public static void validateScope(String scope) {
-        String whitelist = AppSettings.getInstance().getString(AppSettings.SCOPE_WHITELIST);
+        List<String> whitelist = AppSettings.getInstance().getStringList(AppSettings.SCOPES_WHITELIST);
         Set<String> scopeSet = new HashSet<String>(Arrays.asList(scope.split("\\s*,\\s*")));
-        Set<String> whitelistSet = new HashSet<String>(Arrays.asList(whitelist.split("\\s*,\\s*")));
+        Set<String> whitelistSet = new HashSet<String>(whitelist);
         if (!whitelistSet.containsAll(scopeSet)) {
             throw Status.PERMISSION_DENIED
                 .withDescription(String.format("%s is not a whitelisted scope", scope))
                 .asRuntimeException();
         }
     }
-
 
 }

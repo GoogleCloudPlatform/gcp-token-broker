@@ -11,6 +11,8 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
@@ -29,7 +31,7 @@ public class RefreshTokenProviderTest {
     // TODO: Still needs tests:
     // - Happy path.
 
-    private static final String SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
+    private static final Collection<String> SCOPES = Collections.singleton("https://www.googleapis.com/auth/devstorage.read_write");
 
     private static SettingsOverride backupSettings;
 
@@ -81,7 +83,7 @@ public class RefreshTokenProviderTest {
     public void testUnauthorized() {
         RefreshTokenProvider provider = new RefreshTokenProvider();
         try {
-            provider.getAccessToken("bob@EXAMPLE.COM", SCOPE);
+            provider.getAccessToken("bob@EXAMPLE.com", SCOPES);
             fail("StatusRuntimeException not thrown");
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());

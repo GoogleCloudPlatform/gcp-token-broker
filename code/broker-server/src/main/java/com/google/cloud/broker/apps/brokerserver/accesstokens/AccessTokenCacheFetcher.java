@@ -12,6 +12,7 @@
 package com.google.cloud.broker.apps.brokerserver.accesstokens;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -23,17 +24,17 @@ import com.google.cloud.broker.settings.AppSettings;
 public class AccessTokenCacheFetcher extends CacheFetcher {
 
     private String owner;
-    private String scope;
+    private Collection<String> scopes;
 
 
-    public AccessTokenCacheFetcher(String owner, String scope) {
+    public AccessTokenCacheFetcher(String owner, Collection<String> scopes) {
         this.owner = owner;
-        this.scope = scope;
+        this.scopes = scopes;
     }
 
     @Override
     protected String getCacheKey() {
-        return String.format("access-token-%s-%s", owner, scope);
+        return String.format("access-token-%s-%s", owner, scopes);
     }
 
     @Override
@@ -48,7 +49,7 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
 
     @Override
     protected Object computeResult() {
-        return AbstractProvider.getInstance().getAccessToken(owner, scope);
+        return AbstractProvider.getInstance().getAccessToken(owner, scopes);
     }
 
     @Override

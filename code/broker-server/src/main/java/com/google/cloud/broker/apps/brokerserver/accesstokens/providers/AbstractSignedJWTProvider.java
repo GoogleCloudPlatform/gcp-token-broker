@@ -13,18 +13,18 @@ package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 
+import com.google.api.client.auth.oauth2.*;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.auth.oauth2.TokenRequest;
-import com.google.api.client.auth.oauth2.TokenResponse;
-import com.google.api.client.auth.oauth2.BearerToken;
-import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.googleapis.util.Utils;
 import com.google.api.services.iam.v1.Iam;
 import com.google.api.services.iam.v1.model.SignJwtRequest;
 import com.google.api.services.iam.v1.model.SignJwtResponse;
@@ -40,6 +40,7 @@ import com.google.cloud.broker.utils.Constants;
 public abstract class AbstractSignedJWTProvider extends AbstractProvider {
 
     private boolean brokerIssuer;
+    private final static String IAM_API = "https://www.googleapis.com/auth/iam";
 
     AbstractSignedJWTProvider(boolean brokerIssuer) {
         this.brokerIssuer = brokerIssuer;
@@ -50,29 +51,22 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
     }
 
     private Iam createIamService(GoogleCredentialsDetails details) {
-        HttpTransport httpTransport;
-        JsonFactory jsonFactory;
-        try {
-            httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-            jsonFactory = JacksonFactory.getDefaultInstance();
-        } catch (IOException | GeneralSecurityException e) {
-            throw new RuntimeException(e);
-        }
         Credential credential = new Credential(BearerToken.authorizationHeaderAccessMethod()).setAccessToken(details.getAccessToken());
-        return new Iam.Builder(httpTransport, jsonFactory, credential)
+        return new Iam.Builder(Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(), credential)
             .setApplicationName(Constants.APPLICATION_NAME).build();
     }
 
-    private String getSignedJWT(String owner, String scope) {
+    private String getSignedJWT(String owner, Collection<String> scopes) {
         // Get broker's service account details
-        GoogleCredentialsDetails details = GoogleCredentialsFactory.createCredentialsDetails(true, "https://www.googleapis.com/auth/iam");
+        GoogleCredentialsDetails details = GoogleCredentialsFactory.createCredentialsDetails(
+            Collections.singleton(IAM_API),true);
 
         // Create the JWT payload
         long jwtLifetime = 30;
         long iat = TimeUtils.currentTimeMillis() / 1000L;
         long exp = iat + jwtLifetime;
         HashMap<String, Object> jwtPayload = new HashMap<>();
-        jwtPayload.put("scope", scope);
+        jwtPayload.put("scope", String.join(",", scopes));
         jwtPayload.put("aud", "https://www.googleapis.com/oauth2/v4/token");
         jwtPayload.put("iat", iat);
         jwtPayload.put("exp", exp);
@@ -98,7 +92,7 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
             Iam iamService = createIamService(details);
             String name = String.format("projects/-/serviceAccounts/%s", serviceAccount);
             Iam.Projects.ServiceAccounts.SignJwt request =
-                    iamService.projects().serviceAccounts().signJwt(name, requestBody);
+                iamService.projects().serviceAccounts().signJwt(name, requestBody);
 
             // Execute the request
             response = request.execute();
@@ -131,6 +125,8 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
             request.put("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
             request.put("assertion", signedJWT);
             response = request.execute();
+        } catch (TokenResponseException e) {
+            throw Status.PERMISSION_DENIED.asRuntimeException();
         } catch (IOException | GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
@@ -140,9 +136,9 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
     }
 
     @Override
-    public AccessToken getAccessToken(String owner, String scope) {
+    public AccessToken getAccessToken(String owner, Collection<String> scopes) {
         // Get signed JWT
-        String signedJWT = getSignedJWT(owner, scope);
+        String signedJWT = getSignedJWT(owner, scopes);
 
         // Obtain and return new access token for the owner
         return tradeSignedJWTForAccessToken(signedJWT);

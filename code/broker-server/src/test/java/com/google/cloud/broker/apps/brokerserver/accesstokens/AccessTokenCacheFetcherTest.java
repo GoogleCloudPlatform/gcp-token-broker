@@ -12,6 +12,8 @@
 package com.google.cloud.broker.apps.brokerserver.accesstokens;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -24,7 +26,7 @@ import com.google.cloud.broker.settings.AppSettings;
 
 public class AccessTokenCacheFetcherTest {
 
-    private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
+    private static final Collection<String> SCOPES = Collections.singleton("https://www.googleapis.com/auth/devstorage.read_write");
     private static final String ALICE = "alice@EXAMPLE.COM";
 
     private static SettingsOverride backupSettings;
@@ -48,15 +50,15 @@ public class AccessTokenCacheFetcherTest {
 
     @Test
     public void testComputeResult() {
-        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, GCS);
+        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES);
         AccessToken token = (AccessToken) fetcher.computeResult();
-        assertEquals(token.getValue(), "FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scope=" + GCS);
+        assertEquals(token.getValue(), "FakeAccessToken/Owner=\" + ALICE.toLowerCase() + \";Scopes=" + String.join(",", SCOPES));
         assertEquals(token.getExpiresAt(), 999999999L);
     }
 
     @Test
     public void testFromJSON() {
-        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, GCS);
+        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES);
         String json = "{\"expiresAt\": 888888888, \"value\": \"blah\"}";
         AccessToken token;
         try {
@@ -70,19 +72,19 @@ public class AccessTokenCacheFetcherTest {
 
     @Test
     public void testGetCacheKey() {
-        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, GCS);
-        assertEquals(String.format("access-token-%s-%s", ALICE, GCS), fetcher.getCacheKey());
+        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES);
+        assertEquals(String.format("access-token-%s-%s", ALICE, SCOPES), fetcher.getCacheKey());
     }
 
     @Test
     public void testGetLocalCacheTime() {
-        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, GCS);
+        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES);
         assertEquals(1234, fetcher.getLocalCacheTime());
     }
 
     @Test
     public void testGetRemoteCacheTime() {
-        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, GCS);
+        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES);
         assertEquals(6789, fetcher.getRemoteCacheTime());
     }
 

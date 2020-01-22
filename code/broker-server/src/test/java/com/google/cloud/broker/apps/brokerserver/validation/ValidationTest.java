@@ -4,6 +4,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import com.typesafe.config.ConfigFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,14 +31,16 @@ public class ValidationTest {
     @Before
     public void setup() {
         // Override settings
+        Object scopesWhitelist = ConfigFactory.parseString(
+            AppSettings.SCOPES_WHITELIST + "=[\"" + GCS + "\", \"" + BIGQUERY + "\"]"
+        ).getAnyRef(AppSettings.SCOPES_WHITELIST);
         backupSettings = new SettingsOverride(Map.of(
-            AppSettings.SCOPE_WHITELIST, GCS + "," + BIGQUERY,
-            AppSettings.PROXY_USER_WHITELIST, HIVE + "," + PRESTO
+            AppSettings.SCOPES_WHITELIST, scopesWhitelist
         ));
     }
 
     @After
-    public void teardDown() throws Exception {
+    public void tearDown() throws Exception {
         // Restore settings
         backupSettings.restore();
     }
@@ -76,7 +79,7 @@ public class ValidationTest {
         Validation.validateScope(BIGQUERY + "," + GCS);
         try {
             Validation.validateScope(BIGTABLE);
-            fail("StatusRuntimeException not thrown");
+            fail();
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
             assertEquals("https://www.googleapis.com/auth/bigtable.data.readonly is not a whitelisted scope", e.getStatus().getDescription());

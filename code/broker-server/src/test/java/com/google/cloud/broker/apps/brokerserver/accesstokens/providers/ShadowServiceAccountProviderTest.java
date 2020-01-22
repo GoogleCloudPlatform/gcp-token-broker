@@ -11,6 +11,8 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -25,7 +27,7 @@ import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 
 public class ShadowServiceAccountProviderTest {
 
-    private static final String SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
+    private static Collection<String> SCOPES = Collections.singleton("https://www.googleapis.com/auth/devstorage.read_write");
 
     private static SettingsOverride backupSettings;
 
@@ -40,7 +42,7 @@ public class ShadowServiceAccountProviderTest {
     }
 
     @AfterClass
-    public static void teardDownClass() throws Exception {
+    public static void tearDownClass() throws Exception {
         // Restore settings
         backupSettings.restore();
     }
@@ -80,7 +82,7 @@ public class ShadowServiceAccountProviderTest {
     @Test
     public void testSuccess() {
         ShadowServiceAccountProvider provider = new ShadowServiceAccountProvider();
-        AccessToken accessToken = provider.getAccessToken("alice@EXAMPLE.COM", SCOPE);
+        AccessToken accessToken = provider.getAccessToken("alice@EXAMPLE.COM", SCOPES);
         assertTrue(accessToken.getValue().length() > 0);
         assertTrue(accessToken.getExpiresAt() > 0);
     }
@@ -89,7 +91,7 @@ public class ShadowServiceAccountProviderTest {
     public void testUnauthorized() {
         ShadowServiceAccountProvider provider = new ShadowServiceAccountProvider();
         try {
-            provider.getAccessToken("bob@EXAMPLE.COM", SCOPE);
+            provider.getAccessToken("bob@EXAMPLE.COM", SCOPES);
             fail("StatusRuntimeException not thrown");
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());

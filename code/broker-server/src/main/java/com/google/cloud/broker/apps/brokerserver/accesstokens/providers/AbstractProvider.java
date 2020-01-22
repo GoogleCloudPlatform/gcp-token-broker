@@ -11,6 +11,8 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
+import java.util.Collection;
+
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
@@ -27,6 +29,6 @@ public abstract class AbstractProvider {
         return instance;
     }
 
-    public abstract AccessToken getAccessToken(String owner, String scope);
+    public abstract AccessToken getAccessToken(String owner, Collection<String> scopes);
 
 }

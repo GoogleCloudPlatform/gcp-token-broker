@@ -11,6 +11,9 @@
 
 package com.google.cloud.broker.apps.brokerserver.endpoints;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
@@ -69,7 +72,8 @@ public class GetAccessToken {
             }
         }
 
-        AccessToken accessToken = (AccessToken) new AccessTokenCacheFetcher(request.getOwner(), request.getScope()).fetch();
+        Collection<String> scopes = Arrays.asList(request.getScope().split(","));
+        AccessToken accessToken = (AccessToken) new AccessTokenCacheFetcher(request.getOwner(), scopes).fetch();
 
         // Log success message
         MDC.put("owner", request.getOwner());
