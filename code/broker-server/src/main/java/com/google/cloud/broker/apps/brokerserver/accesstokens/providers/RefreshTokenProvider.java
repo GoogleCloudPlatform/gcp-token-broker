@@ -12,7 +12,7 @@
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.List;
 
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
@@ -51,7 +51,7 @@ public class RefreshTokenProvider extends AbstractProvider {
 
 
     @Override
-    public AccessToken getAccessToken(String owner, Collection<String> scopes) {
+    public AccessToken getAccessToken(String owner, List<String> scopes) {
         // Map the Google identity
         String googleIdentity = getGoogleIdentity(owner);
 

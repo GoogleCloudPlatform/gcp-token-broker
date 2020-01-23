@@ -13,9 +13,8 @@ package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import com.google.api.client.auth.oauth2.*;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -56,10 +55,10 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
             .setApplicationName(Constants.APPLICATION_NAME).build();
     }
 
-    private String getSignedJWT(String owner, Collection<String> scopes) {
+    private String getSignedJWT(String owner, List<String> scopes) {
         // Get broker's service account details
         GoogleCredentialsDetails details = GoogleCredentialsFactory.createCredentialsDetails(
-            Collections.singleton(IAM_API),true);
+            List.of(IAM_API),true);
 
         // Create the JWT payload
         long jwtLifetime = 30;
@@ -136,7 +135,7 @@ public abstract class AbstractSignedJWTProvider extends AbstractProvider {
     }
 
     @Override
-    public AccessToken getAccessToken(String owner, Collection<String> scopes) {
+    public AccessToken getAccessToken(String owner, List<String> scopes) {
         // Get signed JWT
         String signedJWT = getSignedJWT(owner, scopes);
 

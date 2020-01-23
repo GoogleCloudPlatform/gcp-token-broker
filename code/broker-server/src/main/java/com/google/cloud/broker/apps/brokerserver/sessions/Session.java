@@ -12,6 +12,7 @@
 package com.google.cloud.broker.apps.brokerserver.sessions;
 
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.HashMap;
@@ -26,20 +27,20 @@ import com.google.cloud.broker.utils.TimeUtils;
 
 public class Session extends Model {
 
-    private String id;          // UUID
-    private String owner;       // Identity who owns the session (e.g. alice@EXAMPLE.COM)
-    private String renewer;     // Identity who is allowed to renew/cancel the session (e.g. yarn@FOO.BAR)
-    private String target;      // Target resource on GCP (e.g. gs://example)
-    private String scope;       // API scope for the target resource (e.g. https://www.googleapis.com/auth/devstorage.read_write)
-    private String password;    // Randomly generated password for the session
-    private Long expiresAt;     // Time when the session will expire (in milliseconds)
-    private Long creationTime;  // Time when the session was created (in milliseconds)
+    private String id;            // UUID
+    private String owner;         // Identity who owns the session (e.g. alice@EXAMPLE.COM)
+    private String renewer;       // Identity who is allowed to renew/cancel the session (e.g. yarn@FOO.BAR)
+    private String target;        // Target resource on GCP (e.g. gs://example)
+    private List<String> scopes;  // API scopes for the target resource (e.g. https://www.googleapis.com/auth/devstorage.read_write)
+    private String password;      // Randomly generated password for the session
+    private Long expiresAt;       // Time when the session will expire (in milliseconds)
+    private Long creationTime;    // Time when the session was created (in milliseconds)
 
     public Session(@JsonProperty("id") String id,
                    @JsonProperty("owner") String owner,
                    @JsonProperty("renewer") String renewer,
                    @JsonProperty("target") String target,
-                   @JsonProperty("scope") String scope,
+                   @JsonProperty("scope") List<String> scopes,
                    @JsonProperty("password") String password,
                    @JsonProperty("expiresAt") Long expiresAt,
                    @JsonProperty("creationTime") Long creationTime) {
@@ -47,7 +48,7 @@ public class Session extends Model {
         setOwner(owner);
         setRenewer(renewer);
         setTarget(target);
-        setScope(scope);
+        setScopes(scopes);
         setExpiresAt(expiresAt);
         setCreationTime(
             (creationTime==null) ? Long.valueOf(TimeUtils.currentTimeMillis()) : creationTime
@@ -74,7 +75,7 @@ public class Session extends Model {
         map.put("owner", owner);
         map.put("renewer", renewer);
         map.put("target", target);
-        map.put("scope", scope);
+        map.put("scope", scopes);
         map.put("password", password);
         map.put("expiresAt", expiresAt);
         map.put("creationTime", creationTime);
@@ -87,7 +88,7 @@ public class Session extends Model {
             (String) map.get("owner"),
             (String) map.get("renewer"),
             (String) map.get("target"),
-            (String) map.get("scope"),
+            (List<String>) map.get("scopes"),
             (String) map.get("password"),
             (Long) map.get("expiresAt"),
             (Long) map.get("creationTime")
@@ -153,12 +154,12 @@ public class Session extends Model {
         this.target = target;
     }
 
-    public String getScope() {
-        return scope;
+    public List<String> getScopes() {
+        return scopes;
     }
 
-    public void setScope(String scope) {
-        this.scope = scope;
+    public void setScopes(List<String> scopes) {
+        this.scopes = scopes;
     }
 
     public String getPassword() {

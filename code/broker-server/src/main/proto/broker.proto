@@ -21,7 +21,7 @@ package com.google.cloud.broker.apps.brokerserver.protobuf;
 // Get session token request/response --------------------------
 
 message GetSessionTokenRequest {
-    string scope = 1;
+    repeated string scopes = 1;
     string owner = 2;
     string target = 3;
     string renewer = 4;
@@ -53,7 +53,7 @@ message CancelSessionTokenResponse {
 // Get access token request/response ---------------------------
 
 message GetAccessTokenRequest {
-    string scope = 1;
+    repeated string scopes = 1;
     string owner = 2;
     string target = 3;
 }

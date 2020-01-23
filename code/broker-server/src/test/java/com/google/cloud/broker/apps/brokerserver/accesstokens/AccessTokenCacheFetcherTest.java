@@ -12,8 +12,7 @@
 package com.google.cloud.broker.apps.brokerserver.accesstokens;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -26,7 +25,7 @@ import com.google.cloud.broker.settings.AppSettings;
 
 public class AccessTokenCacheFetcherTest {
 
-    private static final Collection<String> SCOPES = Collections.singleton("https://www.googleapis.com/auth/devstorage.read_write");
+    private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
     private static final String ALICE = "alice@EXAMPLE.COM";
 
     private static SettingsOverride backupSettings;
@@ -52,7 +51,9 @@ public class AccessTokenCacheFetcherTest {
     public void testComputeResult() {
         AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES);
         AccessToken token = (AccessToken) fetcher.computeResult();
-        assertEquals(token.getValue(), "FakeAccessToken/Owner=\" + ALICE.toLowerCase() + \";Scopes=" + String.join(",", SCOPES));
+        assertEquals(
+            "FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scopes=" + String.join(",", SCOPES),
+            token.getValue());
         assertEquals(token.getExpiresAt(), 999999999L);
     }
 

@@ -34,13 +34,13 @@ public class GetSessionToken {
 
         Validation.validateParameterNotEmpty("owner", request.getOwner());
         Validation.validateParameterNotEmpty("renewer", request.getRenewer());
-        Validation.validateParameterNotEmpty("scope", request.getScope());
+        Validation.validateParameterNotEmpty("scopes", request.getScopesList());
         Validation.validateParameterNotEmpty("target", request.getTarget());
 
         Validation.validateImpersonator(authenticatedUser, request.getOwner());
 
         // Create session
-        Session session = new Session(null, request.getOwner(), request.getRenewer(), request.getTarget(), request.getScope(), null, null, null);
+        Session session = new Session(null, request.getOwner(), request.getRenewer(), request.getTarget(), request.getScopesList(), null, null, null);
         AbstractDatabaseBackend.getInstance().save(session);
 
         // Generate session token

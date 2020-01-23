@@ -14,6 +14,8 @@ package com.google.cloud.broker.apps.brokerserver;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
@@ -60,7 +62,7 @@ public class BrokerServerTest {
     //  - Not whitelisted scopes
 
     private static final String ALICE = "alice@EXAMPLE.COM";
-    private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
+    private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
     private static final String MOCK_BUCKET = "gs://example";
     private static final Long SESSION_RENEW_PERIOD = 80000000L;
     private static final Long SESSION_MAXIMUM_LIFETIME = 160000000L;
@@ -138,7 +140,7 @@ public class BrokerServerTest {
 
     private Session createSession() {
         // Create a session in the database
-        Session session = new Session(null, ALICE, "yarn@FOO.BAR", MOCK_BUCKET, GCS, null, null, null);
+        Session session = new Session(null, ALICE, "yarn@FOO.BAR", MOCK_BUCKET, SCOPES, null, null, null);
         AbstractDatabaseBackend.getInstance().save(session);
         return session;
     }
@@ -157,7 +159,7 @@ public class BrokerServerTest {
         GetSessionTokenResponse response = stub.getSessionToken(GetSessionTokenRequest.newBuilder()
             .setOwner(ALICE)
             .setRenewer("yarn@FOO.BAR")
-            .setScope(GCS)
+            .addAllScopes(SCOPES)
             .setTarget(MOCK_BUCKET)
             .build());
 
@@ -165,7 +167,7 @@ public class BrokerServerTest {
         Session session = SessionTokenUtils.getSessionFromRawToken(response.getSessionToken());
         assertEquals(ALICE, session.getOwner());
         assertEquals("yarn@FOO.BAR", session.getRenewer());
-        assertEquals(GCS, session.getScope());
+        assertEquals(SCOPES, session.getScopes());
         assertEquals(MOCK_BUCKET, session.getTarget());
         assertEquals(now, session.getCreationTime());
         assertEquals(now + SESSION_RENEW_PERIOD, session.getExpiresAt().longValue());
@@ -293,10 +295,12 @@ public class BrokerServerTest {
         stub = addSPNEGOTokenToMetadata(stub, ALICE);
         GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder()
             .setOwner(ALICE)
-            .setScope(GCS)
+            .addAllScopes(SCOPES)
             .setTarget(MOCK_BUCKET)
             .build());
-        assertEquals("FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scopes=" + GCS, response.getAccessToken());
+        assertEquals(
+            "FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scopes=" + String.join(",", SCOPES),
+            response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
 
@@ -313,11 +317,13 @@ public class BrokerServerTest {
         // Send the GetAccessToken request
         GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder()
             .setOwner(ALICE)
-            .setScope(GCS)
+            .addAllScopes(SCOPES)
             .setTarget(MOCK_BUCKET)
             .build());
 
-        assertEquals("FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scopes=" + GCS, response.getAccessToken());
+        assertEquals(
+            "FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scopes=" + String.join(",", SCOPES),
+            response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
 
@@ -334,7 +340,7 @@ public class BrokerServerTest {
         try {
             stub.getAccessToken(GetAccessTokenRequest.newBuilder()
                 .setOwner("bob@EXAMPLE.COM")
-                .setScope(GCS)
+                .addAllScopes(SCOPES)
                 .setTarget(MOCK_BUCKET)
                 .build());
             fail("StatusRuntimeException not thrown");
@@ -347,20 +353,20 @@ public class BrokerServerTest {
         try {
             stub.getAccessToken(GetAccessTokenRequest.newBuilder()
                 .setOwner(ALICE)
-                .setScope("https://www.googleapis.com/auth/bigquery")
+                .addAllScopes(List.of("https://www.googleapis.com/auth/bigquery"))
                 .setTarget(MOCK_BUCKET)
                 .build());
             fail("StatusRuntimeException not thrown");
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("Scope mismatch", e.getStatus().getDescription());
+            assertEquals("Scopes mismatch", e.getStatus().getDescription());
         }
 
         // Send the GetAccessToken request, with wrong owner
         try {
             stub.getAccessToken(GetAccessTokenRequest.newBuilder()
                 .setOwner(ALICE)
-                .setScope(GCS)
+                .addAllScopes(SCOPES)
                 .setTarget("gs://test")
                 .build());
             fail("StatusRuntimeException not thrown");

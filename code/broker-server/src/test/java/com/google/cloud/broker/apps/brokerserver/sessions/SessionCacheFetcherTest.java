@@ -12,6 +12,7 @@
 package com.google.cloud.broker.apps.brokerserver.sessions;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -54,7 +55,7 @@ public class SessionCacheFetcherTest {
 
     private Session createSession() {
         // Create a session in the database
-        Session session = new Session(null, ALICE, "yarn@FOO.BAR", MOCK_BUCKET, GCS, null, null, null);
+        Session session = new Session(null, ALICE, "yarn@FOO.BAR", MOCK_BUCKET, List.of(GCS), null, null, null);
         AbstractDatabaseBackend.getInstance().save(session);
         return session;
     }
@@ -76,7 +77,7 @@ public class SessionCacheFetcherTest {
             "\"creationTime\": 1000000000000, " +
             "\"owner\": \"bob@EXAMPLE.COM\", " +
             "\"renewer\": \"yarn@BAZ.NET\", " +
-            "\"scope\": \"" + BIGQUERY + "\", " +
+            "\"scopes\": [\"" + BIGQUERY + "\"], " +
             "\"target\": \"gs://blah\", " +
             "\"password\": \"secret!\", " +
             "\"expiresAt\": 2000000000000" +
@@ -91,7 +92,7 @@ public class SessionCacheFetcherTest {
         assertEquals(1000000000000L, session.getCreationTime().longValue());
         assertEquals("bob@EXAMPLE.COM", session.getOwner());
         assertEquals("yarn@BAZ.NET", session.getRenewer());
-        assertEquals(BIGQUERY, session.getScope());
+        assertEquals(List.of(BIGQUERY), session.getScopes());
         assertEquals("gs://blah", session.getTarget());
         assertEquals("secret!", session.getPassword());
         assertEquals(2000000000000L, session.getExpiresAt().longValue());

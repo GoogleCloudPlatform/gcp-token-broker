@@ -1,5 +1,6 @@
 package com.google.cloud.broker.apps.brokerserver.validation;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -48,13 +49,13 @@ public class ValidationTest {
 
     @Test
     public void testrequireProperty() {
-        Validation.validateParameterNotEmpty("my-param", "Request must provide the `%s` parameter");
+        Validation.validateParameterNotEmpty("my-param", "Request must provide `%s`");
         try {
             Validation.validateParameterNotEmpty("my-param", "");
             fail("StatusRuntimeException not thrown");
         } catch (StatusRuntimeException e) {
             assertEquals(Status.INVALID_ARGUMENT.getCode(), e.getStatus().getCode());
-            assertEquals("Request must provide the `my-param` parameter", e.getStatus().getDescription());
+            assertEquals("Request must provide `my-param`", e.getStatus().getDescription());
         }
     }
 
@@ -74,16 +75,16 @@ public class ValidationTest {
 
     @Test
     public void testValidateScope() {
-        Validation.validateScope(GCS);
-        Validation.validateScope(BIGQUERY);
-        Validation.validateScope(GCS + "," + BIGQUERY);
-        Validation.validateScope(BIGQUERY + "," + GCS);
+        Validation.validateScopes(List.of(GCS));
+        Validation.validateScopes(List.of(BIGQUERY));
+        Validation.validateScopes(List.of(GCS, BIGQUERY));
+        Validation.validateScopes(List.of(BIGQUERY, GCS));
         try {
-            Validation.validateScope(BIGTABLE);
+            Validation.validateScopes(List.of(BIGTABLE));
             fail();
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("https://www.googleapis.com/auth/bigtable.data.readonly is not a whitelisted scope", e.getStatus().getDescription());
+            assertEquals("`[https://www.googleapis.com/auth/bigtable.data.readonly]` are not whitelisted scopes", e.getStatus().getDescription());
         }
     }
 

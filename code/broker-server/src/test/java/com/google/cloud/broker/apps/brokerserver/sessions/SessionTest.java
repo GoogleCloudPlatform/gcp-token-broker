@@ -12,6 +12,7 @@
 package com.google.cloud.broker.apps.brokerserver.sessions;
 
 import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -34,7 +35,7 @@ public class SessionTest {
         values.put("owner", ALICE);
         values.put("renewer", YARN);
         values.put("target", MOCK_BUCKET);
-        values.put("scope", GCS);
+        values.put("scopes", List.of(GCS));
         values.put("password", "abcd");
         values.put("creationTime", 11111111111111L);
         values.put("expiresAt", 2222222222222L);
@@ -44,7 +45,7 @@ public class SessionTest {
         assertEquals(ALICE, session.getOwner());
         assertEquals(YARN, session.getRenewer());
         assertEquals(MOCK_BUCKET, session.getTarget());
-        assertEquals(GCS, session.getScope());
+        assertEquals(List.of(GCS), session.getScopes());
         assertEquals("abcd", session.getPassword());
         assertEquals(11111111111111L, session.getCreationTime().longValue());
         assertEquals(2222222222222L, session.getExpiresAt().longValue());
