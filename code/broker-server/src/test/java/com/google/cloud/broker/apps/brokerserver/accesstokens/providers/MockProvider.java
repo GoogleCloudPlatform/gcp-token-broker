@@ -14,5 +14,6 @@ public class MockProvider extends AbstractProvider {
         return new AccessToken(
             "FakeAccessToken/Owner=" + owner.toLowerCase() + ";Scopes=" + String.join(",", scopes),
             999999999L);
+    }
 
 }

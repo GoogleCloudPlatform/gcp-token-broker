@@ -35,6 +35,7 @@ public class ValidationTest {
             AppSettings.SCOPES_WHITELIST + "=[\"" + GCS + "\", \"" + BIGQUERY + "\"]"
         ).getAnyRef(AppSettings.SCOPES_WHITELIST);
         backupSettings = new SettingsOverride(Map.of(
+            AppSettings.PROXY_USER_WHITELIST, HIVE + "," + PRESTO,
             AppSettings.SCOPES_WHITELIST, scopesWhitelist
         ));
     }

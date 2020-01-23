@@ -83,7 +83,7 @@ public class RefreshTokenProviderTest {
     public void testUnauthorized() {
         RefreshTokenProvider provider = new RefreshTokenProvider();
         try {
-            provider.getAccessToken("bob@EXAMPLE.com", SCOPES);
+            provider.getAccessToken("bob@EXAMPLE.COM", SCOPES);
             fail("StatusRuntimeException not thrown");
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
