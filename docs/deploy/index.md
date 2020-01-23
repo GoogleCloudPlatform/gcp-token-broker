@@ -175,7 +175,7 @@ Run from the following commands **from the root of the repository**:
 
 To deploy the broker service, run the following commands **from the root of the repository**:
 
-1. Download the broker app's JARs:
+1. Download the application JARs:
 
    ```
    export BROKER_VERSION=$(cat VERSION)
@@ -187,6 +187,8 @@ To deploy the broker service, run the following commands **from the root of the 
    curl https://repo1.maven.org/maven2/com/google/cloud/broker/database-backend-cloud-datastore/${BROKER_VERSION}/database-backend-cloud-datastore-${BROKER_VERSION}-jar-with-dependencies.jar > code/extensions/database/cloud-datastore/target/database-backend-cloud-datastore-${BROKER_VERSION}-jar-with-dependencies.jar
    mkdir -p code/extensions/encryption/cloud-kms/target
    curl https://repo1.maven.org/maven2/com/google/cloud/broker/encryption-backend-cloud-kms/${BROKER_VERSION}/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar > code/extensions/encryption/cloud-kms/target/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar
+   mkdir -p code/authorizer/target
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/authorizer/${BROKER_VERSION}/authorizer-${BROKER_VERSION}-jar-with-dependencies.jar > code/authorizer/target/authorizer-${BROKER_VERSION}-jar-with-dependencies.jar
    ```
 2. Configure credentials for the cluster:
 
@@ -242,6 +244,7 @@ To deploy the broker service, run the following commands **from the root of the 
     POD=$(kubectl get pods | grep authorizer | awk '{print $1}' | head -n 1)
     kubectl exec $POD -- \
       java -cp /classpath/authorizer.jar:/classpath/encryption-backend-cloud-kms.jar \
+        -Dconfig.file=/config/application.conf \
         com.google.cloud.broker.encryption.GenerateDEK
     ```
 10. Wait until an external IP has been assigned to the broker service. You can
