@@ -140,7 +140,15 @@ public class BrokerServerTest {
 
     private Session createSession() {
         // Create a session in the database
-        Session session = new Session(null, ALICE, "yarn@FOO.BAR", MOCK_BUCKET, SCOPES, null, null, null);
+        Session session = new Session(
+            null,
+            ALICE,
+            "yarn@FOO.BAR",
+            MOCK_BUCKET,
+            String.join(",", SCOPES),
+            null,
+            null,
+            null);
         AbstractDatabaseBackend.getInstance().save(session);
         return session;
     }
@@ -167,7 +175,7 @@ public class BrokerServerTest {
         Session session = SessionTokenUtils.getSessionFromRawToken(response.getSessionToken());
         assertEquals(ALICE, session.getOwner());
         assertEquals("yarn@FOO.BAR", session.getRenewer());
-        assertEquals(SCOPES, session.getScopes());
+        assertEquals(SCOPES, Arrays.asList(session.getScopes().split(",")));
         assertEquals(MOCK_BUCKET, session.getTarget());
         assertEquals(now, session.getCreationTime());
         assertEquals(now + SESSION_RENEW_PERIOD, session.getExpiresAt().longValue());

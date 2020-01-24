@@ -11,6 +11,8 @@
 
 package com.google.cloud.broker.apps.brokerserver.endpoints;
 
+import java.util.Arrays;
+
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
@@ -55,7 +57,7 @@ public class GetAccessToken {
                     .withDescription("Target mismatch")
                     .asRuntimeException();
             }
-            if (!request.getScopesList().equals(session.getScopes())) {
+            if (!request.getScopesList().equals(Arrays.asList(session.getScopes().split(",")))) {
                 throw Status.PERMISSION_DENIED
                     .withDescription("Scopes mismatch")
                     .asRuntimeException();

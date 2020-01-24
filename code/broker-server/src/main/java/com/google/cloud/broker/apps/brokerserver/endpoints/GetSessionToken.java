@@ -50,7 +50,7 @@ public class GetSessionToken {
             request.getOwner(),
             request.getRenewer(),
             request.getTarget(),
-            request.getScopesList(),
+            String.join(",", request.getScopesList()),
             null,
             null,
             null

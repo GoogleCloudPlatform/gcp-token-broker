@@ -12,7 +12,6 @@
 package com.google.cloud.broker.apps.brokerserver.sessions;
 
 import java.security.SecureRandom;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.HashMap;
@@ -23,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.TimeUtils;
-import com.google.common.collect.ImmutableList;
 
 
 public class Session extends Model {
@@ -32,7 +30,7 @@ public class Session extends Model {
     private String owner;         // Identity who owns the session (e.g. alice@EXAMPLE.COM)
     private String renewer;       // Identity who is allowed to renew/cancel the session (e.g. yarn@FOO.BAR)
     private String target;        // Target resource on GCP (e.g. gs://example)
-    private List<String> scopes;  // API scopes for the target resource (e.g. https://www.googleapis.com/auth/devstorage.read_write)
+    private String scopes;        // API scopes for the target resource (e.g. https://www.googleapis.com/auth/devstorage.read_write)
     private String password;      // Randomly generated password for the session
     private Long expiresAt;       // Time when the session will expire (in milliseconds)
     private Long creationTime;    // Time when the session was created (in milliseconds)
@@ -41,7 +39,7 @@ public class Session extends Model {
                    @JsonProperty("owner") String owner,
                    @JsonProperty("renewer") String renewer,
                    @JsonProperty("target") String target,
-                   @JsonProperty("scopes") List<String> scopes,
+                   @JsonProperty("scopes") String scopes,
                    @JsonProperty("password") String password,
                    @JsonProperty("expiresAt") Long expiresAt,
                    @JsonProperty("creationTime") Long creationTime) {
@@ -89,7 +87,7 @@ public class Session extends Model {
             (String) map.get("owner"),
             (String) map.get("renewer"),
             (String) map.get("target"),
-            (List<String>) map.get("scopes"),
+            (String) map.get("scopes"),
             (String) map.get("password"),
             (Long) map.get("expiresAt"),
             (Long) map.get("creationTime")
@@ -155,12 +153,12 @@ public class Session extends Model {
         this.target = target;
     }
 
-    public List<String> getScopes() {
+    public String getScopes() {
         return scopes;
     }
 
-    public void setScopes(List<String> scopes) {
-        this.scopes = ImmutableList.copyOf(scopes);
+    public void setScopes(String scopes) {
+        this.scopes = scopes;
     }
 
     public String getPassword() {
