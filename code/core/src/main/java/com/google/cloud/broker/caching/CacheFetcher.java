@@ -11,15 +11,15 @@
 
 package com.google.cloud.broker.caching;
 
+import java.io.IOException;
+import java.util.concurrent.locks.Lock;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.google.cloud.broker.caching.local.LocalCache;
 import com.google.cloud.broker.caching.remote.AbstractRemoteCache;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
-
-
-import java.io.IOException;
-import java.util.concurrent.locks.Lock;
 
 
 public abstract class CacheFetcher {
@@ -50,14 +50,14 @@ public abstract class CacheFetcher {
                 }
             }
             else {
-                // Cache miss... Let's generate a new access token.
+                // Cache miss...
                 // Start by acquiring a lock to avoid cache stampede
                 Lock lock = cache.acquireLock(cacheKey + "_lock");
 
                 // Check again if there's still no value
                 encryptedValue = cache.get(cacheKey);
                 if (encryptedValue != null) {
-                    // This time it's a cache hit. The token must have been generated
+                    // This time it's a cache hit. The value must have been generated
                     // by a competing thread. So we just load the value.
                     String json = new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
                     try {
@@ -69,7 +69,7 @@ public abstract class CacheFetcher {
                 else {
                     // Compute the result
                     result = computeResult();
-                    // Encrypt and cache token for possible future requests
+                    // Encrypt and cache the value for possible future requests
                     String json = null;
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
@@ -90,7 +90,7 @@ public abstract class CacheFetcher {
             result = computeResult();
         }
 
-        // Add unencrypted token to local cache
+        // Add unencrypted value to local cache
         LocalCache.set(cacheKey, result, getLocalCacheTime());
 
         return result;

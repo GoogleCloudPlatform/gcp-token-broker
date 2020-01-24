@@ -14,6 +14,8 @@ package com.google.cloud.broker.database.backends;
 import static org.junit.Assert.*;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
@@ -21,8 +23,6 @@ import com.google.cloud.datastore.*;
 import org.junit.After;
 import org.junit.Test;
 
-
-import com.google.cloud.broker.oauth.RefreshToken;
 import com.google.cloud.broker.settings.AppSettings;
 
 
@@ -35,7 +35,7 @@ public class CloudDatastoreBackendTest {
     public void teardown() {
         // Delete all records
         Datastore datastore = getService();
-        Query<Entity> query = Query.newEntityQueryBuilder().setKind("RefreshToken").build();
+        Query<Entity> query = Query.newEntityQueryBuilder().setKind("Foo").build();
         QueryResults<Entity> entities = datastore.run(query);
         while (entities.hasNext()) {
             Entity entity = entities.next();
@@ -48,6 +48,14 @@ public class CloudDatastoreBackendTest {
         return DatastoreOptions.newBuilder().setProjectId(projectId).build().getService();
     }
 
+    private static void assertListEqualsListValue(List<String> list, ListValue listValue) {
+        List<String> l = new LinkedList<>();
+        for (Value<?> v : listValue.get()) {
+            l.add((String) v.get());
+        }
+        assertEquals(list, l);
+    }
+    
     /**
      * Test saving a new model to the database.
      */
@@ -55,22 +63,23 @@ public class CloudDatastoreBackendTest {
     public void testSaveNew() {
         // Check that there are no records
         Datastore datastore = getService();
-        Query<Entity> query = Query.newEntityQueryBuilder().setKind("RefreshToken").build();
+        Query<Entity> query = Query.newEntityQueryBuilder().setKind("Foo").build();
         QueryResults<Entity> entities = datastore.run(query);
         assertFalse(entities.hasNext());
 
         // Create a new record
         HashMap<String, Object> values = new HashMap<String, Object>();
-        RefreshToken token = new RefreshToken("alice@example.com", "abcd".getBytes(), 1564094282994L);
+        Foo foo = new Foo("myid", "abcd".getBytes(), 1564094282994L, List.of("hello", "hi"));
         CloudDatastoreBackend backend = new CloudDatastoreBackend();
-        backend.save(token);
+        backend.save(foo);
 
         // Check that the record was correctly created
-        KeyFactory keyFactory = datastore.newKeyFactory().setKind("RefreshToken");
-        Key key = keyFactory.newKey("alice@example.com");
+        KeyFactory keyFactory = datastore.newKeyFactory().setKind("Foo");
+        Key key = keyFactory.newKey("myid");
         Entity entity = datastore.get(key);
-        assertEquals(entity.getValue("creationTime").get(), 1564094282994L);
-        assertArrayEquals(((Blob) entity.getValue("value").get()).toByteArray(), "abcd".getBytes());
+        assertEquals(1564094282994L, entity.getValue("longVal").get());
+        assertArrayEquals("abcd".getBytes(), ((Blob) entity.getValue("byteVal").get()).toByteArray());
+        assertListEqualsListValue(List.of("hello", "hi"), entity.getValue("stringList"));
     }
 
     /**
@@ -80,26 +89,27 @@ public class CloudDatastoreBackendTest {
     public void testUpdate() {
         // Create a record in the database
         Datastore datastore = getService();
-        KeyFactory keyFactory = datastore.newKeyFactory().setKind("RefreshToken");
-        Key key = keyFactory.newKey("alice@example.com");
+        KeyFactory keyFactory = datastore.newKeyFactory().setKind("Foo");
+        Key key = keyFactory.newKey("myid");
         Entity.Builder builder = Entity.newBuilder(key);
-        builder.set("creationTime", 1564094282994L);
-        builder.set("value", Blob.copyFrom("abcd".getBytes()));
+        builder.set("longVal", 1564094282994L);
+        builder.set("byteVal", Blob.copyFrom("abcd".getBytes()));
         Entity entity = builder.build();
         datastore.put(entity);
 
         // Update the record with the same ID but different values
         HashMap<String, Object> values = new HashMap<String, Object>();
-        RefreshToken token = new RefreshToken("alice@example.com", "xyz".getBytes(), 2222222222222L);
+        Foo foo = new Foo("myid", "xyz".getBytes(), 2222222222222L, List.of("hello", "hi"));
         CloudDatastoreBackend backend = new CloudDatastoreBackend();
-        backend.save(token);
+        backend.save(foo);
 
         // Check that the record was updated
-        keyFactory = datastore.newKeyFactory().setKind("RefreshToken");
-        key = keyFactory.newKey("alice@example.com");
+        keyFactory = datastore.newKeyFactory().setKind("Foo");
+        key = keyFactory.newKey("myid");
         entity = datastore.get(key);
-        assertEquals(entity.getValue("creationTime").get(), 2222222222222L);
-        assertArrayEquals(((Blob) entity.getValue("value").get()).toByteArray(), "xyz".getBytes());
+        assertEquals(2222222222222L, entity.getValue("longVal").get());
+        assertArrayEquals("xyz".getBytes(), ((Blob) entity.getValue("byteVal").get()).toByteArray());
+        assertListEqualsListValue(List.of("hello", "hi"), entity.getValue("stringList"));
     }
 
     /**
@@ -109,21 +119,22 @@ public class CloudDatastoreBackendTest {
     public void testSaveWithoutID() {
         // Check that there are no records
         Datastore datastore = getService();
-        Query<Entity> query = Query.newEntityQueryBuilder().setKind("RefreshToken").build();
+        Query<Entity> query = Query.newEntityQueryBuilder().setKind("Foo").build();
         QueryResults<Entity> entities = datastore.run(query);
         assertFalse(entities.hasNext());
 
         // Create a new record without specifying an ID
-        RefreshToken token = new RefreshToken(null, "abcd".getBytes(), 1564094282994L);
+        Foo foo = new Foo(null, "abcd".getBytes(), 1564094282994L, List.of("hello", "hi"));
         CloudDatastoreBackend backend = new CloudDatastoreBackend();
-        backend.save(token);
+        backend.save(foo);
 
         // Check that the record was correctly created
-        query = Query.newEntityQueryBuilder().setKind("RefreshToken").build();
+        query = Query.newEntityQueryBuilder().setKind("Foo").build();
         entities = datastore.run(query);
         Entity entity = entities.next();
-        assertEquals(entity.getValue("creationTime").get(), 1564094282994L);
-        assertArrayEquals(((Blob) entity.getValue("value").get()).toByteArray(), "abcd".getBytes());
+        assertEquals(1564094282994L, entity.getValue("longVal").get());
+        assertArrayEquals("abcd".getBytes(), ((Blob) entity.getValue("byteVal").get()).toByteArray());
+        assertListEqualsListValue(List.of("hello", "hi"), entity.getValue("stringList"));
         assertFalse(entities.hasNext());
 
         // Check that the ID is a valid UUID
@@ -138,20 +149,22 @@ public class CloudDatastoreBackendTest {
     public void testGet() {
         // Create a record in the database
         Datastore datastore = getService();
-        KeyFactory keyFactory = datastore.newKeyFactory().setKind("RefreshToken");
-        Key key = keyFactory.newKey("alice@example.com");
+        KeyFactory keyFactory = datastore.newKeyFactory().setKind("Foo");
+        Key key = keyFactory.newKey("myid");
         Entity.Builder builder = Entity.newBuilder(key);
-        builder.set("creationTime", 1564094282994L);
-        builder.set("value", Blob.copyFrom("abcd".getBytes()));
+        builder.set("longVal", 1564094282994L);
+        builder.set("byteVal", Blob.copyFrom("abcd".getBytes()));
+        builder.set("stringList", "hello", "hi");
         Entity entity = builder.build();
         datastore.put(entity);
 
         // Check that the record is correctly retrieved
         CloudDatastoreBackend backend = new CloudDatastoreBackend();
-        RefreshToken token = (RefreshToken) backend.get(RefreshToken.class, "alice@example.com");
-        assertEquals(token.getId(), "alice@example.com");
-        assertEquals(token.getCreationTime().longValue(), 1564094282994L);
-        assertArrayEquals(token.getValue(), "abcd".getBytes());
+        Foo foo = (Foo) backend.get(Foo.class, "myid");
+        assertEquals("myid", foo.getId());
+        assertEquals(1564094282994L, foo.getLongVal().longValue());
+        assertArrayEquals("abcd".getBytes(), foo.getByteVal());
+        assertEquals(List.of("hello", "hi"), foo.getStringList());
     }
 
     /**
@@ -160,7 +173,7 @@ public class CloudDatastoreBackendTest {
     @Test(expected = DatabaseObjectNotFound.class)
     public void testGetNotExist() {
         CloudDatastoreBackend backend = new CloudDatastoreBackend();
-        backend.get(RefreshToken.class, "whatever");
+        backend.get(Foo.class, "whatever");
     }
 
     /**
@@ -170,22 +183,22 @@ public class CloudDatastoreBackendTest {
     public void testDelete() {
         // Create a record in the database
         Datastore datastore = getService();
-        KeyFactory keyFactory = datastore.newKeyFactory().setKind("RefreshToken");
-        Key key = keyFactory.newKey("alice@example.com");
+        KeyFactory keyFactory = datastore.newKeyFactory().setKind("Foo");
+        Key key = keyFactory.newKey("myid");
         Entity.Builder builder = Entity.newBuilder(key);
-        builder.set("creationTime", 1564094282994L);
-        builder.set("value", Blob.copyFrom("abcd".getBytes()));
+        builder.set("longVal", 1564094282994L);
+        builder.set("byteVal", Blob.copyFrom("abcd".getBytes()));
         Entity entity = builder.build();
         datastore.put(entity);
 
         // Delete the record
-        RefreshToken token = new RefreshToken("alice@example.com", null, null);
+        Foo foo = new Foo("myid", null, null, List.of("hello", "hi"));
         CloudDatastoreBackend backend = new CloudDatastoreBackend();
-        backend.delete(token);
+        backend.delete(foo);
 
         // Check that the record was deleted
-        keyFactory = datastore.newKeyFactory().setKind("RefreshToken");
-        key = keyFactory.newKey("alice@example.com");
+        keyFactory = datastore.newKeyFactory().setKind("Foo");
+        key = keyFactory.newKey("myid");
         entity = datastore.get(key);
         assertNull(entity);
     }

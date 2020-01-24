@@ -11,8 +11,7 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
-
-import java.util.Collection;
+import java.util.List;
 
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 
@@ -23,7 +22,7 @@ public class ServiceAccountProvider extends AbstractSignedJWTProvider {
     }
 
     @Override
-    public AccessToken getAccessToken(String googleIdentity, Collection<String> scopes) {
+    public AccessToken getAccessToken(String googleIdentity, List<String> scopes) {
         if (! googleIdentity.endsWith(".iam.gserviceaccount.com")) {
             throw new IllegalArgumentException("Google identity `" + googleIdentity + "` is not a service account");
         }

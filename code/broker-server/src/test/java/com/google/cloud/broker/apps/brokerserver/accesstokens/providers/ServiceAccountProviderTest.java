@@ -11,8 +11,7 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -28,7 +27,7 @@ import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 
 public class ServiceAccountProviderTest {
 
-    private static Collection<String> SCOPES = Collections.singleton("https://www.googleapis.com/auth/devstorage.read_write");
+    private static List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
 
     private static SettingsOverride backupSettings;
 

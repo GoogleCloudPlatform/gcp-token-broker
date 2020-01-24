@@ -12,7 +12,7 @@
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.List;
 
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
@@ -35,7 +35,7 @@ public class RefreshTokenProvider extends AbstractProvider {
     private static String AUTHZ_ERROR_MESSAGE = "GCP Token Broker authorization is invalid or has expired for identity: %s";
 
     @Override
-    public AccessToken getAccessToken(String googleIdentity, Collection<String> scopes) {
+    public AccessToken getAccessToken(String googleIdentity, List<String> scopes) {
         // Fetch refresh token from the database
         RefreshToken refreshToken = null;
         try {

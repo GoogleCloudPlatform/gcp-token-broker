@@ -28,6 +28,7 @@ spec:
   selector:
     run: '{{ .Release.Name }}'
   type: LoadBalancer
+  externalTrafficPolicy: Local  # Preserves origin client IPs
   loadBalancerIP: {{ .Values.broker.service.loadBalancerIP }}
   loadBalancerSourceRanges:
     {{- range .Values.broker.service.loadBalancerSourceRanges }}

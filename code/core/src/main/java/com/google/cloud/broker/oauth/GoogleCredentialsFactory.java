@@ -18,7 +18,7 @@ package com.google.cloud.broker.oauth;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Collection;
+import java.util.List;
 
 import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -26,7 +26,7 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 
 public class GoogleCredentialsFactory {
 
-    public static GoogleCredentialsDetails createCredentialsDetails(Collection<String> scopes, boolean generateAccessToken) {
+    public static GoogleCredentialsDetails createCredentialsDetails(List<String> scopes, boolean generateAccessToken) {
         String jsonPath = System.getenv().get("GOOGLE_APPLICATION_CREDENTIALS");
         GoogleCredentials credentials;
         String email;
