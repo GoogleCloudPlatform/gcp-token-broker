@@ -55,18 +55,8 @@ limitations under the License.
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <finalName>${project.artifactId}-${project.version}-jar-with-dependencies</finalName>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/maven/**</exclude>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
+                            <shadedClassifierName>jar-with-dependencies</shadedClassifierName>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
                             <relocations>
                                 <!-- Shade some dependencies to avoid conflicts with other libraries (e.g. the authorizer) -->
                                 <relocation>

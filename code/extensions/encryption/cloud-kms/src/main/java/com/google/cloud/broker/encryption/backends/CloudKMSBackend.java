@@ -50,7 +50,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.Channels;
 import java.security.GeneralSecurityException;
-import java.util.Collections;
+import java.util.List;
 
 
 /**
@@ -120,7 +120,7 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
 
     private static Storage getStorageClient() {
         GoogleCredentialsDetails details = GoogleCredentialsFactory
-            .createCredentialsDetails(Collections.singleton(GCS_API), false);
+            .createCredentialsDetails(List.of(GCS_API), false);
         return StorageOptions.newBuilder()
             .setCredentials(details.getCredentials())
             .build()
@@ -129,7 +129,7 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
 
     private static CloudKMS getKMSClient() {
         GoogleCredentialsDetails details = GoogleCredentialsFactory
-            .createCredentialsDetails(Collections.singleton(KMS_API), false);
+            .createCredentialsDetails(List.of(KMS_API), false);
         return new CloudKMS.Builder(
             Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(), new HttpCredentialsAdapter(details.getCredentials())
         ).setApplicationName(Constants.APPLICATION_NAME).build();

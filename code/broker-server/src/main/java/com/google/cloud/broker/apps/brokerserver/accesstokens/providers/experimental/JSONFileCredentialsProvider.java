@@ -17,7 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.nio.file.Path;
-import java.util.Collection;
+import java.util.List;
 
 import com.google.auth.oauth2.GoogleCredentials;
 
@@ -40,7 +40,7 @@ public class JSONFileCredentialsProvider extends AbstractProvider {
     private static String AUTHZ_ERROR_MESSAGE = "GCP Token Broker authorization is invalid or has expired for identity: %s";
 
     @Override
-    public AccessToken getAccessToken(String googleIdentity, Collection<String> scopes) {
+    public AccessToken getAccessToken(String googleIdentity, List<String> scopes) {
         try {
             String basedir = AppSettings.getInstance().getString(AppSettings.JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR);
             Path path = Paths.get(basedir, googleIdentity.split("@")[0] + ".json");

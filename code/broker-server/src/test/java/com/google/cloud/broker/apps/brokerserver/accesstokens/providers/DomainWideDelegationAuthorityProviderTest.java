@@ -11,8 +11,7 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -25,7 +24,7 @@ public class DomainWideDelegationAuthorityProviderTest {
     // TODO: Still needs tests:
     // - Happy path
 
-    private static final Collection<String> SCOPES = Collections.singleton("https://www.googleapis.com/auth/devstorage.read_write");
+    private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
 
     @Test
     public void testUnauthorized() {

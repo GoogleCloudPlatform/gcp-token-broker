@@ -85,13 +85,13 @@ public class ProxyUserValidationTest {
 
     @Test
     public void testRequireProperty() {
-        Validation.validateParameterNotEmpty("my-param", "Request must provide the `%s` parameter");
+        Validation.validateParameterNotEmpty("my-param", "Request must provide `%s`");
         try {
             Validation.validateParameterNotEmpty("my-param", "");
             fail();
         } catch (StatusRuntimeException e) {
             assertEquals(Status.INVALID_ARGUMENT.getCode(), e.getStatus().getCode());
-            assertEquals("Request must provide the `my-param` parameter", e.getStatus().getDescription());
+            assertEquals("Request must provide `my-param`", e.getStatus().getDescription());
         }
     }
 

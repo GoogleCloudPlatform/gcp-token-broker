@@ -22,18 +22,26 @@ public class Validation {
     public static void validateParameterNotEmpty(String parameter, String value) {
         if (value.length() == 0) {
             throw Status.INVALID_ARGUMENT
-                .withDescription(String.format("Request must provide the `%s` parameter", parameter))
+                .withDescription(String.format("Request must provide `%s`", parameter))
                 .asRuntimeException();
         }
     }
 
-    public static void validateScope(String scope) {
+    public static void validateParameterNotEmpty(String parameter, List<String> values) {
+        if (values.size() == 0) {
+            throw Status.INVALID_ARGUMENT
+                .withDescription(String.format("Request must provide `%s`", parameter))
+                .asRuntimeException();
+        }
+    }
+
+    public static void validateScopes(List<String> scopes) {
         List<String> whitelist = AppSettings.getInstance().getStringList(AppSettings.SCOPES_WHITELIST);
-        Set<String> scopeSet = new HashSet<String>(Arrays.asList(scope.split("\\s*,\\s*")));
+        Set<String> scopeSet = new HashSet<String>(scopes);
         Set<String> whitelistSet = new HashSet<String>(whitelist);
         if (!whitelistSet.containsAll(scopeSet)) {
             throw Status.PERMISSION_DENIED
-                .withDescription(String.format("%s is not a whitelisted scope", scope))
+                .withDescription(String.format("`[%s]` are not whitelisted scopes", String.join(",", scopes)))
                 .asRuntimeException();
         }
     }

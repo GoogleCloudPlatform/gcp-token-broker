@@ -13,6 +13,7 @@ package com.google.cloud.broker.hadoop.fs;
 
 import java.io.IOException;
 import java.security.PrivilegedAction;
+import java.util.Collections;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
@@ -73,7 +74,7 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
         GetAccessTokenResponse response = loginUser.doAs((PrivilegedAction<GetAccessTokenResponse>) () -> {
             BrokerGateway gateway = new BrokerGateway(config, sessionToken);
             GetAccessTokenRequest request = GetAccessTokenRequest.newBuilder()
-                .setScope(BrokerTokenIdentifier.BROKER_SCOPE)
+                .addAllScopes(Collections.singleton(BrokerTokenIdentifier.GCS_SCOPE))
                 .setOwner(currentUser.getUserName())
                 .setTarget(service.toString())
                 .build();

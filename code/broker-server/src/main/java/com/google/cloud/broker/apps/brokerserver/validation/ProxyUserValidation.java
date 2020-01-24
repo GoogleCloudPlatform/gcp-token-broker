@@ -123,7 +123,7 @@ public class ProxyUserValidation {
         DomainWideDelegationAuthorityProvider provider = new DomainWideDelegationAuthorityProvider();
         AccessToken accessToken = provider.getAccessToken(
             AppSettings.getInstance().getString(AppSettings.GSUITE_ADMIN),
-            Collections.singleton(DirectoryScopes.ADMIN_DIRECTORY_GROUP_MEMBER_READONLY));
+            List.of(DirectoryScopes.ADMIN_DIRECTORY_GROUP_MEMBER_READONLY));
         Credential credential = new Credential(BearerToken.authorizationHeaderAccessMethod()).setAccessToken(accessToken.getValue());
         return new Directory.Builder(Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(), credential)
             .setApplicationName(Constants.APPLICATION_NAME).build();
