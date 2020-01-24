@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.TimeUtils;
+import com.google.common.collect.ImmutableList;
 
 
 public class Session extends Model {
@@ -40,7 +41,7 @@ public class Session extends Model {
                    @JsonProperty("owner") String owner,
                    @JsonProperty("renewer") String renewer,
                    @JsonProperty("target") String target,
-                   @JsonProperty("scope") List<String> scopes,
+                   @JsonProperty("scopes") List<String> scopes,
                    @JsonProperty("password") String password,
                    @JsonProperty("expiresAt") Long expiresAt,
                    @JsonProperty("creationTime") Long creationTime) {
@@ -75,7 +76,7 @@ public class Session extends Model {
         map.put("owner", owner);
         map.put("renewer", renewer);
         map.put("target", target);
-        map.put("scope", scopes);
+        map.put("scopes", scopes);
         map.put("password", password);
         map.put("expiresAt", expiresAt);
         map.put("creationTime", creationTime);
@@ -159,7 +160,7 @@ public class Session extends Model {
     }
 
     public void setScopes(List<String> scopes) {
-        this.scopes = scopes;
+        this.scopes = ImmutableList.copyOf(scopes);
     }
 
     public String getPassword() {

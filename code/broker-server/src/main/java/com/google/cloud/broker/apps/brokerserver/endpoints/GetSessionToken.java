@@ -11,7 +11,10 @@
 
 package com.google.cloud.broker.apps.brokerserver.endpoints;
 
+import java.util.List;
+
 import com.google.cloud.broker.apps.brokerserver.logging.LoggingUtils;
+import com.google.protobuf.UnmodifiableLazyStringList;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
 
@@ -32,15 +35,26 @@ public class GetSessionToken {
         AbstractAuthenticationBackend authenticator = AbstractAuthenticationBackend.getInstance();
         String authenticatedUser = authenticator.authenticateUser();
 
+        UnmodifiableLazyStringList scopes = (UnmodifiableLazyStringList) request.getScopesList();
+
         Validation.validateParameterNotEmpty("owner", request.getOwner());
         Validation.validateParameterNotEmpty("renewer", request.getRenewer());
-        Validation.validateParameterNotEmpty("scopes", request.getScopesList());
+        Validation.validateParameterNotEmpty("scopes", (List<String>) scopes.getUnmodifiableView().getUnderlyingElements());
         Validation.validateParameterNotEmpty("target", request.getTarget());
 
         Validation.validateImpersonator(authenticatedUser, request.getOwner());
 
         // Create session
-        Session session = new Session(null, request.getOwner(), request.getRenewer(), request.getTarget(), request.getScopesList(), null, null, null);
+        Session session = new Session(
+            null,
+            request.getOwner(),
+            request.getRenewer(),
+            request.getTarget(),
+            request.getScopesList(),
+            null,
+            null,
+            null
+        );
         AbstractDatabaseBackend.getInstance().save(session);
 
         // Generate session token
