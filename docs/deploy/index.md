@@ -304,7 +304,7 @@ Run the following commands **from the root of the repository**:
    export BROKER_PRINCIPAL="broker/${BROKER_HOSTNAME}"
    export BROKER_VERSION=$(cat VERSION)
    export INIT_ACTION="gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh"
-   export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${BROKER_VERSION}/broker-connector-hadoop2-${BROKER_VERSION}.jar"
+   export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${BROKER_VERSION}/broker-connector-hadoop2-${BROKER_VERSION}-jar-with-dependencies.jar"
    ```
 
 3. Create the Kerberos configuration file for Dataproc:

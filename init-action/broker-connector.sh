@@ -97,7 +97,7 @@ fi
 cd ${lib_dir}
 rm -f "gcs-connector-"*
 
-# Download the JARs
+# Download the broker connector JAR
 if [[ -n "${connector_jar_gcs}" ]]; then
   gsutil cp ${connector_jar_gcs} .
 else
@@ -108,7 +108,9 @@ else
     exit 1
   fi
 fi
-wget https://repo1.maven.org/maven2/com/google/cloud/bigdataoss/gcs-connector/${GCS_CONN_VERSION}/gcs-connector-${GCS_CONN_VERSION}-jar-with-dependencies.jar
+
+# Download the GCS connector JAR
+wget https://repo1.maven.org/maven2/com/google/cloud/bigdataoss/gcs-connector/${GCS_CONN_VERSION}/gcs-connector-${GCS_CONN_VERSION}-shaded.jar
 
 # Update version-less connector link if present
 if [[ -L ${lib_dir}/gcs-connector.jar ]]; then
