@@ -11,21 +11,30 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
+import java.io.IOException;
 import java.util.List;
+
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ImpersonatedCredentials;
+import io.grpc.Status;
 
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 
-public class ServiceAccountProvider extends AbstractSignedJWTProvider {
 
-    public ServiceAccountProvider() {
-        super(false);
-    }
+public class ServiceAccountProvider extends AbstractProvider {
 
     @Override
     public AccessToken getAccessToken(String googleIdentity, List<String> scopes) {
         if (! googleIdentity.endsWith(".iam.gserviceaccount.com")) {
             throw new IllegalArgumentException("Google identity `" + googleIdentity + "` is not a service account");
         }
-        return super.getAccessToken(googleIdentity, scopes);
+        try {
+            GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+            ImpersonatedCredentials impersonatedCredentials = ImpersonatedCredentials.create(credentials, googleIdentity, null, scopes, 3600);
+            com.google.auth.oauth2.AccessToken accessToken = impersonatedCredentials.refreshAccessToken();
+            return new AccessToken(accessToken.getTokenValue(), accessToken.getExpirationTime().getTime());
+        } catch (IOException e) {
+            throw Status.PERMISSION_DENIED.asRuntimeException();
+        }
     }
 }
