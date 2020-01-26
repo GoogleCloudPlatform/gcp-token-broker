@@ -116,8 +116,8 @@ HDFS on behalf of the user who is running a Hive query.
 The broker can handle proxy users. For that, you just need to specify the list of authorized proxy users
 in the broker's settings, for example:
 
-```python
-PROXY_USER_WHITELIST='hive/hive.your-domain.com@YOUR.REALM.COM,oozie/oozie.your-domain.com@YOUR.REALM.COM'
+```
+proxy-users.whitelist="hive/hive.your-domain.com@YOUR.REALM.COM,oozie/oozie.your-domain.com@YOUR.REALM.COM"
 ```
 
 When a Hive job is running, the GCS connector calls the broker and sends a SPNEGO token for the
