@@ -1,3 +1,8 @@
+## 0.7.0 (January 24, 2019)
+
+- Changed scopes' format from comma-separated list string to proper list of strings in protocol buffers and in
+  `scopes.whitelist` setting.
+
 ## 0.6.0 (December 13, 2019)
 
 - Moved Authorizer and Broker server code to the `com.google.cloud.broker.apps` package. 

@@ -238,7 +238,11 @@ To deploy the broker service, run the following commands **from the root of the 
    Note: The first time you run the `skaffold` command, it might take a few
    minutes for the container images to build and get uploaded to the
    container registry.
-9.  Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
+   
+9. Let the `skaffold` process run in the current terminal – this is where you will see the broker server's console
+   output. Now open a new, separate terminal and use that new terminal to run the commands in the rest of this tutorial.
+
+10.  Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
 
     ```shell
     POD=$(kubectl get pods | grep authorizer | awk '{print $1}' | head -n 1)
@@ -247,7 +251,7 @@ To deploy the broker service, run the following commands **from the root of the 
         -Dconfig.file=/config/application.conf \
         com.google.cloud.broker.encryption.GenerateDEK
     ```
-10. Wait until an external IP has been assigned to the broker service. You can
+11. Wait until an external IP has been assigned to the broker service. You can
     check the status by running the following command in a different terminal,
     and by looking up the `EXTERNAL-IP` value:
 
@@ -255,7 +259,7 @@ To deploy the broker service, run the following commands **from the root of the 
     kubectl get service broker-service
     ```
 
-### Using the authorizer
+### Using the Authorizer
 
 The Authorizer is a simple Web UI that users must use, only once, to authorize
 the broker. The authorization process consists of a simple OAuth flow:
@@ -282,7 +286,7 @@ the broker. The authorization process consists of a simple OAuth flow:
 
 ### Creating a Dataproc cluster
 
-In this section, you create a Dataproc cluster to run sample Hadoop jobs and interact with the broker.
+In this section, you create a Dataproc cluster that can be used to run Hadoop jobs and interact with the broker.
 
 Run the following commands **from the root of the repository**:
 

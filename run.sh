@@ -216,6 +216,11 @@ function clean() {
     docker exec -it ${CONTAINER} bash -c "mvn clean"
 }
 
+function update_version() {
+    set -x
+    docker exec -it ${CONTAINER} bash -c "mvn -Prelease versions:set -DgenerateBackupPoms=false -DnewVersion=$(cat VERSION)"
+}
+
 function dependency() {
     set -x
     docker exec -it ${CONTAINER} bash -c "mvn dependency:tree"
@@ -286,6 +291,11 @@ case "$1" in
     dependency)
         shift
         dependency
+        break
+        ;;
+    update_version)
+        shift
+        update_version
         break
         ;;
     *)
