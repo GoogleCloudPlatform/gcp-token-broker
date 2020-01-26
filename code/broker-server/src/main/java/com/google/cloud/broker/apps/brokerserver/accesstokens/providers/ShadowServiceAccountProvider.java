@@ -11,12 +11,28 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
+import java.io.IOException;
+import java.util.List;
+
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ImpersonatedCredentials;
+import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 import com.google.cloud.broker.settings.AppSettings;
+import io.grpc.Status;
 
-public class ShadowServiceAccountProvider extends AbstractSignedJWTProvider {
+public class ShadowServiceAccountProvider extends AbstractProvider {
 
-    public ShadowServiceAccountProvider() {
-        super(false);
+    @Override
+    public AccessToken getAccessToken(String owner, List<String> scopes) {
+        String googleIdentity = getGoogleIdentity(owner);
+        try {
+            GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+            ImpersonatedCredentials impersonatedCredentials = ImpersonatedCredentials.create(credentials, googleIdentity, null, scopes, 3600);
+            com.google.auth.oauth2.AccessToken accessToken = impersonatedCredentials.refreshAccessToken();
+            return new AccessToken(accessToken.getTokenValue(), accessToken.getExpirationTime().getTime());
+        } catch (IOException e) {
+            throw Status.PERMISSION_DENIED.asRuntimeException();
+        }
     }
 
     public String getGoogleIdentity(String owner) {
