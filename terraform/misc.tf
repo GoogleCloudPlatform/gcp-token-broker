@@ -40,8 +40,11 @@ provider "local" {
 resource "google_project_service" "service_compute" {
   service = "compute.googleapis.com"
 }
-resource "google_project_service" "service_iamcredentials" {
+resource "google_project_service" "service_iam" {
   service = "iam.googleapis.com"
+}
+resource "google_project_service" "service_iamcredentials" {
+  service = "iamcredentials.googleapis.com"
 }
 resource "google_project_service" "service_dataproc" {
   service = "dataproc.googleapis.com"
@@ -59,7 +62,13 @@ resource "google_project_service" "service_containerregistry" {
   service = "containerregistry.googleapis.com"
 }
 
+resource "google_project_service" "service_resourcemanager" {
+  service = "cloudresourcemanager.googleapis.com"
+}
 
+resource "google_project_service" "service_appengine_admin" {
+  service = "appengine.googleapis.com"
+}
 // Test bucket -----------------------------------------------------------------------
 
 resource "google_storage_bucket" "demo_bucket" {
