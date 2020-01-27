@@ -16,7 +16,6 @@ import com.google.cloud.broker.settings.AppSettings;
 public class ShadowServiceAccountUserMapper extends AbstractUserMapper {
     @Override
     public String map(String name) {
-
         String shadowProject = AppSettings.getInstance().getString(AppSettings.SHADOW_PROJECT);
         String shadowPattern = AppSettings.getInstance().getString(AppSettings.SHADOW_USERNAME_PATTERN);
         String username;
