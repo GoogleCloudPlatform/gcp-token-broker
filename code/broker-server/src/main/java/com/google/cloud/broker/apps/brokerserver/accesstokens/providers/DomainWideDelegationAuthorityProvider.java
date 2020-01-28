@@ -31,7 +31,7 @@ import com.google.cloud.broker.utils.TimeUtils;
 import io.grpc.Status;
 
 
-public class DomainWideDelegationAuthorityProvider extends AbstractProvider {
+public class DomainWideDelegationAuthorityProvider extends AbstractUserProvider {
 
     private final static String IAM_API = "https://www.googleapis.com/auth/iam";
 
