@@ -23,6 +23,9 @@ public class ServiceAccountProvider extends AbstractProvider {
 
     @Override
     public AccessToken getAccessToken(String googleIdentity, List<String> scopes) {
+        if (! googleIdentity.endsWith(".iam.gserviceaccount.com")) {
+            throw new IllegalArgumentException("Google identity `" + googleIdentity + "` is not a service account");
+        }
         try {
             GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
             ImpersonatedCredentials impersonatedCredentials = ImpersonatedCredentials.create(credentials, googleIdentity, null, scopes, 3600);
@@ -32,4 +35,5 @@ public class ServiceAccountProvider extends AbstractProvider {
             throw Status.PERMISSION_DENIED.asRuntimeException();
         }
     }
+
 }

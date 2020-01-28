@@ -17,6 +17,7 @@ import java.util.Map;
 import static org.junit.Assert.*;
 import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.usermapping.ShadowServiceAccountUserMapper;
+import com.google.common.base.CharMatcher;
 import org.junit.*;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -52,7 +53,8 @@ public class ServiceAccountProviderTest {
         ServiceAccountProvider provider = new ServiceAccountProvider();
         ShadowServiceAccountUserMapper mapper = new ShadowServiceAccountUserMapper();
         AccessToken accessToken = provider.getAccessToken(mapper.map("alice@EXAMPLE.COM"), SCOPES);
-        assertTrue(accessToken.getValue().length() > 0);
+        assertTrue(accessToken.getValue().startsWith("y"));
+        assertEquals(2, CharMatcher.is('.').countIn(accessToken.getValue()));
         assertTrue(accessToken.getExpiresAt() > 0);
     }
 

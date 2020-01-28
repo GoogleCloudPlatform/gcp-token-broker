@@ -30,7 +30,7 @@ import com.google.cloud.broker.oauth.RefreshToken;
 import com.google.cloud.broker.utils.TimeUtils;
 
 
-public class RefreshTokenProvider extends AbstractProvider {
+public class RefreshTokenProvider extends AbstractUserProvider {
 
     private static String AUTHZ_ERROR_MESSAGE = "GCP Token Broker authorization is invalid or has expired for identity: %s";
 
