@@ -1,13 +1,18 @@
-## 0.6.0 (XXXX)
+## 0.7.0 (January 24, 2019)
 
-- Moved Authorizer and Broker server to the `com.google.cloud.broker.apps` package. 
+- Changed scopes' format from comma-separated list string to proper list of strings in protocol buffers and in
+  `scopes.whitelist` setting.
+
+## 0.6.0 (December 13, 2019)
+
+- Moved Authorizer and Broker server code to the `com.google.cloud.broker.apps` package. 
 - Renamed all settings to fit better Typesafe Config conventions. Settings can now be passed as configuration files.
 - Moved providers to the `com.google.cloud.broker.apps.brokerserver.accesstokens.providers` package.
 - Renamed the broker service's Maven artifact from `broker` to `broker-server`.
 - Decoupled the broker URI from the broker kerberos principal name. This includes the following changes:
   * On the broker side:
     - The `BROKER_SERVICE_HOSTNAME` and `BROKER_SERVICE_NAME` are removed.
-    - The `KEYTABS_PATH` setting is replaced with `authentication.spnego.keytabs`.
+    - The `KEYTABS_PATH` setting is replaced by `authentication.spnego.keytabs`.
     - The new `authentication.spnego.keytabs` setting is a list of keytab/principal pairs. Those are used by the broker
       to log in at launch time.
   * On the connector side:

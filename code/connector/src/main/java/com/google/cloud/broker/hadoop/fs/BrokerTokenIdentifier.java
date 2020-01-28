@@ -15,6 +15,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.security.PrivilegedAction;
+import java.util.Collections;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
@@ -31,7 +32,7 @@ import com.google.cloud.broker.apps.brokerserver.protobuf.GetSessionTokenRespons
 public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
 
     public static final Text KIND = new Text("GCPBrokerSessionToken");
-    static final String BROKER_SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
+    static final String GCS_SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
     private String sessionToken;
 
     public BrokerTokenIdentifier() {
@@ -60,7 +61,7 @@ public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
         GetSessionTokenResponse response = loginUser.doAs((PrivilegedAction<GetSessionTokenResponse>) () -> {
             BrokerGateway gateway = new BrokerGateway(config);
             GetSessionTokenRequest request = GetSessionTokenRequest.newBuilder()
-                .setScope(BROKER_SCOPE)
+                .addAllScopes(Collections.singleton(GCS_SCOPE))
                 .setOwner(currentUser.getUserName())
                 .setRenewer(renewer.toString())
                 .setTarget(getURI(service))

@@ -21,16 +21,18 @@ import java.util.Map;
 
 public class RefreshToken extends Model {
 
-    private String id;  // GSuite email address (e.g. alice@example.com)
+    private String id;          // GSuite email address (e.g. alice@example.com)
     private byte[] value;       // The actual OAuth refresh token (Recommendation: encrypt this value)
     private Long creationTime;  // The time when the object was created (in milliseconds)
 
     public RefreshToken(@JsonProperty("id") String id,
                         @JsonProperty("value") byte[] value,
                         @JsonProperty("creationTime") Long creationTime) {
-        this.id = id;
-        this.value = value;
-        this.creationTime = (creationTime==null) ? Long.valueOf(TimeUtils.currentTimeMillis()) : creationTime;
+        setId(id);
+        setValue(value);
+        setCreationTime(
+            (creationTime==null) ? Long.valueOf(TimeUtils.currentTimeMillis()) : creationTime
+        );
     }
 
     @Override

@@ -11,6 +11,7 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
@@ -29,7 +30,7 @@ public class RefreshTokenProviderTest {
     // TODO: Still needs tests:
     // - Happy path.
 
-    private static final String SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
+    private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
     private static final String TARGET = "//storage.googleapis.com/projects/_/buckets/example";
 
     private static SettingsOverride backupSettings;
@@ -82,11 +83,13 @@ public class RefreshTokenProviderTest {
     public void testUnauthorized() {
         RefreshTokenProvider provider = new RefreshTokenProvider();
         try {
-            provider.getAccessToken("bob@EXAMPLE.COM", SCOPE, TARGET);
+            provider.getAccessToken("bob@EXAMPLE.COM", SCOPES, TARGET);
             fail("StatusRuntimeException not thrown");
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("GCP Token Broker authorization is invalid or has expired for user: bob@EXAMPLE.COM", e.getStatus().getDescription());
+            assertEquals(
+                "GCP Token Broker authorization is invalid or has expired for user: bob@EXAMPLE.COM",
+                e.getStatus().getDescription());
         }
     }
 

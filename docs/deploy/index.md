@@ -85,14 +85,14 @@ Follow these steps to deploy the demo environment to GCP:
    gcp_region = "us-west1"
    gcp_zone = "us-west1-a"
    datastore_region = "us-west2"
-   domain = "[your.domain.name]"
+   gsuite_domain = "[your.domain.name]"
    authorizer_hostname = "[your.authorizer.hostname]"
    origin_realm = "[YOUR.REALM.NAME]"
    test_users = ["alice", "bob", "john"]
    ```
 
    Notes:
-   * `domain` is the domain name (e.g. "your-domain.com") that you registered in the [Prerequisites](#prerequisites)
+   * `gsuite_domain` is the domain name (e.g. "your-domain.com") that you registered in the [Prerequisites](#prerequisites)
      section for your GSuite organization.
    * `datastore_region` is the region for your Cloud Datastore database. See the list of
      [available regions](https://cloud.google.com/datastore/docs/locations#location-r) for Cloud Datastore.
@@ -175,18 +175,20 @@ Run from the following commands **from the root of the repository**:
 
 To deploy the broker service, run the following commands **from the root of the repository**:
 
-1. Download the broker app's JARs:
+1. Download the application JARs:
 
    ```
    export BROKER_VERSION=$(cat VERSION)
    mkdir -p code/broker-server/target
-   curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker/${BROKER_VERSION}/broker-${BROKER_VERSION}-jar-with-dependencies.jar > code/broker-server/target/broker-${BROKER_VERSION}-jar-with-dependencies.jar
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker-server/${BROKER_VERSION}/broker-server-${BROKER_VERSION}-jar-with-dependencies.jar > code/broker-server/target/broker-server-${BROKER_VERSION}-jar-with-dependencies.jar
    mkdir -p code/extensions/caching/redis/target
    curl https://repo1.maven.org/maven2/com/google/cloud/broker/cache-backend-redis/${BROKER_VERSION}/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar > code/extensions/caching/redis/target/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar
    mkdir -p code/extensions/database/cloud-datastore/target
    curl https://repo1.maven.org/maven2/com/google/cloud/broker/database-backend-cloud-datastore/${BROKER_VERSION}/database-backend-cloud-datastore-${BROKER_VERSION}-jar-with-dependencies.jar > code/extensions/database/cloud-datastore/target/database-backend-cloud-datastore-${BROKER_VERSION}-jar-with-dependencies.jar
    mkdir -p code/extensions/encryption/cloud-kms/target
    curl https://repo1.maven.org/maven2/com/google/cloud/broker/encryption-backend-cloud-kms/${BROKER_VERSION}/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar > code/extensions/encryption/cloud-kms/target/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar
+   mkdir -p code/authorizer/target
+   curl https://repo1.maven.org/maven2/com/google/cloud/broker/authorizer/${BROKER_VERSION}/authorizer-${BROKER_VERSION}-jar-with-dependencies.jar > code/authorizer/target/authorizer-${BROKER_VERSION}-jar-with-dependencies.jar
    ```
 2. Configure credentials for the cluster:
 
@@ -236,15 +238,20 @@ To deploy the broker service, run the following commands **from the root of the 
    Note: The first time you run the `skaffold` command, it might take a few
    minutes for the container images to build and get uploaded to the
    container registry.
-9.  Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
+   
+9. Let the `skaffold` process run in the current terminal – this is where you will see the broker server's console
+   output. Now open a new, separate terminal and use that new terminal to run the commands in the rest of this tutorial.
+
+10.  Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
 
     ```shell
     POD=$(kubectl get pods | grep authorizer | awk '{print $1}' | head -n 1)
     kubectl exec $POD -- \
       java -cp /classpath/authorizer.jar:/classpath/encryption-backend-cloud-kms.jar \
+        -Dconfig.file=/config/application.conf \
         com.google.cloud.broker.encryption.GenerateDEK
     ```
-10. Wait until an external IP has been assigned to the broker service. You can
+11. Wait until an external IP has been assigned to the broker service. You can
     check the status by running the following command in a different terminal,
     and by looking up the `EXTERNAL-IP` value:
 
@@ -252,7 +259,7 @@ To deploy the broker service, run the following commands **from the root of the 
     kubectl get service broker-service
     ```
 
-### Using the authorizer
+### Using the Authorizer
 
 The Authorizer is a simple Web UI that users must use, only once, to authorize
 the broker. The authorization process consists of a simple OAuth flow:
@@ -279,7 +286,7 @@ the broker. The authorization process consists of a simple OAuth flow:
 
 ### Creating a Dataproc cluster
 
-In this section, you create a Dataproc cluster to run sample Hadoop jobs and interact with the broker.
+In this section, you create a Dataproc cluster that can be used to run Hadoop jobs and interact with the broker.
 
 Run the following commands **from the root of the repository**:
 
@@ -301,7 +308,7 @@ Run the following commands **from the root of the repository**:
    export BROKER_PRINCIPAL="broker/${BROKER_HOSTNAME}"
    export BROKER_VERSION=$(cat VERSION)
    export INIT_ACTION="gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh"
-   export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${BROKER_VERSION}/broker-connector-hadoop2-${BROKER_VERSION}.jar"
+   export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${BROKER_VERSION}/broker-connector-hadoop2-${BROKER_VERSION}-jar-with-dependencies.jar"
    ```
 
 3. Create the Kerberos configuration file for Dataproc:

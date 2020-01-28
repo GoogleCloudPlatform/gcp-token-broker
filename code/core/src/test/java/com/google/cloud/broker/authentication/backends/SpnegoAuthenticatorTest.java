@@ -19,9 +19,6 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigObject;
 import org.ietf.jgss.*;
 import static org.junit.Assert.*;
 import org.junit.AfterClass;

@@ -11,9 +11,7 @@
 
 package com.google.cloud.broker.database.backends;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.settings.AppSettings;
@@ -49,13 +47,19 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
         for (String name : entity.getNames()) {
             Value<?> value = entity.getValue(name);
             if (value != null) {
-                if (value.get() instanceof Blob) {
+                if (value instanceof BlobValue) {
                     values.put(name, ((Blob) value.get()).toByteArray());
+                }
+                else if(value instanceof ListValue) {
+                    List<Object> list = new LinkedList<>();
+                    for (Value<?> v: ((ListValue) value).get()) {
+                        list.add(v.get());
+                    }
+                    values.put(name, list);
                 }
                 else {
                     values.put(name, value.get());
                 }
-
             }
         }
 
@@ -67,7 +71,6 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
         if (model.getDBId() == null) {
             model.setDBId(UUID.randomUUID().toString());
         }
-
         Datastore datastore = getService();
         KeyFactory keyFactory = datastore.newKeyFactory().setKind(model.getClass().getSimpleName());
         Key key = keyFactory.newKey(model.getDBId());
@@ -75,23 +78,36 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
         Map<String, Object> map = model.toMap();
         for(Map.Entry<String, Object> entry : map.entrySet()) {
             String name = entry.getKey();
-            Object value = entry.getValue();
-            if (value instanceof String) {
-                builder.set(name, (String) value);
-            }
-            else if (value instanceof Long) {
-                builder.set(name, (long) value);
-            }
-            else if (value instanceof byte[]) {
-                builder.set(name, Blob.copyFrom((byte[]) value));
-            }
-            else {
-                // TODO extend to other supported types
-                throw new UnsupportedOperationException("Unsupported type: " + value.getClass());
-            }
+            Value<?> value = objectToValue(entry.getValue());
+            builder.set(name, value);
         }
         Entity entity = builder.build();
         datastore.put(entity);
+    }
+
+    // Converts an Object to a Datastore Value
+    private Value<?> objectToValue(Object object) {
+        if (object instanceof String) {
+            return StringValue.of((String) object);
+        }
+        else if (object instanceof Long) {
+            return LongValue.of((long) object);
+        }
+        else if (object instanceof byte[]) {
+            return BlobValue.of(Blob.copyFrom((byte[]) object));
+        }
+        else if (object instanceof List<?>) {
+            List<Value<?>> list = new LinkedList<>();
+            for (Object o : (List<?>) object) {
+                Value<?> valueObject = objectToValue(o);
+                list.add(valueObject);
+            }
+            return ListValue.of(list);
+        }
+        else {
+            // TODO extend to other supported types
+            throw new UnsupportedOperationException("Unsupported type: " + object.getClass());
+        }
     }
 
     @Override

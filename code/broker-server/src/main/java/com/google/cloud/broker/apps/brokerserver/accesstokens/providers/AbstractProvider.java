@@ -16,10 +16,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.List;
 
-import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
-import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.utils.InstanceUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -30,6 +28,11 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+
+import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
+import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.utils.InstanceUtils;
+
 
 public abstract class AbstractProvider {
 
@@ -43,9 +46,7 @@ public abstract class AbstractProvider {
         return instance;
     }
 
-    public abstract AccessToken getAccessToken(String owner, String scope, String target);
-
-    public static class AccessTokenResponse {
+    private static class BoundedAccessTokenResponse {
         public String access_token;
         public long expires_in;
     }
@@ -93,13 +94,13 @@ public abstract class AbstractProvider {
         }
 
         // Submit the request
-        AccessTokenResponse accessTokenResponse;
+        BoundedAccessTokenResponse accessTokenResponse;
         try {
             CloseableHttpResponse response = httpClient.execute(httpPost);
             if (response.getStatusLine().getStatusCode() != 200) {
                 throw Status.PERMISSION_DENIED.asRuntimeException();
             }
-            accessTokenResponse = gson.fromJson(EntityUtils.toString(response.getEntity()), AbstractSignedJWTProvider.AccessTokenResponse.class);
+            accessTokenResponse = gson.fromJson(EntityUtils.toString(response.getEntity()), BoundedAccessTokenResponse.class);
             httpClient.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -107,5 +108,7 @@ public abstract class AbstractProvider {
 
         return new AccessToken(accessTokenResponse.access_token, accessTokenResponse.expires_in);
     }
+
+    public abstract AccessToken getAccessToken(String owner, List<String> scopes, String target);
 
 }

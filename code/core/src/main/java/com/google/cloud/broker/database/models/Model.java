@@ -22,7 +22,7 @@ public abstract class Model {
     public abstract void setDBId(String id);
     public abstract String getDBId();
 
-    public static Model fromMap(Class klass, Map<String, Object> map) {
+    public static Model fromMap(Class<?> klass, Map<String, Object> map) {
         Method method;
         try {
             method = klass.getMethod("fromMap", Map.class);

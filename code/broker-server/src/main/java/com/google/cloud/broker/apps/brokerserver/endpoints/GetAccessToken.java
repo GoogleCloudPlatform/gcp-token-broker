@@ -11,6 +11,8 @@
 
 package com.google.cloud.broker.apps.brokerserver.endpoints;
 
+import java.util.Arrays;
+
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
@@ -32,7 +34,7 @@ public class GetAccessToken {
 
     public static void run(GetAccessTokenRequest request, StreamObserver<GetAccessTokenResponse> responseObserver) {
         Validation.validateParameterNotEmpty("owner", request.getOwner());
-        Validation.validateParameterNotEmpty("scope", request.getScope());
+        Validation.validateParameterNotEmpty("scopes", request.getScopesList());
         Validation.validateParameterNotEmpty("target", request.getTarget());
 
         // First try to authenticate the session, if any.
@@ -49,15 +51,15 @@ public class GetAccessToken {
         }
         else {
             // A session token was provided. The client is using delegated authentication.
-            Validation.validateScope(request.getScope());
+            Validation.validateScopes(request.getScopesList());
             if (!request.getTarget().equals(session.getTarget())) {
                 throw Status.PERMISSION_DENIED
                     .withDescription("Target mismatch")
                     .asRuntimeException();
             }
-            if (!request.getScope().equals(session.getScope())) {
+            if (!request.getScopesList().equals(Arrays.asList(session.getScopes().split(",")))) {
                 throw Status.PERMISSION_DENIED
-                    .withDescription("Scope mismatch")
+                    .withDescription("Scopes mismatch")
                     .asRuntimeException();
             }
             String sessionOwner = session.getOwner();
@@ -70,11 +72,12 @@ public class GetAccessToken {
         }
 
         AccessToken accessToken = (AccessToken) new AccessTokenCacheFetcher(
-            request.getOwner(), request.getScope(), request.getTarget()).fetch();
+            request.getOwner(), request.getScopesList(), request.getTarget()).fetch();
 
         // Log success message
         MDC.put("owner", request.getOwner());
-        MDC.put("scope", request.getScope());
+        MDC.put("scopes", String.join(",", request.getScopesList()));
+        MDC.put("target", request.getTarget());
         if (session == null) {
             MDC.put("auth_mode", "direct");
         }

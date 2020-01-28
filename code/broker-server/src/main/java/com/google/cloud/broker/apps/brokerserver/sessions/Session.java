@@ -26,31 +26,35 @@ import com.google.cloud.broker.utils.TimeUtils;
 
 public class Session extends Model {
 
-    private String id;          // UUID
-    private String owner;       // Identity who owns the session (e.g. alice@EXAMPLE.COM)
-    private String renewer;     // Identity who is allowed to renew/cancel the session (e.g. yarn@FOO.BAR)
-    private String target;      // Target resource on GCP (e.g. //storage.googleapis.com/projects/_/buckets/example)
-    private String scope;       // API scope for the target resource (e.g. https://www.googleapis.com/auth/devstorage.read_write)
-    private String password;    // Randomly generated password for the session
-    private Long expiresAt;     // Time when the session will expire (in milliseconds)
-    private Long creationTime;  // Time when the session was created (in milliseconds)
+    private String id;            // UUID
+    private String owner;         // Identity who owns the session (e.g. alice@EXAMPLE.COM)
+    private String renewer;       // Identity who is allowed to renew/cancel the session (e.g. yarn@FOO.BAR)
+    private String target;        // Target resource on GCP (e.g. //storage.googleapis.com/projects/_/buckets/example)
+    private String scopes;        // API scopes for the target resource (e.g. https://www.googleapis.com/auth/devstorage.read_write)
+    private String password;      // Randomly generated password for the session
+    private Long expiresAt;       // Time when the session will expire (in milliseconds)
+    private Long creationTime;    // Time when the session was created (in milliseconds)
 
     public Session(@JsonProperty("id") String id,
                    @JsonProperty("owner") String owner,
                    @JsonProperty("renewer") String renewer,
                    @JsonProperty("target") String target,
-                   @JsonProperty("scope") String scope,
+                   @JsonProperty("scopes") String scopes,
                    @JsonProperty("password") String password,
                    @JsonProperty("expiresAt") Long expiresAt,
                    @JsonProperty("creationTime") Long creationTime) {
-        this.id = id;
-        this.owner = owner;
-        this.renewer = renewer;
-        this.target = target;
-        this.scope = scope;
-        this.expiresAt = expiresAt;
-        this.creationTime = (creationTime==null) ? Long.valueOf(TimeUtils.currentTimeMillis()) : creationTime;
-        this.password = (password==null) ? generateRandomPassword() : password;
+        setId(id);
+        setOwner(owner);
+        setRenewer(renewer);
+        setTarget(target);
+        setScopes(scopes);
+        setExpiresAt(expiresAt);
+        setCreationTime(
+            (creationTime==null) ? Long.valueOf(TimeUtils.currentTimeMillis()) : creationTime
+        );
+        setPassword(
+            (password==null) ? generateRandomPassword() : password
+        );
         if (expiresAt==null) {
             extendLifetime();
         }
@@ -70,7 +74,7 @@ public class Session extends Model {
         map.put("owner", owner);
         map.put("renewer", renewer);
         map.put("target", target);
-        map.put("scope", scope);
+        map.put("scopes", scopes);
         map.put("password", password);
         map.put("expiresAt", expiresAt);
         map.put("creationTime", creationTime);
@@ -83,7 +87,7 @@ public class Session extends Model {
             (String) map.get("owner"),
             (String) map.get("renewer"),
             (String) map.get("target"),
-            (String) map.get("scope"),
+            (String) map.get("scopes"),
             (String) map.get("password"),
             (Long) map.get("expiresAt"),
             (Long) map.get("creationTime")
@@ -149,12 +153,12 @@ public class Session extends Model {
         this.target = target;
     }
 
-    public String getScope() {
-        return scope;
+    public String getScopes() {
+        return scopes;
     }
 
-    public void setScope(String scope) {
-        this.scope = scope;
+    public void setScopes(String scopes) {
+        this.scopes = scopes;
     }
 
     public String getPassword() {

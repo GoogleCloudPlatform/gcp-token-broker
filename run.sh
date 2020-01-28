@@ -102,7 +102,7 @@ function build_packages() {
     validate_project_var
 
     set -x
-    docker exec -it ${CONTAINER} bash -c "mvn package -DskipTests ${PROJECTS_ARG}"
+    docker exec -it ${CONTAINER} bash -c "mvn clean package -DskipTests ${PROJECTS_ARG}"
 }
 
 
@@ -199,12 +199,18 @@ function run_tests() {
 
 function mvn() {
     set -x
-    docker exec -it ${CONTAINER} bash -c "mvn $@"
+    ARGS="$@"
+    docker exec -it ${CONTAINER} bash -c "mvn ${ARGS}"
 }
 
 function clean() {
     set -x
     docker exec -it ${CONTAINER} bash -c "mvn clean"
+}
+
+function update_version() {
+    set -x
+    docker exec -it ${CONTAINER} bash -c "mvn -Prelease versions:set -DgenerateBackupPoms=false -DnewVersion=$(cat VERSION)"
 }
 
 function dependency() {
@@ -277,6 +283,11 @@ case "$1" in
     dependency)
         shift
         dependency
+        break
+        ;;
+    update_version)
+        shift
+        update_version
         break
         ;;
     *)

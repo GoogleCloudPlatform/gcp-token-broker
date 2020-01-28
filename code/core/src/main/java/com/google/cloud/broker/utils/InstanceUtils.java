@@ -7,8 +7,8 @@ public class InstanceUtils {
 
     public static Object invokeConstructor(String className) {
         try {
-            Class c = Class.forName(className);
-            Constructor constructor = c.getConstructor();
+            Class<?> c = Class.forName(className);
+            Constructor<?> constructor = c.getConstructor();
             return constructor.newInstance();
         } catch (InvocationTargetException e) {
             Throwable cause = e.getCause();

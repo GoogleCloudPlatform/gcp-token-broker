@@ -238,6 +238,8 @@ public class Authorizer implements AutoCloseable {
          * Handler for the OAuth callback endpoint.
          */
         private void handleCallback(HttpServletRequest request, HttpServletResponse response) throws IOException {
+            response.setContentType("text/html");
+
             // Ensure that the authorization code is provided
             String authzCode = request.getParameter(CODE_PARAM);
             if (authzCode == null) {
@@ -252,9 +254,9 @@ public class Authorizer implements AutoCloseable {
                 .execute();
 
             // Retrieve some details about the Google identity
-            Credential credential = new Credential(BearerToken.authorizationHeaderAccessMethod()).setAccessToken(tokenResponse.getAccessToken());
+            Credential credential = new Credential(BearerToken.authorizationHeaderAccessMethod())
+                .setAccessToken(tokenResponse.getAccessToken());
             UserInfo user = getUserInfo(credential);
-            response.setContentType("text/html");
 
             // Save the refresh token in the database
             saveRefreshToken(user.getEmail(), tokenResponse.getRefreshToken());
@@ -271,6 +273,9 @@ public class Authorizer implements AutoCloseable {
 
         @Override
         protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+            // Prevent i-framing
+            response.addHeader("X-Frame-Options", "deny");
+
             String requestUri = request.getRequestURI();
             // Index page
             switch (requestUri) {

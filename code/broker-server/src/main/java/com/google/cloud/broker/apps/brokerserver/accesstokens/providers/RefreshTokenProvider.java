@@ -12,6 +12,7 @@
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
@@ -48,8 +49,9 @@ public class RefreshTokenProvider extends AbstractProvider {
         return String.format("%s@%s", username, domain);
     }
 
+
     @Override
-    public AccessToken getAccessToken(String owner, String scope, String target) {
+    public AccessToken getAccessToken(String owner, List<String> scopes, String target) {
         // Map the Google identity
         String googleIdentity = getGoogleIdentity(owner);
 
@@ -78,7 +80,7 @@ public class RefreshTokenProvider extends AbstractProvider {
                 decryptedValue,
                 clientSecrets.getDetails().getClientId(),
                 clientSecrets.getDetails().getClientSecret()
-            ).execute();
+            ).setScopes(scopes).execute();
         } catch (IOException e) {
             throw Status.PERMISSION_DENIED.withDescription(String.format(AUTHZ_ERROR_MESSAGE, owner)).asRuntimeException();
         }

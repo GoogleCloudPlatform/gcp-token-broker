@@ -30,7 +30,7 @@ public class AppSettings {
     public final static String SESSION_MAXIMUM_LIFETIME = "sessions.maximum-lifetime";
     public final static String SESSION_RENEW_PERIOD = "sessions.renew-period";
     public final static String PROXY_USER_WHITELIST = "proxy-users.whitelist";
-    public final static String SCOPE_WHITELIST = "scopes.whitelist";
+    public final static String SCOPES_WHITELIST = "scopes.whitelist";
     public final static String PROVIDER_BACKEND = "provider.backend";
     public final static String ACCESS_TOKEN_BOUNDARY_PERMISSIONS = "provider.access-tokens.boundary-permissions";
     public final static String ACCESS_TOKEN_LOCAL_CACHE_TIME = "provider.access-tokens.local-cache-time";
