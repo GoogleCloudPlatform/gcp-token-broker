@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,18 +17,25 @@ import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
 
-public abstract class AbstractProvider {
+public class HybridProvider extends AbstractProvider {
 
-    private static AbstractProvider instance;
+    AbstractUserProvider userProvider;
+    ServiceAccountProvider serviceAccountProvider;
 
-    public static AbstractProvider getInstance() {
-        String className = AppSettings.getInstance().getString(AppSettings.PROVIDER_BACKEND);
-        if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
-            instance = (AbstractProvider) InstanceUtils.invokeConstructor(className);
-        }
-        return instance;
+    public HybridProvider() {
+        String className = AppSettings.getInstance().getString(AppSettings.HYBRID_USER_PROVIDER);
+        userProvider = (AbstractUserProvider) InstanceUtils.invokeConstructor(className);
+        serviceAccountProvider = new ServiceAccountProvider();
     }
 
-    public abstract AccessToken getAccessToken(String googleIdentity, List<String> scopes);
+    @Override
+    public AccessToken getAccessToken(String googleIdentity, List<String> scopes) {
+        if (googleIdentity.endsWith(".iam.gserviceaccount.com")) {
+            return serviceAccountProvider.getAccessToken(googleIdentity, scopes);
+        }
+        else {
+            return userProvider.getAccessToken(googleIdentity, scopes);
+        }
+    }
 
 }

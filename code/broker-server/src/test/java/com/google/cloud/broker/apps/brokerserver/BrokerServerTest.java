@@ -84,9 +84,9 @@ public class BrokerServerTest {
         map.put(AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
         map.put(AppSettings.AUTHENTICATION_BACKEND, "com.google.cloud.broker.authentication.backends.MockAuthenticator");
         map.put(AppSettings.SCOPES_WHITELIST, "[\"https://www.googleapis.com/auth/devstorage.read_write\", \"https://www.googleapis.com/auth/bigquery\"]");
-        map.put(AppSettings.PROXY_USER_WHITELIST, "\"hive@FOO.BAR\"");
         map.put(AppSettings.SESSION_RENEW_PERIOD, SESSION_RENEW_PERIOD.toString());
         map.put(AppSettings.SESSION_MAXIMUM_LIFETIME, SESSION_MAXIMUM_LIFETIME.toString());
+        map.put(AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper");
 
         // Keep reference to old config file, if any
         configFileBackup = System.getProperty("config.file");
@@ -306,7 +306,7 @@ public class BrokerServerTest {
             .setTarget(MOCK_BUCKET)
             .build());
         assertEquals(
-            "FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scopes=" + String.join(",", SCOPES),
+            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES),
             response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
@@ -329,7 +329,7 @@ public class BrokerServerTest {
             .build());
 
         assertEquals(
-            "FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scopes=" + String.join(",", SCOPES),
+            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES),
             response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }

@@ -59,6 +59,11 @@ resource "google_project_service" "service_containerregistry" {
   service = "containerregistry.googleapis.com"
 }
 
+// Used for proxy user support to check group membership
+resource "google_project_service" "service_admin" {
+  service = "admin.googleapis.com"
+}
+
 
 // Test bucket -----------------------------------------------------------------------
 

@@ -56,6 +56,11 @@ limitations under the License.
             <version>${javax.annotation-api.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-admin-directory</artifactId>
+            <version>directory_v1-rev20190806-1.30.3</version>
+        </dependency>
 
         <!-- For the access token providers -->
         <dependency>

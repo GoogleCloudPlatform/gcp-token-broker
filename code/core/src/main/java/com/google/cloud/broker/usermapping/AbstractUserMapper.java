@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -9,26 +9,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
+package com.google.cloud.broker.usermapping;
 
-import java.util.List;
-
-import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
 
-public abstract class AbstractProvider {
+public abstract class AbstractUserMapper {
 
-    private static AbstractProvider instance;
+    private static AbstractUserMapper instance;
 
-    public static AbstractProvider getInstance() {
-        String className = AppSettings.getInstance().getString(AppSettings.PROVIDER_BACKEND);
+    public static AbstractUserMapper getInstance() {
+        String className = AppSettings.getInstance().getString(AppSettings.USER_MAPPER);
         if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
-            instance = (AbstractProvider) InstanceUtils.invokeConstructor(className);
+            instance = (AbstractUserMapper) InstanceUtils.invokeConstructor(className);
         }
         return instance;
     }
 
-    public abstract AccessToken getAccessToken(String googleIdentity, List<String> scopes);
-
+    abstract public String map(String name);
 }

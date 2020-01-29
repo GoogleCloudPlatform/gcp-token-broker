@@ -16,15 +16,18 @@ import java.util.List;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
-import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
-import com.google.cloud.broker.settings.AppSettings;
 import io.grpc.Status;
 
-public class ShadowServiceAccountProvider extends AbstractProvider {
+import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
+
+
+public class ServiceAccountProvider extends AbstractProvider {
 
     @Override
-    public AccessToken getAccessToken(String owner, List<String> scopes) {
-        String googleIdentity = getGoogleIdentity(owner);
+    public AccessToken getAccessToken(String googleIdentity, List<String> scopes) {
+        if (! googleIdentity.endsWith(".iam.gserviceaccount.com")) {
+            throw new IllegalArgumentException("Google identity `" + googleIdentity + "` is not a service account");
+        }
         try {
             GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
             ImpersonatedCredentials impersonatedCredentials = ImpersonatedCredentials.create(credentials, googleIdentity, null, scopes, 3600);
@@ -33,21 +36,6 @@ public class ShadowServiceAccountProvider extends AbstractProvider {
         } catch (IOException e) {
             throw Status.PERMISSION_DENIED.asRuntimeException();
         }
-    }
-
-    public String getGoogleIdentity(String owner) {
-        String shadowProject = AppSettings.getInstance().getString(AppSettings.SHADOW_PROJECT);
-        String shadowPattern = AppSettings.getInstance().getString(AppSettings.SHADOW_USERNAME_PATTERN);
-        String username;
-        try {
-            username = owner.split("@")[0];
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw new IllegalArgumentException();
-        }
-        if (username.length() == 0) {
-            throw new IllegalArgumentException();
-        }
-        return String.format(shadowPattern, username) + "@" + shadowProject + ".iam.gserviceaccount.com";
     }
 
 }

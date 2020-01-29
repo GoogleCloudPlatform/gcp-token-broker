@@ -26,13 +26,12 @@ import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
-import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.Constants;
 import com.google.cloud.broker.utils.TimeUtils;
 import io.grpc.Status;
 
 
-public class DomainWideDelegationAuthorityProvider extends AbstractProvider {
+public class DomainWideDelegationAuthorityProvider extends AbstractUserProvider {
 
     private final static String IAM_API = "https://www.googleapis.com/auth/iam";
 
@@ -117,26 +116,11 @@ public class DomainWideDelegationAuthorityProvider extends AbstractProvider {
     }
 
     @Override
-    public AccessToken getAccessToken(String owner, List<String> scopes) {
-        String googleIdentity = getGoogleIdentity(owner);
+    public AccessToken getAccessToken(String googleIdentity, List<String> scopes) {
         // Get signed JWT
         String signedJWT = getSignedJWT(googleIdentity, scopes);
         // Obtain and return new access token for the owner
         return tradeSignedJWTForAccessToken(signedJWT);
-    }
-
-    public String getGoogleIdentity(String owner) {
-        String username;
-        try {
-            username = owner.split("@")[0];
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw new IllegalArgumentException();
-        }
-        if (username.length() == 0) {
-            throw new IllegalArgumentException();
-        }
-        String domain = AppSettings.getInstance().getString(AppSettings.GSUITE_DOMAIN);
-        return String.format("%s@%s", username, domain);
     }
 
 }

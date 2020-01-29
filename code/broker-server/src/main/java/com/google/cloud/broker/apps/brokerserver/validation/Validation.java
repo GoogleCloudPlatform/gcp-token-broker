@@ -35,23 +35,6 @@ public class Validation {
         }
     }
 
-    public static void validateImpersonator(String impersonator, String impersonated) {
-        if (impersonator.equals(impersonated)) {
-            // A user is allowed to impersonate themselves
-            return;
-        }
-        else {
-            String proxyString = AppSettings.getInstance().getString(AppSettings.PROXY_USER_WHITELIST);
-            String[] proxyUsers = proxyString.split("\\s*,\\s*");
-            boolean whitelisted = Arrays.stream(proxyUsers).anyMatch(impersonator::equals);
-            if (!whitelisted) {
-                throw Status.PERMISSION_DENIED
-                    .withDescription(String.format("%s is not a whitelisted impersonator", impersonator))
-                    .asRuntimeException();
-            }
-        }
-    }
-
     public static void validateScopes(List<String> scopes) {
         List<String> whitelist = AppSettings.getInstance().getStringList(AppSettings.SCOPES_WHITELIST);
         Set<String> scopeSet = new HashSet<String>(scopes);
