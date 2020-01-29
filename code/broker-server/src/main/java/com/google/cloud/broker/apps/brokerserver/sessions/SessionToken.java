@@ -14,19 +14,19 @@ package com.google.cloud.broker.apps.brokerserver.sessions;
 class SessionToken {
 
     private String sessionId;
-    private byte[] encryptedPassword;
+    private byte[] signature;
 
-    SessionToken(String sessionId, byte[] encryptedPassword) {
+    SessionToken(String sessionId, byte[] signature) {
         this.sessionId = sessionId;
-        this.encryptedPassword = encryptedPassword;
+        this.signature = signature;
     }
 
     String getSessionId() {
         return sessionId;
     }
 
-    byte[] getEncryptedPassword() {
-        return encryptedPassword;
+    byte[] getSignature() {
+        return signature;
     }
 
 }

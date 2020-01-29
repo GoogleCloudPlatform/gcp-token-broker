@@ -55,7 +55,7 @@ public class SessionCacheFetcherTest {
 
     private Session createSession() {
         // Create a session in the database
-        Session session = new Session(null, ALICE, "yarn@FOO.BAR", MOCK_BUCKET, GCS, null, null, null);
+        Session session = new Session(null, ALICE, "yarn@FOO.BAR", MOCK_BUCKET, GCS, null, null);
         AbstractDatabaseBackend.getInstance().save(session);
         return session;
     }
@@ -79,7 +79,6 @@ public class SessionCacheFetcherTest {
             "\"renewer\": \"yarn@BAZ.NET\", " +
             "\"scopes\": \"" + BIGQUERY + "\", " +
             "\"target\": \"gs://blah\", " +
-            "\"password\": \"secret!\", " +
             "\"expiresAt\": 2000000000000" +
         "}";
         Session session;
@@ -94,7 +93,6 @@ public class SessionCacheFetcherTest {
         assertEquals("yarn@BAZ.NET", session.getRenewer());
         assertEquals(BIGQUERY, session.getScopes());
         assertEquals("gs://blah", session.getTarget());
-        assertEquals("secret!", session.getPassword());
         assertEquals(2000000000000L, session.getExpiresAt().longValue());
     }
 

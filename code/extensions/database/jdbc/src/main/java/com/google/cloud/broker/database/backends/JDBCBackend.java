@@ -183,7 +183,6 @@ public class JDBCBackend extends AbstractDatabaseBackend {
                 quote("renewer") + " VARCHAR(255)," +
                 quote("target") + " VARCHAR(255)," +
                 quote("scope") + " VARCHAR(255)," +
-                quote("password") + " VARCHAR(255)," +
                 quote("expiresAt") + " BIGINT," +
                 quote("creationTime") + " BIGINT" +
             ");";
