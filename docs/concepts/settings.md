@@ -115,9 +115,9 @@ Port of the Redis cache server. Only necessary if you use the [Redis cache backe
 
 ### `scopes.whitelist`
 
-Default: `https://www.googleapis.com/auth/devstorage.read_write`
+Default: `["https://www.googleapis.com/auth/devstorage.read_write"]`
 
-Comma-separated whitelist of API scopes for access tokens.
+Whitelist of API scopes for access tokens.
 
 ### `server.host`
 
