@@ -29,11 +29,8 @@ For each new session, the broker adds a new record in the [database](database.md
 - `renewer`: Name of the Kerberos principal who is authorized to renew and cancel the token.
 - `scope`: Google API scope used to generate access tokens.
 - `target`: Name of the bucket associated with the session.
-- `password`: Secret associated with the session. Used to validate that the session token
-  provided by the client was in fact created by the broker.
 
-The broker then generates a token for the session (i.e the "session token"), which consists of the [encrypted](encryption.md)
-session's password, and returns the token to the client.
+The broker then generates a signed token for the session (i.e the "session token").
 
 ## Access token trade
 
@@ -41,8 +38,8 @@ After it obtains a new session token, the client submits the job and passes the 
 When a task needs to access a GCP resources (e.g. a GCS bucket), the task calls the `GetAccessToken` broker endpoint
 and submits the session token.
 
-The broker then decrypts the token, compares it with the session's password, and if the passwords match, generates
-a new GCP access token and returns that token to the caller.
+The broker then verifies the session token's signature, generates a new GCP access token, and returns the access
+token to the caller.
 
 In other terms, the `GetAccessToken` endpoint trades a session token for a GCP access token.
 

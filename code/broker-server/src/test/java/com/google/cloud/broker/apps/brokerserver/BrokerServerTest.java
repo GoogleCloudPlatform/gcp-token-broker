@@ -147,7 +147,6 @@ public class BrokerServerTest {
             MOCK_BUCKET,
             String.join(",", SCOPES),
             null,
-            null,
             null);
         AbstractDatabaseBackend.getInstance().save(session);
         return session;

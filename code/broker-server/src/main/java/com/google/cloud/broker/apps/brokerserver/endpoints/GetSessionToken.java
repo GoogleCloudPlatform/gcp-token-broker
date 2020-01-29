@@ -52,7 +52,6 @@ public class GetSessionToken {
             request.getTarget(),
             String.join(",", request.getScopesList()),
             null,
-            null,
             null
         );
         AbstractDatabaseBackend.getInstance().save(session);
