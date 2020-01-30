@@ -21,6 +21,7 @@ import com.google.cloud.broker.caching.CacheFetcher;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.usermapping.AbstractUserMapper;
 import io.grpc.Status;
+import org.slf4j.MDC;
 
 
 public class AccessTokenCacheFetcher extends CacheFetcher {
@@ -58,6 +59,7 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
         catch (IllegalArgumentException e) {
             throw Status.PERMISSION_DENIED.withDescription("Principal `" + owner + "` cannot be matched to a Google identity.").asRuntimeException();
         }
+        MDC.put("access_token_user", googleIdentity);
         return AbstractProvider.getInstance().getAccessToken(googleIdentity, scopes);
     }
 
