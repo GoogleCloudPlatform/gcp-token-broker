@@ -12,7 +12,6 @@
 package com.google.cloud.broker.apps.brokerserver.validation;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 import com.google.api.client.auth.oauth2.BearerToken;
@@ -25,6 +24,7 @@ import com.google.api.services.directory.model.Member;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import io.grpc.Status;
+import org.slf4j.MDC;
 
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 import com.google.cloud.broker.apps.brokerserver.accesstokens.providers.DomainWideDelegationAuthorityProvider;
@@ -71,13 +71,12 @@ public class ProxyUserValidation {
         }
 
         try {
-            String googleIdentity = AbstractUserMapper.getInstance().map(impersonated);
             Directory directory = getDirectoryService();
             for (String proxyableGroup : proxyableGroups) {
                 try {
                     List<Member> members = directory.members().list(proxyableGroup).execute().getMembers();
                     for (Member member : members) {
-                        if (member.getEmail().equals(googleIdentity)) {
+                        if (member.getEmail().equals(impersonated)) {
                             // User is member of whitelisted group
                             return true;
                         }
@@ -94,28 +93,25 @@ public class ProxyUserValidation {
     }
 
     public static void validateImpersonator(String impersonator, String impersonated) {
-        if (impersonator.equals(impersonated)) {
-            // A user is allowed to impersonate themselves
-            return;
-        }
-
+        String mappedImpersonated = AbstractUserMapper.getInstance().map(impersonated);
+        MDC.put("impersonated_user", impersonated);
+        MDC.put("impersonated_user_mapped", mappedImpersonated);
         List<? extends Config> proxyConfigs = AppSettings.getInstance().getConfigList(AppSettings.PROXY_USERS);
         for (Config proxyConfig : proxyConfigs) {
             String proxy = proxyConfig.getString(CONFIG_PROXY);
             if (impersonator.equals(proxy)) {
-                if (isWhitelistedByUsername(proxyConfig, impersonated)) {
+                if (isWhitelistedByUsername(proxyConfig, mappedImpersonated)) {
                     // The user is directly whitelisted by its username
                     return;
                 }
-                else if (isWhitelistedByGroupMembership(proxyConfig, impersonated)) {
+                else if (isWhitelistedByGroupMembership(proxyConfig, mappedImpersonated)) {
                     // The user is whitelisted by group membership
                     return;
                 }
             }
         }
-
         throw Status.PERMISSION_DENIED
-            .withDescription(String.format("%s is not a whitelisted impersonator for %s", impersonator, impersonated))
+            .withDescription("Impersonation disallowed for `" + impersonator + "`")
             .asRuntimeException();
     }
 

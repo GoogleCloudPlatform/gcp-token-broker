@@ -117,12 +117,15 @@ The broker can handle proxy users. For that, you just need to specify the list o
 in the broker's settings, for example:
 
 ```
-proxy-users.whitelist="hive/hive.your-domain.com@YOUR.REALM.COM,oozie/oozie.your-domain.com@YOUR.REALM.COM"
+proxy-users = [
+  { proxy = "hive/hive.your-domain.com@YOUR.REALM.COM", users = ["alice@your-domain.com", "bob@your-domain.com"] }
+  { proxy = "oozie/oozie.your-domain.com@YOUR.REALM.COM", groups = ["datascience@your-domain.com"] }
+]
 ```
 
 When a Hive job is running, the GCS connector calls the broker and sends a SPNEGO token for the
 [logged-in principal](https://hadoop.apache.org/docs/current/api/org/apache/hadoop/security/UserGroupInformation.html#getLoginUser())
 (e.g. "hive") in the request authentication header and the [`currentUser`](https://hadoop.apache.org/docs/current/api/org/apache/hadoop/security/UserGroupInformation.html#getCurrentUser())'s
 username (e.g. "alice") as a request parameter. The broker then checks that the SPNEGO token's Kerberos
-principal is in the `PROXY_USER_WHITELIST` setting, and if so, returns a GCP access token for the
+principal is in the `proxy-users` setting, and if so, returns a GCP access token for the
 "alice@your-domain.com" Cloud Identity.

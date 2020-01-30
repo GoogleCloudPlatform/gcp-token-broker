@@ -43,6 +43,7 @@ public class ProxyUserValidationTest {
     @Before
     public void setup() {
         // Override settings
+        String GSUITE_DOMAIN = AppSettings.getInstance().getString(AppSettings.GSUITE_DOMAIN);
         Object proxyUsers = ConfigFactory.parseString(
             AppSettings.PROXY_USERS + "=[" +
                 "{" +
@@ -51,7 +52,7 @@ public class ProxyUserValidationTest {
                 "}," +
                 "{" +
                     "proxy=\"" + STORM + "\"," +
-                    "users=[\"" + ALICE + "\", \"" + BOB + "\"]" +
+                    "users=[\"alice@" + GSUITE_DOMAIN + "\", \"bob@" + GSUITE_DOMAIN + "\"]" +
                 "}," +
                 "{" +
                     "proxy=\"" + OOZIE + "\"," +
@@ -59,21 +60,20 @@ public class ProxyUserValidationTest {
                 "}," +
                 "{" +
                     "proxy=\"" + HIVE + "\"," +
-                    "groups=[\"" + GROUP_DATASCIENCE + "@" + AppSettings.getInstance().getString(AppSettings.GSUITE_DOMAIN) + "\"]" +
+                    "groups=[\"" + GROUP_DATASCIENCE + "@" + GSUITE_DOMAIN + "\"]" +
                 "}," +
                 "{" +
                     "proxy=\"" + SOLR + "\"," +
-                    "groups=[\"" + GROUP_FINANCE + "@" + AppSettings.getInstance().getString(AppSettings.GSUITE_DOMAIN) + "\"]" +
+                    "groups=[\"" + GROUP_FINANCE + "@" + GSUITE_DOMAIN + "\"]" +
                 "}," +
             "]"
         ).getAnyRef(AppSettings.PROXY_USERS);
         backupSettings = new SettingsOverride(Map.of(
             AppSettings.PROXY_USERS, proxyUsers,
             AppSettings.PROVIDER_BACKEND, "com.google.cloud.broker.apps.brokerserver.accesstokens.providers.ServiceAccountProvider",
-            AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.ShadowServiceAccountUserMapper",
+            AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.GsuiteDomainSwapUserMapper",
             AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend",
-            AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend",
-            AppSettings.SHADOW_PROJECT, AppSettings.getInstance().getString(AppSettings.GCP_PROJECT)
+            AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend"
         ));
     }
 
@@ -95,14 +95,6 @@ public class ProxyUserValidationTest {
         }
     }
 
-
-    @Test
-    public void testValidateImpersonatorSelfImpersonation() {
-        ProxyUserValidation.validateImpersonator(ALICE, ALICE);
-        ProxyUserValidation.validateImpersonator(BOB, BOB);
-        ProxyUserValidation.validateImpersonator(CHARLIE, CHARLIE);
-    }
-
     @Test
     public void testValidateImpersonatorInvalid() {
         String[] users = {ALICE, BOB, CHARLIE};
@@ -112,7 +104,7 @@ public class ProxyUserValidationTest {
                 fail();
             } catch (StatusRuntimeException e) {
                 assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-                assertEquals("spark/testhost@EXAMPLE.COM is not a whitelisted impersonator for " + user, e.getStatus().getDescription());
+                assertEquals("Impersonation disallowed for `spark/testhost@EXAMPLE.COM`", e.getStatus().getDescription());
             }
         }
     }
@@ -132,7 +124,7 @@ public class ProxyUserValidationTest {
             fail();
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("storm/testhost@EXAMPLE.COM is not a whitelisted impersonator for " + CHARLIE, e.getStatus().getDescription());
+            assertEquals("Impersonation disallowed for `storm/testhost@EXAMPLE.COM`", e.getStatus().getDescription());
         }
     }
 
@@ -152,7 +144,7 @@ public class ProxyUserValidationTest {
                 fail();
             } catch (StatusRuntimeException e) {
                 assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-                assertEquals("hive/testhost@EXAMPLE.COM is not a whitelisted impersonator for " + user, e.getStatus().getDescription());
+                assertEquals("Impersonation disallowed for `hive/testhost@EXAMPLE.COM`", e.getStatus().getDescription());
             }
         }
 
@@ -164,7 +156,7 @@ public class ProxyUserValidationTest {
                 fail();
             } catch (StatusRuntimeException e) {
                 assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-                assertEquals("solr/testhost@EXAMPLE.COM is not a whitelisted impersonator for " + user, e.getStatus().getDescription());
+                assertEquals("Impersonation disallowed for `solr/testhost@EXAMPLE.COM`", e.getStatus().getDescription());
             }
         }
     }

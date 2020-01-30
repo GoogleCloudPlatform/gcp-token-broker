@@ -74,18 +74,6 @@ limitations under the License.
             <version>${google-api-services-iam.version}</version>
         </dependency>
 
-        <!-- For logging -->
-        <dependency>
-            <groupId>ch.qos.logback.contrib</groupId>
-            <artifactId>logback-json-classic</artifactId>
-            <version>${ch.qos.logback.contrib.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback.contrib</groupId>
-            <artifactId>logback-jackson</artifactId>
-            <version>${ch.qos.logback.contrib.version}</version>
-        </dependency>
-
         <!-- Testing dependencies -->
         <dependency>
             <groupId>io.grpc</groupId>

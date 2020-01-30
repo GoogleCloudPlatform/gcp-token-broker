@@ -50,6 +50,18 @@ limitations under the License.
         <version>1.30.3</version>
       </dependency>
 
+      <!-- For logging -->
+      <dependency>
+        <groupId>ch.qos.logback.contrib</groupId>
+        <artifactId>logback-json-classic</artifactId>
+        <version>${ch.qos.logback.contrib.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback.contrib</groupId>
+        <artifactId>logback-jackson</artifactId>
+        <version>${ch.qos.logback.contrib.version}</version>
+      </dependency>
+
       <!-- For local cache -->
       <dependency>
         <groupId>net.jodah</groupId>

@@ -83,11 +83,11 @@ Default: `%s-shadow`
 
 Pattern for the [shadow service account](providers.md#service-account-provider) username.
 
-### `proxy-users.whitelist`
+### `proxy-users`
 
-Default: `""` (Empty string)
+Default: `[]` (Empty string)
 
-Comma-separated whitelist of [proxy users](authentication.md#proxy-user-impersonation).
+Whitelist of [proxy users](authentication.md#proxy-user-impersonation).
 
 ### `remote-cache.backend`
 

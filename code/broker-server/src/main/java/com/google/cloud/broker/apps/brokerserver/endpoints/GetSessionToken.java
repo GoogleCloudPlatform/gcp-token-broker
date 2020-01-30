@@ -43,7 +43,11 @@ public class GetSessionToken {
         Validation.validateParameterNotEmpty("scopes", (List<String>) scopes.getUnmodifiableView().getUnderlyingElements());
         Validation.validateParameterNotEmpty("target", request.getTarget());
 
-        ProxyUserValidation.validateImpersonator(authenticatedUser, request.getOwner());
+        // If the authenticated user requests a session token for another user,
+        // verify that it is allowed to do so.
+        if (! authenticatedUser.equals(request.getOwner())) {
+            ProxyUserValidation.validateImpersonator(authenticatedUser, request.getOwner());
+        }
 
         // Create session
         Session session = new Session(
