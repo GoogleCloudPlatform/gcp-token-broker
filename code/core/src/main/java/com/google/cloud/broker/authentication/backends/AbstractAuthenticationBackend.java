@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -10,6 +10,8 @@
 // limitations under the License.
 
 package com.google.cloud.broker.authentication.backends;
+
+import org.slf4j.MDC;
 
 import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
 import com.google.cloud.broker.settings.AppSettings;
@@ -30,7 +32,9 @@ public abstract class AbstractAuthenticationBackend {
 
     public String authenticateUser() {
         String authorizationHeader = AuthorizationHeaderServerInterceptor.AUTHORIZATION_CONTEXT_KEY.get();
-        return authenticateUser(authorizationHeader);
+        String authenticatedUser = authenticateUser(authorizationHeader);
+        MDC.put("authenticated_user", authenticatedUser);
+        return authenticatedUser;
     }
 
     public abstract String authenticateUser(String authorizationHeader);

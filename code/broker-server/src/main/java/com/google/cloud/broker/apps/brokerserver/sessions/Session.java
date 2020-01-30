@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,9 +11,7 @@
 
 package com.google.cloud.broker.apps.brokerserver.sessions;
 
-import java.security.SecureRandom;
 import java.util.Map;
-import java.util.Random;
 import java.util.HashMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -31,7 +29,6 @@ public class Session extends Model {
     private String renewer;       // Identity who is allowed to renew/cancel the session (e.g. yarn@FOO.BAR)
     private String target;        // Target resource on GCP (e.g. //storage.googleapis.com/projects/_/buckets/example)
     private String scopes;        // API scopes for the target resource (e.g. https://www.googleapis.com/auth/devstorage.read_write)
-    private String password;      // Randomly generated password for the session
     private Long expiresAt;       // Time when the session will expire (in milliseconds)
     private Long creationTime;    // Time when the session was created (in milliseconds)
 
@@ -40,7 +37,6 @@ public class Session extends Model {
                    @JsonProperty("renewer") String renewer,
                    @JsonProperty("target") String target,
                    @JsonProperty("scopes") String scopes,
-                   @JsonProperty("password") String password,
                    @JsonProperty("expiresAt") Long expiresAt,
                    @JsonProperty("creationTime") Long creationTime) {
         setId(id);
@@ -51,9 +47,6 @@ public class Session extends Model {
         setExpiresAt(expiresAt);
         setCreationTime(
             (creationTime==null) ? Long.valueOf(TimeUtils.currentTimeMillis()) : creationTime
-        );
-        setPassword(
-            (password==null) ? generateRandomPassword() : password
         );
         if (expiresAt==null) {
             extendLifetime();
@@ -75,7 +68,6 @@ public class Session extends Model {
         map.put("renewer", renewer);
         map.put("target", target);
         map.put("scopes", scopes);
-        map.put("password", password);
         map.put("expiresAt", expiresAt);
         map.put("creationTime", creationTime);
         return map;
@@ -88,21 +80,9 @@ public class Session extends Model {
             (String) map.get("renewer"),
             (String) map.get("target"),
             (String) map.get("scopes"),
-            (String) map.get("password"),
             (Long) map.get("expiresAt"),
             (Long) map.get("creationTime")
         );
-    }
-
-    private static String generateRandomPassword() {
-        Random random = new SecureRandom();
-        int length = 24;
-        String characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            sb.append(characters.charAt(random.nextInt(characters.length())));
-        }
-        return sb.toString();
     }
 
     public void extendLifetime() {
@@ -159,14 +139,6 @@ public class Session extends Model {
 
     public void setScopes(String scopes) {
         this.scopes = scopes;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public Long getExpiresAt() {

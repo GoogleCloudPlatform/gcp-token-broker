@@ -3,7 +3,7 @@
 The broker service can use three different providers to generate access tokens for Google APIs:
 
 - Refresh tokens provider (`RefreshTokenProvider`)
-- Shadow service accounts provider (`ShadowServiceAccountProvider`)
+- Service accounts provider (`ServiceAccountProvider`)
 - Domain-wide delegation authority provider (`DomainWideDelegationAuthorityProvider`)
 
 You can specify which provider you'd like to use by setting the [`provider.backend`](settings.md#provider.backend) setting to the provider's class path.
@@ -48,7 +48,7 @@ This provider requires that you set the following settings: [`gsuite-domain`](se
 
 ## Service account provider
 
-Class path: `com.google.cloud.broker.apps.brokerserver.accesstokens.providers.ShadowServiceAccountProvider`
+Class path: `com.google.cloud.broker.apps.brokerserver.accesstokens.providers.ServiceAccountProvider`
 
 The shadow service accounts approach leverages a Cloud IAM feature called [short-lived service account credentials](https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials).
 This feature allows a given service account to obtain access tokens on behalf of other service accounts.
@@ -67,7 +67,7 @@ Let's take an example:
 
 <img src="../img/access-example-service-accounts.svg">
 
-To use the `ShadowServiceAccountProvider`, follow this procedure:
+To use the `ServiceAccountProvider`, follow this procedure:
 
 - Create a separate shadow service account for each user that is expected to use Hadoop in GCP.
 - Create a service account for the broker.

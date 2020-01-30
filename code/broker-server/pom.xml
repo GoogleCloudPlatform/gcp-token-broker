@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-Copyright 2019 Google LLC
+Copyright 2020 Google LLC
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -56,6 +56,11 @@ limitations under the License.
             <version>${javax.annotation-api.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-admin-directory</artifactId>
+            <version>directory_v1-rev20190806-1.30.3</version>
+        </dependency>
 
         <!-- For the access token providers -->
         <dependency>
@@ -67,18 +72,6 @@ limitations under the License.
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-iam</artifactId>
             <version>${google-api-services-iam.version}</version>
-        </dependency>
-
-        <!-- For logging -->
-        <dependency>
-            <groupId>ch.qos.logback.contrib</groupId>
-            <artifactId>logback-json-classic</artifactId>
-            <version>${ch.qos.logback.contrib.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback.contrib</groupId>
-            <artifactId>logback-jackson</artifactId>
-            <version>${ch.qos.logback.contrib.version}</version>
         </dependency>
 
         <!-- Testing dependencies -->

@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -31,7 +31,6 @@ public class RefreshTokenProviderTest {
     // - Happy path.
 
     private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
-    private static final String TARGET = "//storage.googleapis.com/projects/_/buckets/example";
 
     private static SettingsOverride backupSettings;
 
@@ -39,8 +38,8 @@ public class RefreshTokenProviderTest {
     public static void setupClass() {
         // Override settings
         backupSettings = new SettingsOverride(Map.of(
-            AppSettings.GSUITE_DOMAIN, "example.com",
-            AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend"
+            AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend",
+            AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper"
         ));
     }
 
@@ -58,37 +57,15 @@ public class RefreshTokenProviderTest {
     }
 
     @Test
-    public void testGoogleIdentity() {
-        RefreshTokenProvider provider = new RefreshTokenProvider();
-        assertEquals("alice@example.com", provider.getGoogleIdentity("alice@EXAMPLE.COM"));
-        assertEquals("alice@example.com", provider.getGoogleIdentity("alice@EXAMPLE.NET"));
-        assertEquals("alice@example.com", provider.getGoogleIdentity("alice"));
-        try {
-            provider.getGoogleIdentity("");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
-
-        try {
-            provider.getGoogleIdentity("@EXAMPLE.NET");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
-
-        try {
-            provider.getGoogleIdentity("@");
-            fail("IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException e) {}
-    }
-
-    @Test
     public void testUnauthorized() {
         RefreshTokenProvider provider = new RefreshTokenProvider();
         try {
-            provider.getAccessToken("bob@EXAMPLE.COM", SCOPES, TARGET);
+            provider.getAccessToken("bob@example.com", SCOPES);
             fail("StatusRuntimeException not thrown");
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
             assertEquals(
-                "GCP Token Broker authorization is invalid or has expired for user: bob@EXAMPLE.COM",
+                "GCP Token Broker authorization is invalid or has expired for identity: bob@example.com",
                 e.getStatus().getDescription());
         }
     }

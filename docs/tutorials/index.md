@@ -4,7 +4,7 @@ This section provides a few simple test scenarios that you can run on the test D
 To SSH in the Dataproc cluster's master node, run this command:
 
 ```shell
-gcloud beta compute ssh test-cluster-m --tunnel-through-iap
+gcloud compute ssh test-cluster-m --tunnel-through-iap
 ```
 
 Once you're SSH'ed in, log in as one of your test users with Kerberos, for example:
@@ -112,6 +112,23 @@ parameters:
   ```shell
   --hiveconf="hive.execution.engine=mr"
   ```
+
+**Troubleshooting**:
+
+If you get the following error when using hive:
+
+```
+FAILED: Execution Error, return code 1 from org.apache.hadoop.hive.ql.exec.DDLTask. MetaException(message:java.lang.RuntimeException:
+User is not logged-in with Kerberos or cannot authenticate with the broker.
+Kerberos error message: No valid credentials provided
+(Mechanism level: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)))
+```
+
+... try restarting the Hive Metastore:
+
+```
+sudo service hive-metastore restart
+```
 
 ### SparkSQL
 

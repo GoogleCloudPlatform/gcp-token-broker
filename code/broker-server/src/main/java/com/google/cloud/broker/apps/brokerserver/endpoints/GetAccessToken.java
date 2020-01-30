@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,6 +19,7 @@ import org.slf4j.MDC;
 
 import com.google.cloud.broker.apps.brokerserver.logging.LoggingUtils;
 import com.google.cloud.broker.apps.brokerserver.validation.Validation;
+import com.google.cloud.broker.apps.brokerserver.validation.ProxyUserValidation;
 import com.google.cloud.broker.apps.brokerserver.sessions.SessionAuthenticator;
 import com.google.cloud.broker.authentication.backends.AbstractAuthenticationBackend;
 import com.google.cloud.broker.apps.brokerserver.sessions.Session;
@@ -47,7 +48,11 @@ public class GetAccessToken {
             AbstractAuthenticationBackend authenticator = AbstractAuthenticationBackend.getInstance();
             String authenticatedUser = authenticator.authenticateUser();
 
-            Validation.validateImpersonator(authenticatedUser, request.getOwner());
+            // If the authenticated user requests an access token for another user,
+            // verify that it is allowed to do so.
+            if (! authenticatedUser.equals(request.getOwner())) {
+                ProxyUserValidation.validateImpersonator(authenticatedUser, request.getOwner());
+            }
         }
         else {
             // A session token was provided. The client is using delegated authentication.

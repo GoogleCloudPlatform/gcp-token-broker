@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -36,7 +36,6 @@ public class SessionTest {
         values.put("renewer", YARN);
         values.put("target", MOCK_BUCKET);
         values.put("scopes", GCS);
-        values.put("password", "abcd");
         values.put("creationTime", 11111111111111L);
         values.put("expiresAt", 2222222222222L);
 
@@ -46,7 +45,6 @@ public class SessionTest {
         assertEquals(YARN, session.getRenewer());
         assertEquals(MOCK_BUCKET, session.getTarget());
         assertEquals(GCS, session.getScopes());
-        assertEquals("abcd", session.getPassword());
         assertEquals(11111111111111L, session.getCreationTime().longValue());
         assertEquals(2222222222222L, session.getExpiresAt().longValue());
     }

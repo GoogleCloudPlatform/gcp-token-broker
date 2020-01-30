@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,7 +22,14 @@ import org.junit.Test;
 
 import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+@RunWith(PowerMockRunner.class)
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "javax.activation.*", "org.xml.*", "org.w3c.*"})
+@PrepareForTest({AccessBoundaryUtils.class})  // Classes to be mocked
 public class AccessTokenCacheFetcherTest {
 
     private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
@@ -37,6 +44,7 @@ public class AccessTokenCacheFetcherTest {
         backupSettings = new SettingsOverride(Map.of(
             AppSettings.REMOTE_CACHE, "com.google.cloud.broker.caching.remote.RedisCache",
             AppSettings.PROVIDER_BACKEND, "com.google.cloud.broker.apps.brokerserver.accesstokens.providers.MockProvider",
+            AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper",
             AppSettings.ACCESS_TOKEN_LOCAL_CACHE_TIME, "1234",
             AppSettings.ACCESS_TOKEN_REMOTE_CACHE_TIME, "6789"
         ));
@@ -50,10 +58,13 @@ public class AccessTokenCacheFetcherTest {
 
     @Test
     public void testComputeResult() {
+        // Mock the Access Boundary API
+        MockAccessBoundary.mock();
+
         AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES, TARGET);
         AccessToken token = (AccessToken) fetcher.computeResult();
         assertEquals(
-            "FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scopes=" + String.join(",", SCOPES) + ";Target=" + TARGET,
+            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES) + ";Target=" + TARGET,
             token.getValue());
         assertEquals(token.getExpiresAt(), 999999999L);
     }

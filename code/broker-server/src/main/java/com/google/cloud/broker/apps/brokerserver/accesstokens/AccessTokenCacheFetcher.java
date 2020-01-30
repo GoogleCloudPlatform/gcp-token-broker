@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,6 +19,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.broker.apps.brokerserver.accesstokens.providers.AbstractProvider;
 import com.google.cloud.broker.caching.CacheFetcher;
 import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.usermapping.AbstractUserMapper;
+import io.grpc.Status;
+import org.slf4j.MDC;
 
 
 public class AccessTokenCacheFetcher extends CacheFetcher {
@@ -31,7 +34,7 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
     public AccessTokenCacheFetcher(String owner, List<String> scopes, String target) {
         this.owner = owner;
         this.scopes = scopes;
-            this.target = target;
+        this.target = target;
     }
 
     @Override
@@ -51,7 +54,16 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
 
     @Override
     protected Object computeResult() {
-        return AbstractProvider.getInstance().getAccessToken(owner, scopes, target);
+        String googleIdentity;
+        try {
+            googleIdentity = AbstractUserMapper.getInstance().map(owner);
+        }
+        catch (IllegalArgumentException e) {
+            throw Status.PERMISSION_DENIED.withDescription("Principal `" + owner + "` cannot be matched to a Google identity.").asRuntimeException();
+        }
+        MDC.put("access_token_user", googleIdentity);
+        AccessToken accessToken = AbstractProvider.getInstance().getAccessToken(googleIdentity, scopes);
+        return AccessBoundaryUtils.addAccessBoundary(accessToken, target);
     }
 
     @Override

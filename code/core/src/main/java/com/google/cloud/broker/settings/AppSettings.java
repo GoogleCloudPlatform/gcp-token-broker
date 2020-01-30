@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,6 +18,7 @@ public class AppSettings {
 
     public final static String GCP_PROJECT = "gcp-project";
     public final static String GSUITE_DOMAIN = "gsuite-domain";
+    public final static String GSUITE_ADMIN = "gsuite-admin";
     public final static String AUTHORIZER_HOST = "authorizer.host";
     public final static String AUTHORIZER_PORT = "authorizer.port";
     public final static String LOGGING_LEVEL = "logging.level";
@@ -29,7 +30,7 @@ public class AppSettings {
     public final static String SESSION_LOCAL_CACHE_TIME = "sessions.local-cache-time";
     public final static String SESSION_MAXIMUM_LIFETIME = "sessions.maximum-lifetime";
     public final static String SESSION_RENEW_PERIOD = "sessions.renew-period";
-    public final static String PROXY_USER_WHITELIST = "proxy-users.whitelist";
+    public final static String PROXY_USERS = "proxy-users";
     public final static String SCOPES_WHITELIST = "scopes.whitelist";
     public final static String PROVIDER_BACKEND = "provider.backend";
     public final static String ACCESS_TOKEN_BOUNDARY_PERMISSIONS = "provider.access-tokens.boundary-permissions";
@@ -37,6 +38,7 @@ public class AppSettings {
     public final static String ACCESS_TOKEN_REMOTE_CACHE_TIME = "provider.access-tokens.remote-cache-time";
     public final static String SHADOW_PROJECT = "provider.shadow-service-accounts.project";
     public final static String SHADOW_USERNAME_PATTERN = "provider.shadow-service-accounts.username-pattern";
+    public final static String HYBRID_USER_PROVIDER = "provider.hybrid.user-provider";
     public final static String JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR = "provider.json-file-credentials.base-dir";
     public final static String DATABASE_BACKEND = "database.backend";
     public final static String DATABASE_JDBC_URL = "database.jdbc.driver-url";
@@ -52,6 +54,7 @@ public class AppSettings {
     public final static String ENCRYPTION_BACKEND = "encryption.backend";
     public final static String ENCRYPTION_DEK_URI = "encryption.cloud-kms.dek-uri";
     public final static String ENCRYPTION_KEK_URI = "encryption.cloud-kms.kek-uri";
+    public final static String USER_MAPPER = "user-mapping.mapper";
 
     private static Config instance;
     static {

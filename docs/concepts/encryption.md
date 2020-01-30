@@ -2,7 +2,6 @@
 
 The broker encrypts different types of information:
 
-- [Session](sessions.md) passwords embedded in session tokens.
 - Access tokens before they are stored in the [remote cache](caching.md#remote-cache).
 - Refresh tokens used by the [refresh token provider](providers.md#refresh-token-provider), if that is the provider that you elect
   to use.

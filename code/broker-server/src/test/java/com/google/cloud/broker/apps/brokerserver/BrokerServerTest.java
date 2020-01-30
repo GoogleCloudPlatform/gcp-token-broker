@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,6 +23,8 @@ import static com.google.cloud.broker.apps.brokerserver.protobuf.BrokerGrpc.Brok
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessBoundaryUtils;
+import com.google.cloud.broker.apps.brokerserver.accesstokens.MockAccessBoundary;
 import com.google.cloud.broker.apps.brokerserver.protobuf.*;
 import com.google.cloud.broker.apps.brokerserver.sessions.Session;
 import com.google.cloud.broker.apps.brokerserver.sessions.SessionTokenUtils;
@@ -53,7 +55,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "javax.activation.*", "org.xml.*", "org.w3c.*"})
-@PrepareForTest({TimeUtils.class})  // Classes to be mocked
+@PrepareForTest({TimeUtils.class, AccessBoundaryUtils.class})  // Classes to be mocked
 public class BrokerServerTest {
 
     // TODO: Still needs tests:
@@ -84,9 +86,9 @@ public class BrokerServerTest {
         map.put(AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
         map.put(AppSettings.AUTHENTICATION_BACKEND, "com.google.cloud.broker.authentication.backends.MockAuthenticator");
         map.put(AppSettings.SCOPES_WHITELIST, "[\"https://www.googleapis.com/auth/devstorage.read_write\", \"https://www.googleapis.com/auth/bigquery\"]");
-        map.put(AppSettings.PROXY_USER_WHITELIST, "\"hive@FOO.BAR\"");
         map.put(AppSettings.SESSION_RENEW_PERIOD, SESSION_RENEW_PERIOD.toString());
         map.put(AppSettings.SESSION_MAXIMUM_LIFETIME, SESSION_MAXIMUM_LIFETIME.toString());
+        map.put(AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper");
 
         // Keep reference to old config file, if any
         configFileBackup = System.getProperty("config.file");
@@ -146,7 +148,6 @@ public class BrokerServerTest {
             "yarn@FOO.BAR",
             MOCK_BUCKET,
             String.join(",", SCOPES),
-            null,
             null,
             null);
         AbstractDatabaseBackend.getInstance().save(session);
@@ -301,17 +302,20 @@ public class BrokerServerTest {
     public void testGetAccessToken_DirectAuth() {
         BrokerBlockingStub stub = getStub();
         stub = addSPNEGOTokenToMetadata(stub, ALICE);
+
+        // Mock the Access Boundary API
+        MockAccessBoundary.mock();
+
         GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder()
             .setOwner(ALICE)
             .addAllScopes(SCOPES)
             .setTarget(MOCK_BUCKET)
             .build());
         assertEquals(
-            "FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scopes=" + String.join(",", SCOPES) + ";Target=" + MOCK_BUCKET,
+            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES) + ";Target=" + MOCK_BUCKET,
             response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
-
 
     @Test
     public void testGetAccessToken_DelegatedAuth_Success() {
@@ -322,6 +326,9 @@ public class BrokerServerTest {
         BrokerBlockingStub stub = getStub();
         stub = addSessionTokenToMetadata(stub, session);
 
+        // Mock the Access Boundary API
+        MockAccessBoundary.mock();
+
         // Send the GetAccessToken request
         GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder()
             .setOwner(ALICE)
@@ -330,7 +337,7 @@ public class BrokerServerTest {
             .build());
 
         assertEquals(
-            "FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scopes=" + String.join(",", SCOPES) + ";Target=" + MOCK_BUCKET,
+            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES) + ";Target=" + MOCK_BUCKET,
             response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }

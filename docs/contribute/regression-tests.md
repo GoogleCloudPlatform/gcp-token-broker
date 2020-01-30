@@ -48,33 +48,40 @@ Follow these steps to run the test suite:
    ```shell
    gcloud iam service-accounts create alice-shadow
    ```
-10. Allow the broker service account to generate access tokens on behalf of the test service account:
+10. Allow the broker service account to sign JWTs for itself (This is necessary to test domain-wide delegation):
+
+   ```shell
+   gcloud iam service-accounts add-iam-policy-binding broker@${PROJECT}.iam.gserviceaccount.com \
+     --role roles/iam.serviceAccountTokenCreator \
+     --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
+   ```
+11. Allow the broker service account to generate access tokens on behalf of the test service account:
 
    ```shell
    gcloud iam service-accounts add-iam-policy-binding alice-shadow@${PROJECT}.iam.gserviceaccount.com \
      --role roles/iam.serviceAccountTokenCreator \
      --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
    ```
-11. Add the Cloud Datastore user IAM role to allow the broker service account to read and write to the database:
+12. Add the Cloud Datastore user IAM role to allow the broker service account to read and write to the database:
 
    ```shell
    gcloud projects add-iam-policy-binding $PROJECT \
      --role roles/datastore.user \
      --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
    ```
-11. Create a KMS keyring:
+13. Create a KMS keyring:
 
     ```shell
     gcloud kms keyrings create mykeyring --location global
     ```
-12. Create a KMS key:
+14. Create a KMS key:
 
     ```shell
     gcloud kms keys create mykey --location global \
       --keyring mykeyring --purpose encryption
     ```
 
-13. Give permission to the broker service account to use the keyring:
+15. Give permission to the broker service account to use the keyring:
 
     ```shell
     gcloud kms keyrings add-iam-policy-binding \
@@ -83,7 +90,7 @@ Follow these steps to run the test suite:
       --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
     ```
 
-14. Download a private JSON key for the broker service account:
+16. Download a private JSON key for the broker service account:
 
    ```shell
    gcloud iam service-accounts keys create --iam-account \
@@ -91,7 +98,7 @@ Follow these steps to run the test suite:
      service-account-key.json
    ```
 
-14. You can now run the tests as follows:
+17. You can now run the tests as follows:
 
     To run the entire test suite:
 

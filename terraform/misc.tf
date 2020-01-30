@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2020 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -57,6 +57,11 @@ resource "google_project_service" "service_redis" {
 
 resource "google_project_service" "service_containerregistry" {
   service = "containerregistry.googleapis.com"
+}
+
+// Used for proxy user support to check group membership
+resource "google_project_service" "service_admin" {
+  service = "admin.googleapis.com"
 }
 
 
