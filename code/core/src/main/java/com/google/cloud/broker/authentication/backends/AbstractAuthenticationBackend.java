@@ -11,6 +11,8 @@
 
 package com.google.cloud.broker.authentication.backends;
 
+import org.slf4j.MDC;
+
 import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
@@ -30,7 +32,9 @@ public abstract class AbstractAuthenticationBackend {
 
     public String authenticateUser() {
         String authorizationHeader = AuthorizationHeaderServerInterceptor.AUTHORIZATION_CONTEXT_KEY.get();
-        return authenticateUser(authorizationHeader);
+        String authenticatedUser = authenticateUser(authorizationHeader);
+        MDC.put("authenticated_user", authenticatedUser);
+        return authenticatedUser;
     }
 
     public abstract String authenticateUser(String authorizationHeader);
