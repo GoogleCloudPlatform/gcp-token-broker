@@ -7,7 +7,7 @@ You can run the load tests from the sample Dataproc cluster that you created for
 1. SSH into the Dataproc master instance:
 
    ```shell
-   gcloud beta compute ssh test-cluster-m --tunnel-through-iap
+   gcloud compute ssh test-cluster-m --tunnel-through-iap
    ```
 2. Clone the project's repository:
 
