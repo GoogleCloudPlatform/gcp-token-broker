@@ -242,8 +242,8 @@ function ssh_function() {
 # Initializes a development container
 function init_dev() {
     set -x
-	docker run -it -v $PWD:/base -w /base -p 7070:7070 --detach --name ${CONTAINER} ubuntu:18.04 && \
-	docker exec -it ${CONTAINER} bash -c "code/broker-server/install-dev.sh"
+	  docker run -it -v $PWD:/base -w /base -p 7070:7070 --detach --name ${CONTAINER} ubuntu:18.04 && \
+	  docker exec -it ${CONTAINER} bash -c "code/broker-server/install-dev.sh"
 }
 
 # Restart the development container, in case the container was previously stopped.
@@ -251,6 +251,24 @@ function restart_dev {
     set -x
     docker start ${CONTAINER}
     docker exec -it ${CONTAINER} bash -c "/restart-services.sh"
+}
+
+# Upload connector jar to a Dataproc cluster
+function upload_connector {
+    LIB_DIR="/usr/local/share/google/dataproc/lib"
+    VERSION="$(cat VERSION)"
+    JAR="broker-connector-hadoop2-${VERSION}-jar-with-dependencies.jar"
+    LOCAL_JAR=""
+    SSH="gcloud compute ssh $1 --tunnel-through-iap"
+    set -x
+    # Upload new JAR
+    gcloud compute scp code/connector/target/${JAR} $1:/tmp --tunnel-through-iap
+    # Delete old JAR
+    ${SSH} --command "sudo rm -f ${LIB_DIR}/broker-connector-*.jar"
+    # Relocate new JAR
+    ${SSH} --command "sudo mv /tmp/${JAR} ${LIB_DIR}"
+    # Restart services
+    ${SSH} --command "sudo systemctl restart hadoop-hdfs-namenode && sudo systemctl restart hadoop-hdfs-secondarynamenode && sudo systemctl restart hadoop-yarn-resourcemanager && sudo systemctl restart hive-server2 && sudo systemctl restart hive-metastore && sudo systemctl restart hadoop-yarn-timelineserver && sudo systemctl restart hadoop-mapreduce-historyserver && sudo systemctl restart spark-history-server"
 }
 
 
@@ -304,6 +322,11 @@ case "$1" in
     update_version)
         shift
         update_version
+        break
+        ;;
+    upload_connector)
+        shift
+        upload_connector $@
         break
         ;;
     *)
