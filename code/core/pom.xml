@@ -76,6 +76,13 @@ limitations under the License.
         <version>${jackson-databind.version}</version>
       </dependency>
 
+      <!-- For the Jinja-based user mapping rules -->
+      <dependency>
+        <groupId>com.hubspot.jinjava</groupId>
+        <artifactId>jinjava</artifactId>
+        <version>2.5.2</version>
+      </dependency>
+
       <!-- Testing dependencies -->
       <dependency>
         <groupId>com.google.cloud.broker</groupId>
