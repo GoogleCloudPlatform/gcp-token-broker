@@ -43,8 +43,7 @@ Let's take an example:
 
 <img src="../img/access-example-users.svg">
 
-This provider requires that you set the following settings: [`gsuite-domain`](settings.md#gsuite-domain), and
-[`oauth.client-secret-json-path`](settings.md#oauth.client-secret-json-path).
+This provider requires that you set the following settings: [`oauth.client-secret-json-path`](settings.md#oauth.client-secret-json-path).
 
 ## Service account provider
 
@@ -104,5 +103,3 @@ Then in the Google Admin console, add the service account ID and set the require
 <img src="../img/dwd-admin-screen.png">
 
 At that point, the service account is allowed to impersonate any user in the organization's domain and obtain access tokens for those users, although only for the specified API scopes.
-
-This provider requires that you set the following settings: [`gsuite-domain`](settings.md#gsuite-domain).

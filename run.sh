@@ -192,6 +192,7 @@ function run_tests() {
     done
 
     MVN_VARS="-Dgcp-project=${PROJECT}"
+    ENV_VARS="--env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json"
 
     if [[ -n "${SPECIFIC_TEST}" ]]; then
         MVN_VARS="${MVN_VARS} -DfailIfNoTests=false -Dtest=${SPECIFIC_TEST}"
@@ -202,13 +203,12 @@ function run_tests() {
     fi
 
     if [[ -n "${GSUITE_DOMAIN}" ]]; then
-        MVN_VARS="${MVN_VARS} -Dgsuite-domain=${GSUITE_DOMAIN}"
+        ENV_VARS="${ENV_VARS} --env GSUITE_DOMAIN=${GSUITE_DOMAIN}"
     fi
 
     set_projects_arg
     validate_project_var
 
-    ENV_VARS="--env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json"
     set -x
     docker exec -it ${ENV_VARS} ${CONTAINER} bash -c "mvn test ${PROJECTS_ARG} ${MVN_VARS}"
 }

@@ -17,7 +17,6 @@ import com.typesafe.config.Config;
 public class AppSettings {
 
     public final static String GCP_PROJECT = "gcp-project";
-    public final static String GSUITE_DOMAIN = "gsuite-domain";
     public final static String GSUITE_ADMIN = "gsuite-admin";
     public final static String AUTHORIZER_HOST = "authorizer.host";
     public final static String AUTHORIZER_PORT = "authorizer.port";
@@ -35,8 +34,6 @@ public class AppSettings {
     public final static String PROVIDER_BACKEND = "provider.backend";
     public final static String ACCESS_TOKEN_LOCAL_CACHE_TIME = "provider.access-tokens.local-cache-time";
     public final static String ACCESS_TOKEN_REMOTE_CACHE_TIME = "provider.access-tokens.remote-cache-time";
-    public final static String SHADOW_PROJECT = "provider.shadow-service-accounts.project";
-    public final static String SHADOW_USERNAME_PATTERN = "provider.shadow-service-accounts.username-pattern";
     public final static String HYBRID_USER_PROVIDER = "provider.hybrid.user-provider";
     public final static String JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR = "provider.json-file-credentials.base-dir";
     public final static String DATABASE_BACKEND = "database.backend";

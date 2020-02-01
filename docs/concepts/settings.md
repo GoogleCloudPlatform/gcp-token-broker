@@ -40,10 +40,6 @@ URI of the Cloud KMS key encryption key (KEK) used to [encrypt/decrypt](encrypti
 
 URI in Cloud Storage for the data encryption key (DEK) used to [encrypt/decrypt](encryption.md) data.
 
-### `gsuite-domain`
-
-Domain name for your GSuite users.
-
 ### `logging-level`
 
 Default: `INFO`

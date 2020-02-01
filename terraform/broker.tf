@@ -260,15 +260,13 @@ broker:
   app:
     settings: |-
       gcp-project = "${var.gcp_project}"
-      gsuite-domain = "${var.gsuite_domain}"
       encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
       encryption.cloud-kms.dek-uri = "gs://${google_storage_bucket.encryption_bucket.name}/dek.json"
-      proxy-users = [
-        {
+      proxy-users = [{
           proxy = "hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}"
           users = ["${var.test_users[0]}@${var.gsuite_domain}"]
-        }
-      ]
+      }]
+      user-mapping.rules=[{if:"true", then:"principal.primary + '@' + ${var.gsuite_domain}"}]
       authentication.spnego.keytabs = [{keytab="/keytabs/broker.keytab", principal="broker/${var.broker_service_hostname}@${local.dataproc_realm}"}]
       server.tls.private-key-path = "/secrets/tls.pem"
       server.tls.certificate-path = "/secrets/tls.crt"
