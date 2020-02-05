@@ -14,3 +14,4 @@ The conceptual documentation is divided in the following topics (here listed in 
 - [Sessions](sessions.md): All you need to know about broker sessions.
 - [Settings](settings.md): List of all available settings.
 - [TLS](tls.md): Securing transport between broker clients and the broker service with TLS.
+- [User mapping](user-mapping.md): Mapping third-party user names to Google identity names. 
