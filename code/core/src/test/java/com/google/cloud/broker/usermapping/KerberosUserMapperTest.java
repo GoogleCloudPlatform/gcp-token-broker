@@ -34,24 +34,24 @@ public class KerberosUserMapperTest {
         "rules=[" +
                 // Short names (no realms):
                 "{" +
-                    "if: \"principal.realm == '' and principal.primary.endsWith('-hello')\"," +
+                    "if: \"principal.realm == null and principal.primary.endsWith('-hello')\"," +
                     "then: \"principal.primary[:-6] + '-bonjour@altostrat.net'\"" +
                 "}," +
                 "{" +
-                    "if: \"principal.realm == '' and principal.primary.endsWith('-lowercase')\"," +
+                    "if: \"principal.realm == null and principal.primary.endsWith('-lowercase')\"," +
                     "then: \"principal.primary|lower + '@altostrat.com.au'\"" +
                 "}," +
                 "{" +
-                    "if: \"principal.realm == ''\"," +
+                    "if: \"principal.realm == null\"," +
                     "then: \"principal.primary + '@altostrat.com'\"" +
                 "}," +
                 // Kerberos usernames:
                 "{" +
-                    "if: \"principal.instance == '' and principal.realm == 'EXAMPLE.COM'\"," +
+                    "if: \"principal.instance == null and principal.realm == 'EXAMPLE.COM'\"," +
                     "then: \"principal.primary + '@altostrat.com'\"" +
                 "}," +
                 "{" +
-                    "if: \"principal.instance != '' and principal.realm == 'EXAMPLE.COM'\"," +
+                    "if: \"principal.instance != null and principal.realm == 'EXAMPLE.COM'\"," +
                     "then: \"principal.primary + '--' + principal.instance + '@altostrat.com'\"" +
                 "}," +
                 "{" +
@@ -111,13 +111,58 @@ public class KerberosUserMapperTest {
     }
 
     @Test
-    public void testInvalidIfCondition() throws Exception {
-        // Override settings
+    public void testUndefinedVariableInIfCondition() throws Exception {
+        Object rules = ConfigFactory.parseString(
+        "rules=[" +
+                "{" +
+                    "if: \"foo\"," +
+                    "then: \"'bar@baz'\"" +  // Undefined variable
+                "}," +
+            "]"
+        ).getAnyRef("rules");
+
+        try(SettingsOverride override = new SettingsOverride(Map.of(
+            AppSettings.USER_MAPPING_RULES, rules
+        ))) {
+            try {
+                new KerberosUserMapper();
+                fail();
+            } catch (IllegalArgumentException e) {
+                assertTrue(e.getMessage().contains("Unknown token found: foo"));
+            }
+        }
+    }
+
+    @Test
+    public void testUndefinedVariableInThenExpression() throws Exception {
+        Object rules = ConfigFactory.parseString(
+        "rules=[" +
+                "{" +
+                    "if: \"principal.realm == 'FOO'\"," +
+                    "then: \"bar\"" +  // Undefined variable
+                "}," +
+            "]"
+        ).getAnyRef("rules");
+
+        try(SettingsOverride override = new SettingsOverride(Map.of(
+            AppSettings.USER_MAPPING_RULES, rules
+        ))) {
+            try {
+                new KerberosUserMapper();
+                fail();
+            } catch (IllegalArgumentException e) {
+                assertTrue(e.getMessage().contains("Unknown token found: bar"));
+            }
+        }
+    }
+
+    @Test
+    public void testInvalidSyntaxInIfCondition() throws Exception {
         Object rules = ConfigFactory.parseString(
         "rules=[" +
                 "{" +
                     "if: \"((;=\"," +  // Syntax error
-                    "then: \"principal.primary + '@' + principal.realm\"" +
+                    "then: \"principal.primary + '@foo.bar'\"" +
                 "}," +
             "]"
         ).getAnyRef("rules");
@@ -135,7 +180,7 @@ public class KerberosUserMapperTest {
     }
 
     @Test
-    public void testInvalidThenExpression() throws Exception {
+    public void testInvalidSyntaxInThenExpression() throws Exception {
         Object rules = ConfigFactory.parseString(
         "rules=[" +
                 "{" +
