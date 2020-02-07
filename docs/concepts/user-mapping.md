@@ -89,10 +89,10 @@ Still with the above example configuration, the following example Kerberos names
 
 #### Important warning about short names
 
-When using Hadoop, some services like Yarn and [proxy users](authentication.md#proxy-user-impersonation) like Hive
-initially translate the impersonated Kerberos name to a POSIX username (often referred to as short name) that is local
-to the cluster. This translation is typically performed on the Hadoop cluster by applying regular expression rules that
-are defined in the `auth_to_local` attribute of the [`krb5.conf`](https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html)
+When using Hadoop, some [proxy users](authentication.md#proxy-user-impersonation) like Hive initially translate the
+impersonated Kerberos name to a POSIX username (often referred to as short name) that is local to the cluster. This
+translation is typically performed on the Hadoop cluster by applying regular expression rules that are defined in the
+`auth_to_local` attribute of the [`krb5.conf`](https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html)
 configuration file. 
 
 In some cases, when those services call the broker, they only provide the short name (e.g. `alice`) for the impersonated

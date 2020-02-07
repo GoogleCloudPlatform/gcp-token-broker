@@ -12,7 +12,9 @@
 package com.google.cloud.broker.apps.brokerserver.endpoints;
 
 import java.util.Arrays;
+import java.util.List;
 
+import com.google.common.base.Preconditions;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
@@ -34,15 +36,21 @@ import com.google.cloud.broker.apps.brokerserver.protobuf.GetAccessTokenResponse
 public class GetAccessToken {
 
     public static void run(GetAccessTokenRequest request, StreamObserver<GetAccessTokenResponse> responseObserver) {
-        Validation.validateParameterNotEmpty("owner", request.getOwner());
-        Validation.validateParameterNotEmpty("scopes", request.getScopesList());
-        Validation.validateParameterNotEmpty("target", request.getTarget());
-
         // First try to authenticate the session, if any.
         SessionAuthenticator sessionAuthenticator = new SessionAuthenticator();
         Session session = sessionAuthenticator.authenticateSession();
 
-        if (session == null) {
+        // Fetch parameters from the request
+        String owner = request.getOwner();
+        List<String> scopes = request.getScopesList();
+        String target = request.getTarget();
+
+        if (session == null) {  // No session token was provided. The client is using direct authentication.
+            // Assert that the parameters were provided
+            Validation.validateParameterNotEmpty("owner", owner);
+            Validation.validateParameterNotEmpty("scopes", scopes);
+            Validation.validateParameterNotEmpty("target", target);
+
             // No session token was provided. The client is using direct authentication.
             // So let's authenticate the user.
             AbstractAuthenticationBackend authenticator = AbstractAuthenticationBackend.getInstance();
@@ -50,39 +58,28 @@ public class GetAccessToken {
 
             // If the authenticated user requests an access token for another user,
             // verify that it is allowed to do so.
-            if (! authenticatedUser.equals(request.getOwner())) {
-                ProxyUserValidation.validateImpersonator(authenticatedUser, request.getOwner());
+            if (! authenticatedUser.equals(owner)) {
+                ProxyUserValidation.validateImpersonator(authenticatedUser, owner);
             }
         }
-        else {
-            // A session token was provided. The client is using delegated authentication.
-            Validation.validateScopes(request.getScopesList());
-            if (!request.getTarget().equals(session.getTarget())) {
-                throw Status.PERMISSION_DENIED
-                    .withDescription("Target mismatch")
-                    .asRuntimeException();
-            }
-            if (!request.getScopesList().equals(Arrays.asList(session.getScopes().split(",")))) {
-                throw Status.PERMISSION_DENIED
-                    .withDescription("Scopes mismatch")
-                    .asRuntimeException();
-            }
-            String sessionOwner = session.getOwner();
-            String sessionOwnerUsername = sessionOwner.split("@")[0];
-            if (!request.getOwner().equals(sessionOwner) && !request.getOwner().equals(sessionOwnerUsername)) {
-                throw Status.PERMISSION_DENIED
-                    .withDescription("Owner mismatch")
-                    .asRuntimeException();
-            }
+        else {  // A session token was provided. The client is using delegated authentication.
+            // Assert that no parameters were provided
+            Validation.validateParameterIsEmpty("owner", owner);
+            Validation.validateParameterIsEmpty("scopes", scopes);
+            Validation.validateParameterIsEmpty("target", target);
+
+            // Fetch the correct parameters from the session
+            owner = session.getOwner();
+            target = session.getTarget();
+            scopes = Arrays.asList(session.getScopes().split(","));
         }
 
-        AccessToken accessToken = (AccessToken) new AccessTokenCacheFetcher(
-            request.getOwner(), request.getScopesList()).fetch();
+        AccessToken accessToken = (AccessToken) new AccessTokenCacheFetcher(owner, scopes).fetch();
 
         // Log success message
-        MDC.put("owner", request.getOwner());
-        MDC.put("scopes", String.join(",", request.getScopesList()));
-        MDC.put("target", request.getTarget());
+        MDC.put("owner", owner);
+        MDC.put("scopes", String.join(",", scopes));
+        MDC.put("target", target);
         if (session == null) {
             MDC.put("auth_mode", "direct");
         }
