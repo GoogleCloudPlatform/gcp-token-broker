@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright 2020 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -277,57 +277,46 @@ case "$1" in
     ssh)
         shift
         ssh_function
-        break
         ;;
     mvn)
         shift
         mvn $@
-        break
         ;;
     build)
         shift
         build_packages $@
-        break
         ;;
     clean)
         shift
         clean
-        break
         ;;
     test)
         shift
         run_tests $@
-        break
         ;;
     init_dev)
         shift
         init_dev
-        break
         ;;
     restart_dev)
         shift
         restart_dev
-        break
         ;;
     backup_artifacts)
         shift
         backup_artifacts $@
-        break
         ;;
     dependency)
         shift
         dependency
-        break
         ;;
     update_version)
         shift
         update_version
-        break
         ;;
     upload_connector)
         shift
         upload_connector $@
-        break
         ;;
     *)
         echo "Error: Unsupported command: '$1'" >&2
