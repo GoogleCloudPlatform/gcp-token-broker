@@ -271,6 +271,15 @@ function upload_connector {
     ${SSH} --command "sudo systemctl restart hadoop-hdfs-namenode && sudo systemctl restart hadoop-hdfs-secondarynamenode && sudo systemctl restart hadoop-yarn-resourcemanager && sudo systemctl restart hive-server2 && sudo systemctl restart hive-metastore && sudo systemctl restart hadoop-yarn-timelineserver && sudo systemctl restart hadoop-mapreduce-historyserver && sudo systemctl restart spark-history-server"
 }
 
+function lint {
+  NO_COPYRIGHT=$(git grep -L "Copyright" | grep -v "^docs/" | grep -v ".md$" | grep -v "^VERSION$") || true
+  if [ -z "${NO_COPYRIGHT}" ]; then
+    echo "✅ All files contain copyright notice."
+  else
+    echo -e "⛔️ Some file(s) do not include a copyright notice:\n\n${NO_COPYRIGHT}"
+  fi
+}
+
 
 # Route to the requested action
 case "$1" in
@@ -317,6 +326,10 @@ case "$1" in
     upload_connector)
         shift
         upload_connector $@
+        ;;
+    lint)
+        shift
+        lint
         ;;
     *)
         echo "Error: Unsupported command: '$1'" >&2
