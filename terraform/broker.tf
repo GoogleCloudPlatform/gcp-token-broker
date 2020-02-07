@@ -266,7 +266,10 @@ broker:
           proxy = "hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}"
           users = ["${var.test_users[0]}@${var.gsuite_domain}"]
       }]
-      user-mapping.rules=[{if:"true", then:"principal.primary + '@' + ${var.gsuite_domain}"}]
+      user-mapping.rules=[{
+          if: "principal.realm == '${var.origin_realm}'",
+          then: "principal.primary + '@${var.gsuite_domain}'"
+      }]
       authentication.spnego.keytabs = [{keytab="/keytabs/broker.keytab", principal="broker/${var.broker_service_hostname}@${local.dataproc_realm}"}]
       server.tls.private-key-path = "/secrets/tls.pem"
       server.tls.certificate-path = "/secrets/tls.crt"
