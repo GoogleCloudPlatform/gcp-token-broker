@@ -113,35 +113,27 @@ function set_projects_arg() {
         case "${MODULE}" in
             core)
                 PROJECTS_ARG="--projects code/common,code/core"
-                break
                 ;;
             broker-server)
                 PROJECTS_ARG="--projects code/common,code/core,code/broker-server"
-                break
                 ;;
             authorizer)
                 PROJECTS_ARG="--projects code/core,code/authorizer"
-                break
                 ;;
             connector)
                 PROJECTS_ARG="--projects code/common,code/connector"
-                break
                 ;;
             cloud-datastore)
                 PROJECTS_ARG="--projects code/core,code/extensions/database/cloud-datastore"
-                break
                 ;;
             jdbc)
                 PROJECTS_ARG="--projects code/core,code/extensions/database/jdbc"
-                break
                 ;;
             cloud-kms)
                 PROJECTS_ARG="--projects code/core,code/extensions/encryption/cloud-kms"
-                break
                 ;;
             redis)
                 PROJECTS_ARG="--projects code/core,code/extensions/caching/redis"
-                break
                 ;;
             *)
                 echo "Invalid module: '${MODULE}'" >&2
