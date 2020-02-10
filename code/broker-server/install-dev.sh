@@ -40,4 +40,4 @@ sed 's/^bind 127.0.0.1 ::1/bind 127.0.0.1/' -i /etc/redis/redis.conf
 echo "service redis-server restart" >> /restart-services.sh
 
 # (Re)start all services
-./restart-services.sh
+/restart-services.sh
