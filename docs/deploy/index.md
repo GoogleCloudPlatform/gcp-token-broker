@@ -416,11 +416,11 @@ To build the containers:
 
 ```shell
 # Broker service
-docker build -f ./code/broker-server/Dockerfile -t gcr.io/$PROJECT/broker .
-docker push gcr.io/$PROJECT/broker
+docker build -f ./code/broker-server/Dockerfile -t gcr.io/${PROJECT}/broker-server .
+docker push gcr.io/$PROJECT/broker-server
 
 # Authorizer
-docker build -f ./code/authorizer/Dockerfile -t gcr.io/$PROJECT/authorizer .
+docker build -f ./code/authorizer/Dockerfile -t gcr.io/${PROJECT}/authorizer .
 docker push gcr.io/$PROJECT/authorizer
 ```
 
