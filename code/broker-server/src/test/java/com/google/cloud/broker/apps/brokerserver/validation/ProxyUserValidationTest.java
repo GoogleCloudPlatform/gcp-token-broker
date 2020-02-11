@@ -72,7 +72,7 @@ public class ProxyUserValidationTest {
         "rules=[" +
                 "{" +
                     "if: \"true\"," +
-                    "then: \"principal.primary + '@" + GSUITE_DOMAIN + "'\"" +
+                    "then: \"primary + '@" + GSUITE_DOMAIN + "'\"" +
                 "}," +
             "]"
         ).getAnyRef("rules");

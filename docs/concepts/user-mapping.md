@@ -49,14 +49,14 @@ rules and applies the following logic:
 - If the loop reaches the end of the list and none of the specified rules were found to be applicable, then the Kerberos
   name is rejected as un-mappable.
 
-The Kerberos principal is available in both the `if` and `then` expressions as a variable named `principal`. This
-variable has 3 attributes corresponding to the 3 possible parts of a Kerberos principal:
+The Kerberos principal is available in both the `if` and `then` expressions as 3 variables corresponding to the 3
+possible parts of a Kerberos principal:
 
-- `principal.primary`: The user or service name (e.g. `alice` or `hive`).
-- `principal.instance`: (Optional) If present, the `instance` is separated from the `primary` with a slash (`/`). In the 
+- `primary`: The user or service name (e.g. `alice` or `hive`).
+- `instance`: (Optional) If present, the `instance` is separated from the `primary` with a slash (`/`). In the 
   case of a user principal, the `instance` is typically `null`. In the case of a service principal, the `instance`
   may be the fully qualified domain name of the host where the service is running.
-- `principal.realm`: The principal's Kerberos realm.
+- `realm`: The principal's Kerberos realm.
 
 Take the following example:
 
@@ -64,12 +64,12 @@ Take the following example:
 user-mapping {
   rules = [
     {
-        if: "principal.primary.endsWith('-app') and principal.instance != null and principal.realm == 'YOUR.REALM.COM'",
-        then: "principal.primary + '-serviceaccount@myproject.iam.gserviceaccount.com'"
+        if: "primary.endsWith('-app') and instance != null and realm == 'YOUR.REALM.COM'",
+        then: "primary + '-serviceaccount@myproject.iam.gserviceaccount.com'"
     },
     {
-        if: "principal.realm == 'MYREALM'",
-        then: "principal.primary + '@my-domain.com'"
+        if: "realm == 'MYREALM'",
+        then: "primary + '@my-domain.com'"
     }
   ]
 }
@@ -101,8 +101,8 @@ broker, you must provide a rule that accounts for usernames that don't include a
 
 ```
     {
-        if: "principal.realm == null",
-        then: "principal.primary + '@my-domain.com'"
+        if: "realm == null",
+        then: "primary + '@my-domain.com'"
     }
 ```
 

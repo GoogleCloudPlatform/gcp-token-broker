@@ -81,8 +81,9 @@ public class KerberosUserMapper extends AbstractUserMapper {
             // Create dummy context for the validation
             Jinjava jinjava = new Jinjava();
             Context context = new Context();
-            KerberosName dummy = new KerberosName("abcd/1.2.3.4@REALM");
-            context.put("principal", dummy);
+            context.put("primary", "abcd");
+            context.put("instance", "1.2.3.4");
+            context.put("realm", "MYREALM");
             JinjavaConfig config = JinjavaConfig.newBuilder()
                 .withValidationMode(true)
                 .withFailOnUnknownTokens(true)
@@ -157,7 +158,10 @@ public class KerberosUserMapper extends AbstractUserMapper {
     @Override
     public String map(String name) {
         Context context = new Context();
-        context.put("principal", new KerberosName(name));
+        KerberosName principal = new KerberosName(name);
+        context.put("primary", principal.getPrimary());
+        context.put("instance", principal.getInstance());
+        context.put("realm", principal.getRealm());
         // Look through the list of rules
         for (Rule rule : rulesList) {
             boolean isApplicable = rule.evaluateIfCondition(context);

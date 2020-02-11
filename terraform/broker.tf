@@ -267,8 +267,8 @@ broker:
           users = ["${var.test_users[0]}@${var.gsuite_domain}"]
       }]
       user-mapping.rules=[{
-          if: "principal.realm == '${var.origin_realm}'",
-          then: "principal.primary + '@${var.gsuite_domain}'"
+          if: "realm == '${var.origin_realm}'",
+          then: "primary + '@${var.gsuite_domain}'"
       }]
       authentication.spnego.keytabs = [{keytab="/keytabs/broker.keytab", principal="broker/${var.broker_service_hostname}@${local.dataproc_realm}"}]
       server.tls.private-key-path = "/secrets/tls.pem"

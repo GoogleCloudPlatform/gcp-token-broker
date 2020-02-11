@@ -41,7 +41,7 @@ public class ServiceAccountProviderTest {
         "rules=[" +
                 "{" +
                     "if: \"true\"," +
-                    "then: \"principal.primary + '-shadow@" + projectId + ".iam.gserviceaccount.com'\"" +
+                    "then: \"primary + '-shadow@" + projectId + ".iam.gserviceaccount.com'\"" +
                 "}," +
             "]"
         ).getAnyRef("rules");

@@ -34,33 +34,33 @@ public class KerberosUserMapperTest {
         "rules=[" +
                 // Short names (no realms):
                 "{" +
-                    "if: \"principal.realm == null and principal.primary.endsWith('-hello')\"," +
-                    "then: \"principal.primary[:-6] + '-bonjour@altostrat.net'\"" +
+                    "if: \"realm == null and primary.endsWith('-hello')\"," +
+                    "then: \"primary[:-6] + '-bonjour@altostrat.net'\"" +
                 "}," +
                 "{" +
-                    "if: \"principal.realm == null and principal.primary.endsWith('-lowercase')\"," +
-                    "then: \"principal.primary|lower + '@altostrat.com.au'\"" +
+                    "if: \"realm == null and primary.endsWith('-lowercase')\"," +
+                    "then: \"primary|lower + '@altostrat.com.au'\"" +
                 "}," +
                 "{" +
-                    "if: \"principal.realm == null\"," +
-                    "then: \"principal.primary + '@altostrat.com'\"" +
+                    "if: \"realm == null\"," +
+                    "then: \"primary + '@altostrat.com'\"" +
                 "}," +
                 // Kerberos usernames:
                 "{" +
-                    "if: \"principal.instance == null and principal.realm == 'EXAMPLE.COM'\"," +
-                    "then: \"principal.primary + '@altostrat.com'\"" +
+                    "if: \"instance == null and realm == 'EXAMPLE.COM'\"," +
+                    "then: \"primary + '@altostrat.com'\"" +
                 "}," +
                 "{" +
-                    "if: \"principal.instance != null and principal.realm == 'EXAMPLE.COM'\"," +
-                    "then: \"principal.primary + '--' + principal.instance + '@altostrat.com'\"" +
+                    "if: \"instance != null and realm == 'EXAMPLE.COM'\"," +
+                    "then: \"primary + '--' + instance + '@altostrat.com'\"" +
                 "}," +
                 "{" +
-                    "if: \"principal.primary.endsWith('-app') and principal.realm == 'FOO.ORG'\"," +
-                    "then: \"'robot-' + principal.primary[:-4] + '@altostrat.org'\"" +
+                    "if: \"primary.endsWith('-app') and realm == 'FOO.ORG'\"," +
+                    "then: \"'robot-' + primary[:-4] + '@altostrat.org'\"" +
                 "}," +
                 "{" +
-                    "if: \"principal.realm == 'FOO.ORG'\"," +
-                    "then: \"principal.primary + '@altostrat.org'\"" +
+                    "if: \"realm == 'FOO.ORG'\"," +
+                    "then: \"primary + '@altostrat.org'\"" +
                 "}" +
             "]"
         ).getAnyRef("rules");
@@ -162,7 +162,7 @@ public class KerberosUserMapperTest {
         "rules=[" +
                 "{" +
                     "if: \"((;=\"," +  // Syntax error
-                    "then: \"principal.primary + '@foo.bar'\"" +
+                    "then: \"primary + '@foo.bar'\"" +
                 "}," +
             "]"
         ).getAnyRef("rules");
