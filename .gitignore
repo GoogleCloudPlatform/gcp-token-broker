@@ -31,6 +31,10 @@ service-account-key.json
 # Kerberos configuration file for Dataproc
 kerberos-config.yaml
 
+# Custom application settings
+authorizer.conf
+broker-server.conf
+
 # Java artifacts
 *.jar
 **/target/**
