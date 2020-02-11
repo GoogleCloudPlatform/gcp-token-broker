@@ -14,7 +14,8 @@ package com.google.cloud.broker.usermapping;
 public class MapUser {
 
     public static void main(String[] args) {
-        System.out.println(AbstractUserMapper.getInstance().map(args[1]));
+        String email = AbstractUserMapper.getInstance().map(args[1]);
+        System.out.println(email);
     }
 
 }

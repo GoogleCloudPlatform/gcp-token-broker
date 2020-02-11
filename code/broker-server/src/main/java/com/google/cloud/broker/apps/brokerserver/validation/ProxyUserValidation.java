@@ -94,6 +94,7 @@ public class ProxyUserValidation {
 
     public static void validateImpersonator(String impersonator, String impersonated) {
         String mappedImpersonated = AbstractUserMapper.getInstance().map(impersonated);
+        Validation.validateEmail(mappedImpersonated);
         MDC.put("impersonated_user", impersonated);
         MDC.put("impersonated_user_mapped", mappedImpersonated);
         List<? extends Config> proxyConfigs = AppSettings.getInstance().getConfigList(AppSettings.PROXY_USERS);

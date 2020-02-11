@@ -12,6 +12,8 @@
 package com.google.cloud.broker.apps.brokerserver.validation;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.grpc.Status;
 
@@ -59,6 +61,14 @@ public class Validation {
             throw Status.PERMISSION_DENIED
                 .withDescription(String.format("`[%s]` are not whitelisted scopes", String.join(",", scopes)))
                 .asRuntimeException();
+        }
+    }
+
+    public static void validateEmail(String email) {
+        Pattern parser = Pattern.compile("([a-zA-Z0-9.-]+)@([a-zA-Z0-9.-]+)");
+        Matcher match = parser.matcher(email);
+        if (!match.matches()) {
+            throw new IllegalArgumentException("Invalid email: " + email);
         }
     }
 

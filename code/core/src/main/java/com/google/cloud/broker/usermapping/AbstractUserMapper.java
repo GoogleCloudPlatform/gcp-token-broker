@@ -11,6 +11,9 @@
 
 package com.google.cloud.broker.usermapping;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
 

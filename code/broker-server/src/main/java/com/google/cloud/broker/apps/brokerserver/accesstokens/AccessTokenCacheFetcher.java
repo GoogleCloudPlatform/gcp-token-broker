@@ -17,6 +17,7 @@ import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.google.cloud.broker.apps.brokerserver.accesstokens.providers.AbstractProvider;
+import com.google.cloud.broker.apps.brokerserver.validation.Validation;
 import com.google.cloud.broker.caching.CacheFetcher;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.usermapping.AbstractUserMapper;
@@ -55,6 +56,7 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
         String googleIdentity;
         try {
             googleIdentity = AbstractUserMapper.getInstance().map(owner);
+            Validation.validateEmail(googleIdentity);
         }
         catch (IllegalArgumentException e) {
             throw Status.PERMISSION_DENIED.withDescription("Principal `" + owner + "` cannot be matched to a Google identity.").asRuntimeException();
