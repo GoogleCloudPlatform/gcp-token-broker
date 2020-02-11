@@ -63,31 +63,22 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
             throw new RuntimeException(e);
         }
 
-        String sessionToken;
-        String target;
-        String owner;
-        Set<String> scopes;
-
-        if (tokenIdentifier != null) {
-            sessionToken = tokenIdentifier.getSessionToken();
-            owner = null;
-            target = null;
-            scopes = null;
-        }
-        else {
-            sessionToken = null;
-            owner = currentUser.getUserName();
-            target = service.toString();
-            scopes = Collections.singleton(BrokerTokenIdentifier.GCS_SCOPE);
-        }
-
         GetAccessTokenResponse response = loginUser.doAs((PrivilegedAction<GetAccessTokenResponse>) () -> {
-            BrokerGateway gateway = new BrokerGateway(config, sessionToken);
-            GetAccessTokenRequest request = GetAccessTokenRequest.newBuilder()
-                .addAllScopes(scopes)
-                .setOwner(owner)
-                .setTarget(target)
-                .build();
+            BrokerGateway gateway;
+            GetAccessTokenRequest request;
+            if (tokenIdentifier == null) {  // Direct authentication
+                gateway = new BrokerGateway(config, null);
+                request = GetAccessTokenRequest.newBuilder()
+                    .addAllScopes(Collections.singleton(BrokerTokenIdentifier.GCS_SCOPE))
+                    .setOwner(currentUser.getUserName())
+                    .setTarget(service.toString())
+                    .build();
+
+            }
+            else {  // Delegated authentication
+                gateway = new BrokerGateway(config, tokenIdentifier.getSessionToken());
+                request = GetAccessTokenRequest.newBuilder().build();
+            }
             GetAccessTokenResponse r = gateway.getStub().getAccessToken(request);
             gateway.getManagedChannel().shutdown();
             return r;
