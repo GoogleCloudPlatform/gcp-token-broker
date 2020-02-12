@@ -39,7 +39,7 @@ public class KerberosUserMapper extends AbstractUserMapper {
         private final String realm;
 
         public KerberosName(String name) {
-            Pattern parser = Pattern.compile("([a-zA-Z0-9.-]+)(/([a-zA-Z0-9.-]+))?(@([a-zA-Z0-9.-]+))?");
+            Pattern parser = Pattern.compile("([a-zA-Z0-9\\.-]+)(/([a-zA-Z0-9\\.-]+))?(@([a-zA-Z0-9\\.-]+))?");
             Matcher match = parser.matcher(name);
             if (match.matches()) {
                 primary = match.group(1);

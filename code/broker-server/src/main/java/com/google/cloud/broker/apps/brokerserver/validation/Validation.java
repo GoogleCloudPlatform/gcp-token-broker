@@ -65,7 +65,7 @@ public class Validation {
     }
 
     public static void validateEmail(String email) {
-        Pattern parser = Pattern.compile("([a-zA-Z0-9.-]+)@([a-zA-Z0-9.-]+)");
+        Pattern parser = Pattern.compile("([a-zA-Z0-9\\.-]+)@([a-zA-Z0-9\\.-]+)");
         Matcher match = parser.matcher(email);
         if (!match.matches()) {
             throw new IllegalArgumentException("Invalid email: " + email);
