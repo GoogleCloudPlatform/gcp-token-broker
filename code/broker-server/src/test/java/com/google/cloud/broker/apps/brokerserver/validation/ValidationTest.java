@@ -79,4 +79,17 @@ public class ValidationTest {
         }
     }
 
+    @Test
+    public void validateEmail() {
+        Validation.validateEmail("alice@example.com");
+        Validation.validateEmail("alice-shadow@my-project.iam.gserviceaccount.com");
+        for (String value : new String[]{"alice", "alice@", "@example.com", "xxx()@xxx"})
+        try {
+            Validation.validateEmail(value);
+            fail();
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+    }
+
 }
