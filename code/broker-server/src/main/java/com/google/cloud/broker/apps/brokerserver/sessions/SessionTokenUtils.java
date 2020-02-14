@@ -11,14 +11,19 @@
 
 package com.google.cloud.broker.apps.brokerserver.sessions;
 
-import java.io.IOException;
-import java.security.MessageDigest;
+import java.io.*;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.Map;
 import java.util.regex.Pattern;
 
-import com.google.auth.oauth2.ComputeEngineCredentials;
+import com.google.auth.ServiceAccountSigner;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -32,7 +37,6 @@ import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 public class SessionTokenUtils {
 
     private static String TOKEN_SEPARATOR = ".";
-
 
     private static SessionToken unmarshallSessionToken(String token) {
         String[] split = token.split(Pattern.quote(TOKEN_SEPARATOR));
@@ -48,7 +52,6 @@ public class SessionTokenUtils {
         }
     }
 
-
     public static Session getSessionFromRawToken(String rawToken) {
         SessionToken sessionToken = unmarshallSessionToken(rawToken);
 
@@ -62,8 +65,7 @@ public class SessionTokenUtils {
         }
 
         // Verify that the provided signature is valid
-        byte[] signature = sign(session);
-        if (MessageDigest.isEqual(signature, sessionToken.getSignature())) {
+        if (verifySignature(session.getId().getBytes(), sessionToken.getSignature())) {
             return session;
         }
         else {
@@ -71,33 +73,70 @@ public class SessionTokenUtils {
         }
     }
 
+    public static boolean verifySignature(byte[] data, byte[] signatureToVerify) {
+        // Load all public certificates for the broker service account
+        String url = "https://www.googleapis.com/service_accounts/v1/metadata/x509/" + getBrokerServiceAccountEmail();
+        InputStream is;
+        try {
+            is = new URL(url).openStream();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        Reader reader = new InputStreamReader(is, StandardCharsets.UTF_8);
+        Map<String, String> map = new Gson().fromJson(reader, Map.class);
+
+        // Loop through the list of public certificates
+        for (String entry : map.values()) {
+            X509Certificate certificate;
+            try {
+                CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+                certificate = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(entry.getBytes()));
+            } catch (CertificateException e) {
+                // Invalid certificate. Move on to the next.
+                continue;
+            }
+
+            PublicKey publicKey = certificate.getPublicKey();
+            try {
+                Signature signature = Signature.getInstance("SHA256WithRSA");
+                signature.initVerify(publicKey);
+                signature.update(data);
+                if (signature.verify(signatureToVerify)) {
+                    // Signature was verified with the current certificate.
+                    return true;
+                }
+            } catch (SignatureException | NoSuchAlgorithmException | InvalidKeyException e) {
+                // This signature doesn't work with the current certificate.
+                // Ignore and move on to the next.
+                continue;
+            }
+        }
+        return false;
+    }
 
     public static String marshallSessionToken(Session session) {
         JsonObject header = new JsonObject();
         header.addProperty("session_id", session.getId());
         String encodedHeader = Base64.getUrlEncoder().encodeToString(new Gson().toJson(header).getBytes());
-        byte[] signature = sign(session);
+        byte[] signature = sign(session.getId().getBytes());
         String encodedSignature = Base64.getUrlEncoder().encodeToString(signature);
         return encodedHeader + TOKEN_SEPARATOR + encodedSignature;
     }
 
-
-    private static byte[] sign(Session session) {
-        String IAM_API = "https://www.googleapis.com/auth/iam";
-        GoogleCredentials credentials;
+    public static String getBrokerServiceAccountEmail() {
         try {
-            credentials = GoogleCredentials.getApplicationDefault().createScoped(IAM_API);
+            return ((ServiceAccountSigner) GoogleCredentials.getApplicationDefault()).getAccount();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (credentials instanceof ServiceAccountCredentials) {
-            return ((ServiceAccountCredentials) credentials).sign(session.getId().getBytes());
-        }
-        else if (credentials instanceof ComputeEngineCredentials) {
-            return ((ComputeEngineCredentials) credentials).sign(session.getId().getBytes());
-        }
-        else {
-            throw new RuntimeException("Invalid credentials");
+    }
+
+    private static byte[] sign(byte[] data) {
+        String IAM_API = "https://www.googleapis.com/auth/iam";
+        try {
+            return ((ServiceAccountSigner) GoogleCredentials.getApplicationDefault().createScoped(IAM_API)).sign(data);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
