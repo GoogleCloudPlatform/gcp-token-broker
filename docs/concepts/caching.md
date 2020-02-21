@@ -44,6 +44,11 @@ The Redis backend is available as a [separate package on Maven Central](https://
 <artifactId>cache-backend-redis</artifactId>
 ```
 
+Important note: Redis is designed to be accessed by trusted clients. It is highly recommended to host your Redis
+instance in the same, dedicated project where the Broker server application runs. If you host your Redis instance on
+Cloud Memorystore, refer to the documentation on [Access control](https://cloud.google.com/memorystore/docs/redis/access-control)
+for more details.
+
 This backend requires that you set the following setting(s): [`remote-cache.redis.host`](settings.md#remote-cacheredishost),
 [`remote-cache.redis.port`](settings.md#remote-cacheredisport), and
 [`remote-cache.redis.db`](settings.md#remote-cacheredisdb).

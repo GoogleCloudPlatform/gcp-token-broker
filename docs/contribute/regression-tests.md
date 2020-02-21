@@ -98,44 +98,42 @@ Follow these steps to run the test suite:
      service-account-key.json
    ```
 
-17. You can now run the tests as follows:
-
-    To run the entire test suite:
+17. Start a [development container](development.md):
 
     ```shell
-    docker exec -it \
-      --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
-      broker-dev bash -c "mvn test -Dgcp-project=${PROJECT}"
+    ./run.sh init_dev
     ```
+18. You can now run the tests as follows:
 
-    To run the tests for a specific component, for example the Cloud Datastore database backend:
+    To run the entire test suite (Replace `[ORG]` with your test GSuite organization's domain and `[ORG_ADMIN]` with
+    the email address of an admin of your GSuite organization):
 
     ```shell
-    docker exec -it \
-      --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
-      broker-dev bash -c "mvn test -Dgcp-project=${PROJECT} --projects code/core,code/extensions/database/cloud-datastore"
+    ./run.sh test -p ${PROJECT} -ga [ORG_ADMIN] -gd [ORG_DOMAIN]
     ```
 
-    To run a specific test class, pass the `-DfailIfNoTests=false -Dtest=[NAME_OF_TEST_CLASS]` properties, for example:
+    Notes:
+      * The `-ga` and `-gd` parameters are only necessary for some tests.
+      * The `-p` parameter and `GOOGLE_APPLICATION_CREDENTIALS` environment variable are only necessary for the tests
+        that rely on GCP APIs (e.g. for the Cloud Datastore backend).
+
+    To run the tests for a specific component, for example the connector:
 
     ```shell
-    docker exec -it \
-      broker-dev bash -c "mvn test --projects code/core,code/broker-server \
-      -DfailIfNoTests=false -Dtest=ValidationTest"
+    ./run.sh test -m connector
     ```
 
-    To run a specific test method, pass the `-DfailIfNoTests=false -Dtest=[NAME_OF_TEST_CLASS]#[NAME_OF_TEST_METHOD]`
-    properties, for example:
+    To run a specific test class:
 
     ```shell
-    docker exec -it \
-      broker-dev bash -c "mvn test --projects code/core,code/broker-server \
-      -DfailIfNoTests=false -Dtest=ValidationTest#testValidateScope"
+    ./run.sh test -m connector -t BrokerAccessTokenProviderTest
     ```
 
-**Note:** The `gcp-project` property and `GOOGLE_APPLICATION_CREDENTIALS` environment variable
-are only necessary for the tests that rely on GCP APIs (e.g. for the Cloud Datastore backend).
-Other tests do not need those variables.
+    To run a specific test method:
+
+    ```shell
+    ./run.sh test -m connector -t BrokerAccessTokenProviderTest#testProviderRefresh
+    ```
 
 ### Inspecting the test coverage
 
