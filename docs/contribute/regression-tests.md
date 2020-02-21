@@ -48,33 +48,40 @@ Follow these steps to run the test suite:
    ```shell
    gcloud iam service-accounts create alice-shadow
    ```
-10. Allow the broker service account to generate access tokens on behalf of the test service account:
+10. Allow the broker service account to sign JWTs for itself (This is necessary to test domain-wide delegation):
+
+   ```shell
+   gcloud iam service-accounts add-iam-policy-binding broker@${PROJECT}.iam.gserviceaccount.com \
+     --role roles/iam.serviceAccountTokenCreator \
+     --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
+   ```
+11. Allow the broker service account to generate access tokens on behalf of the test service account:
 
    ```shell
    gcloud iam service-accounts add-iam-policy-binding alice-shadow@${PROJECT}.iam.gserviceaccount.com \
      --role roles/iam.serviceAccountTokenCreator \
      --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
    ```
-11. Add the Cloud Datastore user IAM role to allow the broker service account to read and write to the database:
+12. Add the Cloud Datastore user IAM role to allow the broker service account to read and write to the database:
 
    ```shell
    gcloud projects add-iam-policy-binding $PROJECT \
      --role roles/datastore.user \
      --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
    ```
-11. Create a KMS keyring:
+13. Create a KMS keyring:
 
     ```shell
     gcloud kms keyrings create mykeyring --location global
     ```
-12. Create a KMS key:
+14. Create a KMS key:
 
     ```shell
     gcloud kms keys create mykey --location global \
       --keyring mykeyring --purpose encryption
     ```
 
-13. Give permission to the broker service account to use the keyring:
+15. Give permission to the broker service account to use the keyring:
 
     ```shell
     gcloud kms keyrings add-iam-policy-binding \
@@ -83,7 +90,7 @@ Follow these steps to run the test suite:
       --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
     ```
 
-14. Download a private JSON key for the broker service account:
+16. Download a private JSON key for the broker service account:
 
    ```shell
    gcloud iam service-accounts keys create --iam-account \
@@ -91,44 +98,42 @@ Follow these steps to run the test suite:
      service-account-key.json
    ```
 
-14. You can now run the tests as follows:
-
-    To run the entire test suite:
+17. Start a [development container](development.md):
 
     ```shell
-    docker exec -it \
-      --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
-      broker-dev bash -c "mvn test -Dgcp-project=${PROJECT}"
+    ./run.sh init_dev
     ```
+18. You can now run the tests as follows:
 
-    To run the tests for a specific component, for example the Cloud Datastore database backend:
+    To run the entire test suite (Replace `[ORG]` with your test GSuite organization's domain and `[ORG_ADMIN]` with
+    the email address of an admin of your GSuite organization):
 
     ```shell
-    docker exec -it \
-      --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json  \
-      broker-dev bash -c "mvn test -Dgcp-project=${PROJECT} --projects code/core,code/extensions/database/cloud-datastore"
+    ./run.sh test -p ${PROJECT} -ga [ORG_ADMIN] -gd [ORG_DOMAIN]
     ```
 
-    To run a specific test class, pass the `-DfailIfNoTests=false -Dtest=[NAME_OF_TEST_CLASS]` properties, for example:
+    Notes:
+      * The `-ga` and `-gd` parameters are only necessary for some tests.
+      * The `-p` parameter and `GOOGLE_APPLICATION_CREDENTIALS` environment variable are only necessary for the tests
+        that rely on GCP APIs (e.g. for the Cloud Datastore backend).
+
+    To run the tests for a specific component, for example the connector:
 
     ```shell
-    docker exec -it \
-      broker-dev bash -c "mvn test --projects code/core,code/broker-server \
-      -DfailIfNoTests=false -Dtest=ValidationTest"
+    ./run.sh test -m connector
     ```
 
-    To run a specific test method, pass the `-DfailIfNoTests=false -Dtest=[NAME_OF_TEST_CLASS]#[NAME_OF_TEST_METHOD]`
-    properties, for example:
+    To run a specific test class:
 
     ```shell
-    docker exec -it \
-      broker-dev bash -c "mvn test --projects code/core,code/broker-server \
-      -DfailIfNoTests=false -Dtest=ValidationTest#testValidateScope"
+    ./run.sh test -m connector -t BrokerAccessTokenProviderTest
     ```
 
-**Note:** The `gcp-project` property and `GOOGLE_APPLICATION_CREDENTIALS` environment variable
-are only necessary for the tests that rely on GCP APIs (e.g. for the Cloud Datastore backend).
-Other tests do not need those variables.
+    To run a specific test method:
+
+    ```shell
+    ./run.sh test -m connector -t BrokerAccessTokenProviderTest#testProviderRefresh
+    ```
 
 ### Inspecting the test coverage
 

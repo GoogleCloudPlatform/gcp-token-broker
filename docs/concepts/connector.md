@@ -3,8 +3,8 @@
 The broker connector is an extension for the [GCS Connector](https://github.com/GoogleCloudPlatform/bigdata-interop/tree/master/gcs),
 which acts as an interface between Hadoop and [Cloud Storage](https://cloud.google.com/storage/).
 
-The broker connector is used by the GCS Connector to access the broker service's gRPC endpoints. Recent minor versions of
-both Hadoop 2 & 3 are supported.
+The broker connector is used by the GCS Connector to access the broker service's gRPC endpoints. Recent minor versions
+of both Hadoop 2 & 3 are supported.
 
 You can find the broker connector's [package on Maven Central](https://search.maven.org/search?q=g:com.google.cloud.broker%20AND%20a:broker-connector):
 
@@ -13,7 +13,8 @@ You can find the broker connector's [package on Maven Central](https://search.ma
 <artifactId>broker-connector</artifactId>
 ```
 
-The broker connector can be downloaded as a single JAR file, which must be placed in the `CLASSPATH` of different environments:
+The broker connector can be downloaded as a single JAR file, which must be placed in the `CLASSPATH` of different
+environments:
 
 - On the user's client node, so the client can access the `GetAccessToken` and `GetSessionToken` endpoints.
 - On the master node(s) where the session token renewer (e.g. Yarn) is running, so the renewer can
@@ -35,15 +36,15 @@ Full name for the broker's Kerberos service principal.
 
 Default: `https://localhost:443`
 
-URI for the broker server. If `https` is specified, then you must also provide `gcp.token.broker.tls.certificate`
+URI for the broker server. If `https` is specified, then you must also provide either `gcp.token.broker.tls.certificate`
 or `gcp.token.broker.tls.certificate.path`.
 
-### ```gcp.token.broker.tls.certificate```
+### `gcp.token.broker.tls.certificate`
 
 Alternative to `gcp.token.broker.tls.certificate.path`. Contents of the TLS certificate for the broker service.
 Used only if `gcp.token.broker.tls.enabled` is `true`.
 
-### ```gcp.token.broker.tls.certificate.path```
+### `gcp.token.broker.tls.certificate.path`
 
 Alternative to `gcp.token.broker.tls.certificate`. File path of TLS certificate for the broker service.
 Used only if `gcp.token.broker.tls.enabled` is `true` and `gcp.token.broker.tls.certificate`  is not provided.

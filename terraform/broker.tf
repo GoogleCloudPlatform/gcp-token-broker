@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2020 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -260,10 +260,16 @@ broker:
   app:
     settings: |-
       gcp-project = "${var.gcp_project}"
-      gsuite-domain = "${var.gsuite_domain}"
       encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
       encryption.cloud-kms.dek-uri = "gs://${google_storage_bucket.encryption_bucket.name}/dek.json"
-      proxy-users.whitelist = "hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}"
+      proxy-users = [{
+          proxy = "hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}"
+          users = ["${var.test_users[0]}@${var.gsuite_domain}"]
+      }]
+      user-mapping.rules=[{
+          if: "realm == '${var.origin_realm}'",
+          then: "primary + '@${var.gsuite_domain}'"
+      }]
       authentication.spnego.keytabs = [{keytab="/keytabs/broker.keytab", principal="broker/${var.broker_service_hostname}@${local.dataproc_realm}"}]
       server.tls.private-key-path = "/secrets/tls.pem"
       server.tls.certificate-path = "/secrets/tls.crt"

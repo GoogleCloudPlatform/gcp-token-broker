@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,19 +14,19 @@ package com.google.cloud.broker.apps.brokerserver.sessions;
 class SessionToken {
 
     private String sessionId;
-    private byte[] encryptedPassword;
+    private byte[] signature;
 
-    SessionToken(String sessionId, byte[] encryptedPassword) {
+    SessionToken(String sessionId, byte[] signature) {
         this.sessionId = sessionId;
-        this.encryptedPassword = encryptedPassword;
+        this.signature = signature;
     }
 
     String getSessionId() {
         return sessionId;
     }
 
-    byte[] getEncryptedPassword() {
-        return encryptedPassword;
+    byte[] getSignature() {
+        return signature;
     }
 
 }

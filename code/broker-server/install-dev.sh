@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2019 Google LLC
+# Copyright 2020 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -40,4 +40,4 @@ sed 's/^bind 127.0.0.1 ::1/bind 127.0.0.1/' -i /etc/redis/redis.conf
 echo "service redis-server restart" >> /restart-services.sh
 
 # (Re)start all services
-./restart-services.sh
+/restart-services.sh

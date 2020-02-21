@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,6 +14,7 @@ package com.google.cloud.broker.hadoop.fs;
 import java.io.IOException;
 import java.security.PrivilegedAction;
 import java.util.Collections;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
@@ -62,22 +63,21 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
             throw new RuntimeException(e);
         }
 
-        String sessionToken;
-
-        if (tokenIdentifier != null) {
-            sessionToken = tokenIdentifier.getSessionToken();
-        }
-        else {
-            sessionToken = null;
-        }
-
         GetAccessTokenResponse response = loginUser.doAs((PrivilegedAction<GetAccessTokenResponse>) () -> {
-            BrokerGateway gateway = new BrokerGateway(config, sessionToken);
-            GetAccessTokenRequest request = GetAccessTokenRequest.newBuilder()
-                .addAllScopes(Collections.singleton(BrokerTokenIdentifier.GCS_SCOPE))
-                .setOwner(currentUser.getUserName())
-                .setTarget(service.toString())
-                .build();
+            BrokerGateway gateway;
+            GetAccessTokenRequest request;
+            if (tokenIdentifier == null) {  // Direct authentication
+                gateway = new BrokerGateway(config, null);
+                request = GetAccessTokenRequest.newBuilder()
+                    .addAllScopes(Collections.singleton(BrokerTokenIdentifier.GCS_SCOPE))
+                    .setOwner(currentUser.getUserName())
+                    .setTarget(service.toString())
+                    .build();
+            }
+            else {  // Delegated authentication
+                gateway = new BrokerGateway(config, tokenIdentifier.getSessionToken());
+                request = GetAccessTokenRequest.newBuilder().build();
+            }
             GetAccessTokenResponse r = gateway.getStub().getAccessToken(request);
             gateway.getManagedChannel().shutdown();
             return r;

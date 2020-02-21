@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -54,35 +54,37 @@ public abstract class CacheFetcher {
                 // Start by acquiring a lock to avoid cache stampede
                 Lock lock = cache.acquireLock(cacheKey + "_lock");
 
-                // Check again if there's still no value
-                encryptedValue = cache.get(cacheKey);
-                if (encryptedValue != null) {
-                    // This time it's a cache hit. The value must have been generated
-                    // by a competing thread. So we just load the value.
-                    String json = new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
-                    try {
-                        result = fromJson(json);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                try {
+                    // Check again if there's still no value
+                    encryptedValue = cache.get(cacheKey);
+                    if (encryptedValue != null) {
+                        // This time it's a cache hit. The value must have been generated
+                        // by a competing thread. So we just load the value.
+                        String json = new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
+                        try {
+                            result = fromJson(json);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        // Compute the result
+                        result = computeResult();
+                        // Encrypt and cache the value for possible future requests
+                        String json = null;
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        try {
+                            json = objectMapper.writeValueAsString(result);
+                        } catch (JsonProcessingException e) {
+                            throw new RuntimeException(e);
+                        }
+                        encryptedValue = AbstractEncryptionBackend.getInstance().encrypt(json.getBytes());
+                        cache.set(cacheKey, encryptedValue, getRemoteCacheTime());
                     }
                 }
-                else {
-                    // Compute the result
-                    result = computeResult();
-                    // Encrypt and cache the value for possible future requests
-                    String json = null;
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    try {
-                        json = objectMapper.writeValueAsString(result);
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
-                    encryptedValue = AbstractEncryptionBackend.getInstance().encrypt(json.getBytes());
-                    cache.set(cacheKey, encryptedValue, getRemoteCacheTime());
+                finally {
+                    // Release the lock
+                    lock.unlock();
                 }
-
-                // Release the lock
-                lock.unlock();
             }
         }
         else {

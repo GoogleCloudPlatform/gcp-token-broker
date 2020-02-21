@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -36,8 +36,7 @@ class GrpcUtils {
             // A certificate is provided, so add it to the stub's build
             InputStream inputStream = new ByteArrayInputStream(tlsCertificate.getBytes());
             try {
-                builder.sslContext(GrpcSslContexts.forClient()
-                    .trustManager(inputStream).build());
+                builder.sslContext(GrpcSslContexts.forClient().trustManager(inputStream).build());
             } catch (SSLException e) {
                 throw new RuntimeException(e);
             } catch (IllegalArgumentException e) {

@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -84,9 +84,9 @@ public class BrokerServerTest {
         map.put(AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
         map.put(AppSettings.AUTHENTICATION_BACKEND, "com.google.cloud.broker.authentication.backends.MockAuthenticator");
         map.put(AppSettings.SCOPES_WHITELIST, "[\"https://www.googleapis.com/auth/devstorage.read_write\", \"https://www.googleapis.com/auth/bigquery\"]");
-        map.put(AppSettings.PROXY_USER_WHITELIST, "\"hive@FOO.BAR\"");
         map.put(AppSettings.SESSION_RENEW_PERIOD, SESSION_RENEW_PERIOD.toString());
         map.put(AppSettings.SESSION_MAXIMUM_LIFETIME, SESSION_MAXIMUM_LIFETIME.toString());
+        map.put(AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper");
 
         // Keep reference to old config file, if any
         configFileBackup = System.getProperty("config.file");
@@ -146,7 +146,6 @@ public class BrokerServerTest {
             "yarn@FOO.BAR",
             MOCK_BUCKET,
             String.join(",", SCOPES),
-            null,
             null,
             null);
         AbstractDatabaseBackend.getInstance().save(session);
@@ -307,7 +306,7 @@ public class BrokerServerTest {
             .setTarget(MOCK_BUCKET)
             .build());
         assertEquals(
-            "FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scopes=" + String.join(",", SCOPES),
+            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES),
             response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
@@ -323,65 +322,12 @@ public class BrokerServerTest {
         stub = addSessionTokenToMetadata(stub, session);
 
         // Send the GetAccessToken request
-        GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder()
-            .setOwner(ALICE)
-            .addAllScopes(SCOPES)
-            .setTarget(MOCK_BUCKET)
-            .build());
+        GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder().build());
 
         assertEquals(
-            "FakeAccessToken/Owner=" + ALICE.toLowerCase() + ";Scopes=" + String.join(",", SCOPES),
+            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES),
             response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
-    }
-
-    @Test
-    public void testGetAccessToken_DelegatedAuth_ParameterMisMatch() {
-        // Create a session in the database
-        Session session = createSession();
-
-        // Add the session token to the request's metadata
-        BrokerBlockingStub stub = getStub();
-        stub = addSessionTokenToMetadata(stub, session);
-
-        // Send the GetAccessToken request, with wrong owner
-        try {
-            stub.getAccessToken(GetAccessTokenRequest.newBuilder()
-                .setOwner("bob@EXAMPLE.COM")
-                .addAllScopes(SCOPES)
-                .setTarget(MOCK_BUCKET)
-                .build());
-            fail("StatusRuntimeException not thrown");
-        } catch (StatusRuntimeException e) {
-            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("Owner mismatch", e.getStatus().getDescription());
-        }
-
-        // Send the GetAccessToken request, with wrong owner
-        try {
-            stub.getAccessToken(GetAccessTokenRequest.newBuilder()
-                .setOwner(ALICE)
-                .addAllScopes(List.of("https://www.googleapis.com/auth/bigquery"))
-                .setTarget(MOCK_BUCKET)
-                .build());
-            fail("StatusRuntimeException not thrown");
-        } catch (StatusRuntimeException e) {
-            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("Scopes mismatch", e.getStatus().getDescription());
-        }
-
-        // Send the GetAccessToken request, with wrong owner
-        try {
-            stub.getAccessToken(GetAccessTokenRequest.newBuilder()
-                .setOwner(ALICE)
-                .addAllScopes(SCOPES)
-                .setTarget("gs://test")
-                .build());
-            fail("StatusRuntimeException not thrown");
-        } catch (StatusRuntimeException e) {
-            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("Target mismatch", e.getStatus().getDescription());
-        }
     }
 
 }

@@ -357,7 +357,7 @@ The broker service needs a keytab to authenticate incoming requests.
 1. Download the keytab from the Dataproc cluster's realm:
 
    ```shell
-   gcloud beta compute ssh test-cluster-m \
+   gcloud compute ssh test-cluster-m \
      --tunnel-through-iap \
      -- "sudo cat /etc/security/keytab/broker.keytab" | perl -pne 's/\r$//g' > broker.keytab
 
@@ -416,11 +416,11 @@ To build the containers:
 
 ```shell
 # Broker service
-docker build -f ./code/broker-server/Dockerfile -t gcr.io/$PROJECT/broker .
-docker push gcr.io/$PROJECT/broker
+docker build -f ./code/broker-server/Dockerfile -t gcr.io/${PROJECT}/broker-server .
+docker push gcr.io/$PROJECT/broker-server
 
 # Authorizer
-docker build -f ./code/authorizer/Dockerfile -t gcr.io/$PROJECT/authorizer .
+docker build -f ./code/authorizer/Dockerfile -t gcr.io/${PROJECT}/authorizer .
 docker push gcr.io/$PROJECT/authorizer
 ```
 
@@ -463,7 +463,7 @@ of workers in multiple, combinable ways:
 You can also scale up each Kubernetes node by increasing memory and CPU resources to accommodate
 for more workers.
 
-#### High availablility
+#### High availability
 
 By default, a Kubernetes Engine cluster creates its cluster master and its nodes in a single compute zone
 that you specify at the time of creation. You can improve availability and resilience of your clusters

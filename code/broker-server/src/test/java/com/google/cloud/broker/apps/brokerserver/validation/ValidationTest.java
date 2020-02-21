@@ -1,3 +1,14 @@
+// Copyright 2020 Google LLC
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package com.google.cloud.broker.apps.brokerserver.validation;
 
 import java.util.List;
@@ -22,11 +33,6 @@ public class ValidationTest {
     private static final String BIGQUERY = "https://www.googleapis.com/auth/bigquery";
     private static final String BIGTABLE = "https://www.googleapis.com/auth/bigtable.data.readonly";
 
-    private static final String ALICE = "alice@EXAMPLE.COM";
-    private static final String HIVE = "hive/testhost@EXAMPLE.COM";
-    private static final String PRESTO = "presto/testhost@EXAMPLE.COM";
-    private static final String SPARK = "spark/testhost@EXAMPLE.COM";
-
     private SettingsOverride backupSettings;
 
     @Before
@@ -36,7 +42,6 @@ public class ValidationTest {
             AppSettings.SCOPES_WHITELIST + "=[\"" + GCS + "\", \"" + BIGQUERY + "\"]"
         ).getAnyRef(AppSettings.SCOPES_WHITELIST);
         backupSettings = new SettingsOverride(Map.of(
-            AppSettings.PROXY_USER_WHITELIST, HIVE + "," + PRESTO,
             AppSettings.SCOPES_WHITELIST, scopesWhitelist
         ));
     }
@@ -60,20 +65,6 @@ public class ValidationTest {
     }
 
     @Test
-    public void testValidateImpersonator() {
-        Validation.validateImpersonator(ALICE, ALICE);
-        Validation.validateImpersonator(HIVE, ALICE);
-        Validation.validateImpersonator(PRESTO, ALICE);
-        try {
-            Validation.validateImpersonator(SPARK, ALICE);
-            fail("StatusRuntimeException not thrown");
-        } catch (StatusRuntimeException e) {
-            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("spark/testhost@EXAMPLE.COM is not a whitelisted impersonator", e.getStatus().getDescription());
-        }
-    }
-
-    @Test
     public void testValidateScope() {
         Validation.validateScopes(List.of(GCS));
         Validation.validateScopes(List.of(BIGQUERY));
@@ -85,6 +76,19 @@ public class ValidationTest {
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
             assertEquals("`[https://www.googleapis.com/auth/bigtable.data.readonly]` are not whitelisted scopes", e.getStatus().getDescription());
+        }
+    }
+
+    @Test
+    public void validateEmail() {
+        Validation.validateEmail("alice@example.com");
+        Validation.validateEmail("alice-shadow@my-project.iam.gserviceaccount.com");
+        for (String value : new String[]{"alice", "alice@", "@example.com", "xxx()@xxx"})
+        try {
+            Validation.validateEmail(value);
+            fail();
+        } catch (IllegalArgumentException e) {
+            // Expected
         }
     }
 

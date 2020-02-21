@@ -1,0 +1,81 @@
+// Copyright 2020 Google LLC
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.*;
+import com.google.common.base.CharMatcher;
+import com.typesafe.config.ConfigFactory;
+import org.junit.*;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+
+import com.google.cloud.broker.usermapping.KerberosUserMapper;
+import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.settings.SettingsOverride;
+import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
+
+
+public class ServiceAccountProviderTest {
+
+    private static List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
+
+    private static SettingsOverride backupSettings;
+
+    @BeforeClass
+    public static void setupClass() {
+        // Override settings
+        String projectId = AppSettings.getInstance().getString(AppSettings.GCP_PROJECT);
+        Object rules = ConfigFactory.parseString(
+        "rules=[" +
+                "{" +
+                    "if: \"true\"," +
+                    "then: \"primary + '-shadow@" + projectId + ".iam.gserviceaccount.com'\"" +
+                "}," +
+            "]"
+        ).getAnyRef("rules");
+        backupSettings = new SettingsOverride(Map.of(
+            AppSettings.USER_MAPPING_RULES, rules
+        ));
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+        // Restore settings
+        backupSettings.restore();
+    }
+
+    @Test
+    public void testSuccess() {
+        ServiceAccountProvider provider = new ServiceAccountProvider();
+        KerberosUserMapper mapper = new KerberosUserMapper();
+        AccessToken accessToken = provider.getAccessToken(mapper.map("alice@EXAMPLE.COM"), SCOPES);
+        assertTrue(accessToken.getValue().startsWith("y"));
+        assertEquals(2, CharMatcher.is('.').countIn(accessToken.getValue()));
+        assertTrue(accessToken.getExpiresAt() > 0);
+    }
+
+    @Test
+    public void testUnauthorized() {
+        ServiceAccountProvider provider = new ServiceAccountProvider();
+        KerberosUserMapper mapper = new KerberosUserMapper();
+        try {
+            provider.getAccessToken(mapper.map("bob@EXAMPLE.COM"), SCOPES);
+            fail("StatusRuntimeException not thrown");
+        } catch (StatusRuntimeException e) {
+            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
+        }
+    }
+
+}
