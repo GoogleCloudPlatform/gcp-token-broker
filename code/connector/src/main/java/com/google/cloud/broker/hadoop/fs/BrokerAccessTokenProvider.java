@@ -73,7 +73,6 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
                     .setOwner(currentUser.getUserName())
                     .setTarget(service.toString())
                     .build();
-
             }
             else {  // Delegated authentication
                 gateway = new BrokerGateway(config, tokenIdentifier.getSessionToken());

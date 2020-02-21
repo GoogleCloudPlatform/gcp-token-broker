@@ -15,14 +15,14 @@ import java.io.IOException;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.grpc.Status;
+import org.slf4j.MDC;
 
 import com.google.cloud.broker.apps.brokerserver.accesstokens.providers.AbstractProvider;
 import com.google.cloud.broker.apps.brokerserver.validation.Validation;
 import com.google.cloud.broker.caching.CacheFetcher;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.usermapping.AbstractUserMapper;
-import io.grpc.Status;
-import org.slf4j.MDC;
 
 
 public class AccessTokenCacheFetcher extends CacheFetcher {
