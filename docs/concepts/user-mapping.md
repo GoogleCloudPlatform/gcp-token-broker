@@ -43,20 +43,20 @@ Both the `if` condition and `then` expressions use the [Jinja](https://www.palle
 When the user mapper receives a mapping request for a given Kerberos principal, the mapper loops through the list of
 rules and applies the following logic:
 
-- If the `if` condition of the current rule in the loop evaluates as `true`, then the rule is found to be applicable.
-  The mapper therefore exits the loop and returns the result of the rule's `then` expression to the caller.
-- If the `if` condition returns `false`, then then mapper moves on to the next rule in the loop.
-- If the loop reaches the end of the list and none of the specified rules were found to be applicable, then the Kerberos
-  name is rejected as un-mappable.
+-   If the `if` condition of the current rule in the loop evaluates as `true`, then the rule is found to be applicable.
+    The mapper therefore exits the loop and returns the result of the rule's `then` expression to the caller.
+-   If the `if` condition returns `false`, then then mapper moves on to the next rule in the loop.
+-   If the loop reaches the end of the list and none of the specified rules were found to be applicable, then the Kerberos
+    name is rejected as un-mappable.
 
 The Kerberos principal is available in both the `if` and `then` expressions as 3 variables corresponding to the 3
 possible parts of a Kerberos principal:
 
-- `primary`: The user or service name (e.g. `alice` or `hive`).
-- `instance`: (Optional) If present, the `instance` is separated from the `primary` with a slash (`/`). In the 
-  case of a user principal, the `instance` is typically `null`. In the case of a service principal, the `instance`
-  may be the fully qualified domain name of the host where the service is running.
-- `realm`: The principal's Kerberos realm.
+-   `primary`: The user or service name (e.g. `alice` or `hive`).
+-   `instance`: (Optional) If present, the `instance` is separated from the `primary` with a slash (`/`). In the 
+    case of a user principal, the `instance` is typically `null`. In the case of a service principal, the `instance`
+    may be the fully qualified domain name of the host where the service is running.
+-   `realm`: The principal's Kerberos realm.
 
 Take the following example:
 
@@ -77,15 +77,15 @@ user-mapping {
 
 The above example configuration would yield mappings like the following:
 
-- `spark-app/example.com@YOUR.REALM.COM` maps to `spark-serviceaccount@myproject.iam.gserviceaccount.com`
-- `alice@MYREALM` maps to `alice@my-domain.com`
-- `bob@MYREALM` maps to `bob@my-domain.com`
+-   `spark-app/example.com@YOUR.REALM.COM` maps to `spark-serviceaccount@myproject.iam.gserviceaccount.com`
+-   `alice@MYREALM` maps to `alice@my-domain.com`
+-   `bob@MYREALM` maps to `bob@my-domain.com`
 
 Still with the above example configuration, the following example Kerberos names would be rejected as un-mappable:
 
-- `spark-app/example.com@ANOTHER.REALM.COM` (rejected because the realm is not `YOUR.REALM.COM`)
-- `spark-app@YOUR.REALM.COM` (rejected because the `instance` is `null`)
-- `alice@FOO` (rejected because the realm is not `MYREALM`)
+-   `spark-app/example.com@ANOTHER.REALM.COM` (rejected because the realm is not `YOUR.REALM.COM`)
+-   `spark-app@YOUR.REALM.COM` (rejected because the `instance` is `null`)
+-   `alice@FOO` (rejected because the realm is not `MYREALM`)
 
 #### Important warning about short names
 

@@ -16,13 +16,13 @@ You can find the broker connector's [package on Maven Central](https://search.ma
 The broker connector can be downloaded as a single JAR file, which must be placed in the `CLASSPATH` of different
 environments:
 
-- On the user's client node, so the client can access the `GetAccessToken` and `GetSessionToken` endpoints.
-- On the master node(s) where the session token renewer (e.g. Yarn) is running, so the renewer can
-  call the `RenewSessionToken` and `CancelSessionToken` endpoints.
-- On the worker nodes, so the distributed tasks can call the `GetAccessToken` to trade a session token for
-  an access token.
+-   On the user's client node, so the client can access the `GetAccessToken` and `GetSessionToken` endpoints.
+-   On the master node(s) where the session token renewer (e.g. Yarn) is running, so the renewer can
+    call the `RenewSessionToken` and `CancelSessionToken` endpoints.
+-   On the worker nodes, so the distributed tasks can call the `GetAccessToken` to trade a session token for
+    an access token.
 
-For more information, see the documentation about [authentication](authentication.md) and [sessions](sessionds.md).
+For more information, see the documentation about [authentication](authentication.md) and [sessions](sessions.md).
 
 ## Configuration properties
 
