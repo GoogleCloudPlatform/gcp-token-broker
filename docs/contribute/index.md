@@ -8,9 +8,9 @@ just a few small guidelines you need to follow.
 Check out the following links to get started if you're interested in making code contributions
 to this project:
 
-- Set up a [development](development.md) environment
-- Run the [regression tests](regression-tests.md)
-- Run the [load tests](load-tests.md)
+-   Set up a [development](development.md) environment
+-   Run the [regression tests](regression-tests.md)
+-   Run the [load tests](load-tests.md)
 
 Every contribution for bug fixes and new features should include unit tests and documentation to
 benefit other developers and facilitate the long-term maintenance of this project.
@@ -20,7 +20,7 @@ bug fixes or new features in the same pull request. This will make it easier for
 maintainers to review your individual pull requests. This will also allow merging the reviewed
 PRs faster and not block them if other code changes need extra review time.
 
-Also, it is preferrable to create pull requests based on the official master branch.
+Also, it is preferable to create pull requests based on the official master branch.
 
 ## Contributor License Agreement
 

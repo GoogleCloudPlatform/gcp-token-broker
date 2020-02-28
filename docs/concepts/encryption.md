@@ -2,9 +2,9 @@
 
 The broker encrypts different types of information:
 
-- Access tokens before they are stored in the [remote cache](caching.md#remote-cache).
-- Refresh tokens used by the [refresh token provider](providers.md#refresh-token-provider), if that is the provider
-  that you elect to use.
+-   Access tokens before they are stored in the [remote cache](caching.md#remote-cache).
+-   Refresh tokens used by the [refresh token provider](providers.md#refresh-token-provider), if that is the provider
+    that you elect to use.
 
 ## Encryption backends
 

@@ -23,14 +23,14 @@ the caller is correctly authenticated with the user's credentials.
 
 For each new session, the broker adds a new record in the [database](database.md) with some details about the session:
 
-- `id`: Automatically generated unique ID for the session.
-- `creation_time`: Time at which the session was created, that is, just before the job started.
-- `expires_at`: Time at which the session will expire. If the Yarn Resource Manager renews
-  the session token, then this time will be extended to some time in the future (24 hours later, by default).
-- `owner`: Name of the original Kerberos principal who submitted the job.
-- `renewer`: Name of the Kerberos principal who is authorized to renew and cancel the token.
-- `scope`: Google API scope used to generate access tokens.
-- `target`: Name of the GCP resource (e.g. a GCS bucket) associated with the session.
+-   `id`: Automatically generated unique ID for the session.
+-   `creation_time`: Time at which the session was created, that is, just before the job started.
+-   `expires_at`: Time at which the session will expire. If the Yarn Resource Manager renews
+    the session token, then this time will be extended to some time in the future (24 hours later, by default).
+-   `owner`: Name of the original Kerberos principal who submitted the job.
+-   `renewer`: Name of the Kerberos principal who is authorized to renew and cancel the token.
+-   `scope`: Google API scope used to generate access tokens.
+-   `target`: Name of the GCP resource (e.g. a GCS bucket) associated with the session.
 
 The broker then generates a signed token for the session (i.e the "session token").
 

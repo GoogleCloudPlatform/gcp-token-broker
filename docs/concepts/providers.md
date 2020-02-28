@@ -14,12 +14,12 @@ _Class path:_ `com.google.cloud.broker.apps.brokerserver.accesstokens.providers.
 This is the default provider. This provider doesn't directly generate access tokens - instead, it delegates that task
 to either:
 
-- the [`Service account provider`](#service-account-provider) if the given cloud identity's name ends with
-  `.iam.gserviceaccount.com`.
-- the provider specified in the [`provider.hybrid.user-mapper`](settings.md#providerhybriduser-provider) setting
-  (which defaults to the [Refresh token Provider](#refresh-token-provider)'s class path) for all other identities.
+-   the [`Service account provider`](#service-account-provider) if the given cloud identity's name ends with
+    `.iam.gserviceaccount.com`.
+-   the provider specified in the [`provider.hybrid.user-provider`](settings.md#providerhybriduser-provider) setting
+    (which defaults to the [Refresh token Provider](#refresh-token-provider)'s class path) for all other identities.
 
-This provider requires that you set the following setting(s): [`provider.hybrid.user-mapper`](settings.md#providerhybriduser-mapper).
+This provider requires that you set the following setting(s): [`provider.hybrid.user-provider`](settings.md#providerhybriduser-provider).
 
 ## Refresh token provider
 
@@ -33,9 +33,9 @@ Refresh tokens are obtained by the [Authorizer app](authorizer.md), then stored 
 
 Below is the schema for the refresh token table:
 
-- `id`: Name of the Cloud Identity associated with the token.
-- `creation_time`: Time at which the refresh token was obtained by the broker.
-- `value`: [Encrypted](encryption.md) value of the OAuth refresh token.
+-   `id`: Name of the Cloud Identity associated with the token.
+-   `creation_time`: Time at which the refresh token was obtained by the broker.
+-   `value`: [Encrypted](encryption.md) value of the OAuth refresh token.
 
 Obtaining a refresh token is a one-time process for each user, although there are some cases where a refresh token can
 expire (for more details, see [refresh token expiration](https://developers.google.com/identity/protocols/OAuth2#expiration)).
@@ -48,11 +48,11 @@ tokens for a specific whitelist of Google users.
 
 Let's take an example:
 
-- The user Alice belongs to Group A, which owns Bucket A. The user Bob doesn't belong to any group and doesn't have
-  access to any buckets.
-- Alice and Bob use the Authorizer app to let the broker obtain refresh tokens.
-- The broker can now use the refresh tokens to obtain access tokens for both Bob and Alice. However, only access
-  tokens obtained for Alice can be used to access Bucket A.
+-   The user Alice belongs to Group A, which owns Bucket A. The user Bob doesn't belong to any group and doesn't have
+    access to any buckets.
+-   Alice and Bob use the Authorizer app to let the broker obtain refresh tokens.
+-   The broker can now use the refresh tokens to obtain access tokens for both Bob and Alice. However, only access
+    tokens obtained for Alice can be used to access Bucket A.
 
 <img src="../img/access-example-users.svg">
 
@@ -70,25 +70,25 @@ one for each human user. Those are called **shadow service accounts**.
 
 Let's take an example:
 
-- The user Alice belongs to Group A, which owns Bucket A. The user Bob doesn't belong to any group and doesn't have
-  access to any buckets.
-- You create a service account for Bob. You create another service account for Alice, and add Alice's service account
-  to Group A.
-- You create a service account for the broker service and give it the [Service Account Token Creator](https://cloud.google.com/iam/docs/service-accounts#the_service_account_token_creator_role)
-  role for Bob's and Alice's service accounts.
-- The broker's service account can now obtain access tokens for both Bob's and Alice's service accounts. However, only
-  access tokens obtained for Alice's service account can be used to access Bucket A.
+-   The user Alice belongs to Group A, which owns Bucket A. The user Bob doesn't belong to any group and doesn't have
+    access to any buckets.
+-   You create a service account for Bob. You create another service account for Alice, and add Alice's service account
+    to Group A.
+-   You create a service account for the broker service and give it the [Service Account Token Creator](https://cloud.google.com/iam/docs/service-accounts#the_service_account_token_creator_role)
+    role for Bob's and Alice's service accounts.
+-   The broker's service account can now obtain access tokens for both Bob's and Alice's service accounts. However, only
+    access tokens obtained for Alice's service account can be used to access Bucket A.
 
 <img src="../img/access-example-service-accounts.svg">
 
 To use the `ServiceAccountProvider`, follow this procedure:
 
-- Create a separate shadow service account for each user that is expected to use Hadoop in GCP.
-- Create a service account for the broker.
-- Give the broker's service account the [Service Account Token Creator](https://cloud.google.com/iam/docs/service-accounts#the_service_account_token_creator_role)
-  role for all shadow service accounts that are expected to use the Hadoop platform (e.g. if creating a broker for
-  Spark, then only give that role for the Spark users' shadow service accounts). This essentially controls what users
-  can be impersonated.
+-   Create a separate shadow service account for each user that is expected to use Hadoop in GCP.
+-   Create a service account for the broker.
+-   Give the broker's service account the [Service Account Token Creator](https://cloud.google.com/iam/docs/service-accounts#the_service_account_token_creator_role)
+    role for all shadow service accounts that are expected to use the Hadoop platform (e.g. if creating a broker for
+    Spark, then only give that role for the Spark users' shadow service accounts). This essentially controls what users
+    can be impersonated.
 
 ## Domain-wide delegation authority provider
 

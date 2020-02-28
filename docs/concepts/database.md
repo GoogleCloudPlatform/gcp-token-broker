@@ -2,9 +2,9 @@
 
 The broker uses a database to store different types of information:
 
-- [Session](sessions.md) details to enable [delegated authentication](#delegated-authentication).
-- Refresh tokens used by the [refresh token provider](providers.md#refresh-token-provider), if that is the provider that
-  you elect to use.
+-   [Session](sessions.md) details to enable [delegated authentication](authentication.md#delegated-authentication).
+-   Refresh tokens used by the [refresh token provider](providers.md#refresh-token-provider), if that is the provider that
+    you elect to use.
 
 ## Database backends
 
@@ -48,9 +48,9 @@ This is available as a [separate package on Maven Central](https://search.maven.
 To use one of the supported RDBMS, you also have to include the corresponding driver in your classpath. Here is a
 non-exhaustive list of drivers you can use:
 
-- For Postgres: `org.postgresql:postgresql`.
-- For MariaDB and MySQL: `org.mariadb.jdbc:mariadb-java-client`.
-- For SQLite: `org.xerial:sqlite-jdbc`.
+-   For Postgres: `org.postgresql:postgresql`.
+-   For MariaDB and MySQL: `org.mariadb.jdbc:mariadb-java-client`.
+-   For SQLite: `org.xerial:sqlite-jdbc`.
 
 This backend requires that you set the following setting(s): [`database.jdbc.driver-url`](settings.md#databasejdbcdriver-url).
 
@@ -71,12 +71,12 @@ Some database backends require that you initialize the database to create the ta
 
 Follow these steps to initialize the database:
 
-1. Retrieve the JAR file for the [broker server](broker-server.md) package.
-2. Retrieve the JAR file from [Maven Central](https://search.maven.org/search?q=g:com.google.cloud.broker) for the database backend of your choice.
-3. Place the JAR files in the `CLASSPATH`.
-4. Create an `application.conf` file with the [settings](settings.md) for your environment.
-5. Run the following command:
+1.  Retrieve the JAR file for the [broker server](broker-server.md) package.
+2.  Retrieve the JAR file from [Maven Central](https://search.maven.org/search?q=g:com.google.cloud.broker) for the database backend of your choice.
+3.  Place the JAR files in the `CLASSPATH`.
+4.  Create an `application.conf` file with the [settings](settings.md) for your environment.
+5.  Run the following command:
 
-   ```shell
-   java -Dconfig.file=/<path>/application.conf com.google.cloud.broker.database.InitializeDatabase
-   ```
+    ```shell
+    java -Dconfig.file=/<path>/application.conf com.google.cloud.broker.database.InitializeDatabase
+    ```
