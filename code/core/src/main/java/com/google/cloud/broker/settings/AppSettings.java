@@ -52,6 +52,9 @@ public class AppSettings {
     public final static String ENCRYPTION_KEK_URI = "encryption.cloud-kms.kek-uri";
     public final static String USER_MAPPER = "user-mapping.mapper";
     public final static String USER_MAPPING_RULES = "user-mapping.rules";
+    public final static String SECRETS_DOWNLOAD_AT_RUNTIME = "secret-manager.download-at-runtime";
+    public final static String SECRETS_DOWNLOAD = "secret-manager.downloads";
+    public final static String SECRETS_FOLDER = "secret-manager.folder";
 
     private static Config instance;
     static {

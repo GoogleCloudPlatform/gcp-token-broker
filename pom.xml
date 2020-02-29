@@ -80,7 +80,7 @@ limitations under the License.
         <org.postgresql.version>42.2.8.jre7</org.postgresql.version>
         <org.mariadb.jdbc.version>2.5.1</org.mariadb.jdbc.version>
         <com.github.stefanbirkner.system-rules.version>1.19.0</com.github.stefanbirkner.system-rules.version>
-        <io.grpc.version>1.25.0</io.grpc.version>
+        <io.grpc.version>1.27.2</io.grpc.version>
         <com.google.crypto.tink.version>1.3.0-rc1</com.google.crypto.tink.version>
         <google-api-services-cloudkms.version>v1-rev20191009-1.30.3</google-api-services-cloudkms.version>
         <google-cloud-storage.version>1.101.0</google-cloud-storage.version>

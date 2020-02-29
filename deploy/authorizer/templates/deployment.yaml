@@ -42,14 +42,7 @@ spec:
         volumeMounts:
         - name: {{ .Chart.Name }}-config-volume
           mountPath: '/config'
-        - name: {{ .Chart.Name }}-secrets-volume
-          mountPath: '/secrets'
-          readOnly: true
-          volumes:
       volumes:
       - name: {{ .Chart.Name }}-config-volume
         configMap:
           name: {{ .Chart.Name }}-settings-configmap
-      - name: {{ .Chart.Name }}-secrets-volume
-        secret:
-          secretName: {{ .Chart.Name }}-secrets

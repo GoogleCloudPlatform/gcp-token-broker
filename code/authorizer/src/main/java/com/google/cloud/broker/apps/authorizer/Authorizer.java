@@ -52,9 +52,10 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.cloud.broker.secretmanager.SecretManager;
 import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
-import com.google.cloud.broker.oauth.GoogleClientSecretsLoader;
+import com.google.cloud.broker.oauth.OauthClientSecretsLoader;
 import com.google.cloud.broker.oauth.RefreshToken;
 import com.google.cloud.broker.settings.AppSettings;
 
@@ -73,7 +74,6 @@ public class Authorizer implements AutoCloseable {
 
     private static final HttpTransport HTTP_TRANSPORT = new ApacheHttpTransport();
     private static final JacksonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
-    private static final GoogleClientSecrets CLIENT_SECRETS = GoogleClientSecretsLoader.getSecrets();
     private static final Credential.AccessMethod ACCESS_METHOD = BearerToken.queryParameterAccessMethod();
     private static final String CODE_PARAM = "code";
     private static final String USER_INFO_URI = "https://www.googleapis.com/oauth2/v2/userinfo";
@@ -83,16 +83,7 @@ public class Authorizer implements AutoCloseable {
         "https://www.googleapis.com/auth/devstorage.read_write",
         "email",
         "profile");
-    private static final GoogleAuthorizationCodeFlow FLOW = new GoogleAuthorizationCodeFlow
-        .Builder(HTTP_TRANSPORT,
-        JSON_FACTORY,
-        CLIENT_SECRETS,
-        SCOPES)
-        .setAuthorizationServerEncodedUrl(AUTH_SERVER_URL)
-        .setTokenServerUrl(new GenericUrl(TOKEN_URL))
-        .setMethod(ACCESS_METHOD)
-        .setAccessType("offline").setApprovalPrompt("force") // "offline" and "force" are both required to get a refresh token
-        .build();
+    private static GoogleAuthorizationCodeFlow FLOW;
     private static final String GOOGLE_LOGIN_URI = "/google/login";
     private static final String GOOGLE_OAUTH2_CALLBACK_URI = "/google/oauth2callback";
     private static final String host = AppSettings.getInstance().getString(AppSettings.AUTHORIZER_HOST);
@@ -114,9 +105,31 @@ public class Authorizer implements AutoCloseable {
         logbackLogger.setLevel(level);
     }
 
+    private static void initOauthFlow() {
+        GoogleClientSecrets clientSecrets = OauthClientSecretsLoader.getSecrets();
+        FLOW = new GoogleAuthorizationCodeFlow
+            .Builder(HTTP_TRANSPORT,
+            JSON_FACTORY,
+            clientSecrets,
+            SCOPES)
+            .setAuthorizationServerEncodedUrl(AUTH_SERVER_URL)
+            .setTokenServerUrl(new GenericUrl(TOKEN_URL))
+            .setMethod(ACCESS_METHOD)
+            .setAccessType("offline").setApprovalPrompt("force") // "offline" and "force" are both required to get a refresh token
+            .build();
+    }
+
     public Authorizer() {
         // Initialize the logging level
         setLoggingLevel();
+
+        // Download secrets
+        if (AppSettings.getInstance().getBoolean(AppSettings.SECRETS_DOWNLOAD_AT_RUNTIME)) {
+            SecretManager.downloadSecrets();
+        }
+
+        // Initialize the Oauth flow
+        initOauthFlow();
 
         // Initialize the context handler
         int opts = ServletContextHandler.GZIP | ServletContextHandler.SECURITY;

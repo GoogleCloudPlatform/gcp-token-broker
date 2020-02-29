@@ -122,6 +122,12 @@ resource "google_compute_router_nat" "broker_nat" {
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
 
+// Secret Manager ------------------------------------------------------
+
+resource "google_project_iam_member" "secret_accessor" {
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.broker.email}"
+}
 
 // Datastore ------------------------------------------------------
 
@@ -270,12 +276,13 @@ broker:
           if: "realm == '${var.origin_realm}'",
           then: "primary + '@${var.gsuite_domain}'"
       }]
-      authentication.spnego.keytabs = [{keytab="/keytabs/broker.keytab", principal="broker/${var.broker_service_hostname}@${local.dataproc_realm}"}]
-      server.tls.private-key-path = "/secrets/tls.pem"
-      server.tls.certificate-path = "/secrets/tls.crt"
-      oauth.client-secret-json-path = "/secrets/client_secret.json"
+      authentication.spnego.keytabs = [{keytab="/secrets/keytab", principal="broker/${var.broker_service_hostname}@${local.dataproc_realm}"}]
+      server.tls.private-key-path = "/secrets/broker-tls-pem"
+      server.tls.certificate-path = "/secrets/broker-tls-crt"
+      oauth.client-secret-json-path = "/secrets/oauth-client"
       remote-cache.redis.host = "${google_redis_instance.cache.host}"
       logging.level = "INFO"
+      secret-manager { folder="/secrets", downloads=["broker-tls-pem", "broker-tls-crt", "keytab", "oauth-client"], download-at-runtime=true}
   service:
     port: '${var.broker_service_port}'
     loadBalancerIP: '${var.broker_service_ip}'
@@ -289,10 +296,11 @@ authorizer:
   app:
     settings: |-
       gcp-project = "${var.gcp_project}"
-      oauth.client-secret-json-path = "/secrets/client_secret.json"
+      oauth.client-secret-json-path = "/secrets/oauth-client"
       encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
       encryption.cloud-kms.dek-uri = "gs://${google_storage_bucket.encryption_bucket.name}/dek.json"
       logging.level = "INFO"
+      secret-manager { folder="/secrets", downloads=["oauth-client"], download-at-runtime=true}
   ingress:
     host: '${var.authorizer_hostname}'
 EOT

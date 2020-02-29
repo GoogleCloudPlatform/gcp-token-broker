@@ -19,9 +19,9 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.cloud.broker.oauth.GoogleClientSecretsLoader;
 import io.grpc.Status;
 
+import com.google.cloud.broker.oauth.OauthClientSecretsLoader;
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
@@ -50,7 +50,7 @@ public class RefreshTokenProvider extends AbstractUserProvider {
         String decryptedValue = new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
 
         // Load OAuth client secret
-        GoogleClientSecrets clientSecrets = GoogleClientSecretsLoader.getSecrets();
+        GoogleClientSecrets clientSecrets = OauthClientSecretsLoader.getSecrets();
 
         // Generate a new access token
         TokenResponse response = null;
