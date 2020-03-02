@@ -50,6 +50,7 @@ client_secret*.json
 *.key
 *.csr
 *.pem
+dek.json
 
 # Ignore .DS_Store (folder metadata file in OS X)
 *.DS_Store

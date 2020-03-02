@@ -45,7 +45,7 @@ public class GenerateDEK {
         System.out.println("Wrapping with KEK `" + kekUri + "`...");
         System.out.println("Writing to `" + dekUri + "`...");
         try {
-            CloudKMSBackend.generateAndWrite(dekUri, kekUri);
+            CloudKMSBackend.generateAndWriteKeyset(dekUri, kekUri);
         } catch (Exception e) {
             System.err.println("Failed to generate and write DEK");
             e.printStackTrace(System.err);

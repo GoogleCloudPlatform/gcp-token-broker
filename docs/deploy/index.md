@@ -188,6 +188,8 @@ To deploy the broker service, run the following commands **from the root of the 
     ```
     export BROKER_VERSION=$(cat VERSION)
     mkdir -p code/broker-server/target
+    curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker-core/${BROKER_VERSION}/broker-core-${BROKER_VERSION}-jar-with-dependencies.jar > code/core/target/broker-core-${BROKER_VERSION}-jar-with-dependencies.jar
+    mkdir -p code/broker-server/target
     curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker-server/${BROKER_VERSION}/broker-server-${BROKER_VERSION}-jar-with-dependencies.jar > code/broker-server/target/broker-server-${BROKER_VERSION}-jar-with-dependencies.jar
     mkdir -p code/extensions/caching/redis/target
     curl https://repo1.maven.org/maven2/com/google/cloud/broker/cache-backend-redis/${BROKER_VERSION}/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar > code/extensions/caching/redis/target/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar
@@ -260,14 +262,22 @@ To deploy the broker service, run the following commands **from the root of the 
 10. Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
 
     ```shell
-    POD=$(kubectl get pods | grep authorizer | awk '{print $1}' | head -n 1)
-    kubectl exec $POD -- \
-      java -cp /classpath/authorizer.jar:/classpath/encryption-backend-cloud-kms.jar \
-        -Dconfig.file=/config/application.conf \
-        com.google.cloud.broker.encryption.GenerateDEK
+    export BROKER_VERSION=$(cat VERSION)
+    export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
+    export REGION=${ZONE%-*}
+    java -cp code/core/target/broker-core-${BROKER_VERSION}-jar-with-dependencies.jar:code/extensions/encryption/cloud-kms/target/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar \
+      com.google.cloud.broker.encryption.GenerateDEK \
+      file://dek.json \
+      projects/${PROJECT}/locations/${REGION}/keyRings/broker-key-ring/cryptoKeys/broker-key
     ```
     
-11. Wait until an external IP has been assigned to the broker service. You can
+11. Upload the DEK to Cloud Storage:
+
+    ```shell
+    gsutil cp dek.json gs://${PROJECT}-encryption
+    ```
+
+12. Wait until an external IP has been assigned to the broker service. You can
     check the status by running the following command in a different terminal,
     and by looking up the `EXTERNAL-IP` value:
 

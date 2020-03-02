@@ -51,10 +51,14 @@ Default: `com.google.cloud.broker.encryption.backends.CloudKMSBackend`
 ### `encryption.cloud-kms.kek-uri`
 
 URI of the Cloud KMS key encryption key (KEK) used to [encrypt/decrypt](encryption.md) the data encryption key (DEK).
+The KEK URI must use the following format: `projects/[PROJECT]/locations/[REGION]/keyRings/[KEY_RING]/cryptoKeys/[KEY_NAME]`
+(Replace the `[PROJECT]`, `[REGION]`, `[KEY_RING]`, and `[KEY_NAME]` with the appropriate values).
 
 ### `encryption.cloud-kms.dek-uri`
 
-URI in Cloud Storage for the data encryption key (DEK) used to [encrypt/decrypt](encryption.md) data.
+URI in Cloud Storage or on the local filesystem for the data encryption key (DEK) used to
+[encrypt/decrypt](encryption.md) data. The DEK URI must have the `gs://` prefix if the key is stored in Cloud Storage
+or the `file://` prefix if the key is stored on the local filesystem.
 
 ### `gcp-project`
 
