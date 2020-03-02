@@ -272,10 +272,11 @@ To deploy the broker service, run the following commands **from the root of the 
       projects/${PROJECT}/locations/${REGION}/keyRings/broker-key-ring/cryptoKeys/broker-key
     ```
 
-10. Upload the DEK to Cloud Storage:
+10. Upload the DEK to Secret Manager:
 
     ```shell
-    gsutil cp dek.json gs://${PROJECT}-encryption
+    gcloud beta secrets create dek --replication-policy="automatic"
+    gcloud beta secrets versions add dek --data-file=dek.json
     ```
       
 11. Wait until an external IP has been assigned to the broker service. You can
