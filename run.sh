@@ -35,7 +35,7 @@
 #
 #   * Run the tests for a specific module, for example:
 #
-#     ./run.sh test -m cloud-datastore
+#     ./run.sh test -m db-datastore
 #
 #   * Run a specific test class in a module, for example:
 #
@@ -123,7 +123,7 @@ function set_projects_arg() {
             connector)
                 PROJECTS_ARG="--projects code/common,code/connector"
                 ;;
-            cloud-datastore)
+            db-datastore)
                 PROJECTS_ARG="--projects code/core,code/extensions/database/cloud-datastore"
                 ;;
             jdbc)
@@ -132,8 +132,11 @@ function set_projects_arg() {
             cloud-kms)
                 PROJECTS_ARG="--projects code/core,code/extensions/encryption/cloud-kms"
                 ;;
-            redis)
+            cache-redis)
                 PROJECTS_ARG="--projects code/core,code/extensions/caching/redis"
+                ;;
+            cache-datastore)
+                PROJECTS_ARG="--projects code/core,code/extensions/caching/cloud-datastore"
                 ;;
             *)
                 echo "Invalid module: '${MODULE}'" >&2
