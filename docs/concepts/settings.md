@@ -3,8 +3,13 @@
 Settings for the Authorizer app and broker service use the [HOCON](https://en.wikipedia.org/wiki/HOCON) format developed
 by [Lightbend](https://en.wikipedia.org/wiki/Lightbend) (See [official documentation](https://github.com/lightbend/config).
 
-To customize settings for your environment, create an `application.conf` file and pass it to your application instance
-with the `-Dconfig.file=/<path>/application.conf` configuration property.
+To customize settings for your environment, create an `application.conf` file and pass it to your application using one
+one the following ways:
+ 
+*   `-Dconfig.file` property set to the configuration file's path on the filesystem.
+*   `CONFIG_FILE` environment variable set to the configuration file's path on the filesystem.
+*   `CONFIG_BASE64` environment variable set to the base64-encoded contents of the configuration file.
+*   `CONFIG_GCS` environment set to the URI of the configuration file in a Cloud Storage bucket.
 
 Below is the list of available settings, in alphabetical order.
 

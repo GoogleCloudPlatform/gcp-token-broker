@@ -46,11 +46,6 @@ limitations under the License.
             <version>${google-api-services-cloudkms.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.google.cloud</groupId>
-            <artifactId>google-cloud-storage</artifactId>
-            <version>${google-cloud-storage.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.conscrypt</groupId>
             <artifactId>conscrypt-openjdk-uber</artifactId>
             <version>${org.conscrypt.version}</version>
