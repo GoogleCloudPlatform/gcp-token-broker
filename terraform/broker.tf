@@ -92,22 +92,6 @@ resource "google_compute_firewall" "broker_allow_http" {
   ]
 }
 
-// Encryption ------------------------------------------------
-
-// Bucket to store data the encryption key (DEK) for the CloudKMS encryption backend
-
-resource "google_storage_bucket" "encryption_bucket" {
-  name = "${var.gcp_project}-encryption"
-  depends_on = ["google_project_service.service_compute"]  # Dependency required: https://github.com/terraform-providers/terraform-provider-google/issues/1089
-  force_destroy = true
-}
-
-resource "google_storage_bucket_iam_member" "encryption_bucket_perms" {
-  bucket = "${google_storage_bucket.encryption_bucket.name}"
-  role = "roles/storage.objectAdmin"
-  member = "serviceAccount:${google_service_account.broker.email}"
-}
-
 // NAT gateway -----------------------------------------------
 
 resource "google_compute_router" "broker" {
@@ -122,6 +106,12 @@ resource "google_compute_router_nat" "broker_nat" {
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
 
+// Secret Manager ------------------------------------------------------
+
+resource "google_project_iam_member" "secret_accessor" {
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.broker.email}"
+}
 
 // Datastore ------------------------------------------------------
 
@@ -261,7 +251,7 @@ broker:
     settings: |-
       gcp-project = "${var.gcp_project}"
       encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
-      encryption.cloud-kms.dek-uri = "gs://${google_storage_bucket.encryption_bucket.name}/dek.json"
+      encryption.cloud-kms.dek-uri = "file:///secrets/dek"
       proxy-users = [{
           proxy = "hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}"
           users = ["${var.test_users[0]}@${var.gsuite_domain}"]
@@ -270,12 +260,13 @@ broker:
           if: "realm == '${var.origin_realm}'",
           then: "primary + '@${var.gsuite_domain}'"
       }]
-      authentication.spnego.keytabs = [{keytab="/keytabs/broker.keytab", principal="broker/${var.broker_service_hostname}@${local.dataproc_realm}"}]
-      server.tls.private-key-path = "/secrets/tls.pem"
-      server.tls.certificate-path = "/secrets/tls.crt"
-      oauth.client-secret-json-path = "/secrets/client_secret.json"
+      authentication.spnego.keytabs = [{keytab="/secrets/keytab", principal="broker/${var.broker_service_hostname}@${local.dataproc_realm}"}]
+      server.tls.private-key-path = "/secrets/broker-tls-pem"
+      server.tls.certificate-path = "/secrets/broker-tls-crt"
+      oauth.client-secret-json-path = "/secrets/oauth-client"
       remote-cache.redis.host = "${google_redis_instance.cache.host}"
       logging.level = "INFO"
+      secret-manager { folder="/secrets", downloads=["dek", "broker-tls-pem", "broker-tls-crt", "keytab", "oauth-client"], download-at-runtime=true}
   service:
     port: '${var.broker_service_port}'
     loadBalancerIP: '${var.broker_service_ip}'
@@ -289,10 +280,11 @@ authorizer:
   app:
     settings: |-
       gcp-project = "${var.gcp_project}"
-      oauth.client-secret-json-path = "/secrets/client_secret.json"
+      oauth.client-secret-json-path = "/secrets/oauth-client"
       encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
-      encryption.cloud-kms.dek-uri = "gs://${google_storage_bucket.encryption_bucket.name}/dek.json"
+      encryption.cloud-kms.dek-uri = "file:///secrets/dek"
       logging.level = "INFO"
+      secret-manager { folder="/secrets", downloads=["dek", "oauth-client"], download-at-runtime=true}
   ingress:
     host: '${var.authorizer_hostname}'
 EOT

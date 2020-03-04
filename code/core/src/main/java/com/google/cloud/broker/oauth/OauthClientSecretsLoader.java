@@ -24,7 +24,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.cloud.broker.settings.AppSettings;
 import com.typesafe.config.ConfigException;
 
-public class GoogleClientSecretsLoader {
+public class OauthClientSecretsLoader {
 
     public static GoogleClientSecrets getSecrets() {
         try {

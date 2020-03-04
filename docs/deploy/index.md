@@ -220,25 +220,26 @@ To deploy the broker service, run the following commands **from the root of the 
     helm init --service-account tiller
     ```
 
-5.  Create the Broker secrets:
+5.  Upload some secrets to Secret Manager:
 
     ```shell
-    kubectl create secret generic broker-secrets \
-      --from-file=client_secret.json \
-      --from-file=tls.pem=broker-tls.pem \
-      --from-file=tls.crt=broker-tls.crt
+    gcloud beta secrets create oauth-client --replication-policy="automatic"
+    gcloud beta secrets versions add oauth-client --data-file=client_secret.json
+    
+    gcloud beta secrets create broker-tls-pem --replication-policy="automatic"
+    gcloud beta secrets versions add broker-tls-pem --data-file=broker-tls.pem
+    
+    gcloud beta secrets create broker-tls-crt --replication-policy="automatic"
+    gcloud beta secrets versions add broker-tls-crt --data-file=broker-tls.crt
+    
+    gcloud beta secrets create authorizer-tls-key --replication-policy="automatic"
+    gcloud beta secrets versions add authorizer-tls-key --data-file=authorizer-tls.key
+    
+    gcloud beta secrets create authorizer-tls-crt --replication-policy="automatic"
+    gcloud beta secrets versions add authorizer-tls-crt --data-file=authorizer-tls.crt
     ```
 
-6.  Create the Authorizer secrets
-
-    ```shell
-    kubectl create secret generic authorizer-secrets \
-      --from-file=client_secret.json \
-      --from-file=tls.key=authorizer-tls.key \
-      --from-file=tls.crt=authorizer-tls.crt
-    ```
-
-7.  Create the `skaffold.yaml` configuration file:
+6.  Create the `skaffold.yaml` configuration file:
 
     ```shell
     cd deploy
@@ -246,7 +247,7 @@ To deploy the broker service, run the following commands **from the root of the 
     sed -e "s/PROJECT/$PROJECT/" skaffold.yaml.template > skaffold.yaml
     ```
 
-8.  Deploy to Kubernetes Engine:
+7.  Deploy to Kubernetes Engine:
 
     ```shell
     skaffold dev -v info
@@ -256,10 +257,10 @@ To deploy the broker service, run the following commands **from the root of the 
     minutes for the container images to build and get uploaded to the
     container registry.
    
-9.  Let the `skaffold` process run in the current terminal – this is where you will see the broker server's console
+8.  Let the `skaffold` process run in the current terminal – this is where you will see the broker server's console
     output. Now open a new, separate terminal and use that new terminal to run the commands in the rest of this tutorial.
 
-10. Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
+9. Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
 
     ```shell
     export BROKER_VERSION=$(cat VERSION)
@@ -270,14 +271,15 @@ To deploy the broker service, run the following commands **from the root of the 
       file://dek.json \
       projects/${PROJECT}/locations/${REGION}/keyRings/broker-key-ring/cryptoKeys/broker-key
     ```
-    
-11. Upload the DEK to Cloud Storage:
+
+10. Upload the DEK to Secret Manager:
 
     ```shell
-    gsutil cp dek.json gs://${PROJECT}-encryption
+    gcloud beta secrets create dek --replication-policy="automatic"
+    gcloud beta secrets versions add dek --data-file=dek.json
     ```
-
-12. Wait until an external IP has been assigned to the broker service. You can
+      
+11. Wait until an external IP has been assigned to the broker service. You can
     check the status by running the following command in a different terminal,
     and by looking up the `EXTERNAL-IP` value:
 
@@ -390,11 +392,11 @@ The broker service needs a keytab to authenticate incoming requests.
       --tunnel-through-iap \
       -- "sudo cat /etc/security/keytab/broker.keytab" | perl -pne 's/\r$//g' > broker.keytab
 
-2.  Upload the keytab to the broker cluster:
+2.  Upload the keytab to Secret Manager:
 
     ```shell
-    kubectl create secret generic broker-keytabs \
-      --from-file=broker.keytab
+    gcloud beta secrets create keytab --replication-policy="automatic"
+    gcloud beta secrets versions add keytab --data-file=broker.keytab
     ```
 
 3.  Restart the broker Kubernetes pods:
