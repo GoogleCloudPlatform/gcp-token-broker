@@ -246,6 +246,7 @@ limitations under the License.
         <module>code/extensions/database/cloud-datastore</module>
         <module>code/extensions/encryption/cloud-kms</module>
         <module>code/extensions/caching/redis</module>
+        <module>code/extensions/caching/cloud-datastore</module>
         <module>code/connector</module>
     </modules>
 
