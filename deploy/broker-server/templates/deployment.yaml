@@ -31,12 +31,9 @@ spec:
       containers:
       - name: {{ .Chart.Name }}-container
         image: {{ .Values.broker.image }}
-        command: [
-          'java',
-          '-cp',
-          '/classpath/broker-server.jar:/classpath/cache-backend-redis.jar:/classpath/database-backend-cloud-datastore.jar:/classpath/encryption-backend-cloud-kms.jar',
-          '-Dconfig.file=/config/application.conf',
-          'com.google.cloud.broker.apps.brokerserver.BrokerServer']
+        env:
+        - name: CONFIG_FILE
+          value: "/config/application.conf"
         ports:
         - containerPort: {{ .Values.broker.app.port }}
         volumeMounts:

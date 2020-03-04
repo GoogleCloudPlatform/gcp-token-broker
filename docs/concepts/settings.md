@@ -5,7 +5,7 @@ by [Lightbend](https://en.wikipedia.org/wiki/Lightbend) (See [official documenta
 
 To customize settings for your environment, create an `application.conf` file and pass it to your application using one
 one the following ways:
- 
+
 *   `-Dconfig.file` property set to the configuration file's path on the filesystem.
 *   `CONFIG_FILE` environment variable set to the configuration file's path on the filesystem.
 *   `CONFIG_BASE64` environment variable set to the base64-encoded contents of the configuration file.
@@ -173,7 +173,7 @@ Hostname where the broker application is served.
 
 ### `server.port`
 
-Default: `5000`
+Default: `8080`
 
 Port number where the broker application is served. A valid port value is between `0` and `65535`.
 A port number of `0` will let the system pick up an ephemeral port in a bind operation.
