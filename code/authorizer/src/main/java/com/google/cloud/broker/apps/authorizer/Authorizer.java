@@ -124,9 +124,7 @@ public class Authorizer implements AutoCloseable {
         setLoggingLevel();
 
         // Download secrets
-        if (AppSettings.getInstance().getBoolean(AppSettings.SECRETS_DOWNLOAD_AT_RUNTIME)) {
-            SecretManager.downloadSecrets();
-        }
+        SecretManager.downloadSecrets();
 
         // Initialize the Oauth flow
         initOauthFlow();

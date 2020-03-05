@@ -266,7 +266,16 @@ broker:
       oauth.client-secret-json-path = "/secrets/oauth-client"
       remote-cache.redis.host = "${google_redis_instance.cache.host}"
       logging.level = "INFO"
-      secret-manager { folder="/secrets", downloads=["dek", "broker-tls-pem", "broker-tls-crt", "keytab", "oauth-client"], download-at-runtime=true}
+      secret-manager {
+        directory = "/secrets",
+        downloads = [
+            {secret="projects/${var.gcp_project}/secrets/keytab/versions/latest", file="/secrets/keytab"},
+            {secret="projects/${var.gcp_project}/secrets/broker-tls-pem/versions/latest", file="/secrets/broker-tls-pem"},
+            {secret="projects/${var.gcp_project}/secrets/broker-tls-crt/versions/latest", file="/secrets/broker-tls-crt"},
+            {secret="projects/${var.gcp_project}/secrets/dek/versions/latest", file="/secrets/dek"},
+            {secret="projects/${var.gcp_project}/secrets/oauth-client/versions/latest" file="/secrets/oauth-client"}
+        ]
+      }
   service:
     port: '${var.broker_service_port}'
     loadBalancerIP: '${var.broker_service_ip}'
@@ -284,7 +293,13 @@ authorizer:
       encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
       encryption.cloud-kms.dek-uri = "file:///secrets/dek"
       logging.level = "INFO"
-      secret-manager { folder="/secrets", downloads=["dek", "oauth-client"], download-at-runtime=true}
+      secret-manager {
+        directory = "/secrets",
+        downloads = [
+            {secret="projects/${var.gcp_project}/secrets/dek/versions/latest", file="/secrets/dek"},
+            {secret="projects/${var.gcp_project}/secrets/oauth-client/versions/latest" file="/secrets/oauth-client"}
+        ]
+      }
   ingress:
     host: '${var.authorizer_hostname}'
 EOT

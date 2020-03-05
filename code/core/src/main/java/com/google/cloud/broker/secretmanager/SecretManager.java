@@ -22,59 +22,56 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.secretmanager.v1beta1.AccessSecretVersionRequest;
 import com.google.cloud.secretmanager.v1beta1.AccessSecretVersionResponse;
 import com.google.cloud.secretmanager.v1beta1.SecretManagerServiceClient;
 import com.google.cloud.secretmanager.v1beta1.SecretVersionName;
+import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.cloud.broker.settings.AppSettings;
+
 
 public class SecretManager {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    private final static Path SECRETS_FOLDER = Path.of(AppSettings.getInstance().getString(AppSettings.SECRETS_FOLDER));
 
     /**
-     * Download a specific secret as a file in the secrets folder.
+     * Download a specific secret.
      */
-    private static void downloadSecret(String secretId) throws IOException {
-        String projectId = AppSettings.getInstance().getString(AppSettings.GCP_PROJECT);
-        try (SecretManagerServiceClient client = SecretManagerServiceClient.create()) {
-            SecretVersionName name = SecretVersionName.of(projectId, secretId, "latest");
-            AccessSecretVersionRequest request = AccessSecretVersionRequest.newBuilder().setName(name.toString()).build();
-            AccessSecretVersionResponse response = client.accessSecretVersion(request);
-            byte[] secretValue = response.getPayload().getData().toByteArray();
-            Path secretFile = SECRETS_FOLDER.resolve(secretId);
-            Files.write(secretFile, secretValue);
-            logger.info("Downloaded secret: " + secretId);
+    private static void downloadSecret(String secretUri, String fileName) {
+        SecretManagerServiceClient client;
+        try {
+            client = SecretManagerServiceClient.create();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+        // Fetch the secret from Secret Manager
+        SecretVersionName secretVersionName = SecretVersionName.parse(secretUri);
+        AccessSecretVersionRequest request = AccessSecretVersionRequest.newBuilder().setName(secretVersionName.toString()).build();
+        AccessSecretVersionResponse response = client.accessSecretVersion(request);
+        byte[] secretValue = response.getPayload().getData().toByteArray();
+        // Save the secret value to disk
+        Path secretPath = Path.of(fileName);
+        secretPath.getParent().toFile().mkdirs();
+        try {
+            Files.write(secretPath, secretValue);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        logger.info("Downloaded secret `" + secretUri + "`" + " to `" + fileName + "`");
     }
 
     /**
-     * Download all secrets specified in the settings as files in the secrets folder.
+     * Download all secrets specified in the settings.
      */
     public static void downloadSecrets() {
-        // Create the secrets folder if it doesn't already exists
-        if (!Files.exists(SECRETS_FOLDER)) {
-            try {
-                logger.info("Creating secrets folder: " + SECRETS_FOLDER);
-                Files.createDirectory(SECRETS_FOLDER);
-                logger.info("Created secrets folder: " + SECRETS_FOLDER);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        // Download all the secrets specified in the settings
-        List<String> downloads = AppSettings.getInstance().getStringList(AppSettings.SECRETS_DOWNLOAD);
-        logger.info("Downloading secrets: " + String.join(",", downloads));
-        for (String secretId : downloads) {
-            secretId = secretId.trim();
-            try {
-                downloadSecret(secretId);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+        List<? extends Config> downloads = AppSettings.getInstance().getConfigList(AppSettings.SECRET_MANAGER_DOWNLOADS);
+        if (downloads.size() > 0) {
+            // Download all secrets specified in the settings
+            for (Config download : downloads) {
+                downloadSecret(download.getString("secret"), download.getString("file"));
             }
         }
     }
