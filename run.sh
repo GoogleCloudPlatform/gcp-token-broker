@@ -268,16 +268,16 @@ function upload_connector {
 
 function lint {
   # Find missing copyright notices
-  echo "* Checking copyright notices..."
+  echo -e "*** Checking copyright notices:\n"
   NO_COPYRIGHT=$(git grep -L "Copyright" | grep -v "^docs/" | grep -v ".md$" | grep -v "^VERSION$") || true
   if [ -z "${NO_COPYRIGHT}" ]; then
-    echo "✅ All files contain copyright notice."
+    echo -e "✅ All files contain copyright notice.\n"
   else
-    echo -e "⛔️ Some file(s) do not include a copyright notice:\n\n${NO_COPYRIGHT}"
+    echo -e "🛑 Some file(s) do not include a copyright notice:\n\n${NO_COPYRIGHT}\n"
   fi
 
   # Lint documentation files
-  echo "* Checking documentation..."
+  echo -e "*** Checking documentation:\n"
   docker exec -it ${CONTAINER} bash -c "NODE_PATH=/usr/local/lib/node_modules remark -u validate-links -u preset-lint-recommended /base/docs/"
 }
 
