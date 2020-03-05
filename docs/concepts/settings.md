@@ -165,6 +165,10 @@ Default: `["https://www.googleapis.com/auth/devstorage.read_write"]`
 
 Whitelist of API scopes for access tokens.
 
+### `secret-manager.downloads`
+
+List of [secrets](secret-management.md) to download from Secret Manager.
+
 ### `server.host`
 
 Default: `0.0.0.0`

@@ -148,6 +148,11 @@ Follow these steps to deploy the demo environment to GCP:
     *   Click the "Download JSON" icon for your client ID.
     *   Move the downloaded JSON file to the code repository's **root**, then rename it to
         `client_secret.json`.
+    *   Upload the file to Secret Manager:
+        ```shell
+        gcloud beta secrets create oauth-client --replication-policy="automatic"
+        gcloud beta secrets versions add oauth-client --data-file=client_secret.json
+        ```
 
 ### Creating TLS certificates
 
@@ -178,6 +183,22 @@ Run from the following commands **from the root of the repository**:
     openssl req -new -key authorizer-tls.key -out authorizer-tls.csr -subj "/CN=${AUTHORIZER_DOMAIN}"
     openssl x509 -req -days 365 -in authorizer-tls.csr -signkey authorizer-tls.key -out authorizer-tls.crt
     ```
+
+Once the certificates and private keys are created, upload them to Secret Manager:
+
+```shell
+gcloud beta secrets create broker-tls-pem --replication-policy="automatic"
+gcloud beta secrets versions add broker-tls-pem --data-file=broker-tls.pem
+
+gcloud beta secrets create broker-tls-crt --replication-policy="automatic"
+gcloud beta secrets versions add broker-tls-crt --data-file=broker-tls.crt
+
+gcloud beta secrets create authorizer-tls-key --replication-policy="automatic"
+gcloud beta secrets versions add authorizer-tls-key --data-file=authorizer-tls.key
+
+gcloud beta secrets create authorizer-tls-crt --replication-policy="automatic"
+gcloud beta secrets versions add authorizer-tls-crt --data-file=authorizer-tls.crt
+```
 
 ### Deploying the broker service
 
@@ -220,26 +241,7 @@ To deploy the broker service, run the following commands **from the root of the 
     helm init --service-account tiller
     ```
 
-5.  Upload some secrets to Secret Manager:
-
-    ```shell
-    gcloud beta secrets create oauth-client --replication-policy="automatic"
-    gcloud beta secrets versions add oauth-client --data-file=client_secret.json
-    
-    gcloud beta secrets create broker-tls-pem --replication-policy="automatic"
-    gcloud beta secrets versions add broker-tls-pem --data-file=broker-tls.pem
-    
-    gcloud beta secrets create broker-tls-crt --replication-policy="automatic"
-    gcloud beta secrets versions add broker-tls-crt --data-file=broker-tls.crt
-    
-    gcloud beta secrets create authorizer-tls-key --replication-policy="automatic"
-    gcloud beta secrets versions add authorizer-tls-key --data-file=authorizer-tls.key
-    
-    gcloud beta secrets create authorizer-tls-crt --replication-policy="automatic"
-    gcloud beta secrets versions add authorizer-tls-crt --data-file=authorizer-tls.crt
-    ```
-
-6.  Create the `skaffold.yaml` configuration file:
+5.  Create the `skaffold.yaml` configuration file:
 
     ```shell
     cd deploy
@@ -247,7 +249,7 @@ To deploy the broker service, run the following commands **from the root of the 
     sed -e "s/PROJECT/$PROJECT/" skaffold.yaml.template > skaffold.yaml
     ```
 
-7.  Deploy to Kubernetes Engine:
+6.  Deploy to Kubernetes Engine:
 
     ```shell
     skaffold dev -v info
@@ -257,10 +259,10 @@ To deploy the broker service, run the following commands **from the root of the 
     minutes for the container images to build and get uploaded to the
     container registry.
    
-8.  Let the `skaffold` process run in the current terminal – this is where you will see the broker server's console
+7.  Let the `skaffold` process run in the current terminal – this is where you will see the broker server's console
     output. Now open a new, separate terminal and use that new terminal to run the commands in the rest of this tutorial.
 
-9. Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
+8.  Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
 
     ```shell
     export BROKER_VERSION=$(cat VERSION)
@@ -272,14 +274,14 @@ To deploy the broker service, run the following commands **from the root of the 
       projects/${PROJECT}/locations/${REGION}/keyRings/broker-key-ring/cryptoKeys/broker-key
     ```
 
-10. Upload the DEK to Secret Manager:
+9.  Upload the DEK to Secret Manager:
 
     ```shell
     gcloud beta secrets create dek --replication-policy="automatic"
     gcloud beta secrets versions add dek --data-file=dek.json
     ```
       
-11. Wait until an external IP has been assigned to the broker service. You can
+10. Wait until an external IP has been assigned to the broker service. You can
     check the status by running the following command in a different terminal,
     and by looking up the `EXTERNAL-IP` value:
 
