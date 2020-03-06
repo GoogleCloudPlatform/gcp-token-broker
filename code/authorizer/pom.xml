@@ -37,17 +37,17 @@
         <dependency>
             <groupId>com.google.http-client</groupId>
             <artifactId>google-http-client</artifactId>
-            <version>1.31.0</version>
+            <version>${google.http.client.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client</artifactId>
-            <version>1.30.2</version>
+            <version>${google.api.client.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.template</groupId>
             <artifactId>soy</artifactId>
-            <version>2019-08-22</version>
+            <version>${google.template.soy.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -57,12 +57,12 @@
         <dependency>
             <groupId>com.google.http-client</groupId>
             <artifactId>google-http-client-apache-v2</artifactId>
-            <version>1.31.0</version>
+            <version>${google.http.client.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.9</version>
+            <version>${apache.httpcomponents.httpclient.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -73,16 +73,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${ch.qos.logback.version}</version>
-        </dependency>
-
-        <!--
-        Fix the warning "Illegal reflective access by com.google.protobuf.UnsafeUtil"
-        caused by the soy library using an old version of protobuf-java.
-         -->
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>3.11.1</version>
         </dependency>
 
         <!-- Testing dependencies -->

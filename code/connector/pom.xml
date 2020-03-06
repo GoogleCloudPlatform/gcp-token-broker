@@ -40,7 +40,7 @@ limitations under the License.
         <properties>
           <hadoop.identifier>hadoop2</hadoop.identifier>
           <hadoop.version>2.9.2</hadoop.version>
-          <gcs.connector.version>hadoop2-2.0.0-RC2</gcs.connector.version>
+          <gcs.connector.version>${gcs-connector-hadoop2.version}</gcs.connector.version>
         </properties>
       </profile>
       <profile>
@@ -48,7 +48,7 @@ limitations under the License.
         <properties>
           <hadoop.identifier>hadoop3</hadoop.identifier>
           <hadoop.version>3.1.1</hadoop.version>
-          <gcs.connector.version>hadoop3-2.0.0-RC2</gcs.connector.version>
+          <gcs.connector.version>${gcs-connector-hadoop3.version}</gcs.connector.version>
         </properties>
       </profile>
     </profiles>
@@ -86,7 +86,7 @@ limitations under the License.
         <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>javax.annotation-api</artifactId>
-            <version>1.2</version>
+            <version>${javax.annotation-api.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -128,14 +128,14 @@ limitations under the License.
             <extension>
                 <groupId>kr.motd.maven</groupId>
                 <artifactId>os-maven-plugin</artifactId>
-                <version>1.6.1</version>
+                <version>${os-maven-plugin.version}</version>
             </extension>
         </extensions>
         <plugins>
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
-                <version>${maven.protobuf.plugin.version}</version>
+                <version>${protobuf-maven-plugin.version}</version>
                 <configuration>
                     <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
@@ -153,7 +153,7 @@ limitations under the License.
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>${maven.shade.plugin.version}</version>
+                <version>${maven-shade-plugin.version}</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
