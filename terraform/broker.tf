@@ -273,7 +273,7 @@ broker:
             {secret="projects/${var.gcp_project}/secrets/broker-tls-pem/versions/latest", file="/secrets/broker-tls-pem"},
             {secret="projects/${var.gcp_project}/secrets/broker-tls-crt/versions/latest", file="/secrets/broker-tls-crt"},
             {secret="projects/${var.gcp_project}/secrets/dek/versions/latest", file="/secrets/dek"},
-            {secret="projects/${var.gcp_project}/secrets/oauth-client/versions/latest" file="/secrets/oauth-client"}
+            {secret="projects/${var.gcp_project}/secrets/oauth-client/versions/latest", file="/secrets/oauth-client"}
         ]
       }
   service:
@@ -297,7 +297,7 @@ authorizer:
         directory = "/secrets",
         downloads = [
             {secret="projects/${var.gcp_project}/secrets/dek/versions/latest", file="/secrets/dek"},
-            {secret="projects/${var.gcp_project}/secrets/oauth-client/versions/latest" file="/secrets/oauth-client"}
+            {secret="projects/${var.gcp_project}/secrets/oauth-client/versions/latest", file="/secrets/oauth-client"}
         ]
       }
   ingress:
