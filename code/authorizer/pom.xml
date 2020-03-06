@@ -94,7 +94,7 @@
                 fix in this pull request: https://github.com/apache/maven-shade-plugin/pull/17
                 -->
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>${maven.assembly.plugin.version}</version>
+                <version>${maven-assembly-plugin.version}</version>
                 <executions>
                     <execution>
                         <phase>package</phase>

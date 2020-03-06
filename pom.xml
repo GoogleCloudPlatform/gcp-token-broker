@@ -103,7 +103,7 @@ limitations under the License.
         <gcs-connector-hadoop3.version>hadoop3-2.0.1</gcs-connector-hadoop3.version>
         <google-cloud-secretmanager.version>0.3.0</google-cloud-secretmanager.version>
         <jinjava.version>2.5.2</jinjava.version>
-        <maven.assembly.plugin.version>3.2.0</maven.assembly.plugin.version>
+        <maven-assembly-plugin.version>3.2.0</maven-assembly-plugin.version>
         <os-maven-plugin.version>1.6.2</os-maven-plugin.version>
         <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
         <maven-javadoc-plugin.version>3.1.1</maven-javadoc-plugin.version>
