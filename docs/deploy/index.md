@@ -208,7 +208,7 @@ To deploy the broker service, run the following commands **from the root of the 
 
     ```
     export BROKER_VERSION=$(cat VERSION)
-    mkdir -p code/broker-server/target
+    mkdir -p code/core/target
     curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker-core/${BROKER_VERSION}/broker-core-${BROKER_VERSION}-jar-with-dependencies.jar > code/core/target/broker-core-${BROKER_VERSION}-jar-with-dependencies.jar
     mkdir -p code/broker-server/target
     curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker-server/${BROKER_VERSION}/broker-server-${BROKER_VERSION}-jar-with-dependencies.jar > code/broker-server/target/broker-server-${BROKER_VERSION}-jar-with-dependencies.jar
