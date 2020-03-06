@@ -1,3 +1,7 @@
+## 0.9.1 (March 5, 2020)
+
+- Fixed an issue with the `broker-server` package assembly.
+
 ## 0.9.0 (March 5, 2020)
 
 - Added integration with Secret Manager.
