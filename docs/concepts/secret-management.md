@@ -7,8 +7,8 @@ The broker service needs to access some sensitive pieces of information to run i
 *   Data encryption key (DEK) for envelope [encryption](encryption.md).
 *   [TLS](tls.md) certificate and private key.
 
-It's a good idea to keep master copies of this information in a centralized location. One great place for this is
-[Secret Manager](https://cloud.google.com/secret-manager), a fully-managed Google Cloud service to encrypt, store,
+It's a good idea to keep master copies of this information in a centralized, secure location. One great place for this
+is [Secret Manager](https://cloud.google.com/secret-manager), a fully-managed Google Cloud service to encrypt, store,
 manage, and audit infrastructure and application-level secrets.
 
 You can create a secret in Secret Manager using the `gcloud` command, for example:
