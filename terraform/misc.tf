@@ -64,6 +64,10 @@ resource "google_project_service" "service_admin" {
   service = "admin.googleapis.com"
 }
 
+resource "google_project_service" "service_secretmanager" {
+  service = "secretmanager.googleapis.com"
+}
+
 
 // Test bucket -----------------------------------------------------------------------
 

@@ -78,7 +78,7 @@ final class BrokerGateway {
             String tlsCerfiticatePath = config.get(CONFIG_CERTIFICATE_PATH);
             if (tlsCerfiticatePath != null) {
                 try {
-                    tlsCertificate = new String(Files.readAllBytes(Paths.get(tlsCerfiticatePath)), StandardCharsets.US_ASCII);
+                    tlsCertificate = Files.readString(Paths.get(tlsCerfiticatePath), StandardCharsets.US_ASCII);
                 } catch (IOException e) {
                     throw new RuntimeException("Error reading the TLS certificate file: " + e.getMessage());
                 }

@@ -33,5 +33,5 @@ To run the Authorizer:
 6.  Run the following command:
 
     ```shell
-    java -Dconfig.file=/<path>/application.conf com.google.cloud.broker.apps.authorizer.Authorizer
+    CONFIG_FILE=/<path>/application.conf java com.google.cloud.broker.apps.authorizer.Authorizer
     ```

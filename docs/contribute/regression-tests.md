@@ -21,7 +21,7 @@ Follow these steps to run the test suite:
 4.  Enable some Google APIs:
 
     ```shell
-    gcloud services enable datastore.googleapis.com iam.googleapis.com cloudkms.googleapis.com
+    gcloud services enable datastore.googleapis.com iam.googleapis.com cloudkms.googleapis.com secretmanager.googleapis.com
     ```
 
 5.  Create a test bucket:
@@ -109,13 +109,28 @@ Follow these steps to run the test suite:
       service-account-key.json
     ```
 
-17. Start a [development container](development.md):
+17. Create a secret in Secret Manager:
+
+    ```shell
+    gcloud beta secrets create secretstuff --replication-policy="automatic"
+    echo -n "This is secret stuff" | gcloud beta secrets versions add secretstuff --data-file=-
+    ```
+
+18. Allow the broker service account to access Secret Manager:
+
+    ```shell
+    gcloud projects add-iam-policy-binding $PROJECT \
+      --role roles/secretmanager.secretAccessor \
+      --member="serviceAccount:broker@${PROJECT}.iam.gserviceaccount.com"
+    ```
+
+19. Start a [development container](development.md):
 
     ```shell
     ./run.sh init_dev
     ```
 
-18. You can now run the tests as follows:
+20. You can now run the tests as follows:
 
     To run the entire test suite (Replace `[ORG]` with your test GSuite organization's domain and `[ORG_ADMIN]` with
     the email address of an admin of your GSuite organization):

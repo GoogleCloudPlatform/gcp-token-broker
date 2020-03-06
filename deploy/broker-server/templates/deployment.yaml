@@ -31,32 +31,15 @@ spec:
       containers:
       - name: {{ .Chart.Name }}-container
         image: {{ .Values.broker.image }}
-        command: [
-          'java',
-          '-cp',
-          '/classpath/broker-server.jar:/classpath/cache-backend-redis.jar:/classpath/database-backend-cloud-datastore.jar:/classpath/encryption-backend-cloud-kms.jar',
-          '-Dconfig.file=/config/application.conf',
-          'com.google.cloud.broker.apps.brokerserver.BrokerServer']
+        env:
+        - name: CONFIG_FILE
+          value: "/config/application.conf"
         ports:
         - containerPort: {{ .Values.broker.app.port }}
         volumeMounts:
         - name: {{ .Chart.Name }}-config-volume
           mountPath: '/config'
-        - name: {{ .Chart.Name }}-secrets-volume
-          mountPath: '/secrets'
-          readOnly: true
-          volumes:
-        - name: {{ .Chart.Name }}-keytabs-volume
-          mountPath: '/keytabs'
-          readOnly: true
-          volumes:
       volumes:
       - name: {{ .Chart.Name }}-config-volume
         configMap:
           name: {{ .Chart.Name }}-settings-configmap
-      - name: {{ .Chart.Name }}-secrets-volume
-        secret:
-          secretName: {{ .Chart.Name }}-secrets
-      - name: {{ .Chart.Name }}-keytabs-volume
-        secret:
-          secretName: {{ .Chart.Name }}-keytabs

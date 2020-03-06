@@ -20,7 +20,7 @@ limitations under the License.
     <parent>
         <groupId>com.google.cloud.broker</groupId>
         <artifactId>broker-parent</artifactId>
-        <version>0.8.0</version>
+        <version>0.9.1</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -42,12 +42,22 @@ limitations under the License.
       <dependency>
         <groupId>com.google.auth</groupId>
         <artifactId>google-auth-library-oauth2-http</artifactId>
-        <version>0.17.1</version>
+        <version>${google-auth-library-oauth2-http.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.api-client</groupId>
         <artifactId>google-api-client</artifactId>
-        <version>1.30.3</version>
+        <version>${google.api.client.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-storage</artifactId>
+        <version>${google-cloud-storage.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-secretmanager</artifactId>
+        <version>${google-cloud-secretmanager.version}</version>
       </dependency>
 
       <!-- For logging -->
@@ -80,7 +90,7 @@ limitations under the License.
       <dependency>
         <groupId>com.hubspot.jinjava</groupId>
         <artifactId>jinjava</artifactId>
-        <version>2.5.2</version>
+        <version>${jinjava.version}</version>
       </dependency>
 
       <!-- Testing dependencies -->
@@ -91,5 +101,27 @@ limitations under the License.
         <scope>test</scope>
       </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>${maven-assembly-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

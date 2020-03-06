@@ -20,7 +20,7 @@ limitations under the License.
     <parent>
         <groupId>com.google.cloud.broker</groupId>
         <artifactId>broker-parent</artifactId>
-        <version>0.8.0</version>
+        <version>0.9.1</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -59,14 +59,14 @@ limitations under the License.
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-admin-directory</artifactId>
-            <version>directory_v1-rev20190806-1.30.3</version>
+            <version>${google.api.services.admin.directory.version}</version>
         </dependency>
 
         <!-- For the access token providers -->
         <dependency>
             <groupId>com.google.auth</groupId>
             <artifactId>google-auth-library-oauth2-http</artifactId>
-            <version>0.16.2</version>
+            <version>${google-auth-library-oauth2-http.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>
@@ -94,14 +94,14 @@ limitations under the License.
             <extension>
                 <groupId>kr.motd.maven</groupId>
                 <artifactId>os-maven-plugin</artifactId>
-                <version>${maven.os.plugin.version}</version>
+                <version>${os-maven-plugin.version}</version>
             </extension>
         </extensions>
         <plugins>
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
-                <version>${maven.protobuf.plugin.version}</version>
+                <version>${protobuf-maven-plugin.version}</version>
                 <configuration>
                     <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
@@ -123,7 +123,7 @@ limitations under the License.
                 fix in this pull request: https://github.com/apache/maven-shade-plugin/pull/17
                 -->
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>${maven.assembly.plugin.version}</version>
+                <version>${maven-assembly-plugin.version}</version>
                 <executions>
                 <execution>
                     <phase>package</phase>
@@ -136,9 +136,9 @@ limitations under the License.
                                 <mainClass>com.google.cloud.broker.apps.brokerserver.BrokerServer</mainClass>
                             </manifest>
                         </archive>
-                        <descriptorRefs>
-                            <descriptorRef>jar-with-dependencies</descriptorRef>
-                        </descriptorRefs>
+                        <descriptors>
+                            <descriptor>descriptor.xml</descriptor>
+                        </descriptors>
                     </configuration>
                 </execution>
                 </executions>

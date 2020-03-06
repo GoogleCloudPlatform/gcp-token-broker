@@ -26,14 +26,18 @@ import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.ByteArrayCodec;
 import org.redisson.config.Config;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 
 
 public class RedisCacheTest {
 
     private static RedissonClient client;
-    private static RedisCache backend;
+    private static RedisCache cache;
     private static SettingsOverride backupSettings;
 
     @BeforeClass
@@ -48,7 +52,7 @@ public class RedisCacheTest {
         Config config = new Config();
         config.useSingleServer().setAddress("redis://localhost:6379").setDatabase(0);
         client = Redisson.create(config);
-        backend = new RedisCache();
+        cache = new RedisCache();
     }
 
     @AfterClass
@@ -71,13 +75,13 @@ public class RedisCacheTest {
         bucket.set("abcd".getBytes());
 
         // Check that the backend can retrieve the key/value
-        assertArrayEquals("abcd".getBytes(), backend.get("test"));
+        assertArrayEquals("abcd".getBytes(), cache.get("test"));
     }
 
     @Test
     public void testGetNotExist() {
         // Check that null is returned when the key doesn't exist
-        assertNull(backend.get("whatever"));
+        assertNull(cache.get("whatever"));
     }
 
     @Test
@@ -87,7 +91,7 @@ public class RedisCacheTest {
         assertNull(bucket.get());
 
         // Let the backend set the key/value
-        backend.set("test", "abcd".getBytes());
+        cache.set("test", "abcd".getBytes());
 
         // Check that the key/value was correctly set
         assertArrayEquals("abcd".getBytes(), bucket.get());
@@ -100,12 +104,12 @@ public class RedisCacheTest {
         assertNull(bucket.get());
 
         // Let the backend set the key/value
-        backend.set("test", "abcd".getBytes(), 1);
+        cache.set("test", "abcd".getBytes(), 1);
 
         // Check that the key/value was correctly set
         assertArrayEquals("abcd".getBytes(), bucket.get());
 
-        // Wait for a second
+        // Wait for a while
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
@@ -113,6 +117,7 @@ public class RedisCacheTest {
         }
 
         // Check that the key/value is now gone
+        assertNull(cache.get("test"));
         assertNull(bucket.get());
     }
 
@@ -123,15 +128,52 @@ public class RedisCacheTest {
         bucket.set("abcd".getBytes());
 
         // Let the backend delete the key
-        backend.delete("test");
+        cache.delete("test");
 
         // Check that the key was deleted
+        assertNull(cache.get("test"));
         assertNull(bucket.get());
     }
 
     @Test
-    public void testLock() {
-        Lock lock = backend.acquireLock("test-lock");
-        lock.unlock();
+    public void testLock() throws InterruptedException {
+        String LOCK_NAME = "test-lock";
+        int WAIT = 20;
+        List<String> list = Collections.synchronizedList(new ArrayList<>());
+
+        // Define the concurrent tasks
+        Callable<Object> task1 = () -> {
+            Lock lock = cache.acquireLock(LOCK_NAME);
+            Thread.sleep(WAIT);
+            list.add("a1");
+            Thread.sleep(WAIT);
+            list.add("b1");
+            Thread.sleep(WAIT);
+            list.add("c1");
+            lock.unlock();
+            return null;
+        };
+        Callable<Object> task2 = () -> {
+            Lock lock = cache.acquireLock(LOCK_NAME);
+            Thread.sleep(WAIT);
+            list.add("a2");
+            Thread.sleep(WAIT);
+            list.add("b2");
+            Thread.sleep(WAIT);
+            list.add("c2");
+            lock.unlock();
+            return null;
+        };
+        List<Callable<Object>> tasks = new ArrayList<>();
+        tasks.add(task1);
+        tasks.add(task2);
+
+        // Execute the tasks concurrently
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        executorService.invokeAll(tasks);
+
+        // Verify that the tasks updated the shared list in sequence
+        String result = String.join(",", list);
+        assertTrue(result.equals("a1,b1,c1,a2,b2,c2") || result.equals("a2,b2,c2,a1,b1,c1"));
     }
 }

@@ -35,7 +35,7 @@
 #
 #   * Run the tests for a specific module, for example:
 #
-#     ./run.sh test -m cloud-datastore
+#     ./run.sh test -m db-datastore
 #
 #   * Run a specific test class in a module, for example:
 #
@@ -123,7 +123,7 @@ function set_projects_arg() {
             connector)
                 PROJECTS_ARG="--projects code/common,code/connector"
                 ;;
-            cloud-datastore)
+            db-datastore)
                 PROJECTS_ARG="--projects code/core,code/extensions/database/cloud-datastore"
                 ;;
             jdbc)
@@ -132,8 +132,11 @@ function set_projects_arg() {
             cloud-kms)
                 PROJECTS_ARG="--projects code/core,code/extensions/encryption/cloud-kms"
                 ;;
-            redis)
+            cache-redis)
                 PROJECTS_ARG="--projects code/core,code/extensions/caching/redis"
+                ;;
+            cache-datastore)
+                PROJECTS_ARG="--projects code/core,code/extensions/caching/cloud-datastore"
                 ;;
             *)
                 echo "Invalid module: '${MODULE}'" >&2
@@ -265,16 +268,16 @@ function upload_connector {
 
 function lint {
   # Find missing copyright notices
-  echo "* Checking copyright notices..."
+  echo -e "*** Checking copyright notices:\n"
   NO_COPYRIGHT=$(git grep -L "Copyright" | grep -v "^docs/" | grep -v ".md$" | grep -v "^VERSION$") || true
   if [ -z "${NO_COPYRIGHT}" ]; then
-    echo "✅ All files contain copyright notice."
+    echo -e "✅ All files contain copyright notice.\n"
   else
-    echo -e "⛔️ Some file(s) do not include a copyright notice:\n\n${NO_COPYRIGHT}"
+    echo -e "🛑 Some file(s) do not include a copyright notice:\n\n${NO_COPYRIGHT}\n"
   fi
 
   # Lint documentation files
-  echo "* Checking documentation..."
+  echo -e "*** Checking documentation:\n"
   docker exec -it ${CONTAINER} bash -c "NODE_PATH=/usr/local/lib/node_modules remark -u validate-links -u preset-lint-recommended /base/docs/"
 }
 

@@ -53,6 +53,22 @@ This backend requires that you set the following setting(s): [`remote-cache.redi
 [`remote-cache.redis.port`](settings.md#remote-cacheredisport), and
 [`remote-cache.redis.db`](settings.md#remote-cacheredisdb).
 
+### Cloud Datastore
+
+_Class path:_ `com.google.cloud.broker.caching.remote.CloudDatastoreCache`
+
+The Cloud Datastore cache connects to a database hosted on [Cloud Datastore](https://cloud.google.com/datastore),
+a highly scalable and fully-managed NoSQL database in GCP.
+
+This backend is available as a [separate package on Maven Central](https://search.maven.org/search?q=g:com.google.cloud.broker%20AND%20a:cache-backend-cloud-datastore):
+
+```xml
+<groupId>com.google.cloud.broker</groupId>
+<artifactId>cache-backend-cloud-datastore</artifactId>
+```
+
+This backend requires that you set the following setting(s): [`gcp-project`](settings.md#gcp-project).
+
 ### Dummy backend
 
 _Class path:_ `com.google.cloud.broker.caching.remote.DummyCache`

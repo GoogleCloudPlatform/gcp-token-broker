@@ -19,4 +19,4 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 data:
-  application.conf: {{ .Values.broker.app.settings| quote }}
+  application.conf: {{ .Values.authorizer.app.settings| quote }}

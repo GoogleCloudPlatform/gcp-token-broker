@@ -29,5 +29,5 @@ To run the server:
 5.  [Initialize the database](database.md#database-initialization).
 6.  Run the following command:
     ```shell
-    java -Dconfig.file=/<path>/application.conf com.google.cloud.broker.apps.brokerserver.BrokerServer
+    CONFIG_FILE=/<path>/application.conf java com.google.cloud.broker.apps.brokerserver.BrokerServer
     ```

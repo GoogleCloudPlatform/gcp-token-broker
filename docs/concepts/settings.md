@@ -3,8 +3,13 @@
 Settings for the Authorizer app and broker service use the [HOCON](https://en.wikipedia.org/wiki/HOCON) format developed
 by [Lightbend](https://en.wikipedia.org/wiki/Lightbend) (See [official documentation](https://github.com/lightbend/config).
 
-To customize settings for your environment, create an `application.conf` file and pass it to your application instance
-with the `-Dconfig.file=/<path>/application.conf` configuration property.
+To customize settings for your environment, create an `application.conf` file and pass it to your application using one
+one the following ways:
+
+*   `-Dconfig.file` property set to the configuration file's path on the filesystem.
+*   `CONFIG_FILE` environment variable set to the configuration file's path on the filesystem.
+*   `CONFIG_BASE64` environment variable set to the base64-encoded contents of the configuration file.
+*   `CONFIG_GCS` environment set to the URI of the configuration file in a Cloud Storage bucket.
 
 Below is the list of available settings, in alphabetical order.
 
@@ -51,10 +56,14 @@ Default: `com.google.cloud.broker.encryption.backends.CloudKMSBackend`
 ### `encryption.cloud-kms.kek-uri`
 
 URI of the Cloud KMS key encryption key (KEK) used to [encrypt/decrypt](encryption.md) the data encryption key (DEK).
+The KEK URI must use the following format: `projects/[PROJECT]/locations/[REGION]/keyRings/[KEY_RING]/cryptoKeys/[KEY_NAME]`
+(Replace the `[PROJECT]`, `[REGION]`, `[KEY_RING]`, and `[KEY_NAME]` with the appropriate values).
 
 ### `encryption.cloud-kms.dek-uri`
 
-URI in Cloud Storage for the data encryption key (DEK) used to [encrypt/decrypt](encryption.md) data.
+URI in Cloud Storage or on the local filesystem for the data encryption key (DEK) used to
+[encrypt/decrypt](encryption.md) data. The DEK URI must have the `gs://` prefix if the key is stored in Cloud Storage
+or the `file://` prefix if the key is stored on the local filesystem.
 
 ### `gcp-project`
 
@@ -156,6 +165,10 @@ Default: `["https://www.googleapis.com/auth/devstorage.read_write"]`
 
 Whitelist of API scopes for access tokens.
 
+### `secret-manager.downloads`
+
+List of [secrets](secret-management.md) to download from Secret Manager.
+
 ### `server.host`
 
 Default: `0.0.0.0`
@@ -164,7 +177,7 @@ Hostname where the broker application is served.
 
 ### `server.port`
 
-Default: `5000`
+Default: `8080`
 
 Port number where the broker application is served. A valid port value is between `0` and `65535`.
 A port number of `0` will let the system pick up an ephemeral port in a bind operation.
