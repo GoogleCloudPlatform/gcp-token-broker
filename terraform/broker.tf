@@ -267,7 +267,6 @@ broker:
       remote-cache.redis.host = "${google_redis_instance.cache.host}"
       logging.level = "INFO"
       secret-manager {
-        directory = "/secrets",
         downloads = [
             {secret="projects/${var.gcp_project}/secrets/keytab/versions/latest", file="/secrets/keytab"},
             {secret="projects/${var.gcp_project}/secrets/broker-tls-pem/versions/latest", file="/secrets/broker-tls-pem"},
@@ -294,7 +293,6 @@ authorizer:
       encryption.cloud-kms.dek-uri = "file:///secrets/dek"
       logging.level = "INFO"
       secret-manager {
-        directory = "/secrets",
         downloads = [
             {secret="projects/${var.gcp_project}/secrets/dek/versions/latest", file="/secrets/dek"},
             {secret="projects/${var.gcp_project}/secrets/oauth-client/versions/latest", file="/secrets/oauth-client"}
