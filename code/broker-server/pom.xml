@@ -136,9 +136,9 @@ limitations under the License.
                                 <mainClass>com.google.cloud.broker.apps.brokerserver.BrokerServer</mainClass>
                             </manifest>
                         </archive>
-                        <descriptorRefs>
-                            <descriptorRef>jar-with-dependencies</descriptorRef>
-                        </descriptorRefs>
+                        <descriptors>
+                            <descriptor>descriptor.xml</descriptor>
+                        </descriptors>
                     </configuration>
                 </execution>
                 </executions>

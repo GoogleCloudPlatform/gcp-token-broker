@@ -1,0 +1,30 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+<!--
+Same as the built-in `jar-with-dependencies` descriptor but with the `metaInf-services` handler added to aggregate
+all the META-INF/services.
+
+See:
+* https://maven.apache.org/plugins/maven-assembly-plugin/examples/single/using-container-descriptor-handlers.html
+* https://maven.apache.org/plugins/maven-assembly-plugin/descriptor-refs.html#jar-with-dependencies
+-->
+<id>jar-with-dependencies</id>
+<formats>
+    <format>jar</format>
+</formats>
+<includeBaseDirectory>false</includeBaseDirectory>
+<dependencySets>
+    <dependencySet>
+        <outputDirectory>/</outputDirectory>
+        <useProjectArtifact>true</useProjectArtifact>
+        <unpack>true</unpack>
+        <scope>runtime</scope>
+    </dependencySet>
+</dependencySets>
+<containerDescriptorHandlers>
+    <containerDescriptorHandler>
+        <handlerName>metaInf-services</handlerName>
+    </containerDescriptorHandler>
+</containerDescriptorHandlers>
+</assembly>
