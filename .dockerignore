@@ -9,31 +9,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.git/
+# Ignore all by default:
+*
 
-# Ignore connector since it's client-side code
-code/connector/**
-
-deploy/**
-img/**
-init-action/**
-load-testing/**
-terraform/**
-
-# Documentation
-*.md
-
-# Python artefacts
-.pytest_cache
-__pycache__
-*.pyc
-
-# Redis artefacts
-dump.rdb
-
-# Secrets
-client_secret*.json
-*.keytab
-*.crt
-*.key
-*.csr
+# Whitelist only the required assets:
+!/code/authorizer/install.sh
+!code/broker-server/install.sh
+!code/authorizer/target/authorizer-*-jar-with-dependencies.jar
+!code/broker-server/target/broker-server-*-jar-with-dependencies.jar
+!code/extensions/database/jdbc/target/database-backend-jdbc-*-jar-with-dependencies.jar
+!code/extensions/database/cloud-datastore/target/database-backend-cloud-datastore-*-jar-with-dependencies.jar
+!code/extensions/encryption/cloud-kms/target/encryption-backend-cloud-kms-*-jar-with-dependencies.jar
+!code/extensions/caching/cloud-datastore/target/cache-backend-cloud-datastore-*-jar-with-dependencies.jar
+!code/extensions/caching/redis/target/cache-backend-redis-*-jar-with-dependencies.jar
