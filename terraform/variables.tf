@@ -30,49 +30,6 @@ variable origin_realm {
 variable gsuite_domain {
 }
 
-// Broker --------------------------------------
-
-variable broker_service_hostname {
-  default = "10.2.1.255.xip.io"
-}
-
-variable broker_service_ip {
-  default = "10.2.1.255"
-}
-
-variable broker_subnet_cidr {
-    default = "10.2.0.0/16"
-}
-
-variable broker_service_port {
-    default = 443
-}
-
-variable broker_initial_node_count {
-    default = 4
-}
-
-variable broker_master_cidr {
-    default = "10.3.0.0/28"
-}
-
-variable broker_master_authorized_cidr {
-  default = "0.0.0.0/0"
-}
-
-variable broker_pod_cidr {
-    default = "10.4.0.0/14"
-}
-
-variable broker_service_cidr {
-    default = "10.8.0.0/20"
-}
-
-// Authorizer --------------------------------------
-
-variable authorizer_hostname {
-}
-
 // Origin KDC --------------------------------------
 
 variable origin_subnet_cidr {

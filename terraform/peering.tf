@@ -13,51 +13,6 @@
 # Create the peerings in sequence, as you can't set up multiple peerings
 # with the same VPC at the same time. See https://github.com/terraform-providers/terraform-provider-google/issues/3034
 
-// Origin <--> Broker ---------------------------------------------------------------
-
-resource "google_compute_network_peering" "origin_broker_peering1" {
-  name = "origin-broker-peering1"
-  network = "${google_compute_network.origin.self_link}"
-  peer_network = "${google_compute_network.broker.self_link}"
-  depends_on = [
-    "google_compute_subnetwork.broker_cluster_subnet",
-    "google_compute_subnetwork.origin_subnet",
-  ]
-}
-
-resource "google_compute_network_peering" "origin_broker_peering2" {
-  name = "origin-broker-peering2"
-  network = "${google_compute_network.broker.self_link}"
-  peer_network = "${google_compute_network.origin.self_link}"
-  depends_on = [
-    "google_compute_network_peering.origin_broker_peering1",
-  ]
-}
-
-
-// Client <--> Broker ---------------------------------------------------------------
-
-resource "google_compute_network_peering" "client_broker_peering1" {
-  name = "client-broker-peering1"
-  network = "${google_compute_network.client.self_link}"
-  peer_network = "${google_compute_network.broker.self_link}"
-  depends_on = [
-    "google_compute_subnetwork.broker_cluster_subnet",
-    "google_compute_subnetwork.client_subnet",
-    "google_compute_network_peering.origin_broker_peering2",
-  ]
-}
-
-resource "google_compute_network_peering" "client_broker_peering2" {
-  name = "client-broker-peering2"
-  network = "${google_compute_network.broker.self_link}"
-  peer_network = "${google_compute_network.client.self_link}"
-  depends_on = [
-    "google_compute_network_peering.client_broker_peering1",
-  ]
-}
-
-
 // Client <--> Origin ---------------------------------------------------------------
 
 resource "google_compute_network_peering" "client_origin_peering1" {
@@ -67,7 +22,6 @@ resource "google_compute_network_peering" "client_origin_peering1" {
   depends_on = [
     "google_compute_subnetwork.origin_subnet",
     "google_compute_subnetwork.client_subnet",
-    "google_compute_network_peering.client_broker_peering2",
   ]
 }
 

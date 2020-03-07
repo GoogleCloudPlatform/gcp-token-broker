@@ -23,89 +23,6 @@ resource "google_service_account_iam_member" "broker_self_token_creator" {
   member      = "serviceAccount:${google_service_account.broker.email}"
 }
 
-
-// VPC -------------------------------------------------------------
-
-resource "google_compute_network" "broker" {
-  name                    = "broker-network"
-  auto_create_subnetworks = "false"
-  depends_on = ["google_project_service.service_compute"]
-}
-
-resource "google_compute_subnetwork" "broker_cluster_subnet" {
-  name          = "broker-cluster-subnet"
-  ip_cidr_range = "${var.broker_subnet_cidr}"
-  region        = "${var.gcp_region}"
-  network       = "${google_compute_network.broker.self_link}"
-  private_ip_google_access = true
-}
-
-resource "google_compute_firewall" "broker_allow_ssh" {
-  name    = "broker-allow-ssh"
-  network = "${google_compute_network.broker.name}"
-
-  allow {
-    protocol = "icmp"
-  }
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-  source_ranges = [
-    "35.235.240.0/20" // For IAP tunnel (see: https://cloud.google.com/iap/docs/using-tcp-forwarding)
-  ]
-}
-
-resource "google_compute_firewall" "broker_allow_internal" {
-  name    = "broker-allow-internal"
-  network = "${google_compute_network.broker.name}"
-
-  allow {
-    protocol = "icmp"
-  }
-  allow {
-    protocol = "tcp"
-    ports    = ["1-65535"]
-  }
-  allow {
-    protocol = "udp"
-    ports    = ["1-65535"]
-  }
-  source_ranges = [
-    "${var.broker_subnet_cidr}"
-  ]
-}
-
-resource "google_compute_firewall" "broker_allow_http" {
-  name    = "broker-allow-http"
-  network = "${google_compute_network.broker.name}"
-
-  allow {
-    protocol = "icmp"
-  }
-  allow {
-    protocol = "tcp"
-    ports    = ["80", "443"]
-  }
-  source_ranges = [
-    "${var.client_subnet_cidr}"
-  ]
-}
-
-// NAT gateway -----------------------------------------------
-
-resource "google_compute_router" "broker" {
-  name    = "broker"
-  network = "${google_compute_network.broker.self_link}"
-}
-
-resource "google_compute_router_nat" "broker_nat" {
-  name                               = "broker"
-  router                             = "${google_compute_router.broker.name}"
-  nat_ip_allocate_option             = "AUTO_ONLY"
-  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
-}
-
 // Secret Manager ------------------------------------------------------
 
 resource "google_project_iam_member" "secret_accessor" {
@@ -126,31 +43,7 @@ resource "google_app_engine_application" "app" {
 }
 
 
-// GKE cluster ----------------------------------------------------
-
-# Force creation of the container registry's bucket ("artifacts.${var.gcp_project}.appspot.com")
-# by pushing a sample image. This allows setting permissions to that bucket later on.
-resource "null_resource" "create_container_registry_bucket" {
-  provisioner "local-exec" {
-    command = <<EOT
-      gcloud -q auth configure-docker \
-      && docker pull alpine:latest \
-      && docker tag alpine gcr.io/${var.gcp_project}/alpine \
-      && docker push gcr.io/${var.gcp_project}/alpine
-    EOT
-  }
-  depends_on = ["google_project_service.service_containerregistry"]
-}
-
-# Give access to the container registry's bucket
-resource "google_storage_bucket_iam_member" "container_registry_bucket" {
-  bucket  = "artifacts.${var.gcp_project}.appspot.com"
-  role    = "roles/storage.objectViewer"
-  member  = "serviceAccount:${google_service_account.broker.email}"
-  depends_on = [
-    "null_resource.create_container_registry_bucket"
-  ]
-}
+// Logging & Monitoring --------------------------------------------
 
 resource "google_project_iam_member" "log_writer" {
   role    = "roles/logging.logWriter"
@@ -160,48 +53,6 @@ resource "google_project_iam_member" "log_writer" {
 resource "google_project_iam_member" "metric_writer" {
   role    = "roles/monitoring.metricWriter"
   member  = "serviceAccount:${google_service_account.broker.email}"
-}
-
-resource "google_container_cluster" "broker" {
-  provider = "google-beta"  # Need beta release to enable private_cluster_config
-  name = "broker"
-  network = "${google_compute_network.broker.self_link}"
-  subnetwork = "${google_compute_subnetwork.broker_cluster_subnet.self_link}"
-  initial_node_count = "${var.broker_initial_node_count}"
-
-  node_config {
-    oauth_scopes = ["cloud-platform"]
-    service_account = "${google_service_account.broker.email}"
-  }
-  ip_allocation_policy {
-      cluster_ipv4_cidr_block = "${var.broker_pod_cidr}"
-      services_ipv4_cidr_block = "${var.broker_service_cidr}"
-  }
-  private_cluster_config {
-    # enable_private_endpoint = true  # FIXME
-    enable_private_nodes = true
-    master_ipv4_cidr_block = "${var.broker_master_cidr}"
-  }
-  master_authorized_networks_config {
-      cidr_blocks {
-          cidr_block = "${var.broker_master_authorized_cidr}"
-      }
-  }
-  depends_on = [
-    "google_project_iam_member.log_writer",
-    "google_project_iam_member.metric_writer",
-  ]
-}
-
-
-// Redis cache -----------------------------------------------------
-
-resource "google_redis_instance" "cache" {
-  name = "broker-cache"
-  memory_size_gb = 1
-  reserved_ip_range = "10.1.0.0/29"
-  authorized_network = "${google_compute_network.broker.self_link}"
-  depends_on = ["google_project_service.service_redis"]
 }
 
 
@@ -227,16 +78,7 @@ resource "google_kms_key_ring_iam_binding" "key_ring" {
 }
 
 
-// Authorizer application ---------------------------------------------------
-
-resource "google_compute_global_address" "authorizer" {
-  name = "authorizer-ip"
-  address_type = "EXTERNAL"
-  depends_on = ["google_project_service.service_compute"]
-}
-
-
-// Helm config values --------------------------------------------------------
+// Config files --------------------------------------------------------
 
 resource "null_resource" "create_deploy_directory" {
   provisioner "local-exec" {
@@ -247,108 +89,59 @@ resource "null_resource" "create_deploy_directory" {
   depends_on = ["google_project_service.service_containerregistry"]
 }
 
-resource "local_file" "helm_values" {
+resource "local_file" "broker_conf" {
     depends_on = ["null_resource.create_deploy_directory"]
     content = <<EOT
 #############################################################################
 # This file was automatically generated by Terraform. Do not edit manually. #
 #############################################################################
 
-# Broker config -----------------------
-broker:
-  app:
-    settings: |-
-      gcp-project = "${var.gcp_project}"
-      encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
-      encryption.cloud-kms.dek-uri = "file:///secrets/dek"
-      proxy-users = [{
-          proxy = "hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}"
-          users = ["${var.test_users[0]}@${var.gsuite_domain}"]
-      }]
-      user-mapping.rules=[{
-          if: "realm == '${var.origin_realm}'",
-          then: "primary + '@${var.gsuite_domain}'"
-      }]
-      authentication.spnego.keytabs = [{keytab="/secrets/keytab", principal="broker/${var.broker_service_hostname}@${local.dataproc_realm}"}]
-      server.tls.private-key-path = "/secrets/broker-tls-pem"
-      server.tls.certificate-path = "/secrets/broker-tls-crt"
-      oauth.client-secret-json-path = "/secrets/oauth-client"
-      remote-cache.redis.host = "${google_redis_instance.cache.host}"
-      logging.level = "INFO"
-      secret-manager {
-        downloads = [
-            {secret="projects/${var.gcp_project}/secrets/keytab/versions/latest", file="/secrets/keytab"},
-            {secret="projects/${var.gcp_project}/secrets/broker-tls-pem/versions/latest", file="/secrets/broker-tls-pem"},
-            {secret="projects/${var.gcp_project}/secrets/broker-tls-crt/versions/latest", file="/secrets/broker-tls-crt"},
-            {secret="projects/${var.gcp_project}/secrets/dek/versions/latest", file="/secrets/dek"},
-            {secret="projects/${var.gcp_project}/secrets/oauth-client/versions/latest", file="/secrets/oauth-client"}
-        ]
-      }
-  service:
-    port: '${var.broker_service_port}'
-    loadBalancerIP: '${var.broker_service_ip}'
-    loadBalancerSourceRanges:
-    # Allow access only from client machines
-    - '${var.client_subnet_cidr}'
-
-# Authorizer config -----------------------
-authorizer:
-  app:
-    settings: |-
-      gcp-project = "${var.gcp_project}"
-      oauth.client-secret-json-path = "/secrets/oauth-client"
-      encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
-      encryption.cloud-kms.dek-uri = "file:///secrets/dek"
-      logging.level = "INFO"
-      secret-manager {
-        downloads = [
-            {secret="projects/${var.gcp_project}/secrets/dek/versions/latest", file="/secrets/dek"},
-            {secret="projects/${var.gcp_project}/secrets/oauth-client/versions/latest", file="/secrets/oauth-client"}
-        ]
-      }
-  ingress:
-    host: '${var.authorizer_hostname}'
+gcp-project = "${var.gcp_project}"
+encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
+encryption.cloud-kms.dek-uri = "file:///secrets/dek"
+proxy-users = [{
+    proxy = "hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}"
+    users = ["${var.test_users[0]}@${var.gsuite_domain}"]
+}]
+user-mapping.rules=[{
+    if: "realm == '${var.origin_realm}'",
+    then: "primary + '@${var.gsuite_domain}'"
+}]
+authentication.spnego.keytabs = [{keytab="/secrets/keytab", principal="broker@${local.dataproc_realm}"}]
+server.tls.enabled = false
+oauth.client-secret-json-path = "/secrets/oauth-client"
+remote-cache.backend = "com.google.cloud.broker.caching.remote.CloudDatastoreCache"
+logging.level = "INFO"
+secret-manager {
+  downloads = [
+      {secret="projects/${var.gcp_project}/secrets/keytab/versions/latest", file="/secrets/keytab"},
+      {secret="projects/${var.gcp_project}/secrets/dek/versions/latest", file="/secrets/dek"},
+      {secret="projects/${var.gcp_project}/secrets/oauth-client/versions/latest", file="/secrets/oauth-client"}
+  ]
+}
 EOT
-    filename = "../deploy/${var.gcp_project}/values_override.yaml"
+  filename = "../deploy/${var.gcp_project}/broker-server.conf"
 }
 
 
-resource "local_file" "skaffold_yaml" {
-  depends_on = ["null_resource.create_deploy_directory"]
-  content = <<EOT
-##############################################################
-# This file was automatically generated by Terraform.        #
-# You can use it if you want to use Skaffold for development #
-# purposes, otherwise you can just ignore it.                #
-##############################################################
+resource "local_file" "authorizer_conf" {
+    depends_on = ["null_resource.create_deploy_directory"]
+    content = <<EOT
+#############################################################################
+# This file was automatically generated by Terraform. Do not edit manually. #
+#############################################################################
 
-apiVersion: skaffold/v1
-kind: Config
-build:
-  artifacts:
-  - image: gcr.io/${var.gcp_project}/broker-server
-    context: ../../
-    docker:
-      dockerfile: ./code/broker-server/Dockerfile
-  - image: gcr.io/${var.gcp_project}/authorizer
-    context: ../../
-    docker:
-      dockerfile: ./code/authorizer/Dockerfile
-deploy:
-  helm:
-    releases:
-    - name: broker-server
-      chartPath: ../../kubernetes/broker-server
-      values:
-        broker.image: gcr.io/${var.gcp_project}/broker-server
-      valuesFiles:
-        - ./values_override.yaml
-    - name: authorizer
-      chartPath: ../../kubernetes/authorizer
-      values:
-        authorizer.image: gcr.io/${var.gcp_project}/authorizer
-      valuesFiles:
-        - ./values_override.yaml
+gcp-project = "${var.gcp_project}"
+oauth.client-secret-json-path = "/secrets/oauth-client"
+encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
+encryption.cloud-kms.dek-uri = "file:///secrets/dek"
+logging.level = "INFO"
+secret-manager {
+  downloads = [
+      {secret="projects/${var.gcp_project}/secrets/dek/versions/latest", file="/secrets/dek"},
+      {secret="projects/${var.gcp_project}/secrets/oauth-client/versions/latest", file="/secrets/oauth-client"}
+  ]
+}
 EOT
-  filename = "../deploy/${var.gcp_project}/skaffold.yaml"
+    filename = "../deploy/${var.gcp_project}/authorizer.conf"
 }

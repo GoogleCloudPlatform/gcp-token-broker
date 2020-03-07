@@ -47,8 +47,7 @@ resource "google_compute_firewall" "client_allow_external_kdcs" {
     ports    = ["88"]
   }
   source_ranges = [
-    "${var.origin_subnet_cidr}",
-    "${var.broker_subnet_cidr}",
+    "${var.origin_subnet_cidr}"
   ]
 }
 

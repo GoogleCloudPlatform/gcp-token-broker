@@ -8,22 +8,16 @@ Once you become familiar with the broker's codebase and functionality, you can l
 to your production or staging environments (For more details on that, refer to the
 "[Production considerations](#production-considerations)" section).
 
-The following diagram illustrates the demo environment's architecture:
-
-<img src="../img/demo-architecture.svg">
-
 Notes about the architecture:
 
-*   The broker's server application is implemented in Java and is deployed with Kubernetes on [Kubernetes Engine](https://cloud.google.com/kubernetes-engine/).
-    The broker's Kubernetes spec automatically deploys an internal load balancer to balance traffic across
-    the broker server pods.
+*   The broker's server application is implemented in Java and is deployed with [Cloud Run](https://cloud.google.com/run).
 *   Interactions between clients and the broker is done with gRPC and protocol buffers.
 *   The Origin KDC is the source of truth for Kerberos users. Alternatively it could be replaced with
     an Active Directory or Open LDAP instance.
-*   All machines for the broker, KDC, and clients are deployed in private networks with RFC 1918 IP addresses.
+*   All machines for the KDC and clients are deployed in private networks with RFC 1918 IP addresses.
     [Cloud NAT](https://cloud.google.com/nat/docs/overview) gateways are deployed for cases where machines need
     to access the internet. Private connectivity between Hadoop client machines (e.g. on [Compute Engine](https://cloud.google.com/compute/)
-    or [Cloud Dataproc](https://cloud.google.com/dataproc/)), the broker service, and the Origin KDC is
+    or [Cloud Dataproc](https://cloud.google.com/dataproc/)) and the Origin KDC is
     established over [VPC peering](https://cloud.google.com/vpc/docs/vpc-peering). Alternatively, private connectivity could also be
     established with [Cloud VPN](https://cloud.google.com/vpn/docs/concepts/overview) or [Shared VPC](https://cloud.google.com/vpc/docs/shared-vpc).
     [Google Private Access](https://cloud.google.com/vpc/docs/private-access-options#pga) is enabled on the VPC subnets to allow machines to access
@@ -41,7 +35,6 @@ Before you start, you must set up some prerequisites for the demo:
 5.  Install some tools on your local machine (The versions indicated below are the ones that have been officially tested.
     Newer versions might work but are untested):
     *   [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v0.11.13
-    *   [Helm](https://docs.helm.sh/using_helm/#installing-helm) v2.16.1
     *   [Google Cloud SDK](https://cloud.google.com/sdk/install) v267.0.0
 
 ### Deploying the demo architecture
@@ -95,7 +88,6 @@ Follow these steps to deploy the demo environment to GCP:
     ```conf
     datastore_region = "[your.datastore.region]"
     gsuite_domain = "[your.domain.name]"
-    authorizer_hostname = "[your.authorizer.hostname]"
     origin_realm = "[YOUR.REALM.NAME]"
     test_users = ["alice", "bob", "john"]
     ```
@@ -105,9 +97,6 @@ Follow these steps to deploy the demo environment to GCP:
         [available regions](https://cloud.google.com/datastore/docs/locations#location-r) for Cloud Datastore.
     *   `gsuite_domain` is the domain name (e.g. "your-domain.com") that you registered in the [Prerequisites](#prerequisites)
         section for your GSuite organization.
-    *   `authorizer_hostname` is the host name (e.g. "authorizer.your-domain.com") that
-        you wish to use to access the authorizer app. This value will be used to configure the
-        authorizer app's load balancer.
     *   `origin_realm` is the Kerberos realm (e.g. "YOUR-DOMAIN.COM") that you wish
         to use for your test users. This value can be a totally arbitrary string, and is
         generally made of UPPERCASE letters.
@@ -140,18 +129,11 @@ Follow these steps to deploy the demo environment to GCP:
 
 ### Configuring the OAuth client
 
-1.  Add an `A` DNS record in your domain registrar for your authorizer app's fully qualified domain name.
-    For the `A` record's IP address, use the IP returned by the following command:
-
-    ```shell
-    gcloud compute addresses describe authorizer-ip --global --format="value(address)"
-    ```
-
-2.  Create an OAuth consent screen:
+1.  Create an OAuth consent screen:
     *   Go to: <https://console.cloud.google.com/apis/credentials/consent>
     *   For "Application type", select "Internal".
     *   For "Application name", type "GCP Token Broker".
-    *   For "Scopes for Google APIs", click "Add scope", then search for
+    *   For "Scopes for Google APIs", click "Add scope", then search for 
         "Google Cloud Storage JSON API", then tick the checkbox for
         "auth/devstorage.read_write", then click "Add".
     *   For "Authorized domains":
@@ -164,11 +146,6 @@ Follow these steps to deploy the demo environment to GCP:
     *   Click "Create credentials" > "OAuth client ID"
     *   For "Application type", select "Web application".
     *   For "Name", type "GCP Token Broker".
-    *   Leave "Authorized JavaScript origins" blank.
-    *   For "Authorized redirect URIs":
-        -   Type the following (Replace **`[your.authorizer.hostname]`** with your authorizer
-            app's fully qualified domain name): `https://[your.authorizer.hostname]/google/oauth2callback`
-        -   **Press "Enter"** on your keyboard to add the URI to the list.
     *   Click "Create".
     *   Click "Ok" to close the confirmation popup.
     *   Click the "Download JSON" icon for your client ID.
@@ -183,77 +160,6 @@ Follow these steps to deploy the demo environment to GCP:
         ```shell
         rm [CLIENT_SECRET.JSON]
         ```
-
-### Creating TLS certificates
-
-The broker and authorizer apps both use TLS encryption when serving requests.
-
-You may choose to use your own domain, certificates, and trusted Certificate
-Authority. Alternatively, for development and testing purposes only,
-you may create self-signed certificates as described below.
-
-1.  Create the broker certificate:
-
-    ```shell
-    BROKER_DOMAIN="10.2.1.255.xip.io"
-    openssl genrsa -out broker-tls.key 2048
-    openssl req -new -key broker-tls.key -out broker-tls.csr -subj "/CN=${BROKER_DOMAIN}"
-    openssl x509 -req -days 365 -in broker-tls.csr -signkey broker-tls.key -out broker-tls.crt
-    openssl pkcs8 -topk8 -nocrypt -in broker-tls.key -out broker-tls.pem
-    ```
-    
-2.  Create the authorizer certificate (Replace **`[your.authorizer.hostname]`** with your authorizer
-    app's host name):
-
-    ```shell
-    AUTHORIZER_DOMAIN="[your.authorizer.hostname]"
-    openssl genrsa -out authorizer-tls.key 2048
-    openssl req -new -key authorizer-tls.key -out authorizer-tls.csr -subj "/CN=${AUTHORIZER_DOMAIN}"
-    openssl x509 -req -days 365 -in authorizer-tls.csr -signkey authorizer-tls.key -out authorizer-tls.crt
-    ```
-
-3.  Once the certificates and private keys are created, upload them to Secret Manager:
-
-    ```shell
-    gcloud beta secrets create broker-tls-pem --replication-policy="automatic"
-    gcloud beta secrets versions add broker-tls-pem --data-file=broker-tls.pem
-    
-    gcloud beta secrets create broker-tls-crt --replication-policy="automatic"
-    gcloud beta secrets versions add broker-tls-crt --data-file=broker-tls.crt
-    
-    gcloud beta secrets create authorizer-tls-key --replication-policy="automatic"
-    gcloud beta secrets versions add authorizer-tls-key --data-file=authorizer-tls.key
-    
-    gcloud beta secrets create authorizer-tls-crt --replication-policy="automatic"
-    gcloud beta secrets versions add authorizer-tls-crt --data-file=authorizer-tls.crt
-    ```
-    
-4.  You can now delete the created files from your local filesystem: 
-
-    ```shell
-    rm broker-tls.pem broker-tls.key broker-tls.crt broker-tls.csr authorizer-tls.key authorizer-tls.crt authorizer-tls.csr
-    ```
-
-### Initializing the GKE cluster
-
-1.  Configure credentials for the cluster:
-
-    ```shell
-    gcloud container clusters get-credentials broker
-    ```
-
-2.  Create a Kubernetes service account with the cluster admin role for Tiller, the Helm server:
-
-    ```shell
-    kubectl create serviceaccount --namespace kube-system tiller
-    kubectl create clusterrolebinding tiller --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-    ```
-
-3.  Install Helm tiller in the cluster:
-
-    ```shell
-    helm init --service-account tiller
-    ```
 
 ### Generating the data encryption key (DEK)
 
@@ -283,6 +189,76 @@ you may create self-signed certificates as described below.
     rm dek.json
     ```
 
+### Using the Authorizer
+
+The Authorizer is a simple Web UI that users must use to authorize the broker. Follow these steps to deploy and use the
+Authorizer:
+
+1.  Deploy the Authorizer app:
+
+    ```shell
+    export BROKER_VERSION=$(cat VERSION)
+    export PROJECT=$(gcloud info --format='value(config.project)')
+    export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
+    export REGION=${ZONE%-*}
+    gcloud run deploy authorizer \
+      --image gcr.io/gcp-token-broker/authorizer:${BROKER_VERSION} \
+      --platform managed \
+      --allow-unauthenticated \
+      --service-account "broker@${PROJECT}.iam.gserviceaccount.com" \
+      --region ${REGION} \
+      --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/authorizer.conf)
+    ```
+    
+2.  Retrieve the app's URL:
+    
+    ```shell
+    gcloud run services describe authorizer \
+      --platform managed \
+      --region ${REGION} \
+      --format "value(status.url)"
+    ```
+    
+    Take note of this URL. You will need it in the next step.
+
+3.  Configure the OAuth client:
+    *   Go to: <https://console.cloud.google.com/apis/credentials>
+    *   Click on the "GCP Token Broker" OAuth 2.0 Client ID.
+    *   Click "Add URI".
+    *   Type the following (Replace **`[APP_ID]`** with the ID in the url that you noted in the previous step):
+        `https://authorizer-[APP_ID].a.run.app/google/oauth2callback`
+    * Click "Save".
+
+2.  Open the authorizer page in your browser: `https://authorizer-[APP_ID].a.run.app` (Replace **`[APP_ID]`** with the
+    ID in your URL).
+
+3.  Click "Authorize". You are redirected to the Google login page.
+
+4.  Enter the credentials for one of the three users you created in the [Prerequisites](#prerequisites) section.
+
+5.  Read the consent form, then click "Allow". You are redirected back to
+    the authorizer page, and are greeted with a "Success" message. The
+    broker now has authority to generate GCP access tokens on the user's behalf.
+
+
+### Starting the broker service
+
+Run the following command to deploy the broker service on the GKE cluster:
+
+```shell
+export BROKER_VERSION=$(cat VERSION)
+export PROJECT=$(gcloud info --format='value(config.project)')
+export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
+export REGION=${ZONE%-*}
+gcloud run deploy broker-server \
+  --image gcr.io/gcp-token-broker/broker-server:${BROKER_VERSION} \
+  --platform managed \
+  --allow-unauthenticated \
+  --region ${REGION} \
+  --service-account broker@${PROJECT}.iam.gserviceaccount.com \
+  --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/broker-server.conf)
+```
+
 ### Creating a Dataproc cluster
 
 In this section, you create a Dataproc cluster that can be used to run Hadoop jobs and interact with the broker.
@@ -300,11 +276,10 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
     export PROJECT=$(gcloud info --format='value(config.project)')
     export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
     export REGION=${ZONE%-*}
-    export BROKER_HOSTNAME="10.2.1.255.xip.io"
-    export BROKER_URI="https://${BROKER_HOSTNAME}:443"
-    export BROKER_PRINCIPAL="broker/${BROKER_HOSTNAME}"
+    export BROKER_URI=$(gcloud run services describe broker-server --platform managed --region ${REGION} --format "value(status.url)")
+    export BROKER_PRINCIPAL="broker"
     export BROKER_VERSION=$(cat VERSION)
-    export BROKER_CRT=$(gcloud beta secrets versions access latest --secret broker-tls-crt)
+    export BROKER_CRT=$(true | openssl s_client -connect `basename ${BROKER_URI}`:443 2>/dev/null | openssl x509)
     export INIT_ACTION="gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh"
     export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${BROKER_VERSION}/broker-connector-hadoop2-${BROKER_VERSION}-jar-with-dependencies.jar"
     ```
@@ -358,129 +333,24 @@ The broker service needs a keytab to authenticate incoming requests.
     ```shell
     rm broker.keytab
     ```
-
-### Using the Authorizer
-
-The Authorizer is a simple Web UI that users must use to authorize the broker. Follow these steps to deploy and use the
-Authorizer:
-
-1.  The Authorizer app uses a global HTTPS load balancer that which requires a TLS certificate and private key.
-    Follow these steps to configure the balancer in the Kubenetes Engine cluster:
-     
-    a)  Download the Authorizer's TLS secrets from Secret Manager:
     
-        ```shell
-        gcloud beta secrets versions access latest --secret authorizer-tls-crt > authorizer-tls.crt
-        gcloud beta secrets versions access latest --secret authorizer-tls-key > authorizer-tls.key
-        ```
-        
-    b)  Upload the secrets to the Kubernetes Engine cluster:
-    
-        ```shell 
-        kubectl create secret generic authorizer-tls \
-          --from-file=tls.crt=authorizer-tls.crt \
-          --from-file=tls.key=authorizer-tls.key
-        ```
-        
-    c)  Delete the secrets from your local filesystem: 
-    
-        ```shell
-        rm authorizer-tls.crt
-        rm authorizer-tls.key
-        ```
-
-2.  Deploy the Authorizer app:
+4.  Reload the broker service so it can fetch the keytab:
 
     ```shell
-    export BROKER_VERSION=$(cat VERSION)
-    helm install --set authorizer.image=gcr.io/gcp-token-broker/authorizer:${BROKER_VERSION} -f deploy/${PROJECT}/values_override.yaml --name authorizer kubernetes/authorizer
-    ```
-
-3.  Verify that the broker pod is running:
-
-    ```shell
-    kubectl get pods
-    ```
-    
-    The output should be similar to:
-    
-    ```
-    NAME                                     READY   STATUS    RESTARTS   AGE
-    authorizer-deployment-xxxxxxxx           1/1     Running   0          10s
-    ```
-
-4.  Open the authorizer page in your browser (`https://[your.authorizer.hostname]`).
-
-    **Notes:**
-    *   If you're trying to access the authorizer page right after deploying
-        the authorizer app with the `helm install` command, your browser might return
-        an error with a 502 code when loading the authorizer page. This means that the load
-        balancer is still being deployed. It might take a few minutes for this deployment to complete.
-        Wait for a few seconds, and then refresh the page. Try this until the page works and the
-        authorizer UI appears.
-    *   If you used a self-signed certificate for the authorizer app, the browser will display
-        a warning (In Chrome, you see a message that says "Your connection is not private").
-        You can ignore this warning and proceed to loading the page (In Chrome, click the "Advanced"
-        button then click the "Proceed" link).
-
-5.  Click "Authorize". You are redirected to the Google login page.
-
-6.  Enter the credentials for one of the three users you created in the [Prerequisites](#prerequisites) section.
-
-7.  Read the consent form, then click "Allow". You are redirected back to
-    the authorizer page, and are greeted with a "Success" message. The
-    broker now has authority to generate GCP access tokens on the user's behalf.
-
-
-### Starting the broker service
-
-1.  Run the following command to deploy the broker service on the GKE cluster:
-
-    ```shell
-    export BROKER_VERSION=$(cat VERSION)
-    helm install --set broker.image=gcr.io/gcp-token-broker/broker-server:${BROKER_VERSION} -f deploy/${PROJECT}/values_override.yaml --name broker-server kubernetes/broker-server
-    ```
-
-2.  Verify that the broker pod is running:
-
-    ```shell
-    kubectl get pods
+    export PROJECT=$(gcloud info --format='value(config.project)')
+    export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
+    export REGION=${ZONE%-*}
+    gcloud run deploy broker-server \
+          --image gcr.io/gcp-token-broker/broker-server:${BROKER_VERSION} \
+          --platform managed \
+          --allow-unauthenticated \
+          --region ${REGION} \
+          --service-account broker@${PROJECT}.iam.gserviceaccount.com \
+          --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/broker-server.conf)
     ```
     
-    The output should be similar to:
-    
-    ```
-    NAME                                     READY   STATUS    RESTARTS   AGE
-    authorizer-deployment-xxxxxxxx           1/1     Running   0          2m39s
-    broker-deployment-xxxxxxxx               1/1     Running   0          12s
-    ```
-
-3.  Wait until an external IP has been assigned to the broker service. You can
-    check the status by running the following command in a different terminal,
-    and by looking up the `EXTERNAL-IP` value:
-
-    ```shell
-    kubectl get service broker-service
-    ```
-
-4.  You are now ready to do some testing. Refer to the [tutorials](../tutorials/index.md) section to run
+5.  You are now ready to do some testing. Refer to the [tutorials](../tutorials/index.md) section to run
     some sample Hadoop jobs and try out the broker's functionality.
-
-## Notes about Helm
-
-*  Run these commands if you'd like to restart the broker and authorizer pods:
-
-    ```shell
-    helm upgrade --recreate-pods broker-server kubernetes/broker-server
-    helm upgrade --recreate-pods authorizer kubernetes/broker-server
-    ```
-
-*   Run these commands if you'd like to delete the broker and authorizer pods:
-    
-    ```shell
-    helm delete broker-server --purge
-    helm delete authorizer --purge
-    ```    
 
 ## Broker application logs
 
@@ -517,39 +387,6 @@ service to production or staging environment.
 
 ### Performance optimizations
 
-#### Scaling out workers
-
-[Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) is a great platform
-for running the broker server application. This allows you to scale out the number
-of workers in multiple, combinable ways:
-
-*   Number of deployed Kubernetes nodes, that is the number of VMs in the Kubernetes cluster,
-    by resizing the cluster:
-
-    ```shell
-    gcloud container clusters resize broker --size <NEW_NUMBER_OF_NODES>
-    ```
-
-*   Number of Kubernetes pods, that is the number of running broker containers in the Kubernetes cluster,
-    by increasing the `broker.replicaCount` value for the Helm chart and then running the
-    following command:
-
-    ```shell
-    helm upgrade -f <VALUE_FILE.yaml> broker-server kubernetes/broker-server
-    ```
-
-*   Number of threads, i.e. the number of gRPC server instances running in each container,
-    by changing the `NUM_SERVER_THREADS` broker setting.
-
-You can also scale up each Kubernetes node by increasing memory and CPU resources to accommodate
-for more workers.
-
-#### High availability
-
-By default, a Kubernetes Engine cluster creates its cluster master and its nodes in a single compute zone
-that you specify at the time of creation. You can improve availability and resilience of your clusters
-by creating [regional clusters](https://cloud.google.com/kubernetes-engine/docs/concepts/regional-clusters).
-
 #### Caching
 
 Be sure to turn on [caching](../concepts/caching.md) to improve performance.
@@ -570,18 +407,10 @@ This section describes different ways to further harden security for the deploym
 
 The broker service has a lot of power as it holds sensitive secrets (e.g. refresh tokens)
 and has the capacity to generate access tokens for other users. Therefore it is highly
-recommended to keep the broker and its core components (Kubernetes cluster, cache, database, etc)
+recommended to keep the broker and its core components (Cloud Run, cache, database, etc)
 in a separate project, and to only allow a privileged group of admin users to access its
 resources. Client machines can be allowed to access the broker service's API through private
 network connectivity and via Kerberos authentication.
-
-#### IP-based controls
-
-It is recommended to restrict access to the broker service's API from specific client clusters.
-This can be done by setting specific IP ranges for the [`loadBalancerSourceRanges`](https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service)
-parameter in the broker's Kubernetes configuration.
-
-Access to GCS buckets can also be restricted by IP ranges using [VPC Service Controls](https://cloud.google.com/vpc-service-controls/docs/overview).
 
 #### Transport encryption
 
