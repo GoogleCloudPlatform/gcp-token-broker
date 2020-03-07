@@ -283,6 +283,108 @@ you may create self-signed certificates as described below.
     rm dek.json
     ```
 
+### Using the Authorizer
+
+The Authorizer is a simple Web UI that users must use to authorize the broker. Follow these steps to deploy and use the
+Authorizer:
+
+1.  The Authorizer app uses a global HTTPS load balancer that which requires a TLS certificate and private key.
+    Follow these steps to configure the balancer in the Kubenetes Engine cluster:
+     
+    a)  Download the Authorizer's TLS secrets from Secret Manager:
+    
+        ```shell
+        gcloud beta secrets versions access latest --secret authorizer-tls-crt > authorizer-tls.crt
+        gcloud beta secrets versions access latest --secret authorizer-tls-key > authorizer-tls.key
+        ```
+        
+    b)  Upload the secrets to the Kubernetes Engine cluster:
+    
+        ```shell 
+        kubectl create secret generic authorizer-tls \
+          --from-file=tls.crt=authorizer-tls.crt \
+          --from-file=tls.key=authorizer-tls.key
+        ```
+        
+    c)  Delete the secrets from your local filesystem: 
+    
+        ```shell
+        rm authorizer-tls.crt
+        rm authorizer-tls.key
+        ```
+
+2.  Deploy the Authorizer app:
+
+    ```shell
+    export BROKER_VERSION=$(cat VERSION)
+    helm install --set authorizer.image=gcr.io/gcp-token-broker/authorizer:${BROKER_VERSION} -f deploy/${PROJECT}/values_override.yaml --name authorizer kubernetes/authorizer
+    ```
+
+3.  Verify that the broker pod is running:
+
+    ```shell
+    kubectl get pods
+    ```
+    
+    The output should be similar to:
+    
+    ```
+    NAME                                     READY   STATUS    RESTARTS   AGE
+    authorizer-deployment-xxxxxxxx           1/1     Running   0          10s
+    ```
+
+4.  Open the authorizer page in your browser (`https://[your.authorizer.hostname]`).
+
+    **Notes:**
+    *   If you're trying to access the authorizer page right after deploying
+        the authorizer app with the `helm install` command, your browser might return
+        an error with a 502 code when loading the authorizer page. This means that the load
+        balancer is still being deployed. It might take a few minutes for this deployment to complete.
+        Wait for a few seconds, and then refresh the page. Try this until the page works and the
+        authorizer UI appears.
+    *   If you used a self-signed certificate for the authorizer app, the browser will display
+        a warning (In Chrome, you see a message that says "Your connection is not private").
+        You can ignore this warning and proceed to loading the page (In Chrome, click the "Advanced"
+        button then click the "Proceed" link).
+
+5.  Click "Authorize". You are redirected to the Google login page.
+
+6.  Enter the credentials for one of the three users you created in the [Prerequisites](#prerequisites) section.
+
+7.  Read the consent form, then click "Allow". You are redirected back to
+    the authorizer page, and are greeted with a "Success" message. The
+    broker now has authority to generate GCP access tokens on the user's behalf.
+
+### Starting the broker service
+
+1.  Run the following command to deploy the broker service on the GKE cluster:
+
+    ```shell
+    export BROKER_VERSION=$(cat VERSION)
+    helm install --set broker.image=gcr.io/gcp-token-broker/broker-server:${BROKER_VERSION} -f deploy/${PROJECT}/values_override.yaml --name broker-server kubernetes/broker-server
+    ```
+
+2.  Verify that the broker pod is running:
+
+    ```shell
+    kubectl get pods
+    ```
+    
+    The output should be similar to:
+    
+    ```
+    NAME                                     READY   STATUS    RESTARTS   AGE
+    authorizer-deployment-xxxxxxxx           1/1     Running   0          2m39s
+    broker-deployment-xxxxxxxx               1/1     Running   0          12s
+    ```
+
+3.  It might take a minute or two for the load balancer to fully deploy. You can check the status by running the
+    following command and by looking up the `EXTERNAL-IP` value:
+
+    ```shell
+    kubectl get service broker-service
+    ```
+
 ### Creating a Dataproc cluster
 
 In this section, you create a Dataproc cluster that can be used to run Hadoop jobs and interact with the broker.
@@ -359,123 +461,26 @@ The broker service needs a keytab to authenticate incoming requests.
     rm broker.keytab
     ```
 
-### Using the Authorizer
-
-The Authorizer is a simple Web UI that users must use to authorize the broker. Follow these steps to deploy and use the
-Authorizer:
-
-1.  The Authorizer app uses a global HTTPS load balancer that which requires a TLS certificate and private key.
-    Follow these steps to configure the balancer in the Kubenetes Engine cluster:
-     
-    a)  Download the Authorizer's TLS secrets from Secret Manager:
-    
-        ```shell
-        gcloud beta secrets versions access latest --secret authorizer-tls-crt > authorizer-tls.crt
-        gcloud beta secrets versions access latest --secret authorizer-tls-key > authorizer-tls.key
-        ```
-        
-    b)  Upload the secrets to the Kubernetes Engine cluster:
-    
-        ```shell 
-        kubectl create secret generic authorizer-tls \
-          --from-file=tls.crt=authorizer-tls.crt \
-          --from-file=tls.key=authorizer-tls.key
-        ```
-        
-    c)  Delete the secrets from your local filesystem: 
-    
-        ```shell
-        rm authorizer-tls.crt
-        rm authorizer-tls.key
-        ```
-
-2.  Deploy the Authorizer app:
+4.  Reload the broker application so it can fetch the keytab:
 
     ```shell
-    export BROKER_VERSION=$(cat VERSION)
-    helm install --set authorizer.image=gcr.io/gcp-token-broker/authorizer:${BROKER_VERSION} -f deploy/${PROJECT}/values_override.yaml --name authorizer kubernetes/authorizer
-    ```
+    helm upgrade --recreate-pods broker-server kubernetes/broker-server
+    ``` 
 
-3.  Verify that the broker pod is running:
-
-    ```shell
-    kubectl get pods
-    ```
-    
-    The output should be similar to:
-    
-    ```
-    NAME                                     READY   STATUS    RESTARTS   AGE
-    authorizer-deployment-xxxxxxxx           1/1     Running   0          10s
-    ```
-
-4.  Open the authorizer page in your browser (`https://[your.authorizer.hostname]`).
-
-    **Notes:**
-    *   If you're trying to access the authorizer page right after deploying
-        the authorizer app with the `helm install` command, your browser might return
-        an error with a 502 code when loading the authorizer page. This means that the load
-        balancer is still being deployed. It might take a few minutes for this deployment to complete.
-        Wait for a few seconds, and then refresh the page. Try this until the page works and the
-        authorizer UI appears.
-    *   If you used a self-signed certificate for the authorizer app, the browser will display
-        a warning (In Chrome, you see a message that says "Your connection is not private").
-        You can ignore this warning and proceed to loading the page (In Chrome, click the "Advanced"
-        button then click the "Proceed" link).
-
-5.  Click "Authorize". You are redirected to the Google login page.
-
-6.  Enter the credentials for one of the three users you created in the [Prerequisites](#prerequisites) section.
-
-7.  Read the consent form, then click "Allow". You are redirected back to
-    the authorizer page, and are greeted with a "Success" message. The
-    broker now has authority to generate GCP access tokens on the user's behalf.
-
-
-### Starting the broker service
-
-1.  Run the following command to deploy the broker service on the GKE cluster:
-
-    ```shell
-    export BROKER_VERSION=$(cat VERSION)
-    helm install --set broker.image=gcr.io/gcp-token-broker/broker-server:${BROKER_VERSION} -f deploy/${PROJECT}/values_override.yaml --name broker-server kubernetes/broker-server
-    ```
-
-2.  Verify that the broker pod is running:
-
-    ```shell
-    kubectl get pods
-    ```
-    
-    The output should be similar to:
-    
-    ```
-    NAME                                     READY   STATUS    RESTARTS   AGE
-    authorizer-deployment-xxxxxxxx           1/1     Running   0          2m39s
-    broker-deployment-xxxxxxxx               1/1     Running   0          12s
-    ```
-
-3.  Wait until an external IP has been assigned to the broker service. You can
-    check the status by running the following command in a different terminal,
-    and by looking up the `EXTERNAL-IP` value:
-
-    ```shell
-    kubectl get service broker-service
-    ```
-
-4.  You are now ready to do some testing. Refer to the [tutorials](../tutorials/index.md) section to run
+5.  You are now ready to do some testing. Refer to the [tutorials](../tutorials/index.md) section to run
     some sample Hadoop jobs and try out the broker's functionality.
 
-## Notes about Helm
 
-*  Run these commands if you'd like to restart the broker and authorizer pods:
+## Managing deployments with Helm
+
+*   Run these commands if you'd like to restart the broker and authorizer pods:
 
     ```shell
     helm upgrade --recreate-pods broker-server kubernetes/broker-server
     helm upgrade --recreate-pods authorizer kubernetes/broker-server
     ```
 
-*   Run these commands if you'd like to delete the broker and authorizer pods:
+*   Run these commands if you'd like to delete the broker and authorizer deployments:
     
     ```shell
     helm delete broker-server --purge
