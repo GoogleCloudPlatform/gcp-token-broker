@@ -74,20 +74,13 @@ Follow these steps to deploy the demo environment to GCP:
     export REGION=${ZONE%-*}
     ```
 
-4.  Check out the latest [released version](https://github.com/GoogleCloudPlatform/gcp-token-broker/blob/master/CHANGES.md)
-    (Replace **`[VERSION_NUMBER]`** with the letter `v` followed by the version number, in one word):
-
-    ```shell
-    git checkout [VERSION_NUMBER]
-    ```
-
-5.  Change into the `terraform` directory:
+4.  Change into the `terraform` directory:
 
     ```shell
     cd terraform
     ```
 
-6.  Create a Terraform variables file:
+5.  Create a Terraform variables file:
 
     ```shell
     cat > ${PROJECT}.tfvars << EOL
@@ -97,7 +90,7 @@ Follow these steps to deploy the demo environment to GCP:
     EOL
     ```
  
-7.  Edit the variables file that you created in the previous step and add the following values:
+6.  Edit the variables file that you created in the previous step and add the following values:
 
     ```conf
     datastore_region = "[your.datastore.region]"
@@ -121,25 +114,25 @@ Follow these steps to deploy the demo environment to GCP:
     *   Replace the `test_users` with the usernames of the three users that you created in the
         [Prerequisites](#prerequisites) section.
 
-8.  Create a new Terraform workspace:
+7.  Create a new Terraform workspace:
 
     ```shell
     terraform workspace new ${PROJECT}
     ```
 
-9.  Initialize the terraform deployment:
+8.  Initialize the terraform deployment:
 
     ```shell
     terraform init
     ```
     
-10. Run the deployment:
+9.  Run the deployment:
  
     ```shell
     terraform apply -var-file ${PROJECT}.tfvars
     ```
     
-11. Return to the root of the repository:
+10. Return to the root of the repository:
 
     ```shell
     cd ..
