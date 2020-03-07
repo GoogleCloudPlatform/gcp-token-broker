@@ -243,7 +243,7 @@ Authorizer:
 
 ### Starting the broker service
 
-Run the following command to deploy the broker service on the GKE cluster:
+Run the following command to deploy the broker service:
 
 ```shell
 export BROKER_VERSION=$(cat VERSION)
@@ -341,12 +341,12 @@ The broker service needs a keytab to authenticate incoming requests.
     export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
     export REGION=${ZONE%-*}
     gcloud run deploy broker-server \
-          --image gcr.io/gcp-token-broker/broker-server:${BROKER_VERSION} \
-          --platform managed \
-          --allow-unauthenticated \
-          --region ${REGION} \
-          --service-account broker@${PROJECT}.iam.gserviceaccount.com \
-          --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/broker-server.conf)
+      --image gcr.io/gcp-token-broker/broker-server:${BROKER_VERSION} \
+      --platform managed \
+      --allow-unauthenticated \
+      --region ${REGION} \
+      --service-account broker@${PROJECT}.iam.gserviceaccount.com \
+      --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/broker-server.conf)
     ```
     
 5.  You are now ready to do some testing. Refer to the [tutorials](../tutorials/index.md) section to run
