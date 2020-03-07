@@ -34,8 +34,6 @@ Full name for the broker's Kerberos service principal.
 
 ### `gcp.token.broker.uri`
 
-Default: `https://localhost:443`
-
 URI for the broker server. If `https` is specified, then you must also provide either `gcp.token.broker.tls.certificate`
 or `gcp.token.broker.tls.certificate.path`.
 
