@@ -228,10 +228,10 @@ you may create self-signed certificates as described below.
     gcloud beta secrets versions add authorizer-tls-crt --data-file=authorizer-tls.crt
     ```
     
-4.  You can now delete the certificates and keys from your local filesystem: 
+4.  You can now delete the created files from your local filesystem: 
 
     ```shell
-    rm broker-tls.pem broker-tls.crt authorizer-tls.key authorizer-tls.crt
+    rm broker-tls.pem broker-tls.key broker-tls.crt broker-tls.csr authorizer-tls.key authorizer-tls.crt authorizer-tls.csr
     ```
 
 ### Initializing the GKE cluster
