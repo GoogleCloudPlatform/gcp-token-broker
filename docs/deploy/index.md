@@ -277,7 +277,7 @@ you may create self-signed certificates as described below.
     gcloud beta secrets versions add dek --data-file=dek.json
     ```
     
-3. You can now delete the DEK from your local filesystem:
+3.  You can now delete the DEK from your local filesystem:
 
     ```shell
     rm dek.json
