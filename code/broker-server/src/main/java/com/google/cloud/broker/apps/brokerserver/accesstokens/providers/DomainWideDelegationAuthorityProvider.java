@@ -22,9 +22,8 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.iam.v1.Iam;
 import com.google.api.services.iam.v1.model.SignJwtRequest;
-import com.google.auth.oauth2.ComputeEngineCredentials;
+import com.google.auth.ServiceAccountSigner;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 import com.google.cloud.broker.utils.Constants;
 import com.google.cloud.broker.utils.TimeUtils;
@@ -43,18 +42,8 @@ public class DomainWideDelegationAuthorityProvider extends AbstractUserProvider 
             throw new RuntimeException(e);
         }
 
-        String serviceAccount;
-        if (credentials instanceof ServiceAccountCredentials) {
-            serviceAccount = ((ServiceAccountCredentials) credentials).getAccount();
-        }
-        else if (credentials instanceof ComputeEngineCredentials) {
-            serviceAccount = ((ComputeEngineCredentials) credentials).getAccount();
-        }
-        else {
-            throw new RuntimeException("Invalid credentials");
-        }
-
         // Create the JWT payload
+        String serviceAccount = ((ServiceAccountSigner) credentials).getAccount();
         long jwtLifetime = 30;
         long iat = TimeUtils.currentTimeMillis() / 1000L;
         long exp = iat + jwtLifetime;

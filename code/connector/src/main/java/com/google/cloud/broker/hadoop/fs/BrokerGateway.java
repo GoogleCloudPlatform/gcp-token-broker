@@ -65,9 +65,17 @@ final class BrokerGateway {
         String protocol = url.getProtocol();
         if (protocol.equals("http")) {
             useTLS = false;
+            if (port == -1) {
+                // Default HTTP port
+                port = 80;
+            }
         }
         else if (protocol.equals("https")) {
             useTLS = true;
+            if (port == -1) {
+                // Default HTTPS port
+                port = 443;
+            }
         }
         else {
             throw new RuntimeException("Incorrect URI scheme `" + protocol + " ` in `" + CONFIG_URI + "` property: " + brokerUri);
@@ -78,7 +86,7 @@ final class BrokerGateway {
             String tlsCerfiticatePath = config.get(CONFIG_CERTIFICATE_PATH);
             if (tlsCerfiticatePath != null) {
                 try {
-                    tlsCertificate = new String(Files.readAllBytes(Paths.get(tlsCerfiticatePath)), StandardCharsets.US_ASCII);
+                    tlsCertificate = Files.readString(Paths.get(tlsCerfiticatePath), StandardCharsets.US_ASCII);
                 } catch (IOException e) {
                     throw new RuntimeException("Error reading the TLS certificate file: " + e.getMessage());
                 }

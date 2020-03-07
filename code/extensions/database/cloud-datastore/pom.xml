@@ -20,7 +20,7 @@ limitations under the License.
     <parent>
         <groupId>com.google.cloud.broker</groupId>
         <artifactId>broker-parent</artifactId>
-        <version>0.7.0</version>
+        <version>0.9.1</version>
         <relativePath>../../../../pom.xml</relativePath>
     </parent>
 
@@ -47,7 +47,7 @@ limitations under the License.
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>${maven.shade.plugin.version}</version>
+                <version>${maven-shade-plugin.version}</version>
                 <executions>
                     <execution>
                         <phase>package</phase>

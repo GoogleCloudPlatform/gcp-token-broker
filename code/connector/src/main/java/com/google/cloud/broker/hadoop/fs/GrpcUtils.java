@@ -36,8 +36,7 @@ class GrpcUtils {
             // A certificate is provided, so add it to the stub's build
             InputStream inputStream = new ByteArrayInputStream(tlsCertificate.getBytes());
             try {
-                builder.sslContext(GrpcSslContexts.forClient()
-                    .trustManager(inputStream).build());
+                builder.sslContext(GrpcSslContexts.forClient().trustManager(inputStream).build());
             } catch (SSLException e) {
                 throw new RuntimeException(e);
             } catch (IllegalArgumentException e) {

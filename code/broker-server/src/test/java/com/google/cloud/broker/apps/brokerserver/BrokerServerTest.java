@@ -60,7 +60,6 @@ public class BrokerServerTest {
 
     // TODO: Still needs tests:
     //  - "UNAUTHENTICATED: Session token is invalid or has expired"
-    //  - Proxy users
     //  - Not whitelisted scopes
 
     private static final String ALICE = "alice@EXAMPLE.COM";
@@ -91,19 +90,19 @@ public class BrokerServerTest {
         map.put(AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper");
 
         // Keep reference to old config file, if any
-        configFileBackup = System.getProperty("config.file");
+        configFileBackup = System.getProperty(AppSettings.CONFIG_FILE_PROPERTY);
 
         // Override config file
         Path configFilePath = Files.createTempFile("test", ".conf");
         Files.writeString(configFilePath, Joiner.on("\n").withKeyValueSeparator("=").join(map));
-        System.setProperty("config.file", configFilePath.toString());
+        System.setProperty(AppSettings.CONFIG_FILE_PROPERTY, configFilePath.toString());
     }
 
     @After
     public void tearDown() {
         // Restore old config file, if any
         if (configFileBackup != null) {
-            System.setProperty("config.file", configFileBackup);
+            System.setProperty(AppSettings.CONFIG_FILE_PROPERTY, configFileBackup);
         }
         // Clear the database
         ConcurrentMap<String, Object> map = DummyDatabaseBackend.getMap();
@@ -330,65 +329,12 @@ public class BrokerServerTest {
         MockAccessBoundary.mock();
 
         // Send the GetAccessToken request
-        GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder()
-            .setOwner(ALICE)
-            .addAllScopes(SCOPES)
-            .setTarget(MOCK_BUCKET)
-            .build());
+        GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder().build());
 
         assertEquals(
             "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES) + ";Target=" + MOCK_BUCKET,
             response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
-    }
-
-    @Test
-    public void testGetAccessToken_DelegatedAuth_ParameterMisMatch() {
-        // Create a session in the database
-        Session session = createSession();
-
-        // Add the session token to the request's metadata
-        BrokerBlockingStub stub = getStub();
-        stub = addSessionTokenToMetadata(stub, session);
-
-        // Send the GetAccessToken request, with wrong owner
-        try {
-            stub.getAccessToken(GetAccessTokenRequest.newBuilder()
-                .setOwner("bob@EXAMPLE.COM")
-                .addAllScopes(SCOPES)
-                .setTarget(MOCK_BUCKET)
-                .build());
-            fail("StatusRuntimeException not thrown");
-        } catch (StatusRuntimeException e) {
-            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("Owner mismatch", e.getStatus().getDescription());
-        }
-
-        // Send the GetAccessToken request, with wrong owner
-        try {
-            stub.getAccessToken(GetAccessTokenRequest.newBuilder()
-                .setOwner(ALICE)
-                .addAllScopes(List.of("https://www.googleapis.com/auth/bigquery"))
-                .setTarget(MOCK_BUCKET)
-                .build());
-            fail("StatusRuntimeException not thrown");
-        } catch (StatusRuntimeException e) {
-            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("Scopes mismatch", e.getStatus().getDescription());
-        }
-
-        // Send the GetAccessToken request, with wrong owner
-        try {
-            stub.getAccessToken(GetAccessTokenRequest.newBuilder()
-                .setOwner(ALICE)
-                .addAllScopes(SCOPES)
-                .setTarget("gs://test")
-                .build());
-            fail("StatusRuntimeException not thrown");
-        } catch (StatusRuntimeException e) {
-            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("Target mismatch", e.getStatus().getDescription());
-        }
     }
 
 }

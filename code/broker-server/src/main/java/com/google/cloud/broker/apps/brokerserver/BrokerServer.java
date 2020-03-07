@@ -19,8 +19,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
-import com.google.cloud.broker.apps.brokerserver.logging.LoggingUtils;
 import io.grpc.Server;
 import io.grpc.ServerInterceptors;
 import io.grpc.ServerServiceDefinition;
@@ -32,6 +30,9 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.SslProvider;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.LoggerFactory;
 
+import com.google.cloud.broker.secretmanager.SecretManager;
+import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
+import com.google.cloud.broker.apps.brokerserver.logging.LoggingUtils;
 import com.google.cloud.broker.apps.brokerserver.endpoints.GetAccessToken;
 import com.google.cloud.broker.apps.brokerserver.endpoints.GetSessionToken;
 import com.google.cloud.broker.apps.brokerserver.endpoints.RenewSessionToken;
@@ -165,6 +166,7 @@ public class BrokerServer {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         setLoggingLevel();
+        SecretManager.downloadSecrets();
         final BrokerServer server = new BrokerServer();
         server.start();
         server.blockUntilShutdown();

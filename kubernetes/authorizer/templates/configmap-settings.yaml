@@ -9,14 +9,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-broker:
-
-  app:
-    javaOpts: ''
-    port: 5000
-    settings: {}
-
-  replicaCount: 1
-
-  service:
-    port: 80
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-settings-configmap
+  labels:
+    app: {{ .Chart.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data:
+  application.conf: {{ .Values.authorizer.app.settings| quote }}

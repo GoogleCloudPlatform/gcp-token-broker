@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -43,7 +43,7 @@ public class ProxyUserValidationTest {
     @Before
     public void setup() {
         // Override settings
-        String GSUITE_DOMAIN = AppSettings.getInstance().getString(AppSettings.GSUITE_DOMAIN);
+        String GSUITE_DOMAIN = System.getenv("GSUITE_DOMAIN");
         Object proxyUsers = ConfigFactory.parseString(
             AppSettings.PROXY_USERS + "=[" +
                 "{" +
@@ -68,12 +68,20 @@ public class ProxyUserValidationTest {
                 "}," +
             "]"
         ).getAnyRef(AppSettings.PROXY_USERS);
+        Object userMappingRules = ConfigFactory.parseString(
+        "rules=[" +
+                "{" +
+                    "if: \"true\"," +
+                    "then: \"primary + '@" + GSUITE_DOMAIN + "'\"" +
+                "}," +
+            "]"
+        ).getAnyRef("rules");
         backupSettings = new SettingsOverride(Map.of(
             AppSettings.PROXY_USERS, proxyUsers,
             AppSettings.PROVIDER_BACKEND, "com.google.cloud.broker.apps.brokerserver.accesstokens.providers.ServiceAccountProvider",
-            AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.GsuiteDomainSwapUserMapper",
             AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend",
-            AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend"
+            AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend",
+            AppSettings.USER_MAPPING_RULES, userMappingRules
         ));
     }
 

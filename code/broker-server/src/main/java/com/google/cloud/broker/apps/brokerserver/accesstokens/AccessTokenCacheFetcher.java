@@ -15,13 +15,14 @@ import java.io.IOException;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.grpc.Status;
+import org.slf4j.MDC;
 
 import com.google.cloud.broker.apps.brokerserver.accesstokens.providers.AbstractProvider;
+import com.google.cloud.broker.apps.brokerserver.validation.Validation;
 import com.google.cloud.broker.caching.CacheFetcher;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.usermapping.AbstractUserMapper;
-import io.grpc.Status;
-import org.slf4j.MDC;
 
 
 public class AccessTokenCacheFetcher extends CacheFetcher {
@@ -57,6 +58,7 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
         String googleIdentity;
         try {
             googleIdentity = AbstractUserMapper.getInstance().map(owner);
+            Validation.validateEmail(googleIdentity);
         }
         catch (IllegalArgumentException e) {
             throw Status.PERMISSION_DENIED.withDescription("Principal `" + owner + "` cannot be matched to a Google identity.").asRuntimeException();

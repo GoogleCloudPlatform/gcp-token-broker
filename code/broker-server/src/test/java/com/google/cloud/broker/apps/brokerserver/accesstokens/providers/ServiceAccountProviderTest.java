@@ -15,14 +15,15 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
-import com.google.cloud.broker.settings.SettingsOverride;
-import com.google.cloud.broker.usermapping.ShadowServiceAccountUserMapper;
 import com.google.common.base.CharMatcher;
+import com.typesafe.config.ConfigFactory;
 import org.junit.*;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 
+import com.google.cloud.broker.usermapping.KerberosUserMapper;
 import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 
 
@@ -36,9 +37,16 @@ public class ServiceAccountProviderTest {
     public static void setupClass() {
         // Override settings
         String projectId = AppSettings.getInstance().getString(AppSettings.GCP_PROJECT);
+        Object rules = ConfigFactory.parseString(
+        "rules=[" +
+                "{" +
+                    "if: \"true\"," +
+                    "then: \"primary + '-shadow@" + projectId + ".iam.gserviceaccount.com'\"" +
+                "}," +
+            "]"
+        ).getAnyRef("rules");
         backupSettings = new SettingsOverride(Map.of(
-            AppSettings.SHADOW_PROJECT, projectId,
-            AppSettings.SHADOW_USERNAME_PATTERN, "%s-shadow"
+            AppSettings.USER_MAPPING_RULES, rules
         ));
     }
 
@@ -51,7 +59,7 @@ public class ServiceAccountProviderTest {
     @Test
     public void testSuccess() {
         ServiceAccountProvider provider = new ServiceAccountProvider();
-        ShadowServiceAccountUserMapper mapper = new ShadowServiceAccountUserMapper();
+        KerberosUserMapper mapper = new KerberosUserMapper();
         AccessToken accessToken = provider.getAccessToken(mapper.map("alice@EXAMPLE.COM"), SCOPES);
         assertTrue(accessToken.getValue().startsWith("y"));
         assertEquals(2, CharMatcher.is('.').countIn(accessToken.getValue()));
@@ -61,7 +69,7 @@ public class ServiceAccountProviderTest {
     @Test
     public void testUnauthorized() {
         ServiceAccountProvider provider = new ServiceAccountProvider();
-        ShadowServiceAccountUserMapper mapper = new ShadowServiceAccountUserMapper();
+        KerberosUserMapper mapper = new KerberosUserMapper();
         try {
             provider.getAccessToken(mapper.map("bob@EXAMPLE.COM"), SCOPES);
             fail("StatusRuntimeException not thrown");

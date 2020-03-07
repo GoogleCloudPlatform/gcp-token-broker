@@ -35,13 +35,13 @@ public class GetSessionToken {
     public static void run(GetSessionTokenRequest request, StreamObserver<GetSessionTokenResponse> responseObserver) {
         AbstractAuthenticationBackend authenticator = AbstractAuthenticationBackend.getInstance();
         String authenticatedUser = authenticator.authenticateUser();
-
-        UnmodifiableLazyStringList scopes = (UnmodifiableLazyStringList) request.getScopesList();
+        List<String> scopes = (List<String>) ((UnmodifiableLazyStringList) request.getScopesList()).getUnmodifiableView().getUnderlyingElements();
 
         Validation.validateParameterNotEmpty("owner", request.getOwner());
         Validation.validateParameterNotEmpty("renewer", request.getRenewer());
-        Validation.validateParameterNotEmpty("scopes", (List<String>) scopes.getUnmodifiableView().getUnderlyingElements());
+        Validation.validateParameterNotEmpty("scopes", scopes);
         Validation.validateParameterNotEmpty("target", request.getTarget());
+        Validation.validateScopes(scopes);
 
         // If the authenticated user requests a session token for another user,
         // verify that it is allowed to do so.
@@ -55,7 +55,7 @@ public class GetSessionToken {
             request.getOwner(),
             request.getRenewer(),
             request.getTarget(),
-            String.join(",", request.getScopesList()),
+            String.join(",", scopes),
             null,
             null
         );

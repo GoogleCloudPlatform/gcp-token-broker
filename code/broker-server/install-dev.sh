@@ -39,5 +39,10 @@ apt-get install -y redis-server
 sed 's/^bind 127.0.0.1 ::1/bind 127.0.0.1/' -i /etc/redis/redis.conf
 echo "service redis-server restart" >> /restart-services.sh
 
+# Node.JS tools
+apt install -y npm
+npm install --global remark-cli remark-validate-links
+export NODE_PATH="/usr/local/lib/node_modules"
+
 # (Re)start all services
-./restart-services.sh
+/restart-services.sh

@@ -16,6 +16,9 @@
 
 package com.google.cloud.broker.encryption.backends;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+
 import com.google.api.client.googleapis.util.Utils;
 import com.google.api.services.cloudkms.v1.CloudKMS;
 import com.google.api.services.cloudkms.v1.model.DecryptRequest;
@@ -24,42 +27,26 @@ import com.google.api.services.cloudkms.v1.model.EncryptRequest;
 import com.google.api.services.cloudkms.v1.model.EncryptResponse;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.WriteChannel;
-import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.utils.Constants;
-import com.google.cloud.storage.BlobId;
-import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
+import com.google.cloud.broker.encryption.backends.keyset.KeysetManager;
 import com.google.crypto.tink.Aead;
-import com.google.crypto.tink.JsonKeysetReader;
-import com.google.crypto.tink.JsonKeysetWriter;
 import com.google.crypto.tink.KeysetHandle;
-import com.google.crypto.tink.KeysetReader;
 import com.google.crypto.tink.KeysetWriter;
 import com.google.crypto.tink.aead.AeadConfig;
 import com.google.crypto.tink.aead.AeadKeyTemplates;
-import com.google.crypto.tink.proto.EncryptedKeyset;
 import com.google.crypto.tink.proto.KeyTemplate;
-import com.google.crypto.tink.proto.Keyset;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.channels.Channels;
-import java.security.GeneralSecurityException;
-
+import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.utils.Constants;
+import com.google.cloud.broker.encryption.backends.keyset.KeysetUtils;
 
 /**
- * EnvelopeEncryptionBackend uses a static key stored in Cloud Storage.
+ * EnvelopeEncryptionBackend uses a static key stored in Cloud Storage or the local filesystem.
  * Cloud KMS is called once at startup to decrypt the static key.
  * This is the preferred encryption backend when high-throughput is a requirement.
  */
 public class CloudKMSBackend extends AbstractEncryptionBackend {
 
     private static final String MEMORY = "memory";
-    private static final String GCS_API = "https://www.googleapis.com/auth/devstorage.read_write";
     private static final String KMS_API = "https://www.googleapis.com/auth/cloudkms";
 
     static {
@@ -88,11 +75,10 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
         }
 
         try {
-            Storage storageClient = getStorageClient();
             CloudKMS kmsClient = getKMSClient();
-            aead = readKeyset(dekUri, kekUri, storageClient, kmsClient)
+            aead = readKeyset(dekUri, kekUri, kmsClient)
                 .getPrimitive(Aead.class);
-        } catch (GeneralSecurityException | IOException e) {
+        } catch (GeneralSecurityException e) {
             throw new RuntimeException("Failed to initialize encryption backend", e);
         }
 
@@ -116,91 +102,44 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
         }
     }
 
-    private static Storage getStorageClient() throws IOException {
-        GoogleCredentials credentials = GoogleCredentials.getApplicationDefault().createScoped(GCS_API);
-        return StorageOptions.newBuilder()
-            .setCredentials(credentials)
-            .build()
-            .getService();
-    }
-
-    private static CloudKMS getKMSClient() throws IOException {
-        GoogleCredentials credentials = GoogleCredentials.getApplicationDefault().createScoped(KMS_API);
+    private static CloudKMS getKMSClient() {
+        GoogleCredentials credentials;
+        try {
+            credentials = GoogleCredentials.getApplicationDefault().createScoped(KMS_API);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return new CloudKMS.Builder(
             Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(), new HttpCredentialsAdapter(credentials)
         ).setApplicationName(Constants.APPLICATION_NAME).build();
     }
 
-    private static KeysetHandle readKeyset(String dekUri, String kekUri, Storage storageClient, CloudKMS kmsClient) {
+    private static KeysetHandle readKeyset(String dekUri, String kekUri, CloudKMS kmsClient) {
         try {
             Aead kek = new GcpKmsAead(kmsClient, kekUri);
-            CloudStorageKeysetManager keysetManager = new CloudStorageKeysetManager(dekUri, storageClient);
-            return KeysetHandle.read(keysetManager, kek);
+            KeysetManager keysetReader = KeysetUtils.getKeysetManager(dekUri);
+            return KeysetHandle.read(keysetReader, kek);
         } catch (IOException | GeneralSecurityException e) {
             throw new RuntimeException("Failed to read Keyset `" + dekUri + "` with KMS key `" + kekUri + "`", e);
         }
     }
 
-    public static KeysetHandle generateAndWrite(String dekUri, String keyUri) throws IOException {
-        return generateAndWrite(KEY_TEMPLATE, dekUri, keyUri, getStorageClient(), getKMSClient());
+    public static KeysetHandle generateAndWriteKeyset(String dekUri, String keyUri) {
+        return generateAndWriteKeyset(KEY_TEMPLATE, dekUri, keyUri, getKMSClient());
     }
 
-    private static KeysetHandle generateAndWrite(KeyTemplate keyTemplate, String dekUri, String kekUri, Storage storageClient, CloudKMS kmsClient) {
+    private static KeysetHandle generateAndWriteKeyset(KeyTemplate keyTemplate, String dekUri, String kekUri, CloudKMS kmsClient) {
         try {
             Aead kek = new GcpKmsAead(kmsClient, kekUri);
-            CloudStorageKeysetManager keysetManager = new CloudStorageKeysetManager(dekUri, storageClient);
             KeysetHandle keysetHandle = KeysetHandle.generateNew(keyTemplate);
-            keysetHandle.write(keysetManager, kek);
+            KeysetWriter keysetWriter = KeysetUtils.getKeysetManager(dekUri);
+            keysetHandle.write(keysetWriter, kek);
             return keysetHandle;
         } catch (IOException | GeneralSecurityException e) {
             throw new RuntimeException("Failed to write Keyset `" + dekUri + "` with KMS key `" + kekUri + "`", e);
         }
     }
 
-
-    public static class CloudStorageKeysetManager implements KeysetWriter, KeysetReader {
-        private URI dekUri;
-        private Storage storageClient;
-
-        CloudStorageKeysetManager(String dekUri, Storage storageClient) {
-            try {
-                this.dekUri = new URI(dekUri);
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
-            }
-            this.storageClient = storageClient;
-        }
-
-        @Override
-        public Keyset read() throws IOException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public EncryptedKeyset readEncrypted() throws IOException {
-            BlobId blobId = BlobId.of(dekUri.getAuthority(), dekUri.getPath().substring(1));
-            return JsonKeysetReader
-                .withBytes(storageClient.readAllBytes(blobId))
-                .readEncrypted();
-        }
-
-        @Override
-        public void write(Keyset keyset) throws IOException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void write(EncryptedKeyset keyset) throws IOException {
-            BlobId blobId = BlobId.of(dekUri.getAuthority(), dekUri.getPath().substring(1));
-            WriteChannel wc = storageClient.writer(BlobInfo.newBuilder(blobId).build());
-            OutputStream os = Channels.newOutputStream(wc);
-            JsonKeysetWriter
-                .withOutputStream(os)
-                .write(keyset);
-            os.close();
-            wc.close();
-        }
-    }
 
     public static final class GcpKmsAead implements Aead {
 

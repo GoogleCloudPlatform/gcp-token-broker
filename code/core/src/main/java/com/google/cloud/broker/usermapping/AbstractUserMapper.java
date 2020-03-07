@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -10,6 +10,9 @@
 // limitations under the License.
 
 package com.google.cloud.broker.usermapping;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;

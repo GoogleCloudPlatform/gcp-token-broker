@@ -1,18 +1,14 @@
+## Development
+
 ### Creating a development container
 
 You can use docker to create a container dedicated for development tasks.
 
-1. Create the container by running this command **from the repository's root**:
+Create the container by running this command **from the repository's root**:
 
-   ```shell
-   docker run -it -v $PWD:/base -w /base -p 7070:7070 --detach --name broker-dev ubuntu:18.04
-   ```
-
-2. Install the required dependencies in the container:
-
-   ```shell
-   docker exec -it broker-dev bash -- code/broker-server/install-dev.sh
-   ```
+```shell
+./run.sh init_dev
+```
 
 This installs all the dependencies needed to build packages and run the tests.
 
@@ -21,20 +17,29 @@ This installs all the dependencies needed to build packages and run the tests.
 To build all packages:
 
 ```shell
-docker exec -it broker-dev bash -c 'mvn package -DskipTests'
+./run.sh build
 ```
 
 To build an extension, for example the Redis caching backend:
 
 ```shell
-docker exec -it broker-dev bash -c "mvn package -DskipTests --projects code/core,code/extensions/caching/redis"
+./run.sh build -m redis
 ```
 
-To build the broker connector for a specific version of Hadoop (possible options: `hadoop2` and `hadoop3`):
+To build the broker connector:
 
 ```shell
-docker exec -it broker-dev bash -c "mvn package -DskipTests --projects connector -P hadoop2"
+./run.sh build -m connector
 ```
 
-Note: Some packages depend on the `broker-core` package, which is why you must pass the `code/core` parameter
-when you build those packages.
+### Building containers
+
+```shell
+# Broker service
+docker build -f ./code/broker-server/Dockerfile -t gcr.io/${PROJECT}/broker-server .
+docker push gcr.io/$PROJECT/broker-server
+
+# Authorizer
+docker build -f ./code/authorizer/Dockerfile -t gcr.io/${PROJECT}/authorizer .
+docker push gcr.io/$PROJECT/authorizer
+```

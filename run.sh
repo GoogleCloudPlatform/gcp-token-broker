@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-# Copyright 2019 Google LLC
+# Copyright 2020 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -35,7 +35,7 @@
 #
 #   * Run the tests for a specific module, for example:
 #
-#     ./run.sh test -m cloud-datastore
+#     ./run.sh test -m db-datastore
 #
 #   * Run a specific test class in a module, for example:
 #
@@ -74,8 +74,8 @@ function backup_artifacts() {
     cp broker.keytab backups/$1
     cp client_secret.json backups/$1
     cp kerberos-config.yaml backups/$1
-    cp deploy/values_override.yaml backups/$1
-    cp deploy/skaffold.yaml backups/$1
+    cp kubernetes/values_override.yaml backups/$1
+    cp kubernetes/skaffold.yaml backups/$1
 }
 
 
@@ -113,35 +113,30 @@ function set_projects_arg() {
         case "${MODULE}" in
             core)
                 PROJECTS_ARG="--projects code/common,code/core"
-                break
                 ;;
             broker-server)
                 PROJECTS_ARG="--projects code/common,code/core,code/broker-server"
-                break
                 ;;
             authorizer)
                 PROJECTS_ARG="--projects code/core,code/authorizer"
-                break
                 ;;
             connector)
                 PROJECTS_ARG="--projects code/common,code/connector"
-                break
                 ;;
-            cloud-datastore)
+            db-datastore)
                 PROJECTS_ARG="--projects code/core,code/extensions/database/cloud-datastore"
-                break
                 ;;
             jdbc)
                 PROJECTS_ARG="--projects code/core,code/extensions/database/jdbc"
-                break
                 ;;
             cloud-kms)
                 PROJECTS_ARG="--projects code/core,code/extensions/encryption/cloud-kms"
-                break
                 ;;
-            redis)
+            cache-redis)
                 PROJECTS_ARG="--projects code/core,code/extensions/caching/redis"
-                break
+                ;;
+            cache-datastore)
+                PROJECTS_ARG="--projects code/core,code/extensions/caching/cloud-datastore"
                 ;;
             *)
                 echo "Invalid module: '${MODULE}'" >&2
@@ -192,6 +187,7 @@ function run_tests() {
     done
 
     MVN_VARS="-Dgcp-project=${PROJECT}"
+    ENV_VARS="--env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json"
 
     if [[ -n "${SPECIFIC_TEST}" ]]; then
         MVN_VARS="${MVN_VARS} -DfailIfNoTests=false -Dtest=${SPECIFIC_TEST}"
@@ -202,13 +198,12 @@ function run_tests() {
     fi
 
     if [[ -n "${GSUITE_DOMAIN}" ]]; then
-        MVN_VARS="${MVN_VARS} -Dgsuite-domain=${GSUITE_DOMAIN}"
+        ENV_VARS="${ENV_VARS} --env GSUITE_DOMAIN=${GSUITE_DOMAIN}"
     fi
 
     set_projects_arg
     validate_project_var
 
-    ENV_VARS="--env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json"
     set -x
     docker exec -it ${ENV_VARS} ${CONTAINER} bash -c "mvn test ${PROJECTS_ARG} ${MVN_VARS}"
 }
@@ -242,8 +237,8 @@ function ssh_function() {
 # Initializes a development container
 function init_dev() {
     set -x
-	docker run -it -v $PWD:/base -w /base -p 7070:7070 --detach --name ${CONTAINER} ubuntu:18.04 && \
-	docker exec -it ${CONTAINER} bash -c "code/broker-server/install-dev.sh"
+	  docker run -it -v $PWD:/base -w /base -p 7070:7070 --detach --name ${CONTAINER} ubuntu:18.04 && \
+	  docker exec -it ${CONTAINER} bash -c "code/broker-server/install-dev.sh"
 }
 
 # Restart the development container, in case the container was previously stopped.
@@ -253,58 +248,89 @@ function restart_dev {
     docker exec -it ${CONTAINER} bash -c "/restart-services.sh"
 }
 
+# Upload connector jar to a Dataproc cluster
+function upload_connector {
+    LIB_DIR="/usr/local/share/google/dataproc/lib"
+    VERSION="$(cat VERSION)"
+    JAR="broker-connector-hadoop2-${VERSION}-jar-with-dependencies.jar"
+    LOCAL_JAR=""
+    SSH="gcloud compute ssh $1 --tunnel-through-iap"
+    set -x
+    # Upload new JAR
+    gcloud compute scp code/connector/target/${JAR} $1:/tmp --tunnel-through-iap
+    # Delete old JAR
+    ${SSH} --command "sudo rm -f ${LIB_DIR}/broker-connector-*.jar"
+    # Relocate new JAR
+    ${SSH} --command "sudo mv /tmp/${JAR} ${LIB_DIR}"
+    # Restart services
+    ${SSH} --command "sudo systemctl restart hadoop-hdfs-namenode && sudo systemctl restart hadoop-hdfs-secondarynamenode && sudo systemctl restart hadoop-yarn-resourcemanager && sudo systemctl restart hive-server2 && sudo systemctl restart hive-metastore && sudo systemctl restart hadoop-yarn-timelineserver && sudo systemctl restart hadoop-mapreduce-historyserver && sudo systemctl restart spark-history-server"
+}
+
+function lint {
+  # Find missing copyright notices
+  echo -e "*** Checking copyright notices:\n"
+  NO_COPYRIGHT=$(git grep -L "Copyright" | grep -v "^docs/" | grep -v ".md$" | grep -v "^VERSION$") || true
+  if [ -z "${NO_COPYRIGHT}" ]; then
+    echo -e "✅ All files contain copyright notice.\n"
+  else
+    echo -e "🛑 Some file(s) do not include a copyright notice:\n\n${NO_COPYRIGHT}\n"
+  fi
+
+  # Lint documentation files
+  echo -e "*** Checking documentation:\n"
+  docker exec -it ${CONTAINER} bash -c "NODE_PATH=/usr/local/lib/node_modules remark -u validate-links -u preset-lint-recommended /base/docs/"
+}
+
 
 # Route to the requested action
 case "$1" in
     ssh)
         shift
         ssh_function
-        break
         ;;
     mvn)
         shift
         mvn $@
-        break
         ;;
     build)
         shift
         build_packages $@
-        break
         ;;
     clean)
         shift
         clean
-        break
         ;;
     test)
         shift
         run_tests $@
-        break
         ;;
     init_dev)
         shift
         init_dev
-        break
         ;;
     restart_dev)
         shift
         restart_dev
-        break
         ;;
     backup_artifacts)
         shift
         backup_artifacts $@
-        break
         ;;
     dependency)
         shift
         dependency
-        break
         ;;
     update_version)
         shift
         update_version
-        break
+        ;;
+    upload_connector)
+        shift
+        upload_connector $@
+        ;;
+    lint)
+        shift
+        lint
         ;;
     *)
         echo "Error: Unsupported command: '$1'" >&2

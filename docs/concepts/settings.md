@@ -1,4 +1,17 @@
-This page lists the settings available for the broker application, in alphabetical order.
+# Settings
+
+Settings for the Authorizer app and broker service use the [HOCON](https://en.wikipedia.org/wiki/HOCON) format developed
+by [Lightbend](https://en.wikipedia.org/wiki/Lightbend) (See [official documentation](https://github.com/lightbend/config).
+
+To customize settings for your environment, create an `application.conf` file and pass it to your application using one
+one the following ways:
+
+*   `-Dconfig.file` property set to the configuration file's path on the filesystem.
+*   `CONFIG_FILE` environment variable set to the configuration file's path on the filesystem.
+*   `CONFIG_BASE64` environment variable set to the base64-encoded contents of the configuration file.
+*   `CONFIG_GCS` environment set to the URI of the configuration file in a Cloud Storage bucket.
+
+Below is the list of available settings, in alphabetical order.
 
 ## Available settings
 
@@ -15,6 +28,14 @@ List of principal/keytab pairs for the broker service to log in with. For exampl
 ```
 [{principal=broker/example.com@MYREALM, keytab=/etc/security/broker.keytab}, {principal=broker/foo@BAR, keytab=/etc/security/broker-foobar.keytab}]
 ```
+
+### `authorizer.host`
+
+Host for the [Authorizer app](authorizer.md)'s server.
+
+### `authorizer.port`
+
+Port for the [Authorizer app](authorizer.md)'s server.
 
 ### `database.backend`
 
@@ -35,33 +56,62 @@ Default: `com.google.cloud.broker.encryption.backends.CloudKMSBackend`
 ### `encryption.cloud-kms.kek-uri`
 
 URI of the Cloud KMS key encryption key (KEK) used to [encrypt/decrypt](encryption.md) the data encryption key (DEK).
+The KEK URI must use the following format: `projects/[PROJECT]/locations/[REGION]/keyRings/[KEY_RING]/cryptoKeys/[KEY_NAME]`
+(Replace the `[PROJECT]`, `[REGION]`, `[KEY_RING]`, and `[KEY_NAME]` with the appropriate values).
 
 ### `encryption.cloud-kms.dek-uri`
 
-URI in Cloud Storage for the data encryption key (DEK) used to [encrypt/decrypt](encryption.md) data.
+URI in Cloud Storage or on the local filesystem for the data encryption key (DEK) used to
+[encrypt/decrypt](encryption.md) data. The DEK URI must have the `gs://` prefix if the key is stored in Cloud Storage
+or the `file://` prefix if the key is stored on the local filesystem.
 
-### `gsuite-domain`
+### `gcp-project`
 
-Domain name for your GSuite users.
+Project ID for the broker service.
 
-### `logging-level`
+### `gsuite-admin`
+
+Name of an admin user for your GSuite domain. Required if using `groups` attribute in the [`proxy-users`](#proxy-users)
+setting for [proxy user impersonation](authentication.md#proxy-user-impersonation).
+
+### `logging.level`
 
 Default: `INFO`
 
 Base level for application logs.
 
+### `oauth.client-id`
+
+Oauth client ID used by the [Authorizer](authorizer.md) app and the [refresh token provider](providers.md#refresh-token-provider)
+to generate and use refresh tokens.
+
+If used, you must also provide `oauth.client-secret`.
+
+Alternatively you can use `oauth.client-secret-json-path`.
+
+### `oauth.client-secret`
+
+Oauth client secret used by the [Authorizer](authorizer.md) app and the [refresh token provider](providers.md#refresh-token-provider)
+to generate and use refresh tokens.
+
+If used, you must also provide `oauth.client-id`.
+
+Alternatively you can use `oauth.client-secret-json-path`.
+
 ### `oauth.client-secret-json-path`
+
+Alternative to `oauth.client-id` and `oauth.client-secret`.
 
 Path to the OAuth client secret JSON file used by the [Authorizer](authorizer.md) app and the [refresh token provider](providers.md#refresh-token-provider)
 to generate and use refresh tokens.
 
-### `providers.access-tokens.local-cache-time`
+### `provider.access-tokens.local-cache-time`
 
 Default: `30` (in seconds)
 
 [Local cache](caching.md#local-cache) lifetime for access tokens.
 
-### `providers.access-tokens.remote-cache-time`
+### `provider.access-tokens.remote-cache-time`
 
 Default: `60` (in seconds)
 
@@ -69,19 +119,15 @@ Default: `60` (in seconds)
 
 ### `provider.backend`
 
-Default: `com.google.cloud.broker.apps.brokerserver.accesstokens.providers.RefreshTokenProvider`
+Default: `com.google.cloud.broker.apps.brokerserver.accesstokens.providers.HybridProvider`
 
 Access token [provider](providers.md) backend class.
 
-### `provider.shadow-service-accounts.project`
+### `provider.hybrid.user-provider`
 
-GCP project where the [shadow service accounts](providers.md#service-account-provider) are hosted.
+Default: `com.google.cloud.broker.apps.brokerserver.accesstokens.providers.RefreshTokenProvider`
 
-### `provider.shadow-service-accounts.username-pattern`
-
-Default: `%s-shadow`
-
-Pattern for the [shadow service account](providers.md#service-account-provider) username.
+The sub-provider used by the [hybrid provider](providers.md#hybrid-provider) for Google users.
 
 ### `proxy-users`
 
@@ -119,6 +165,10 @@ Default: `["https://www.googleapis.com/auth/devstorage.read_write"]`
 
 Whitelist of API scopes for access tokens.
 
+### `secret-manager.downloads`
+
+List of [secrets](secret-management.md) to download from Secret Manager.
+
 ### `server.host`
 
 Default: `0.0.0.0`
@@ -127,7 +177,7 @@ Hostname where the broker application is served.
 
 ### `server.port`
 
-Default: `5000`
+Default: `8080`
 
 Port number where the broker application is served. A valid port value is between `0` and `65535`.
 A port number of `0` will let the system pick up an ephemeral port in a bind operation.
@@ -163,3 +213,13 @@ Default: `604800000` (7 days, in milliseconds)
 Default: `86400000` (24 hours, in milliseconds)
 
 [Session](sessions.md) lifetime increment.
+
+### `user-mapping.mapper`
+
+Default: `com.google.cloud.broker.usermapping.KerberosUserMapper`
+
+[User mapping](user-mapping.md) backend class.
+
+### `user-mapping.rules`
+
+List of user mapping rules required by the [Kerberos user mapper](user-mapping.md#kerberos-user-mapper).

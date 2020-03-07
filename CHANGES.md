@@ -1,3 +1,25 @@
+## 0.9.1 (March 5, 2020)
+
+- Fixed an issue with the `broker-server` package assembly.
+
+## 0.9.0 (March 5, 2020)
+
+- Added integration with Secret Manager.
+- Added new means of passing settings to the application: base64-encoded or hosted on Cloud Storage.
+- Added Datastore cache backend.
+- Added ability to store data encryption key (DEK) on the file system.
+
+## 0.8.0 (February 20, 2020)
+
+- Added the `HybridProvider`, which is now the default provider.
+- Reformatted the `proxy-users` setting. Proxy users can now also be downscoped to a list of impersonated users or
+  groups.
+- Introduced the concept of user mappers. The default user mapper is `KerberosUserMapper`. You must now explicitly
+  provide user mapping rules by configuring the `user-mapping.rules` setting.
+- Removed the `ShadowServiceAccountProvider` (replaced with the more generic `ServiceAccountProvider`).
+- Removed the `provider.shadow-service-accounts.project` and `provider.shadow-service-accounts.username-pattern`
+  settings. Instead, you must now configure user mapping rules for the `KerberosUserMapper`.
+
 ## 0.7.0 (January 24, 2019)
 
 - Changed scopes' format from comma-separated list string to proper list of strings in protocol buffers and in
