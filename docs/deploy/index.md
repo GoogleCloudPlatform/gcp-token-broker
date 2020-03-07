@@ -14,7 +14,7 @@ The following diagram illustrates the demo environment's architecture:
 
 Notes about the architecture:
 
-*   The broker's server application is implemented in Python and is deployed with Kubernetes on [Kubernetes Engine](https://cloud.google.com/kubernetes-engine/).
+*   The broker's server application is implemented in Java and is deployed with Kubernetes on [Kubernetes Engine](https://cloud.google.com/kubernetes-engine/).
     The broker's Kubernetes spec automatically deploys an internal load balancer to balance traffic across
     the broker server pods.
 *   Interactions between clients and the broker is done with gRPC and protocol buffers.
@@ -42,30 +42,22 @@ Before you start, you must set up some prerequisites for the demo:
     Newer versions might work but are untested):
     *   [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v0.11.13
     *   [Helm](https://docs.helm.sh/using_helm/#installing-helm) v2.16.1
-    *   [Skaffold](https://github.com/GoogleContainerTools/skaffold#install) v1.0.1
     *   [Google Cloud SDK](https://cloud.google.com/sdk/install) v267.0.0
 
 ### Deploying the demo architecture
 
-The demo enviromnent is comprised of multiple components and GCP products (Cloud Datastore, Cloud Memorystore,
+The demo environment is comprised of multiple components and GCP products (Cloud Datastore, Cloud Memorystore,
 VPCs, firewall rules, etc.), which are automatically deployed using terraform.
 
 Follow these steps to deploy the demo environment to GCP:
 
-1.  Check out the latest [released version](https://github.com/GoogleCloudPlatform/gcp-token-broker/blob/master/CHANGES.md)
-    (Replace **`[VERSION_NUMBER]`** with the letter `v` followed by the version number, in one word):
-
-    ```shell
-    git checkout [VERSION_NUMBER]
-    ```
-
-2.  Log in as the Google user who owns the GCP project:
+1.  Log in as the Google user who owns the GCP project:
 
     ```shell
     gcloud auth application-default login
     ```
-
-3.  Run the following commands to set some default configuration values for `gcloud`.
+    
+2.  Run the following commands to set some default configuration values for `gcloud`.
     Replace **`[your-project-id]`** with your GCP project ID, and **`[your-zone-of-choice]`**
     with your preferred zone (See list of [availables zones](https://cloud.google.com/compute/docs/regions-zones/#available)):
 
@@ -74,21 +66,41 @@ Follow these steps to deploy the demo environment to GCP:
     gcloud config set compute/zone [your-zone-of-choice]
     ```
 
-4.  Change into the `terraform` directory:
+3.  Set some environment variables:
+
+    ```shell
+    export PROJECT=$(gcloud info --format='value(config.project)')
+    export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
+    export REGION=${ZONE%-*}
+    ```
+
+4.  Check out the latest [released version](https://github.com/GoogleCloudPlatform/gcp-token-broker/blob/master/CHANGES.md)
+    (Replace **`[VERSION_NUMBER]`** with the letter `v` followed by the version number, in one word):
+
+    ```shell
+    git checkout [VERSION_NUMBER]
+    ```
+
+5.  Change into the `terraform` directory:
 
     ```shell
     cd terraform
     ```
 
-5.  Create a `terraform.tfvars` file in the `terraform` directory with the following configuration
-    (Update the values as needed. Also make sure to use the same `gcp_zone` as you
-    selected in the above step, and its corresponding `gcp_region`):
+6.  Create a Terraform variables file:
+
+    ```shell
+    cat > ${PROJECT}.tfvars << EOL
+    gcp_project="${PROJECT}"
+    gcp_region="${REGION}"
+    gcp_zone="${ZONE}"
+    EOL
+    ```
+ 
+7.  Edit the variables file that you created in the previous step and add the following values:
 
     ```conf
-    gcp_project = "[your-project-id]"
-    gcp_region = "us-west1"
-    gcp_zone = "us-west1-a"
-    datastore_region = "us-west2"
+    datastore_region = "[your.datastore.region]"
     gsuite_domain = "[your.domain.name]"
     authorizer_hostname = "[your.authorizer.hostname]"
     origin_realm = "[YOUR.REALM.NAME]"
@@ -96,10 +108,10 @@ Follow these steps to deploy the demo environment to GCP:
     ```
 
     Notes:
+    *   `datastore_region` is the region for your Cloud Datastore database (e.g. `us-west2`). See the list of
+        [available regions](https://cloud.google.com/datastore/docs/locations#location-r) for Cloud Datastore.
     *   `gsuite_domain` is the domain name (e.g. "your-domain.com") that you registered in the [Prerequisites](#prerequisites)
         section for your GSuite organization.
-    *   `datastore_region` is the region for your Cloud Datastore database. See the list of
-        [available regions](https://cloud.google.com/datastore/docs/locations#location-r) for Cloud Datastore.
     *   `authorizer_hostname` is the host name (e.g. "authorizer.your-domain.com") that
         you wish to use to access the authorizer app. This value will be used to configure the
         authorizer app's load balancer.
@@ -109,8 +121,29 @@ Follow these steps to deploy the demo environment to GCP:
     *   Replace the `test_users` with the usernames of the three users that you created in the
         [Prerequisites](#prerequisites) section.
 
-6.  Run: `terraform init`
-7.  Run: `terraform apply`
+8.  Create a new Terraform workspace:
+
+    ```shell
+    terraform workspace new ${PROJECT}
+    ```
+
+9.  Initialize the terraform deployment:
+
+    ```shell
+    terraform init
+    ```
+    
+10. Run the deployment:
+ 
+    ```shell
+    terraform apply -var-file ${PROJECT}.tfvars
+    ```
+    
+11. Return to the root of the repository:
+
+    ```shell
+    cd ..
+    ```
 
 ### Configuring the OAuth client
 
@@ -141,17 +174,21 @@ Follow these steps to deploy the demo environment to GCP:
     *   Leave "Authorized JavaScript origins" blank.
     *   For "Authorized redirect URIs":
         -   Type the following (Replace **`[your.authorizer.hostname]`** with your authorizer
-            app's fully qualified domain name): `https://[your.authorizer.hostname]/oauth2callback`
+            app's fully qualified domain name): `https://[your.authorizer.hostname]/google/oauth2callback`
         -   **Press "Enter"** on your keyboard to add the URI to the list.
     *   Click "Create".
     *   Click "Ok" to close the confirmation popup.
     *   Click the "Download JSON" icon for your client ID.
-    *   Move the downloaded JSON file to the code repository's **root**, then rename it to
-        `client_secret.json`.
-    *   Upload the file to Secret Manager:
+    *   Upload the file to Secret Manager (Replace **`[CLIENT_SECRET.JSON]`** with the name of the file your downloaded in the
+        previous step):
         ```shell
         gcloud beta secrets create oauth-client --replication-policy="automatic"
-        gcloud beta secrets versions add oauth-client --data-file=client_secret.json
+        gcloud beta secrets versions add oauth-client --data-file=[CLIENT_SECRET.JSON]
+        ```
+    *   You can now delete the file from your local filesystem (Replace  **`[CLIENT_SECRET.JSON]`** with the actual file
+        name):
+        ```shell
+        rm [CLIENT_SECRET.JSON]
         ```
 
 ### Creating TLS certificates
@@ -162,9 +199,7 @@ You may choose to use your own domain, certificates, and trusted Certificate
 Authority. Alternatively, for development and testing purposes only,
 you may create self-signed certificates as described below.
 
-Run from the following commands **from the root of the repository**:
-
-*   Create the broker certificate:
+1.  Create the broker certificate:
 
     ```shell
     BROKER_DOMAIN="10.2.1.255.xip.io"
@@ -174,7 +209,7 @@ Run from the following commands **from the root of the repository**:
     openssl pkcs8 -topk8 -nocrypt -in broker-tls.key -out broker-tls.pem
     ```
     
-*   Create the authorizer certificate (Replace **`[your.authorizer.hostname]`** with your authorizer
+2.  Create the authorizer certificate (Replace **`[your.authorizer.hostname]`** with your authorizer
     app's host name):
 
     ```shell
@@ -184,146 +219,83 @@ Run from the following commands **from the root of the repository**:
     openssl x509 -req -days 365 -in authorizer-tls.csr -signkey authorizer-tls.key -out authorizer-tls.crt
     ```
 
-Once the certificates and private keys are created, upload them to Secret Manager:
+3.  Once the certificates and private keys are created, upload them to Secret Manager:
 
-```shell
-gcloud beta secrets create broker-tls-pem --replication-policy="automatic"
-gcloud beta secrets versions add broker-tls-pem --data-file=broker-tls.pem
-
-gcloud beta secrets create broker-tls-crt --replication-policy="automatic"
-gcloud beta secrets versions add broker-tls-crt --data-file=broker-tls.crt
-
-gcloud beta secrets create authorizer-tls-key --replication-policy="automatic"
-gcloud beta secrets versions add authorizer-tls-key --data-file=authorizer-tls.key
-
-gcloud beta secrets create authorizer-tls-crt --replication-policy="automatic"
-gcloud beta secrets versions add authorizer-tls-crt --data-file=authorizer-tls.crt
-```
-
-### Deploying the broker service
-
-To deploy the broker service, run the following commands **from the root of the repository**:
-
-1.  Download the application JARs:
-
-    ```
-    export BROKER_VERSION=$(cat VERSION)
-    mkdir -p code/core/target
-    curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker-core/${BROKER_VERSION}/broker-core-${BROKER_VERSION}-jar-with-dependencies.jar > code/core/target/broker-core-${BROKER_VERSION}-jar-with-dependencies.jar
-    mkdir -p code/broker-server/target
-    curl https://repo1.maven.org/maven2/com/google/cloud/broker/broker-server/${BROKER_VERSION}/broker-server-${BROKER_VERSION}-jar-with-dependencies.jar > code/broker-server/target/broker-server-${BROKER_VERSION}-jar-with-dependencies.jar
-    mkdir -p code/extensions/caching/redis/target
-    curl https://repo1.maven.org/maven2/com/google/cloud/broker/cache-backend-redis/${BROKER_VERSION}/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar > code/extensions/caching/redis/target/cache-backend-redis-${BROKER_VERSION}-jar-with-dependencies.jar
-    mkdir -p code/extensions/database/cloud-datastore/target
-    curl https://repo1.maven.org/maven2/com/google/cloud/broker/database-backend-cloud-datastore/${BROKER_VERSION}/database-backend-cloud-datastore-${BROKER_VERSION}-jar-with-dependencies.jar > code/extensions/database/cloud-datastore/target/database-backend-cloud-datastore-${BROKER_VERSION}-jar-with-dependencies.jar
-    mkdir -p code/extensions/encryption/cloud-kms/target
-    curl https://repo1.maven.org/maven2/com/google/cloud/broker/encryption-backend-cloud-kms/${BROKER_VERSION}/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar > code/extensions/encryption/cloud-kms/target/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar
-    mkdir -p code/authorizer/target
-    curl https://repo1.maven.org/maven2/com/google/cloud/broker/authorizer/${BROKER_VERSION}/authorizer-${BROKER_VERSION}-jar-with-dependencies.jar > code/authorizer/target/authorizer-${BROKER_VERSION}-jar-with-dependencies.jar
+    ```shell
+    gcloud beta secrets create broker-tls-pem --replication-policy="automatic"
+    gcloud beta secrets versions add broker-tls-pem --data-file=broker-tls.pem
+    
+    gcloud beta secrets create broker-tls-crt --replication-policy="automatic"
+    gcloud beta secrets versions add broker-tls-crt --data-file=broker-tls.crt
+    
+    gcloud beta secrets create authorizer-tls-key --replication-policy="automatic"
+    gcloud beta secrets versions add authorizer-tls-key --data-file=authorizer-tls.key
+    
+    gcloud beta secrets create authorizer-tls-crt --replication-policy="automatic"
+    gcloud beta secrets versions add authorizer-tls-crt --data-file=authorizer-tls.crt
     ```
     
-2.  Configure credentials for the cluster:
+4.  You can now delete the certificates and keys from your local filesystem: 
+
+    ```shell
+    rm broker-tls.pem broker-tls.crt authorizer-tls.key authorizer-tls.crt
+    ```
+
+### Initializing the GKE cluster
+
+1.  Configure credentials for the cluster:
 
     ```shell
     gcloud container clusters get-credentials broker
     ```
 
-3.  Create a Kubernetes service account with the cluster admin role for Tiller, the Helm server:
+2.  Create a Kubernetes service account with the cluster admin role for Tiller, the Helm server:
 
     ```shell
     kubectl create serviceaccount --namespace kube-system tiller
     kubectl create clusterrolebinding tiller --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
     ```
 
-4.  Install Helm tiller in the cluster:
+3.  Install Helm tiller in the cluster:
 
     ```shell
     helm init --service-account tiller
     ```
 
-5.  Create the `skaffold.yaml` configuration file:
+### Generating the data encryption key (DEK)
+
+1.  Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
 
     ```shell
-    cd deploy
-    export PROJECT=$(gcloud info --format='value(config.project)')
-    sed -e "s/PROJECT/$PROJECT/" skaffold.yaml.template > skaffold.yaml
-    ```
-
-6.  Deploy to Kubernetes Engine:
-
-    ```shell
-    skaffold dev -v info
-    ```
-
-    Note: The first time you run the `skaffold` command, it might take a few
-    minutes for the container images to build and get uploaded to the
-    container registry.
-   
-7.  Let the `skaffold` process run in the current terminal – this is where you will see the broker server's console
-    output. Now open a new, separate terminal and use that new terminal to run the commands in the rest of this tutorial.
-
-8.  Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
-
-    ```shell
-    export BROKER_VERSION=$(cat VERSION)
     export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
     export REGION=${ZONE%-*}
-    java -cp code/core/target/broker-core-${BROKER_VERSION}-jar-with-dependencies.jar:code/extensions/encryption/cloud-kms/target/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar \
+    curl "https://repo1.maven.org/maven2/com/google/cloud/broker/broker-core/${BROKER_VERSION}/broker-core-${BROKER_VERSION}-jar-with-dependencies.jar" -o broker-core-${BROKER_VERSION}-jar-with-dependencies.jar
+    curl "https://repo1.maven.org/maven2/com/google/cloud/broker/encryption-backend-cloud-kms/${BROKER_VERSION}/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar" -o encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar
+    java -cp broker-core-${BROKER_VERSION}-jar-with-dependencies.jar:encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar \
       com.google.cloud.broker.encryption.GenerateDEK \
       file://dek.json \
       projects/${PROJECT}/locations/${REGION}/keyRings/broker-key-ring/cryptoKeys/broker-key
     ```
 
-9.  Upload the DEK to Secret Manager:
+2.  Upload the DEK to Secret Manager:
 
     ```shell
     gcloud beta secrets create dek --replication-policy="automatic"
     gcloud beta secrets versions add dek --data-file=dek.json
     ```
-      
-10. Wait until an external IP has been assigned to the broker service. You can
-    check the status by running the following command in a different terminal,
-    and by looking up the `EXTERNAL-IP` value:
+    
+3. You can now delete the DEK from your local filesystem:
 
     ```shell
-    kubectl get service broker-service
+    rm dek.json
     ```
-
-### Using the Authorizer
-
-The Authorizer is a simple Web UI that users must use, only once, to authorize
-the broker. The authorization process consists of a simple OAuth flow:
-
-1.  Open the authorizer page in your browser (`https://[your.authorizer.hostname]`).
-
-    **Notes:**
-    *   If you're trying to access the authorizer page right after deploying
-        the authorizer app with the `skaffold` command, your browser might return
-        an error with a 502 code when loading the authorizer page. This means that the load
-        balancer is still being deployed. It might take a few minutes for this deployment to complete.
-        Wait for a few seconds, and then refresh the page. Try this until the page works and the
-        authorizer UI appears.
-    *   If you used a self-signed certificate for the authorizer app, the browser will display
-        a warning (In Chrome, you see a message that says "Your connection is not private").
-        You can ignore this warning and proceed to loading the page (In Chrome, click the "Advanced"
-        button then click the "Proceed" link).
-
-2.  Click "Authorize". You are redirected to the Google login page.
-
-3.  Enter the credentials for one of the three users you created in the [Prerequisites](#prerequisites) section.
-
-4.  Read the consent form, then click "Allow". You are redirected back to
-    the authorizer page, and are greeted with a "Success" message. The
-    broker now has authority to generate GCP access tokens on the user's behalf.
 
 ### Creating a Dataproc cluster
 
 In this section, you create a Dataproc cluster that can be used to run Hadoop jobs and interact with the broker.
 
-Run the following commands **from the root of the repository**:
-
 1.  Set an environment variable for the Kerberos realm (Replace **`[ORIGIN.REALM.COM]`** with the
-    same Kerberos realm you used in the `terraform.tfvars` file):
+    same Kerberos realm you used in the Terraform variables file (with the `.tfvars` extension):
 
     ```shell
     export REALM=[ORIGIN.REALM.COM]
@@ -335,26 +307,13 @@ Run the following commands **from the root of the repository**:
     export PROJECT=$(gcloud info --format='value(config.project)')
     export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
     export REGION=${ZONE%-*}
-    export ORIGIN_KDC_HOSTNAME=$(gcloud compute instances describe origin-kdc --format="value(networkInterfaces[0].networkIP)").xip.io
     export BROKER_HOSTNAME="10.2.1.255.xip.io"
     export BROKER_URI="https://${BROKER_HOSTNAME}:443"
     export BROKER_PRINCIPAL="broker/${BROKER_HOSTNAME}"
     export BROKER_VERSION=$(cat VERSION)
+    export BROKER_CRT=$(gcloud beta secrets versions access latest --secret broker-tls-crt)
     export INIT_ACTION="gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh"
     export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${BROKER_VERSION}/broker-connector-hadoop2-${BROKER_VERSION}-jar-with-dependencies.jar"
-    ```
-
-3.  Create the Kerberos configuration file for Dataproc:
-
-    ```shell
-    cat > kerberos-config.yaml << EOL
-    root_principal_password_uri: gs://${PROJECT}-secrets/root-password.encrypted
-    kms_key_uri: projects/${PROJECT}/locations/${REGION}/keyRings/dataproc-key-ring/cryptoKeys/dataproc-key
-    cross_realm_trust:
-      kdc: ${ORIGIN_KDC_HOSTNAME}
-      realm: ${REALM}
-      shared_password_uri: gs://${PROJECT}-secrets/shared-password.encrypted
-    EOL
     ```
 
 4.  Create the Dataproc cluster:
@@ -370,8 +329,8 @@ Run the following commands **from the root of the repository**:
       --bucket ${PROJECT}-staging \
       --scopes cloud-platform \
       --service-account "dataproc@${PROJECT}.iam.gserviceaccount.com" \
-      --kerberos-config-file kerberos-config.yaml \
-      --metadata "gcp-token-broker-tls-certificate=$(cat broker-tls.crt)" \
+      --kerberos-config-file deploy/${PROJECT}/kerberos-config.yaml \
+      --metadata "gcp-token-broker-tls-certificate=${BROKER_CRT}" \
       --metadata "gcp-token-broker-uri=${BROKER_URI}" \
       --metadata "gcp-token-broker-kerberos-principal=${BROKER_PRINCIPAL}" \
       --metadata "origin-realm=${REALM}" \
@@ -383,7 +342,7 @@ Run the following commands **from the root of the repository**:
     Cloud Dataproc cluster, which is sufficient for the scope of this demo. In production, it is recommended to use a multi-node
     cluster instead.
 
-### Uploading keytabs
+### Uploading the keytab
 
 The broker service needs a keytab to authenticate incoming requests.
 
@@ -401,14 +360,134 @@ The broker service needs a keytab to authenticate incoming requests.
     gcloud beta secrets versions add keytab --data-file=broker.keytab
     ```
 
-3.  Restart the broker Kubernetes pods:
+3.  You can now delete the keytab from your local filesystem:
 
     ```shell
-    helm upgrade --recreate-pods -f deploy/values_override.yaml broker-server deploy/broker-server
+    rm broker.keytab
+    ```
+
+### Using the Authorizer
+
+The Authorizer is a simple Web UI that users must use to authorize the broker. Follow these steps to deploy and use the
+Authorizer:
+
+1.  The Authorizer app uses a global HTTPS load balancer that which requires a TLS certificate and private key.
+    Follow these steps to configure the balancer in the Kubenetes Engine cluster:
+     
+    a)  Download the Authorizer's TLS secrets from Secret Manager:
+    
+        ```shell
+        gcloud beta secrets versions access latest --secret authorizer-tls-crt > authorizer-tls.crt
+        gcloud beta secrets versions access latest --secret authorizer-tls-key > authorizer-tls.key
+        ```
+        
+    b)  Upload the secrets to the Kubernetes Engine cluster:
+    
+        ```shell 
+        kubectl create secret generic authorizer-tls \
+          --from-file=tls.crt=authorizer-tls.crt \
+          --from-file=tls.key=authorizer-tls.key
+        ```
+        
+    c)  Delete the secrets from your local filesystem: 
+    
+        ```shell
+        rm authorizer-tls.crt
+        rm authorizer-tls.key
+        ```
+
+2.  Deploy the Authorizer app:
+
+    ```shell
+    export BROKER_VERSION=$(cat VERSION)
+    helm install --set authorizer.image=gcr.io/gcp-token-broker/authorizer:${BROKER_VERSION} -f deploy/${PROJECT}/values_override.yaml --name authorizer kubernetes/authorizer
+    ```
+
+3.  Verify that the broker pod is running:
+
+    ```shell
+    kubectl get pods
+    ```
+    
+    The output should be similar to:
+    
+    ```
+    NAME                                     READY   STATUS    RESTARTS   AGE
+    authorizer-deployment-xxxxxxxx           1/1     Running   0          10s
+    ```
+
+4.  Open the authorizer page in your browser (`https://[your.authorizer.hostname]`).
+
+    **Notes:**
+    *   If you're trying to access the authorizer page right after deploying
+        the authorizer app with the `helm install` command, your browser might return
+        an error with a 502 code when loading the authorizer page. This means that the load
+        balancer is still being deployed. It might take a few minutes for this deployment to complete.
+        Wait for a few seconds, and then refresh the page. Try this until the page works and the
+        authorizer UI appears.
+    *   If you used a self-signed certificate for the authorizer app, the browser will display
+        a warning (In Chrome, you see a message that says "Your connection is not private").
+        You can ignore this warning and proceed to loading the page (In Chrome, click the "Advanced"
+        button then click the "Proceed" link).
+
+5.  Click "Authorize". You are redirected to the Google login page.
+
+6.  Enter the credentials for one of the three users you created in the [Prerequisites](#prerequisites) section.
+
+7.  Read the consent form, then click "Allow". You are redirected back to
+    the authorizer page, and are greeted with a "Success" message. The
+    broker now has authority to generate GCP access tokens on the user's behalf.
+
+
+### Starting the broker service
+
+1.  Run the following command to deploy the broker service on the GKE cluster:
+
+    ```shell
+    export BROKER_VERSION=$(cat VERSION)
+    helm install --set broker.image=gcr.io/gcp-token-broker/broker-server:${BROKER_VERSION} -f deploy/${PROJECT}/values_override.yaml --name broker-server kubernetes/broker-server
+    ```
+
+2.  Verify that the broker pod is running:
+
+    ```shell
+    kubectl get pods
+    ```
+    
+    The output should be similar to:
+    
+    ```
+    NAME                                     READY   STATUS    RESTARTS   AGE
+    authorizer-deployment-xxxxxxxx           1/1     Running   0          2m39s
+    broker-deployment-xxxxxxxx               1/1     Running   0          12s
+    ```
+
+3.  Wait until an external IP has been assigned to the broker service. You can
+    check the status by running the following command in a different terminal,
+    and by looking up the `EXTERNAL-IP` value:
+
+    ```shell
+    kubectl get service broker-service
     ```
 
 4.  You are now ready to do some testing. Refer to the [tutorials](../tutorials/index.md) section to run
     some sample Hadoop jobs and try out the broker's functionality.
+
+## Notes about Helm
+
+*  Run these commands if you'd like to restart the broker and authorizer pods:
+
+    ```shell
+    helm upgrade --recreate-pods broker-server kubernetes/broker-server
+    helm upgrade --recreate-pods authorizer kubernetes/broker-server
+    ```
+
+*   Run these commands if you'd like to delete the broker and authorizer pods:
+    
+    ```shell
+    helm delete broker-server --purge
+    helm delete authorizer --purge
+    ```    
 
 ## Broker application logs
 
@@ -443,36 +522,6 @@ set up a demo environment. You can use those scripts as a starting point to crea
 scripts for Terraform or your preferred configuration management tool to deploy the broker
 service to production or staging environment.
 
-#### Building containers
-
-The demo uses Skaffold to build and deploy the applications containers. Note that Skaffold
-is mainly suitable for development purposes. In production, you should build and deploy the
-application containers directly with `docker`.
-
-To build the containers:
-
-```shell
-# Broker service
-docker build -f ./code/broker-server/Dockerfile -t gcr.io/${PROJECT}/broker-server .
-docker push gcr.io/$PROJECT/broker-server
-
-# Authorizer
-docker build -f ./code/authorizer/Dockerfile -t gcr.io/${PROJECT}/authorizer .
-docker push gcr.io/$PROJECT/authorizer
-```
-
-To deploy with Helm and Kubernetes:
-```shell
-helm install -f deploy/values_override.yaml --name broker-server deploy/broker-server
-helm install -f deploy/values_override.yaml --name authorizer deploy/authorizer
-```
-
-To delete the deployments:
-```shell
-helm delete broker --purge
-helm delete authorizer --purge
-```
-
 ### Performance optimizations
 
 #### Scaling out workers
@@ -493,7 +542,7 @@ of workers in multiple, combinable ways:
     following command:
 
     ```shell
-    helm upgrade -f <VALUE_FILE.yaml> broker-server deploy/broker-server
+    helm upgrade -f <VALUE_FILE.yaml> broker-server kubernetes/broker-server
     ```
 
 *   Number of threads, i.e. the number of gRPC server instances running in each container,

@@ -17,7 +17,7 @@ kinit alice@$REALM
 hardcoded in the demo's deployment (See the details in the [startup script template](../../terraform/startup-script-kdc.tpl)
 and the `kadmin.local` commands in the origin KDC's [terraform specification file](../../terraform/origin_kdc.tf).
 Those hardcoded passwords are the same as the usernames (e.g. the password for "alice@$REALM" is "alice").
-Those hardcoded passwords are *not* the passwords that you would have set for the GSuite users in the [Prerequisites](../deploy/index.md#prerequisites)
+Those hardcoded passwords are *not* the passwords that you would have set for the GSuite users in the [Prerequisites](../kubernetes/index.md#prerequisites)
 section, as that would be the case in a production environment where the KDC's database would be synced with your
 LDAP database.
 

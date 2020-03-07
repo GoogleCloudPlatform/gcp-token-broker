@@ -26,7 +26,7 @@ spec:
   tls:
   - hosts:
     - {{ .Values.authorizer.ingress.host }}
-    secretName: {{ .Chart.Name }}-secrets
+    secretName: {{ .Chart.Name }}-tls
   backend:
     serviceName: {{ .Chart.Name }}-service
     servicePort: {{ .Values.authorizer.service.port }}

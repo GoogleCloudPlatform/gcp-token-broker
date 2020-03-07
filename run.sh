@@ -74,8 +74,8 @@ function backup_artifacts() {
     cp broker.keytab backups/$1
     cp client_secret.json backups/$1
     cp kerberos-config.yaml backups/$1
-    cp deploy/values_override.yaml backups/$1
-    cp deploy/skaffold.yaml backups/$1
+    cp kubernetes/values_override.yaml backups/$1
+    cp kubernetes/skaffold.yaml backups/$1
 }
 
 
