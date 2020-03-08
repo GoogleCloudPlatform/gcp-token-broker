@@ -297,19 +297,23 @@ public class BrokerServerTest {
         AbstractDatabaseBackend.getInstance().get(Session.class, session.getId());
     }
 
-    @Test
-    public void testGetAccessToken_DirectAuth() {
+    private GetAccessTokenResponse getAccessToken_DirectAuth(String target) {
         BrokerBlockingStub stub = getStub();
         stub = addSPNEGOTokenToMetadata(stub, ALICE);
 
         // Mock the Access Boundary API
         MockAccessBoundary.mock();
 
-        GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder()
+        return stub.getAccessToken(GetAccessTokenRequest.newBuilder()
             .setOwner(ALICE)
             .addAllScopes(SCOPES)
-            .setTarget(MOCK_BUCKET)
+            .setTarget(target)
             .build());
+    }
+
+    @Test
+    public void testGetAccessToken_DirectAuth() {
+        GetAccessTokenResponse response = getAccessToken_DirectAuth(MOCK_BUCKET);
         assertEquals(
             "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES) + ";Target=" + MOCK_BUCKET,
             response.getAccessToken());
@@ -317,10 +321,15 @@ public class BrokerServerTest {
     }
 
     @Test
-    public void testGetAccessToken_DelegatedAuth_Success() {
-        // Create a session in the database
-        Session session = createSession();
+    public void testGetAccessToken_DirectAuth_NoTarget() {
+        GetAccessTokenResponse response = getAccessToken_DirectAuth("");
+        assertEquals(
+            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES) + ";Target=",
+            response.getAccessToken());
+        assertEquals(999999999L, response.getExpiresAt());
+    }
 
+    private GetAccessTokenResponse getAccessToken_DelegatedAuth(Session session) {
         // Add the session token to the request's metadata
         BrokerBlockingStub stub = getStub();
         stub = addSessionTokenToMetadata(stub, session);
@@ -329,10 +338,29 @@ public class BrokerServerTest {
         MockAccessBoundary.mock();
 
         // Send the GetAccessToken request
-        GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder().build());
+        return stub.getAccessToken(GetAccessTokenRequest.newBuilder().build());
+    }
 
+    @Test
+    public void testGetAccessToken_DelegatedAuth() {
+        Session session = createSession();
+        GetAccessTokenResponse response = getAccessToken_DelegatedAuth(session);
         assertEquals(
             "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES) + ";Target=" + MOCK_BUCKET,
+            response.getAccessToken());
+        assertEquals(999999999L, response.getExpiresAt());
+    }
+
+    @Test
+    public void testGetAccessToken_DelegatedAuth_NoTarget() {
+        // Create a session without target
+        Session session = createSession();
+        session.setTarget("");
+        AbstractDatabaseBackend.getInstance().save(session);
+
+        GetAccessTokenResponse response = getAccessToken_DelegatedAuth(session);
+        assertEquals(
+            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES) + ";Target=",
             response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }

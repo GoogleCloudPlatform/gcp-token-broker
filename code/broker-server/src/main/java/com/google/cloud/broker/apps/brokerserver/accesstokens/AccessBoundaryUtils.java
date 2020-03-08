@@ -41,6 +41,10 @@ public class AccessBoundaryUtils {
     }
 
     public static AccessToken addAccessBoundary(AccessToken accessToken, String target) {
+        if (target == null) {
+            return accessToken;
+        }
+
         // Retrieve the access boundary permissions from configuration
         JsonArray permissionsJSON = new JsonArray();
         List<String> permissions = AppSettings.getInstance().getStringList(AppSettings.ACCESS_TOKEN_BOUNDARY_PERMISSIONS);
