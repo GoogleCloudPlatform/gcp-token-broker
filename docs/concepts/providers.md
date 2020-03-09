@@ -2,12 +2,14 @@
 
 The broker service can use different of providers to generate access tokens for a Google identity to access Google APIs.
 
+## Available providers
+
 You can specify which provider the broker should use by setting the [`provider.backend`](settings.md#providerbackend)
 setting to the provider's class path.
 
-All providers are included in the [broker server](broker-server.md) package.
+All providers are included in the [broker server](broker-server.md) package. 
 
-## Hybrid provider
+### Hybrid provider
 
 _Class path:_ `com.google.cloud.broker.apps.brokerserver.accesstokens.providers.HybridProvider`
 
@@ -21,7 +23,7 @@ to either:
 
 This provider requires that you set the following setting(s): [`provider.hybrid.user-provider`](settings.md#providerhybriduser-provider).
 
-## Refresh token provider
+### Refresh token provider
 
 _Class path:_ `com.google.cloud.broker.apps.brokerserver.accesstokens.providers.RefreshTokenProvider`
 
@@ -58,7 +60,7 @@ Let's take an example:
 
 This provider requires that you set the following setting(s): [`oauth.client-secret-json-path`](settings.md#oauthclient-secret-json-path).
 
-## Service account provider
+### Service account provider
 
 _Class path:_ `com.google.cloud.broker.apps.brokerserver.accesstokens.providers.ServiceAccountProvider`
 
@@ -90,7 +92,7 @@ To use the `ServiceAccountProvider`, follow this procedure:
     Spark, then only give that role for the Spark users' shadow service accounts). This essentially controls what users
     can be impersonated.
 
-## Domain-wide delegation authority provider
+### Domain-wide delegation authority provider
 
 _Class path:_ `com.google.cloud.broker.apps.brokerserver.accesstokens.providers.DomainWideDelegationAuthorityProvider`
 
@@ -118,3 +120,17 @@ Then in the Google Admin console, add the service account ID and set the require
 
 At that point, the service account is allowed to impersonate any user in the organization's domain and obtain access
 tokens for those users, although only for the specified API scopes.
+
+## Access boundary
+
+The broker can restrict the scope of an access token to a specific resource (e.g. a GCS bucket) by setting a
+[Credential Access Boundary](https://cloud.google.com/iam/docs/restricting-short-lived-credentials) (CAB) on the tokens
+that are returned by the providers. To enable this feature, the client can pass a `target` attribute when it sends a
+request to the broker.
+
+The `target` attribute must use the GCP [resource name format](https://cloud.google.com/apis/design/resource_names), for
+example `//storage.googleapis.com/projects/_/buckets/mybucket` for a bucket named `mybucket`.
+
+In the Hadoop use case, Hadoop systematically passes the target bucket to the broker [connector](connector.md). The
+broker connector then relays the target bucket to the broker service. Therefore, CAB is always applied on the
+generated access tokens to restrict access to the given bucket.
