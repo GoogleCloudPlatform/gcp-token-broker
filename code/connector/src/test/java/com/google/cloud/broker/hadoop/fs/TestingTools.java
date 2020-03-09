@@ -37,7 +37,7 @@ class TestingTools {
 
     static final String BROKER_HOST = "testhost";
     static final String REALM = "EXAMPLE.COM";
-    static final String MOCK_BUCKET = "gs://example";
+    static final String MOCK_BUCKET = "//storage.googleapis.com/projects/_/buckets/example";
     static final String BROKER = "broker/" + BROKER_HOST + "@" + REALM;
     static final String ALICE = "alice@" + REALM;
     static final String YARN = "yarn/testhost@FOO.BAR";

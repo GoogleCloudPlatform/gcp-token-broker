@@ -71,7 +71,7 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
                 request = GetAccessTokenRequest.newBuilder()
                     .addAllScopes(Collections.singleton(BrokerTokenIdentifier.GCS_SCOPE))
                     .setOwner(currentUser.getUserName())
-                    .setTarget(service.toString())
+                    .setTarget(BrokerTokenIdentifier.getURI(service))
                     .build();
             }
             else {  // Delegated authentication

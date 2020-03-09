@@ -48,6 +48,7 @@ public class AppSettings {
     public final static String PROXY_USERS = "proxy-users";
     public final static String SCOPES_WHITELIST = "scopes.whitelist";
     public final static String PROVIDER_BACKEND = "provider.backend";
+    public final static String ACCESS_TOKEN_BOUNDARY_PERMISSIONS = "provider.access-tokens.boundary-permissions";
     public final static String ACCESS_TOKEN_LOCAL_CACHE_TIME = "provider.access-tokens.local-cache-time";
     public final static String ACCESS_TOKEN_REMOTE_CACHE_TIME = "provider.access-tokens.remote-cache-time";
     public final static String HYBRID_USER_PROVIDER = "provider.hybrid.user-provider";

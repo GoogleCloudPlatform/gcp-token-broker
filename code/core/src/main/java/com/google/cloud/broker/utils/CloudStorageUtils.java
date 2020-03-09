@@ -24,15 +24,22 @@ import com.google.cloud.storage.StorageOptions;
 
 public class CloudStorageUtils {
 
-    private static final String GCS_API = "https://www.googleapis.com/auth/devstorage.read_write";
+    public static final String GCS_API = "https://www.googleapis.com/auth/devstorage.read_write";
 
-    public static Storage getCloudStorageClient() {
-        GoogleCredentials credentials;
+    public static GoogleCredentials getCloudStorageCredentials() {
         try {
-            credentials = GoogleCredentials.getApplicationDefault().createScoped(GCS_API);
+            return GoogleCredentials.getApplicationDefault().createScoped(GCS_API);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static Storage getCloudStorageClient() {
+        GoogleCredentials credentials = getCloudStorageCredentials();
+        return getCloudStorageClient(credentials);
+    }
+
+    public static Storage getCloudStorageClient(GoogleCredentials credentials) {
         return StorageOptions.newBuilder()
             .setCredentials(credentials)
             .build()

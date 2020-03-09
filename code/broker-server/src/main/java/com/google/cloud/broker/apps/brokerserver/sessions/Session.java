@@ -27,7 +27,7 @@ public class Session extends Model {
     private String id;            // UUID
     private String owner;         // Identity who owns the session (e.g. alice@EXAMPLE.COM)
     private String renewer;       // Identity who is allowed to renew/cancel the session (e.g. yarn@FOO.BAR)
-    private String target;        // Target resource on GCP (e.g. gs://example)
+    private String target;        // Target resource on GCP (e.g. //storage.googleapis.com/projects/_/buckets/example)
     private String scopes;        // API scopes for the target resource (e.g. https://www.googleapis.com/auth/devstorage.read_write)
     private Long expiresAt;       // Time when the session will expire (in milliseconds)
     private Long creationTime;    // Time when the session was created (in milliseconds)
