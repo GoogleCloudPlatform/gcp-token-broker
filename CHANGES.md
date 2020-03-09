@@ -1,3 +1,8 @@
+## 0.9.2 (March 9, 2020)
+
+- Added support for credentials access boundary.
+- Simplified Kubernetes configuration for demo deployment.
+
 ## 0.9.1 (March 5, 2020)
 
 - Fixed an issue with the `broker-server` package assembly.

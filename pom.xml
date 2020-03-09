@@ -19,7 +19,7 @@ limitations under the License.
 
     <groupId>com.google.cloud.broker</groupId>
     <artifactId>broker-parent</artifactId>
-    <version>0.9.1</version>
+    <version>0.9.2</version>
     <packaging>pom</packaging>
 
     <name>GCP Token Broker Parent</name>
