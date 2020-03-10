@@ -65,9 +65,17 @@ final class BrokerGateway {
         String protocol = url.getProtocol();
         if (protocol.equals("http")) {
             useTLS = false;
+            if (port == -1) {
+                // Default HTTP port
+                port = 80;
+            }
         }
         else if (protocol.equals("https")) {
             useTLS = true;
+            if (port == -1) {
+                // Default HTTPS port
+                port = 443;
+            }
         }
         else {
             throw new RuntimeException("Incorrect URI scheme `" + protocol + " ` in `" + CONFIG_URI + "` property: " + brokerUri);

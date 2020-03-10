@@ -22,10 +22,18 @@ import org.junit.Test;
 
 import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+@RunWith(PowerMockRunner.class)
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "javax.activation.*", "org.xml.*", "org.w3c.*"})
+@PrepareForTest({AccessBoundaryUtils.class})  // Classes to be mocked
 public class AccessTokenCacheFetcherTest {
 
     private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
+    private static final String TARGET = "//storage.googleapis.com/projects/_/buckets/example";
     private static final String ALICE = "alice@EXAMPLE.COM";
 
     private static SettingsOverride backupSettings;
@@ -50,17 +58,20 @@ public class AccessTokenCacheFetcherTest {
 
     @Test
     public void testComputeResult() {
-        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES);
+        // Mock the Access Boundary API
+        MockAccessBoundary.mock();
+
+        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES, TARGET);
         AccessToken token = (AccessToken) fetcher.computeResult();
         assertEquals(
-            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES),
+            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES) + ";Target=" + TARGET,
             token.getValue());
         assertEquals(token.getExpiresAt(), 999999999L);
     }
 
     @Test
     public void testFromJSON() {
-        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES);
+        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES, TARGET);
         String json = "{\"expiresAt\": 888888888, \"value\": \"blah\"}";
         AccessToken token;
         try {
@@ -74,19 +85,19 @@ public class AccessTokenCacheFetcherTest {
 
     @Test
     public void testGetCacheKey() {
-        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES);
-        assertEquals(String.format("access-token-%s-%s", ALICE, SCOPES), fetcher.getCacheKey());
+        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES, TARGET);
+        assertEquals(String.format("access-token-%s-%s-%s", ALICE, SCOPES, TARGET), fetcher.getCacheKey());
     }
 
     @Test
     public void testGetLocalCacheTime() {
-        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES);
+        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES, TARGET);
         assertEquals(1234, fetcher.getLocalCacheTime());
     }
 
     @Test
     public void testGetRemoteCacheTime() {
-        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES);
+        AccessTokenCacheFetcher fetcher = new AccessTokenCacheFetcher(ALICE, SCOPES, TARGET);
         assertEquals(6789, fetcher.getRemoteCacheTime());
     }
 

@@ -49,7 +49,6 @@ public class GetAccessToken {
             // Assert that the parameters were provided
             Validation.validateParameterNotEmpty("owner", owner);
             Validation.validateParameterNotEmpty("scopes", scopes);
-            Validation.validateParameterNotEmpty("target", target);
 
             // No session token was provided. The client is using direct authentication.
             // So let's authenticate the user.
@@ -66,7 +65,6 @@ public class GetAccessToken {
             // Assert that no parameters were provided
             Validation.validateParameterIsEmpty("owner", owner);
             Validation.validateParameterIsEmpty("scopes", scopes);
-            Validation.validateParameterIsEmpty("target", target);
 
             // Fetch the correct parameters from the session
             owner = session.getOwner();
@@ -74,7 +72,8 @@ public class GetAccessToken {
             scopes = Arrays.asList(session.getScopes().split(","));
         }
 
-        AccessToken accessToken = (AccessToken) new AccessTokenCacheFetcher(owner, scopes).fetch();
+        AccessToken accessToken = (AccessToken) new AccessTokenCacheFetcher(
+            owner, scopes, target).fetch();
 
         // Log success message
         MDC.put("owner", owner);

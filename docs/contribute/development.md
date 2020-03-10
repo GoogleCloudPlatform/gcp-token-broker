@@ -31,3 +31,15 @@ To build the broker connector:
 ```shell
 ./run.sh build -m connector
 ```
+
+### Building containers
+
+```shell
+# Broker service
+docker build -f ./code/broker-server/Dockerfile -t gcr.io/${PROJECT}/broker-server .
+docker push gcr.io/$PROJECT/broker-server
+
+# Authorizer
+docker build -f ./code/authorizer/Dockerfile -t gcr.io/${PROJECT}/authorizer .
+docker push gcr.io/$PROJECT/authorizer
+```

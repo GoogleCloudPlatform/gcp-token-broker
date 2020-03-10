@@ -14,12 +14,6 @@ terraform/terraform.tfstate*
 terraform/.terraform*
 terraform/*.tfvars
 
-# Helm values
-deploy/values_override*.yaml
-
-# Skaffold config
-deploy/skaffold.yaml
-
 # Load testing artifacts
 load-testing/settings.py
 load-testing/brokerservice/protobuf/broker_pb2_grpc.py
@@ -28,12 +22,8 @@ load-testing/brokerservice/protobuf/broker_pb2.py
 # Unit testing artifacts
 service-account-key.json
 
-# Kerberos configuration file for Dataproc
-kerberos-config.yaml
-
-# Custom application settings
-authorizer.conf
-broker-server.conf
+# Custom deployment specific files
+deploy/**
 
 # Java artifacts
 *.jar
@@ -58,6 +48,3 @@ dek.json
 # Ignore IDE specific files
 .idea
 *.iml
-
-# Backup artifacts for the demo deployment
-backups/**

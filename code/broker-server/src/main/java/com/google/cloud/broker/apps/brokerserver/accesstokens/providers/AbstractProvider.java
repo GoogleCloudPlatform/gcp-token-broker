@@ -17,6 +17,7 @@ import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
 
+
 public abstract class AbstractProvider {
 
     private static AbstractProvider instance;

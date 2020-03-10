@@ -23,6 +23,8 @@ import static com.google.cloud.broker.apps.brokerserver.protobuf.BrokerGrpc.Brok
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessBoundaryUtils;
+import com.google.cloud.broker.apps.brokerserver.accesstokens.MockAccessBoundary;
 import com.google.cloud.broker.apps.brokerserver.protobuf.*;
 import com.google.cloud.broker.apps.brokerserver.sessions.Session;
 import com.google.cloud.broker.apps.brokerserver.sessions.SessionTokenUtils;
@@ -53,7 +55,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "javax.activation.*", "org.xml.*", "org.w3c.*"})
-@PrepareForTest({TimeUtils.class})  // Classes to be mocked
+@PrepareForTest({TimeUtils.class, AccessBoundaryUtils.class})  // Classes to be mocked
 public class BrokerServerTest {
 
     // TODO: Still needs tests:
@@ -62,7 +64,7 @@ public class BrokerServerTest {
 
     private static final String ALICE = "alice@EXAMPLE.COM";
     private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
-    private static final String MOCK_BUCKET = "gs://example";
+    private static final String MOCK_BUCKET = "//storage.googleapis.com/projects/_/buckets/example";
     private static final Long SESSION_RENEW_PERIOD = 80000000L;
     private static final Long SESSION_MAXIMUM_LIFETIME = 160000000L;
 
@@ -295,36 +297,70 @@ public class BrokerServerTest {
         AbstractDatabaseBackend.getInstance().get(Session.class, session.getId());
     }
 
-    @Test
-    public void testGetAccessToken_DirectAuth() {
+    private GetAccessTokenResponse getAccessToken_DirectAuth(String target) {
         BrokerBlockingStub stub = getStub();
         stub = addSPNEGOTokenToMetadata(stub, ALICE);
-        GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder()
+
+        // Mock the Access Boundary API
+        MockAccessBoundary.mock();
+
+        return stub.getAccessToken(GetAccessTokenRequest.newBuilder()
             .setOwner(ALICE)
             .addAllScopes(SCOPES)
-            .setTarget(MOCK_BUCKET)
+            .setTarget(target)
             .build());
+    }
+
+    @Test
+    public void testGetAccessToken_DirectAuth() {
+        GetAccessTokenResponse response = getAccessToken_DirectAuth(MOCK_BUCKET);
         assertEquals(
-            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES),
+            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES) + ";Target=" + MOCK_BUCKET,
             response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
 
-
     @Test
-    public void testGetAccessToken_DelegatedAuth_Success() {
-        // Create a session in the database
-        Session session = createSession();
+    public void testGetAccessToken_DirectAuth_NoTarget() {
+        GetAccessTokenResponse response = getAccessToken_DirectAuth("");
+        assertEquals(
+            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES) + ";Target=",
+            response.getAccessToken());
+        assertEquals(999999999L, response.getExpiresAt());
+    }
 
+    private GetAccessTokenResponse getAccessToken_DelegatedAuth(Session session) {
         // Add the session token to the request's metadata
         BrokerBlockingStub stub = getStub();
         stub = addSessionTokenToMetadata(stub, session);
 
-        // Send the GetAccessToken request
-        GetAccessTokenResponse response = stub.getAccessToken(GetAccessTokenRequest.newBuilder().build());
+        // Mock the Access Boundary API
+        MockAccessBoundary.mock();
 
+        // Send the GetAccessToken request
+        return stub.getAccessToken(GetAccessTokenRequest.newBuilder().build());
+    }
+
+    @Test
+    public void testGetAccessToken_DelegatedAuth() {
+        Session session = createSession();
+        GetAccessTokenResponse response = getAccessToken_DelegatedAuth(session);
         assertEquals(
-            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES),
+            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES) + ";Target=" + MOCK_BUCKET,
+            response.getAccessToken());
+        assertEquals(999999999L, response.getExpiresAt());
+    }
+
+    @Test
+    public void testGetAccessToken_DelegatedAuth_NoTarget() {
+        // Create a session without target
+        Session session = createSession();
+        session.setTarget("");
+        AbstractDatabaseBackend.getInstance().save(session);
+
+        GetAccessTokenResponse response = getAccessToken_DelegatedAuth(session);
+        assertEquals(
+            "FakeAccessToken/GoogleIdentity=alice@altostrat.com;Scopes=" + String.join(",", SCOPES) + ";Target=",
             response.getAccessToken());
         assertEquals(999999999L, response.getExpiresAt());
     }
