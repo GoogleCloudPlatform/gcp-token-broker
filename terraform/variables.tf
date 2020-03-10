@@ -9,55 +9,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variable gcp_project {
+variable "gcp_project" {
 }
 
-variable gcp_region {
+variable "gcp_region" {
   default = "us-west1"
 }
 
-variable gcp_zone {
+variable "gcp_zone" {
   default = "us-west1-a"
 }
 
-variable datastore_region {
+variable "datastore_region" {
   default = "us-west2"
 }
 
-variable origin_realm {
+variable "origin_realm" {
 }
 
-variable gsuite_domain {
+variable "gsuite_domain" {
 }
 
 // Origin KDC --------------------------------------
 
-variable origin_subnet_cidr {
-    default = "10.11.0.0/29"
+variable "origin_subnet_cidr" {
+  default = "10.11.0.0/29"
 }
 
-variable origin_kdc_ip {
-    default = "10.11.0.3"
-}
-
-variable origin_kdc_hostname {
-    default = "10.11.0.3.xip.io"
+variable "origin_kdc_ip" {
+  default = "10.11.0.3"
 }
 
 // Client ----------------------------------------
 
-variable client_subnet_cidr {
-   default = "10.21.0.0/16"
+variable "client_subnet_cidr" {
+  default = "10.21.0.0/16"
 }
 
-variable dataproc_root_password {
-    default = "change-me"
+variable "dataproc_root_password" {
+  default = "change-me"
 }
 
 // Cross-realm trust -----------------------------
 
-variable cross_realm_password {
-    default = "change-me"
+variable "cross_realm_password" {
+  default = "change-me"
 }
 
 locals {
@@ -66,7 +62,8 @@ locals {
 
 // Test users ------------------------------------
 
-variable test_users {
-    type = "list"
-    default = ["alice", "bob", "john"]
+variable "test_users" {
+  type    = list(string)
+  default = ["alice", "bob", "john"]
 }
+

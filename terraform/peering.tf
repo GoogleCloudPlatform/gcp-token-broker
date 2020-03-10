@@ -10,15 +10,12 @@
 # limitations under the License.
 
 
-# Create the peerings in sequence, as you can't set up multiple peerings
-# with the same VPC at the same time. See https://github.com/terraform-providers/terraform-provider-google/issues/3034
-
 // Client <--> Origin ---------------------------------------------------------------
 
 resource "google_compute_network_peering" "client_origin_peering1" {
-  name = "client-origin-peering1"
-  network = "${google_compute_network.client.self_link}"
-  peer_network = "${google_compute_network.origin.self_link}"
+  name         = "client-origin-peering1"
+  network      = google_compute_network.client.self_link
+  peer_network = google_compute_network.origin.self_link
   depends_on = [
     "google_compute_subnetwork.origin_subnet",
     "google_compute_subnetwork.client_subnet",
@@ -26,10 +23,7 @@ resource "google_compute_network_peering" "client_origin_peering1" {
 }
 
 resource "google_compute_network_peering" "client_origin_peering2" {
-  name = "client-origin-peering2"
-  network = "${google_compute_network.origin.self_link}"
-  peer_network = "${google_compute_network.client.self_link}"
-  depends_on = [
-    "google_compute_network_peering.client_origin_peering1",
-  ]
+  name         = "client-origin-peering2"
+  network      = google_compute_network.origin.self_link
+  peer_network = google_compute_network.client.self_link
 }

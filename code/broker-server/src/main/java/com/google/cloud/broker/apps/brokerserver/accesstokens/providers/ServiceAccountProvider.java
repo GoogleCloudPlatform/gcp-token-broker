@@ -31,8 +31,8 @@ public class ServiceAccountProvider extends AbstractProvider {
         try {
             GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
             ImpersonatedCredentials impersonatedCredentials = ImpersonatedCredentials.create(credentials, googleIdentity, null, scopes, 3600);
-            com.google.auth.oauth2.AccessToken accessToken = impersonatedCredentials.refreshAccessToken();
-            return new AccessToken(accessToken.getTokenValue(), accessToken.getExpirationTime().getTime());
+            com.google.auth.oauth2.AccessToken token = impersonatedCredentials.refreshAccessToken();
+            return new AccessToken(token.getTokenValue(), token.getExpirationTime().getTime());
         } catch (IOException e) {
             throw Status.PERMISSION_DENIED.asRuntimeException();
         }

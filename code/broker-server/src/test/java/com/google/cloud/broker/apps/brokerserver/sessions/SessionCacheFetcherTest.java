@@ -29,7 +29,7 @@ public class SessionCacheFetcherTest {
     private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
     private static final String BIGQUERY = "https://www.googleapis.com/auth/bigquery";
     private static final String ALICE = "alice@EXAMPLE.COM";
-    private static final String MOCK_BUCKET = "gs://example";
+    private static final String MOCK_BUCKET = "//storage.googleapis.com/projects/_/buckets/example";
     private static final Long SESSION_RENEW_PERIOD = 80000000L;
     private static final Long SESSION_MAXIMUM_LIFETIME = 80000000L;
 

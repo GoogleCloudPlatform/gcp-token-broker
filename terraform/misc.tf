@@ -10,29 +10,22 @@
 # limitations under the License.
 
 provider "google" {
-  version = "2.19.0"
-  project = "${var.gcp_project}"
-  region = "${var.gcp_region}"
-  zone = "${var.gcp_zone}"
-}
-
-provider "google-beta" {
-  version = "2.19.0"
-  project = "${var.gcp_project}"
-  region = "${var.gcp_region}"
-  zone = "${var.gcp_zone}"
+  version = "3.12.0"
+  project = var.gcp_project
+  region  = var.gcp_region
+  zone    = var.gcp_zone
 }
 
 provider "null" {
-  version = "1.0.0"
+  version = "2.1.2"
 }
 
 provider "template" {
-  version = "1.0.0"
+  version = "2.1.2"
 }
 
 provider "local" {
-  version = "1.1.0"
+  version = "1.4.0"
 }
 
 // Google APIs --------------------------------------------------------------
@@ -40,9 +33,11 @@ provider "local" {
 resource "google_project_service" "service_compute" {
   service = "compute.googleapis.com"
 }
+
 resource "google_project_service" "service_iamcredentials" {
   service = "iam.googleapis.com"
 }
+
 resource "google_project_service" "service_dataproc" {
   service = "dataproc.googleapis.com"
 }
@@ -75,21 +70,21 @@ resource "google_project_service" "service_run" {
 // Test bucket -----------------------------------------------------------------------
 
 resource "google_storage_bucket" "demo_bucket" {
-  name = "${var.gcp_project}-demo-bucket"
-  depends_on = ["google_project_service.service_compute"]  # Dependency required: https://github.com/terraform-providers/terraform-provider-google/issues/1089
+  name          = "${var.gcp_project}-demo-bucket"
+  depends_on    = [google_project_service.service_compute] # Dependency required: https://github.com/terraform-providers/terraform-provider-google/issues/1089
   force_destroy = true
 }
 
 resource "google_storage_bucket_iam_member" "demo_bucket_perms_user" {
-  bucket = "${google_storage_bucket.demo_bucket.name}"
-  role        = "roles/storage.admin"
-  member      = "user:${element(var.test_users, 0)}@${var.gsuite_domain}"
+  bucket = google_storage_bucket.demo_bucket.name
+  role   = "roles/storage.admin"
+  member = "user:${element(var.test_users, 0)}@${var.gsuite_domain}"
 }
 
 resource "google_storage_bucket_iam_member" "demo_bucket_perms_svcacct" {
-  bucket = "${google_storage_bucket.demo_bucket.name}"
-  role        = "roles/storage.admin"
-  member      = "serviceAccount:${google_service_account.test_user_serviceaccount.0.email}"
+  bucket = google_storage_bucket.demo_bucket.name
+  role   = "roles/storage.admin"
+  member = "serviceAccount:${google_service_account.test_user_serviceaccount[0].email}"
 }
 
 resource "null_resource" "upload_demo_files" {
@@ -98,9 +93,10 @@ resource "null_resource" "upload_demo_files" {
         gsutil cp \
             gs://hive-solution/part-00000.parquet \
             gs://${google_storage_bucket.demo_bucket.name}/datasets/transactions/part-00000.parquet
-    EOT
+    
+EOT
+
   }
-  depends_on = [
-    "google_storage_bucket.demo_bucket"
-  ]
+  depends_on = [google_storage_bucket.demo_bucket]
 }
+

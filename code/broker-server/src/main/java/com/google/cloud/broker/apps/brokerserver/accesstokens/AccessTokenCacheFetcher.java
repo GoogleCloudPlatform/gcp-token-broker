@@ -29,16 +29,18 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
 
     private String owner;
     private List<String> scopes;
+    private String target;
 
 
-    public AccessTokenCacheFetcher(String owner, List<String> scopes) {
+    public AccessTokenCacheFetcher(String owner, List<String> scopes, String target) {
         this.owner = owner;
         this.scopes = scopes;
+        this.target = target;
     }
 
     @Override
     protected String getCacheKey() {
-        return String.format("access-token-%s-%s", owner, scopes);
+        return String.format("access-token-%s-%s-%s", owner, scopes, target);
     }
 
     @Override
@@ -62,7 +64,8 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
             throw Status.PERMISSION_DENIED.withDescription("Principal `" + owner + "` cannot be matched to a Google identity.").asRuntimeException();
         }
         MDC.put("access_token_user", googleIdentity);
-        return AbstractProvider.getInstance().getAccessToken(googleIdentity, scopes);
+        AccessToken accessToken = AbstractProvider.getInstance().getAccessToken(googleIdentity, scopes);
+        return AccessBoundaryUtils.addAccessBoundary(accessToken, target);
     }
 
     @Override
