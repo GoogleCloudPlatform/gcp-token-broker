@@ -95,7 +95,7 @@ Follow these steps to deploy the demo environment to GCP:
     ```conf
     datastore_region = "[your.datastore.region]"
     gsuite_domain = "[your.domain.name]"
-    authorizer_hostname = "[your.authorizer.hostname]"
+    authorizer_host = "[your.authorizer.hostname]"
     origin_realm = "[YOUR.REALM.NAME]"
     test_users = ["alice", "bob", "john"]
     ```
@@ -105,7 +105,7 @@ Follow these steps to deploy the demo environment to GCP:
         [available regions](https://cloud.google.com/datastore/docs/locations#location-r) for Cloud Datastore.
     *   `gsuite_domain` is the domain name (e.g. "your-domain.com") that you registered in the [Prerequisites](#prerequisites)
         section for your GSuite organization.
-    *   `authorizer_hostname` is the host name (e.g. "authorizer.your-domain.com") that
+    *   `authorizer_host` is the host (e.g. "authorizer.your-domain.com") that
         you wish to use to access the authorizer app. This value will be used to configure the
         authorizer app's load balancer.
     *   `origin_realm` is the Kerberos realm (e.g. "YOUR-DOMAIN.COM") that you wish
@@ -195,9 +195,9 @@ you may create self-signed certificates as described below.
 1.  Create the broker certificate:
 
     ```shell
-    BROKER_DOMAIN="10.2.1.255.xip.io"
+    BROKER_HOST="10.2.1.255.xip.io"
     openssl genrsa -out broker-tls.key 2048
-    openssl req -new -key broker-tls.key -out broker-tls.csr -subj "/CN=${BROKER_DOMAIN}"
+    openssl req -new -key broker-tls.key -out broker-tls.csr -subj "/CN=${BROKER_HOST}"
     openssl x509 -req -days 365 -in broker-tls.csr -signkey broker-tls.key -out broker-tls.crt
     openssl pkcs8 -topk8 -nocrypt -in broker-tls.key -out broker-tls.pem
     ```
@@ -402,9 +402,9 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
     export PROJECT=$(gcloud info --format='value(config.project)')
     export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
     export REGION=${ZONE%-*}
-    export BROKER_HOSTNAME="10.2.1.255.xip.io"
-    export BROKER_URI="https://${BROKER_HOSTNAME}:443"
-    export BROKER_PRINCIPAL="broker/${BROKER_HOSTNAME}"
+    export BROKER_HOST="10.2.1.255.xip.io"
+    export BROKER_URI="https://${BROKER_HOST}"
+    export BROKER_PRINCIPAL="broker/${BROKER_HOST}"
     export BROKER_VERSION=$(cat VERSION)
     export BROKER_CRT=$(gcloud beta secrets versions access latest --secret broker-tls-crt)
     export INIT_ACTION="gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh"

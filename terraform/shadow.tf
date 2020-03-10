@@ -10,19 +10,20 @@
 # limitations under the License.
 
 resource "google_service_account" "test_user_serviceaccount" {
-  count = "${length(var.test_users)}"
-  account_id = "${element(var.test_users, count.index)}-shadow"
+  count        = length(var.test_users)
+  account_id   = "${element(var.test_users, count.index)}-shadow"
   display_name = "${element(var.test_users, count.index)}'s shadow service account"
 }
 
 resource "google_service_account_iam_member" "token_creator_0" {
-  service_account_id = "${google_service_account.test_user_serviceaccount.0.name}"
-  role        = "roles/iam.serviceAccountTokenCreator"
-  member      = "serviceAccount:${google_service_account.broker.email}"
+  service_account_id = google_service_account.test_user_serviceaccount[0].name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${google_service_account.broker.email}"
 }
 
 resource "google_service_account_iam_member" "token_creator_1" {
-  service_account_id = "${google_service_account.test_user_serviceaccount.1.name}"
-  role        = "roles/iam.serviceAccountTokenCreator"
-  member      = "serviceAccount:${google_service_account.broker.email}"
+  service_account_id = google_service_account.test_user_serviceaccount[1].name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${google_service_account.broker.email}"
 }
+
