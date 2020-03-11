@@ -71,6 +71,12 @@ limitations under the License.
         <artifactId>logback-jackson</artifactId>
         <version>${ch.qos.logback.contrib.version}</version>
       </dependency>
+      <dependency>
+        <groupId>net.logstash.logback</groupId>
+        <artifactId>logstash-logback-encoder</artifactId>
+        <version>${logstash-logback-encoder.version}</version>
+      </dependency>
+
 
       <!-- For local cache -->
       <dependency>

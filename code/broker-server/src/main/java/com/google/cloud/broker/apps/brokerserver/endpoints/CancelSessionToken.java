@@ -29,6 +29,8 @@ import com.google.cloud.broker.apps.brokerserver.protobuf.CancelSessionTokenResp
 public class CancelSessionToken {
 
     public static void run(CancelSessionTokenRequest request, StreamObserver<CancelSessionTokenResponse> responseObserver) {
+        MDC.put(LoggingUtils.MDC_METHOD_NAME_KEY, CancelSessionToken.class.getSimpleName());
+
         AbstractAuthenticationBackend authenticator = AbstractAuthenticationBackend.getInstance();
         String authenticatedUser = authenticator.authenticateUser();
 
@@ -46,10 +48,11 @@ public class CancelSessionToken {
         AbstractDatabaseBackend.getInstance().delete(session);
 
         // Log success message
-        MDC.put("owner", session.getOwner());
-        MDC.put("renewer", session.getRenewer());
-        MDC.put("session_id", session.getId());
-        LoggingUtils.logSuccess(CancelSessionToken.class.getSimpleName());
+        MDC.put(LoggingUtils.MDC_AUTH_MODE_KEY, LoggingUtils.MDC_AUTH_MODE_VALUE_DIRECT);
+        MDC.put(LoggingUtils.MDC_OWNER_KEY, session.getOwner());
+        MDC.put(LoggingUtils.MDC_RENEWER_KEY, session.getRenewer());
+        MDC.put(LoggingUtils.MDC_SESSION_ID_KEY, session.getId());
+        LoggingUtils.successAuditLog();
 
         // Return response
         CancelSessionTokenResponse response = CancelSessionTokenResponse.newBuilder().build();

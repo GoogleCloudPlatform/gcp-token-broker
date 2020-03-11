@@ -21,6 +21,7 @@ import com.google.cloud.broker.utils.InstanceUtils;
 public abstract class AbstractAuthenticationBackend {
 
     private static AbstractAuthenticationBackend instance;
+    public static final String AUTHENTICATED_USER = "authenticatedUser";
 
     public static AbstractAuthenticationBackend getInstance() {
         String className = AppSettings.getInstance().getString(AppSettings.AUTHENTICATION_BACKEND);
@@ -33,7 +34,7 @@ public abstract class AbstractAuthenticationBackend {
     public String authenticateUser() {
         String authorizationHeader = AuthorizationHeaderServerInterceptor.AUTHORIZATION_CONTEXT_KEY.get();
         String authenticatedUser = authenticateUser(authorizationHeader);
-        MDC.put("authenticated_user", authenticatedUser);
+        MDC.put(AUTHENTICATED_USER, authenticatedUser);
         return authenticatedUser;
     }
 

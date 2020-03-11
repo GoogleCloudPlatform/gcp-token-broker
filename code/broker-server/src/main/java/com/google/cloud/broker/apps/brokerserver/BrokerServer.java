@@ -125,7 +125,7 @@ public class BrokerServer {
                 GetAccessToken.run(request, responseObserver);
             }
             catch (StatusRuntimeException e) {
-                LoggingUtils.logError(e, GetAccessToken.class.getSimpleName());
+                LoggingUtils.errorAuditLog(e);
                 responseObserver.onError(e);
             }
         }
@@ -136,7 +136,7 @@ public class BrokerServer {
                 GetSessionToken.run(request, responseObserver);
             }
             catch (StatusRuntimeException e) {
-                LoggingUtils.logError(e, GetSessionToken.class.getSimpleName());
+                LoggingUtils.errorAuditLog(e);
                 responseObserver.onError(e);
             }
         }
@@ -147,7 +147,7 @@ public class BrokerServer {
                 RenewSessionToken.run(request, responseObserver);
             }
             catch (StatusRuntimeException e) {
-                LoggingUtils.logError(e, RenewSessionToken.class.getSimpleName());
+                LoggingUtils.errorAuditLog(e);
                 responseObserver.onError(e);
             }
         }
@@ -158,7 +158,7 @@ public class BrokerServer {
                 CancelSessionToken.run(request, responseObserver);
             }
             catch (StatusRuntimeException e) {
-                LoggingUtils.logError(e, CancelSessionToken.class.getSimpleName());
+                LoggingUtils.errorAuditLog(e);
                 responseObserver.onError(e);
             }
         }
