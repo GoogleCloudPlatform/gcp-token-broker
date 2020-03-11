@@ -40,9 +40,9 @@ Before you start, you must set up some prerequisites for the demo:
 4.  Create a new GCP project under the GSuite organization and [enable billing](https://cloud.google.com/billing/docs/how-to/modify-project).
 5.  Install some tools on your local machine (The versions indicated below are the ones that have been officially tested.
     Newer versions might work but are untested):
-    *   [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v0.11.13
+    *   [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v0.12.3
     *   [Helm](https://docs.helm.sh/using_helm/#installing-helm) v2.16.1
-    *   [Google Cloud SDK](https://cloud.google.com/sdk/install) v267.0.0
+    *   [Google Cloud SDK](https://cloud.google.com/sdk/install) v284.0.0
 
 ### Deploying the demo architecture
 
@@ -498,10 +498,10 @@ Follow these steps to view the broker application logs in Stackdriver:
 3.  Type the following in the text search box:
 
     ```conf
-    resource.type="container"
+    resource.type="k8s_container"
     resource.labels.cluster_name="broker"
-    resource.labels.namespace_id="default"
-    resource.labels.container_name="broker-container"
+    resource.labels.namespace_name="default"
+    labels.k8s-pod/run="broker-server"
     ```
 
 4.  Click "Submit Filter".
