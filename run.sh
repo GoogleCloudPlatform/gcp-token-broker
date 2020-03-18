@@ -54,30 +54,6 @@ MODULE=""
 PROJECTS_ARG=""
 CONTAINER="broker-dev"
 
-# Creates a directory and copies some files to it.
-# The copied files are keytabs and secrets created for the
-# demo environment (See: https://github.com/GoogleCloudPlatform/gcp-token-broker/blob/master/docs/deploy/index.md).
-function backup_artifacts() {
-    if [ $# -ne 1 ]; then
-        echo "Please provide a directory name"
-        exit 1
-    fi
-    set -x
-    mkdir -p backups/$1
-    cp authorizer-tls.crt backups/$1
-    cp authorizer-tls.csr backups/$1
-    cp authorizer-tls.key backups/$1
-    cp broker-tls.crt backups/$1
-    cp broker-tls.csr backups/$1
-    cp broker-tls.key backups/$1
-    cp broker-tls.pem backups/$1
-    cp broker.keytab backups/$1
-    cp client_secret.json backups/$1
-    cp kerberos-config.yaml backups/$1
-    cp kubernetes/values_override.yaml backups/$1
-    cp kubernetes/skaffold.yaml backups/$1
-}
-
 
 # Build the Maven packages
 function build_packages() {
@@ -311,10 +287,6 @@ case "$1" in
     restart_dev)
         shift
         restart_dev
-        ;;
-    backup_artifacts)
-        shift
-        backup_artifacts $@
         ;;
     dependency)
         shift
