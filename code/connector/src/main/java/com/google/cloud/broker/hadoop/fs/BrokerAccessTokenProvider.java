@@ -14,7 +14,6 @@ package com.google.cloud.broker.hadoop.fs;
 import java.io.IOException;
 import java.security.PrivilegedAction;
 import java.util.Collections;
-import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
@@ -71,7 +70,7 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
                 request = GetAccessTokenRequest.newBuilder()
                     .addAllScopes(Collections.singleton(BrokerTokenIdentifier.GCS_SCOPE))
                     .setOwner(currentUser.getUserName())
-                    .setTarget(BrokerTokenIdentifier.getURI(service))
+                    .setTarget(Utils.getTarget(config, service))
                     .build();
             }
             else {  // Delegated authentication

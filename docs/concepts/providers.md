@@ -134,3 +134,7 @@ example `//storage.googleapis.com/projects/_/buckets/mybucket` for a bucket name
 In the Hadoop use case, Hadoop systematically passes the target bucket to the broker [connector](connector.md). The
 broker connector then relays the target bucket to the broker service. Therefore, CAB is always applied on the
 generated access tokens to restrict access to the given bucket.
+
+`The operation requires that Uniform Bucket Level Access be enabled`
+
+`gcp.token.broker.access.boundary.enabled`

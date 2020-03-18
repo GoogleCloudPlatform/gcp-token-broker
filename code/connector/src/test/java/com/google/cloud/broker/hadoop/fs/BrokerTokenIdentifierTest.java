@@ -118,4 +118,19 @@ public class BrokerTokenIdentifierTest {
         assertEquals("FakeSessionToken/AuthenticatedUser=" + ALICE + ";Owner=" + ALICE + ";Target=" + MOCK_BUCKET, token);
         UserGroupInformation.setLoginUser(null);
     }
+
+    /**
+     * Same as testGetSessionToken but with access boundary disabled
+     */
+    @Test
+    public void testGetSessionTokenWithoutAccessBoundary() throws IOException {
+        TestingTools.startServer(new FakeServer(fakeKDC), grpcCleanup);
+        Configuration conf = TestingTools.getBrokerConfig();
+        conf.set("gcp.token.broker.access.boundary.enabled", "false");
+        Subject alice = fakeKDC.login(ALICE);
+        UserGroupInformation.loginUserFromSubject(alice);
+        String token = getSessionToken(conf);
+        assertEquals("FakeSessionToken/AuthenticatedUser=" + ALICE + ";Owner=" + ALICE + ";Target=", token);
+        UserGroupInformation.setLoginUser(null);
+    }
 }

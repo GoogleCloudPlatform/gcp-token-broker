@@ -42,7 +42,6 @@ public class GetSessionToken {
         Validation.validateParameterNotEmpty("owner", request.getOwner());
         Validation.validateParameterNotEmpty("renewer", request.getRenewer());
         Validation.validateParameterNotEmpty("scopes", scopes);
-        Validation.validateParameterNotEmpty("target", request.getTarget());
         Validation.validateScopes(scopes);
 
         // If the authenticated user requests a session token for another user,

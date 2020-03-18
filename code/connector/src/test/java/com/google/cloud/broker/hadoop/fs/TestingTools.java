@@ -81,6 +81,7 @@ class TestingTools {
         Configuration conf = new Configuration();
         conf.set("gcp.token.broker.uri", "http://" + BROKER_HOST + ":1234");
         conf.set("gcp.token.broker.kerberos.principal", BROKER);
+        conf.set("gcp.token.broker.access.boundary.enabled", "true");
         return conf;
     }
 

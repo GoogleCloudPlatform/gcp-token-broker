@@ -124,4 +124,19 @@ public class BrokerAccessTokenProviderTest {
         UserGroupInformation.setLoginUser(null);
     }
 
+    /**
+     * Same as testProviderRefresh but with access boundary disabled
+     */
+    @Test
+    public void testProviderRefreshWithoutAccessBoundary() throws IOException {
+        TestingTools.startServer(new FakeServer(fakeKDC), grpcCleanup);
+        Configuration conf = TestingTools.getBrokerConfig();
+        conf.set("gcp.token.broker.access.boundary.enabled", "false");
+        Subject alice = fakeKDC.login(ALICE);
+        UserGroupInformation.loginUserFromSubject(alice);
+        AccessToken token = refresh(conf);
+        assertEquals("FakeAccessToken/AuthenticatedUser=" + ALICE + ";Owner=" + ALICE + ";Target=", token.getToken());
+        UserGroupInformation.setLoginUser(null);
+    }
+
 }

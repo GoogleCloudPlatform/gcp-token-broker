@@ -72,6 +72,7 @@ public class GetAccessToken {
             // Assert that no parameters were provided
             Validation.validateParameterIsEmpty("owner", owner);
             Validation.validateParameterIsEmpty("scopes", scopes);
+            Validation.validateParameterIsEmpty("target", target);
 
             // Fetch the correct parameters from the session
             owner = session.getOwner();
