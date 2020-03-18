@@ -22,7 +22,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.cloud.broker.testing.FakeKDC;
-import static com.google.cloud.broker.hadoop.fs.SpnegoUtils.newSPNEGOToken;
+import static com.google.cloud.broker.credentials.SpnegoUtils.newSPNEGOToken;
 import static com.google.cloud.broker.hadoop.fs.TestingTools.*;
 
 

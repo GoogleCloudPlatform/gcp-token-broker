@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
+import com.google.cloud.broker.credentials.GrpcUtils;
 import io.grpc.ManagedChannel;
 import io.grpc.internal.testing.TestUtils;
 

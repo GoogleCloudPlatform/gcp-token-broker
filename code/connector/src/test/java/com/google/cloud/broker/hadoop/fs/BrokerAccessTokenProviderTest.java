@@ -16,6 +16,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import com.google.cloud.broker.credentials.GrpcUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.*;
 import org.junit.runner.RunWith;

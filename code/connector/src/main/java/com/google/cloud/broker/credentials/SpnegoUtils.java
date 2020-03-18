@@ -9,17 +9,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.hadoop.fs;
+package com.google.cloud.broker.credentials;
 
 import org.ietf.jgss.*;
 
-final class SpnegoUtils {
+public final class SpnegoUtils {
 
     private static final String SPNEGO_OID = "1.3.6.1.5.5.2";
     private static final String KRB5_MECHANISM_OID = "1.2.840.113554.1.2.2";
     private static final String KRB5_PRINCIPAL_NAME_OID = "1.2.840.113554.1.2.2.1";
 
-    static byte[] newSPNEGOToken(String servicePrincipal) throws GSSException {
+    public static byte[] newSPNEGOToken(String servicePrincipal) throws GSSException {
         // Create GSS context for the broker service and the logged-in user
         Oid krb5Mechanism = new Oid(KRB5_MECHANISM_OID);
         Oid krb5PrincipalNameType = new Oid(KRB5_PRINCIPAL_NAME_OID);

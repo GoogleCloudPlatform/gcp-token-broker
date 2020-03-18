@@ -14,8 +14,15 @@ package com.google.cloud.broker.hadoop.fs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 
+import com.google.cloud.broker.credentials.BrokerServerInfo;
+
 public class Utils {
+
     private final static String CONFIG_ACCESS_BOUNDARY_ENABLED = "gcp.token.broker.access.boundary.enabled";
+    private final static String CONFIG_URI = "gcp.token.broker.uri";
+    private final static String CONFIG_PRINCIPAL = "gcp.token.broker.kerberos.principal";
+    private final static String CONFIG_CERTIFICATE = "gcp.token.broker.tls.certificate";
+    private final static String CONFIG_CERTIFICATE_PATH = "gcp.token.broker.tls.certificate.path";
 
     public static String getTarget(Configuration config, Text service) {
         boolean accessBoundaryEnabled = Boolean.parseBoolean(
@@ -30,6 +37,15 @@ public class Utils {
         else {
             return "";
         }
+    }
+
+    public static BrokerServerInfo getBrokerDetailsFromConfig(Configuration config) {
+        return new BrokerServerInfo(
+            config.get(CONFIG_URI),
+            config.get(CONFIG_PRINCIPAL),
+            config.get(CONFIG_CERTIFICATE),
+            config.get(CONFIG_CERTIFICATE_PATH)
+        );
     }
 
 }
