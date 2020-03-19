@@ -121,7 +121,10 @@ function set_projects_arg() {
                 PROJECTS_ARG="--projects code/core,code/authorizer"
                 ;;
             connector)
-                PROJECTS_ARG="--projects code/common,code/connector"
+                PROJECTS_ARG="--projects code/common,code/client/client-lib,code/client/hadoop-connector"
+                ;;
+            client)
+                PROJECTS_ARG="--projects code/client/client-lib"
                 ;;
             db-datastore)
                 PROJECTS_ARG="--projects code/core,code/extensions/database/cloud-datastore"
@@ -217,6 +220,11 @@ function mvn() {
 function clean() {
     set -x
     docker exec -it ${CONTAINER} bash -c "mvn clean"
+}
+
+function compile_protobuf {
+  set -x
+  docker exec -it ${CONTAINER} bash -c "mvn protobuf:compile --projects code/broker-server,code/client/client-lib"
 }
 
 function update_version() {
@@ -331,6 +339,10 @@ case "$1" in
     lint)
         shift
         lint
+        ;;
+    protobuf)
+        shift
+        compile_protobuf
         ;;
     *)
         echo "Error: Unsupported command: '$1'" >&2
