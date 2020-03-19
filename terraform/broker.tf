@@ -318,7 +318,7 @@ resource "local_file" "skaffold_yaml" {
 ##############################################################
 
 # To use Skaffold, run the following command from the root of the repository:
-# skaffold dev -f deploy/${PROJECT}/skaffold.yaml
+# skaffold dev -f deploy/$${PROJECT}/skaffold.yaml
 
 apiVersion: skaffold/v1
 kind: Config
