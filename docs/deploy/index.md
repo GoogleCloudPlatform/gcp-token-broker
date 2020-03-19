@@ -195,7 +195,7 @@ you may create self-signed certificates as described below.
 1.  Create the broker certificate:
 
     ```shell
-    BROKER_HOST="10.2.1.255.xip.io"
+    BROKER_HOST="10.2.1.255.nip.io"
     openssl genrsa -out broker-tls.key 2048
     openssl req -new -key broker-tls.key -out broker-tls.csr -subj "/CN=${BROKER_HOST}"
     openssl x509 -req -days 365 -in broker-tls.csr -signkey broker-tls.key -out broker-tls.crt
@@ -402,9 +402,8 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
     export PROJECT=$(gcloud info --format='value(config.project)')
     export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
     export REGION=${ZONE%-*}
-    export BROKER_HOST="10.2.1.255.xip.io"
-    export BROKER_URI="https://${BROKER_HOST}"
-    export BROKER_PRINCIPAL="broker/${BROKER_HOST}"
+    export BROKER_URI="https://10.2.1.255.nip.io"
+    export BROKER_PRINCIPAL="broker"
     export BROKER_VERSION=$(cat VERSION)
     export BROKER_CRT=$(gcloud beta secrets versions access latest --secret broker-tls-crt)
     export INIT_ACTION="gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh"

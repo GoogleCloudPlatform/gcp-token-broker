@@ -32,10 +32,6 @@ variable "gsuite_domain" {
 
 // Broker --------------------------------------
 
-variable "broker_host" {
-  default = "10.2.1.255.xip.io"
-}
-
 variable "broker_service_ip" {
   default = "10.2.1.255"
 }
