@@ -317,33 +317,36 @@ resource "local_file" "skaffold_yaml" {
 # purposes, otherwise you can just ignore it.                #
 ##############################################################
 
+# To use Skaffold, run the following command from the root of the repository:
+# skaffold dev -f deploy/$${PROJECT}/skaffold.yaml
+
 apiVersion: skaffold/v1
 kind: Config
 build:
   artifacts:
   - image: gcr.io/${var.gcp_project}/broker-server
-    context: ../../
+    context: .
     docker:
       dockerfile: ./code/broker-server/Dockerfile
   - image: gcr.io/${var.gcp_project}/authorizer
-    context: ../../
+    context: .
     docker:
       dockerfile: ./code/authorizer/Dockerfile
 deploy:
   helm:
     releases:
     - name: broker-server
-      chartPath: ../../kubernetes/broker-server
+      chartPath: ./kubernetes/broker-server
       values:
         broker.image: gcr.io/${var.gcp_project}/broker-server
       valuesFiles:
-        - ./values_override.yaml
+        - ./deploy/${var.gcp_project}/values_override.yaml
     - name: authorizer
-      chartPath: ../../kubernetes/authorizer
+      chartPath: ./kubernetes/authorizer
       values:
         authorizer.image: gcr.io/${var.gcp_project}/authorizer
       valuesFiles:
-        - ./values_override.yaml
+        - ./deploy/${var.gcp_project}/values_override.yaml
 EOT
 
 
