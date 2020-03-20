@@ -34,8 +34,7 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
     private final static AccessToken EXPIRED_TOKEN = new AccessToken("", -1L);
 
     public BrokerAccessTokenProvider(Text service) {
-        this.service = service;
-        this.accessToken = EXPIRED_TOKEN;
+        this(service, null);
     }
 
     public BrokerAccessTokenProvider(Text service, BrokerTokenIdentifier bti) {

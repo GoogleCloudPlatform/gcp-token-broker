@@ -49,14 +49,14 @@ public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
         }
 
         BrokerServerInfo serverInfo = Utils.getBrokerDetailsFromConfig(config);
-        sessionToken = loginUser.doAs((PrivilegedAction<String>) () -> {
+        setSessionToken(loginUser.doAs((PrivilegedAction<String>) () -> {
             return GetSessionToken.submit(
                 serverInfo,
                 currentUser.getUserName(),
                 renewer.toString(),
                 Collections.singleton(GCS_SCOPE),
                 Utils.getTarget(config, service));
-        });
+        }));
     }
 
     @Override
@@ -69,6 +69,10 @@ public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
     public void readFields(DataInput in) throws DelegationTokenIOException, IOException {
         super.readFields(in);
         this.sessionToken = Text.readString(in, 32 * 1024);
+    }
+
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
     }
 
     public String getSessionToken(){

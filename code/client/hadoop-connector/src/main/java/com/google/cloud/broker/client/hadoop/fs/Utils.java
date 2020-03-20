@@ -18,11 +18,11 @@ import com.google.broker.client.connect.BrokerServerInfo;
 
 public class Utils {
 
-    private final static String CONFIG_ACCESS_BOUNDARY_ENABLED = "gcp.token.broker.access.boundary.enabled";
-    private final static String CONFIG_URI = "gcp.token.broker.uri";
-    private final static String CONFIG_PRINCIPAL = "gcp.token.broker.kerberos.principal";
-    private final static String CONFIG_CERTIFICATE = "gcp.token.broker.tls.certificate";
-    private final static String CONFIG_CERTIFICATE_PATH = "gcp.token.broker.tls.certificate.path";
+    public final static String CONFIG_ACCESS_BOUNDARY_ENABLED = "gcp.token.broker.access.boundary.enabled";
+    public final static String CONFIG_URI = "gcp.token.broker.uri";
+    public final static String CONFIG_PRINCIPAL = "gcp.token.broker.kerberos.principal";
+    public final static String CONFIG_CERTIFICATE = "gcp.token.broker.tls.certificate";
+    public final static String CONFIG_CERTIFICATE_PATH = "gcp.token.broker.tls.certificate.path";
 
     public static String getTarget(Configuration config, Text service) {
         boolean accessBoundaryEnabled = Boolean.parseBoolean(
