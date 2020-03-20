@@ -236,14 +236,13 @@ function restart_dev {
 function upload_connector {
     LIB_DIR="/usr/local/share/google/dataproc/lib"
     VERSION="$(cat VERSION)"
-    JAR="broker-connector-hadoop2-${VERSION}-jar-with-dependencies.jar"
-    LOCAL_JAR=""
+    JAR="broker-hadoop-connector-hadoop2-${VERSION}-jar-with-dependencies.jar"
     SSH="gcloud compute ssh $1 --tunnel-through-iap"
     set -x
     # Upload new JAR
-    gcloud compute scp code/connector/target/${JAR} $1:/tmp --tunnel-through-iap
+    gcloud compute scp code/client/hadoop-connector/target/${JAR} $1:/tmp --tunnel-through-iap
     # Delete old JAR
-    ${SSH} --command "sudo rm -f ${LIB_DIR}/broker-connector-*.jar"
+    ${SSH} --command "sudo rm -f ${LIB_DIR}/broker-hadoop-connector-*.jar"
     # Relocate new JAR
     ${SSH} --command "sudo mv /tmp/${JAR} ${LIB_DIR}"
     # Restart services

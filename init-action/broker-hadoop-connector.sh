@@ -40,7 +40,6 @@ readonly connector_jar_gcs="$(/usr/share/google/get_metadata_value attributes/co
 readonly connector_jar_url="$(/usr/share/google/get_metadata_value attributes/connector-jar-url)"
 readonly broker_uri="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-uri)"
 readonly broker_kerberos_principal="$(/usr/share/google/get_metadata_value attributes/gcp-token-broker-kerberos-principal)"
-readonly broker_connector_jar="$(/usr/share/google/get_metadata_value attributes/broker-connector-jar)"
 readonly origin_realm="$(/usr/share/google/get_metadata_value attributes/origin-realm)"
 readonly test_users="$(/usr/share/google/get_metadata_value attributes/test-users)"
 set +x
@@ -77,7 +76,7 @@ function restart_worker_services() {
 }
 
 # Set some hadoop config properties
-set_property_core_site "fs.gs.delegation.token.binding" "com.google.cloud.broker.hadoop.fs.BrokerDelegationTokenBinding"
+set_property_core_site "fs.gs.delegation.token.binding" "com.google.cloud.broker.client.hadoop.fs.BrokerDelegationTokenBinding"
 set_property_core_site "gcp.token.broker.uri" "$broker_uri"
 set_property_core_site "gcp.token.broker.kerberos.principal" "$broker_kerberos_principal"
 set +x

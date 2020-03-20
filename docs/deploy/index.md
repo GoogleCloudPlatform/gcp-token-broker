@@ -406,14 +406,14 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
     export BROKER_PRINCIPAL="broker"
     export BROKER_VERSION=$(cat VERSION)
     export BROKER_CRT=$(gcloud beta secrets versions access latest --secret broker-tls-crt)
-    export INIT_ACTION="gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh"
-    export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${BROKER_VERSION}/broker-connector-hadoop2-${BROKER_VERSION}-jar-with-dependencies.jar"
+    export INIT_ACTION="gs://gcp-token-broker/broker-hadoop-connector.${BROKER_VERSION}.sh"
+    export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-hadoop-connector/hadoop2-${BROKER_VERSION}/broker-hadoop-connector-hadoop2-${BROKER_VERSION}-jar-with-dependencies.jar"
     ```
 
 4.  Create the Dataproc cluster:
 
     ```shell
-    gcloud beta dataproc clusters create test-cluster \
+    gcloud dataproc clusters create test-cluster \
       --single-node \
       --no-address \
       --zone ${ZONE} \
@@ -424,11 +424,11 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
       --scopes cloud-platform \
       --service-account "dataproc@${PROJECT}.iam.gserviceaccount.com" \
       --kerberos-config-file deploy/${PROJECT}/kerberos-config.yaml \
+      --initialization-actions ${INIT_ACTION} \
       --metadata "gcp-token-broker-tls-certificate=${BROKER_CRT}" \
       --metadata "gcp-token-broker-uri=${BROKER_URI}" \
       --metadata "gcp-token-broker-kerberos-principal=${BROKER_PRINCIPAL}" \
       --metadata "origin-realm=${REALM}" \
-      --initialization-actions ${INIT_ACTION} \
       --metadata "connector-jar-url=${CONNECTOR_JAR_URL}"
     ```
 

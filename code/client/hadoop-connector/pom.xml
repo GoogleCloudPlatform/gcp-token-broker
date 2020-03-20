@@ -53,7 +53,6 @@ limitations under the License.
       </profile>
     </profiles>
 
-
     <dependencies>
         <dependency>
             <groupId>com.google.cloud.broker</groupId>
@@ -90,12 +89,6 @@ limitations under the License.
             <groupId>com.google.cloud.broker</groupId>
             <artifactId>common</artifactId>
             <version>${project.parent.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>${protobuf-java-for-testing.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -142,8 +135,9 @@ limitations under the License.
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <artifactSet>
                                 <includes>
+                                    <include>com.google.cloud.broker:broker-client-lib</include>
                                     <include>com.google.auth</include>
-                                    <include>com.google.http-client</include>
+                                    <include>com.google.http-client:google-http-client</include>
                                     <include>com.google.guava</include>
                                     <include>com.google.protobuf</include>
                                     <include>io.grpc</include>

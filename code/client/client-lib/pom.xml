@@ -42,6 +42,11 @@ limitations under the License.
             <version>0.20.0</version>
         </dependency>
         <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf-java.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.grpc</groupId>
             <!-- Must use the shaded library for TLS to work... -->
             <!-- See more details at: https://github.com/grpc/grpc-java/blob/master/SECURITY.md#tls-on-non-android -->
