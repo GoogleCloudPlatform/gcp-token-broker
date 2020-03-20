@@ -91,31 +91,31 @@ function set_projects_arg() {
                 PROJECTS_ARG="--projects code/common,code/core"
                 ;;
             broker-server)
-                PROJECTS_ARG="--projects code/common,code/core,code/broker-server"
+                PROJECTS_ARG="--projects code/common,code/common,code/core,code/broker-server"
                 ;;
             authorizer)
-                PROJECTS_ARG="--projects code/core,code/authorizer"
+                PROJECTS_ARG="--projects code/common,code/core,code/authorizer"
                 ;;
             connector)
                 PROJECTS_ARG="--projects code/common,code/client/client-lib,code/client/hadoop-connector"
                 ;;
             client)
-                PROJECTS_ARG="--projects code/client/client-lib"
+                PROJECTS_ARG="--projects ccode/common,ode/client/client-lib"
                 ;;
             db-datastore)
-                PROJECTS_ARG="--projects code/core,code/extensions/database/cloud-datastore"
+                PROJECTS_ARG="--projects code/common,code/core,code/extensions/database/cloud-datastore"
                 ;;
             jdbc)
-                PROJECTS_ARG="--projects code/core,code/extensions/database/jdbc"
+                PROJECTS_ARG="--projects code/common,code/core,code/extensions/database/jdbc"
                 ;;
             kms)
-                PROJECTS_ARG="--projects code/core,code/extensions/encryption/cloud-kms"
+                PROJECTS_ARG="--projects code/common,code/core,code/extensions/encryption/cloud-kms"
                 ;;
             cache-redis)
-                PROJECTS_ARG="--projects code/core,code/extensions/caching/redis"
+                PROJECTS_ARG="--projects code/common,code/core,code/extensions/caching/redis"
                 ;;
             cache-datastore)
-                PROJECTS_ARG="--projects code/core,code/extensions/caching/cloud-datastore"
+                PROJECTS_ARG="--projects code/common,code/core,code/extensions/caching/cloud-datastore"
                 ;;
             *)
                 echo "Invalid module: '${MODULE}'" >&2
