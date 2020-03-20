@@ -1,4 +1,4 @@
-## 0.10.0 (XXX)
+## 0.10.0 (March 20, 2020)
 
 - Disabled credential access boundary by default.
 - Added new base client library: `broker-client-lib`.
