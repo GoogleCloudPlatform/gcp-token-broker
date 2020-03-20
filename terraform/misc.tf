@@ -9,25 +9,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-provider "google" {
-  version = "3.12.0"
-  project = var.gcp_project
-  region  = var.gcp_region
-  zone    = var.gcp_zone
-}
-
-provider "null" {
-  version = "2.1.2"
-}
-
-provider "template" {
-  version = "2.1.2"
-}
-
-provider "local" {
-  version = "1.4.0"
-}
-
 // Google APIs --------------------------------------------------------------
 
 resource "google_project_service" "service_compute" {
