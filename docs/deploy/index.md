@@ -40,9 +40,9 @@ Before you start, you must set up some prerequisites for the demo:
 4.  Create a new GCP project under the GSuite organization and [enable billing](https://cloud.google.com/billing/docs/how-to/modify-project).
 5.  Install some tools on your local machine (The versions indicated below are the ones that have been officially tested.
     Newer versions might work but are untested):
-    *   [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v0.12.3
-    *   [Helm](https://docs.helm.sh/using_helm/#installing-helm) v2.16.1
-    *   [Google Cloud SDK](https://cloud.google.com/sdk/install) v284.0.0
+    *   [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v0.12.24
+    *   [Helm](https://docs.helm.sh/using_helm/#installing-helm) v3.1.2
+    *   [Google Cloud SDK](https://cloud.google.com/sdk/install) v285.0.1
 
 ### Deploying the demo architecture
 
@@ -188,7 +188,7 @@ Follow these steps to deploy the demo environment to GCP:
 
 The broker and authorizer apps both use TLS encryption when serving requests.
 
-You may choose to use your own domain, certificates, and trusted Certificate
+You may choose to use your own hostname, certificates, and trusted Certificate
 Authority. Alternatively, for development and testing purposes only,
 you may create self-signed certificates as described below.
 
@@ -201,6 +201,10 @@ you may create self-signed certificates as described below.
     openssl x509 -req -days 365 -in broker-tls.csr -signkey broker-tls.key -out broker-tls.crt
     openssl pkcs8 -topk8 -nocrypt -in broker-tls.key -out broker-tls.pem
     ```
+    
+    Note: The [nip.io](https://nip.io/) domain is used here only for the purposes of the demo as it provides an easy
+    way to map an IP address to a hostname. However, in production, you should instead use a real hostname and configure
+    it in your DNS.
     
 2.  Create the authorizer certificate (Replace **`[your.authorizer.hostname]`** with your authorizer
     app's host name):
@@ -309,8 +313,7 @@ Authorizer:
     c)  Delete the secrets from your local filesystem: 
     
         ```shell
-        rm authorizer-tls.crt
-        rm authorizer-tls.key
+        rm authorizer-tls.crt authorizer-tls.key
         ```
 
 2.  Deploy the Authorizer app:

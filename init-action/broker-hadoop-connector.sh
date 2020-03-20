@@ -119,11 +119,12 @@ fi
 # Setup some useful env vars
 PROJECT=$(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
 ZONE=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/zone" -H "Metadata-Flavor: Google" | awk -F/ '{print $NF}')
-cat > /etc/profile.d/extra_env_vars.sh << EOL
+cat > /etc/profile.d/broker.sh << EOL
 export PROJECT=$PROJECT
 export ZONE=$ZONE
 export DATAPROC_REALM=$DATAPROC_REALM
 export REALM=$origin_realm
+alias ping-broker='java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.PingServer'
 EOL
 
 # Create POSIX users (which need to exist on all nodes for Yarn to work)
