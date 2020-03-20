@@ -107,6 +107,7 @@ limitations under the License.
         <maven-assembly-plugin.version>3.2.0</maven-assembly-plugin.version>
         <os-maven-plugin.version>1.6.2</os-maven-plugin.version>
         <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
+        <protobuf-java.version>3.11.4</protobuf-java.version>
         <maven-javadoc-plugin.version>3.1.1</maven-javadoc-plugin.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-shade-plugin.version>3.2.2</maven-shade-plugin.version>
@@ -257,7 +258,8 @@ limitations under the License.
         <module>code/extensions/encryption/cloud-kms</module>
         <module>code/extensions/caching/redis</module>
         <module>code/extensions/caching/cloud-datastore</module>
-        <module>code/connector</module>
+        <module>code/client/client-lib</module>
+        <module>code/client/hadoop-connector</module>
     </modules>
 
 </project>

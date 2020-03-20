@@ -263,7 +263,7 @@ broker:
           if: "realm == '${var.origin_realm}'",
           then: "primary + '@${var.gsuite_domain}'"
       }]
-      authentication.spnego.keytabs = [{keytab="/secrets/keytab", principal="broker/${var.broker_host}@${local.dataproc_realm}"}]
+      authentication.spnego.keytabs = [{keytab="/secrets/keytab", principal="broker@${local.dataproc_realm}"}]
       server.tls.private-key-path = "/secrets/broker-tls-pem"
       server.tls.certificate-path = "/secrets/broker-tls-crt"
       oauth.client-secret-json-path = "/secrets/oauth-client"

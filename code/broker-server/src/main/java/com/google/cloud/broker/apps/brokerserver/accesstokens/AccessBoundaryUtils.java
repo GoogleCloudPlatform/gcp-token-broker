@@ -41,7 +41,7 @@ public class AccessBoundaryUtils {
     }
 
     public static AccessToken addAccessBoundary(AccessToken accessToken, String target) {
-        if (target == null) {
+        if (target == null || target.isEmpty()) {
             return accessToken;
         }
 

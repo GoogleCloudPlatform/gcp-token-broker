@@ -97,7 +97,10 @@ function set_projects_arg() {
                 PROJECTS_ARG="--projects code/core,code/authorizer"
                 ;;
             connector)
-                PROJECTS_ARG="--projects code/common,code/connector"
+                PROJECTS_ARG="--projects code/common,code/client/client-lib,code/client/hadoop-connector"
+                ;;
+            client)
+                PROJECTS_ARG="--projects code/client/client-lib"
                 ;;
             db-datastore)
                 PROJECTS_ARG="--projects code/core,code/extensions/database/cloud-datastore"
@@ -195,6 +198,11 @@ function clean() {
     docker exec -it ${CONTAINER} bash -c "mvn clean"
 }
 
+function compile_protobuf {
+  set -x
+  docker exec -it ${CONTAINER} bash -c "mvn protobuf:compile --projects code/broker-server,code/client/client-lib"
+}
+
 function update_version() {
     set -x
     docker exec -it ${CONTAINER} bash -c "mvn -Prelease versions:set -DgenerateBackupPoms=false -DnewVersion=$(cat VERSION)"
@@ -228,14 +236,13 @@ function restart_dev {
 function upload_connector {
     LIB_DIR="/usr/local/share/google/dataproc/lib"
     VERSION="$(cat VERSION)"
-    JAR="broker-connector-hadoop2-${VERSION}-jar-with-dependencies.jar"
-    LOCAL_JAR=""
+    JAR="broker-hadoop-connector-hadoop2-${VERSION}-jar-with-dependencies.jar"
     SSH="gcloud compute ssh $1 --tunnel-through-iap"
     set -x
     # Upload new JAR
-    gcloud compute scp code/connector/target/${JAR} $1:/tmp --tunnel-through-iap
+    gcloud compute scp code/client/hadoop-connector/target/${JAR} $1:/tmp --tunnel-through-iap
     # Delete old JAR
-    ${SSH} --command "sudo rm -f ${LIB_DIR}/broker-connector-*.jar"
+    ${SSH} --command "sudo rm -f ${LIB_DIR}/broker-hadoop-connector-*.jar"
     # Relocate new JAR
     ${SSH} --command "sudo mv /tmp/${JAR} ${LIB_DIR}"
     # Restart services
@@ -303,6 +310,10 @@ case "$1" in
     lint)
         shift
         lint
+        ;;
+    protobuf)
+        shift
+        compile_protobuf
         ;;
     *)
         echo "Error: Unsupported command: '$1'" >&2

@@ -18,7 +18,7 @@ from client import BrokerClient
 from settings import TEST_USERS, REALM
 
 SCOPE = 'https://www.googleapis.com/auth/devstorage.read_write'
-BROKER_HOST = '10.2.1.255.xip.io'
+BROKER_HOST = '10.2.1.255.nip.io'
 USER = TEST_USERS[0]
 USER_FULL = '{}@{}'.format(USER, REALM)
 

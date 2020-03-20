@@ -26,6 +26,14 @@ described the following sub-sections. After each command, you can verify in the 
 that the demo GCS bucket is in fact accessed by the expected GSuite user, that is
 "alice@your-domain.com" (See the [Logging](../concepts/logging.md) section to learn how to view the logs).
 
+### Configuration checks
+
+To verify that your client environment is correctly configured, you can run this simple command:
+
+```shell
+java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.CheckConfig
+```
+
 ### Hadoop FS
 
 Run a simple Hadoop FS command:
