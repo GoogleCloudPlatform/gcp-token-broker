@@ -9,29 +9,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.encryption.backends;
+package com.google.cloud.broker.checks;
 
-import com.google.cloud.broker.checks.CheckResult;
+public class CheckResult {
 
-/**
- Dummy encryption backend that does not encrypt nor decrypt anything.
- Use only for testing. Do NOT use in production!
- */
-public class DummyEncryptionBackend extends AbstractEncryptionBackend {
+    private boolean success;
+    private String message;
+    private String type;
 
-    @Override
-    public byte[] decrypt(byte[] cipherText) {
-        return cipherText;
+    public CheckResult(boolean success) {
+        this(success, null);
     }
 
-    @Override
-    public byte[] encrypt(byte[] plainText) {
-        return plainText;
+    public CheckResult(boolean success, String message) {
+        this.success = success;
+        this.message = message;
     }
 
-    @Override
-    public CheckResult checkConnection() {
-        return new CheckResult(true);
+    public boolean isSuccess() {
+        return success;
     }
 
+    public String getMessage() {
+        return message;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 }

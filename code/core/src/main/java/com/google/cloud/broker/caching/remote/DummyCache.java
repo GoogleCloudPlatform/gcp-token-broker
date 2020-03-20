@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
+import com.google.cloud.broker.checks.CheckResult;
 
 /**
  * Dummy caching backend that does not actually cache anything.
@@ -44,6 +45,11 @@ public class DummyCache extends AbstractRemoteCache {
     @Override
     public Lock acquireLock(String lockName) {
         return new NoOpLock();
+    }
+
+    @Override
+    public CheckResult checkConnection() {
+        return new CheckResult(true);
     }
 
     public static class NoOpLock implements Lock {

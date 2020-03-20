@@ -108,7 +108,7 @@ function set_projects_arg() {
             jdbc)
                 PROJECTS_ARG="--projects code/core,code/extensions/database/jdbc"
                 ;;
-            cloud-kms)
+            kms)
                 PROJECTS_ARG="--projects code/core,code/extensions/encryption/cloud-kms"
                 ;;
             cache-redis)

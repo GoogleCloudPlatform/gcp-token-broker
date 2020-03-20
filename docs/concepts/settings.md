@@ -214,6 +214,13 @@ Default: `86400000` (24 hours, in milliseconds)
 
 [Session](sessions.md) lifetime increment.
 
+### `system-check-enabled`
+
+Default: `true`
+
+Flag to enable/disable the system check when the broker server starts. The system check verifies that there is
+connectivity established with the database, cache, and encryption backends.
+
 ### `user-mapping.mapper`
 
 Default: `com.google.cloud.broker.usermapping.KerberosUserMapper`

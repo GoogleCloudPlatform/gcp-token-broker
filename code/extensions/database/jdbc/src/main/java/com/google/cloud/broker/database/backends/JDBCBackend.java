@@ -11,12 +11,15 @@
 
 package com.google.cloud.broker.database.backends;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.cloud.broker.checks.CheckResult;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.settings.AppSettings;
@@ -209,6 +212,18 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             throw new RuntimeException(e);
         } finally {
             try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
+        }
+    }
+
+    @Override
+    public CheckResult checkConnection() {
+        try {
+            getConnection();
+            return new CheckResult(true);
+        } catch(Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            return new CheckResult(false, sw.toString());
         }
     }
 
