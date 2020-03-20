@@ -11,16 +11,20 @@
 
 package com.google.cloud.broker.caching.remote;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
 import org.redisson.Redisson;
+import org.redisson.api.NodesGroup;
 import org.redisson.api.RBucket;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.ByteArrayCodec;
 import org.redisson.config.Config;
 
+import com.google.cloud.broker.checks.CheckResult;
 import com.google.cloud.broker.settings.AppSettings;
 
 
@@ -29,39 +33,58 @@ public class RedisCache extends AbstractRemoteCache {
     private RedissonClient client;
 
     public RedisCache() {
-        String host = AppSettings.getInstance().getString(AppSettings.REDIS_CACHE_HOST);
-        Integer port = AppSettings.getInstance().getInt(AppSettings.REDIS_CACHE_PORT);
-        Config config = new Config();
-        config.useSingleServer()
-            .setAddress(String.format("redis://%s:%s", host, port))
-            .setDatabase(AppSettings.getInstance().getInt(AppSettings.REDIS_CACHE_DB));
-        client = Redisson.create(config);
+    }
+
+    private RedissonClient getClient() {
+        if (client == null) {
+            String host = AppSettings.getInstance().getString(AppSettings.REDIS_CACHE_HOST);
+            Integer port = AppSettings.getInstance().getInt(AppSettings.REDIS_CACHE_PORT);
+            Config config = new Config();
+            config.useSingleServer()
+                .setAddress(String.format("redis://%s:%s", host, port))
+                .setDatabase(AppSettings.getInstance().getInt(AppSettings.REDIS_CACHE_DB));
+            client = Redisson.create(config);
+        }
+        return client;
     }
 
     public byte[] get(String key) {
-        RBucket<byte[]> bucket = client.getBucket(key, ByteArrayCodec.INSTANCE);
+        RBucket<byte[]> bucket = getClient().getBucket(key, ByteArrayCodec.INSTANCE);
         return bucket.get();
     }
 
     public void set(String key, byte[] value) {
-        RBucket<byte[]> bucket = client.getBucket(key, ByteArrayCodec.INSTANCE);
+        RBucket<byte[]> bucket = getClient().getBucket(key, ByteArrayCodec.INSTANCE);
         bucket.set(value);
     }
 
     public void set(String key, byte[] value, int expireIn) {
-        RBucket<byte[]> bucket = client.getBucket(key, ByteArrayCodec.INSTANCE);
+        RBucket<byte[]> bucket = getClient().getBucket(key, ByteArrayCodec.INSTANCE);
         bucket.set(value, expireIn, TimeUnit.SECONDS);
     }
 
     public void delete(String key) {
-        RBucket<byte[]> bucket = client.getBucket(key, ByteArrayCodec.INSTANCE);
+        RBucket<byte[]> bucket = getClient().getBucket(key, ByteArrayCodec.INSTANCE);
         bucket.delete();
     }
 
     public Lock acquireLock(String lockName) {
-        RLock lock = client.getLock(lockName);
+        RLock lock = getClient().getLock(lockName);
         lock.lock();
         return lock;
+    }
+
+    @Override
+    public CheckResult checkConnection() {
+        try {
+            NodesGroup nodesGroup = getClient().getNodesGroup();
+            nodesGroup.pingAll();
+            return new CheckResult(true);
+        } catch(Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            return new CheckResult(false, sw.toString());
+        }
     }
 
 }

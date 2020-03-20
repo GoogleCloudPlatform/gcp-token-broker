@@ -30,6 +30,8 @@ import com.google.cloud.broker.apps.brokerserver.protobuf.RenewSessionTokenRespo
 public class RenewSessionToken {
 
     public static void run(RenewSessionTokenRequest request, StreamObserver<RenewSessionTokenResponse> responseObserver) {
+        MDC.put(LoggingUtils.MDC_METHOD_NAME_KEY, RenewSessionToken.class.getSimpleName());
+
         AbstractAuthenticationBackend authenticator = AbstractAuthenticationBackend.getInstance();
         String authenticatedUser = authenticator.authenticateUser();
 
@@ -48,10 +50,11 @@ public class RenewSessionToken {
         AbstractDatabaseBackend.getInstance().save(session);
 
         // Log success message
-        MDC.put("owner", session.getOwner());
-        MDC.put("renewer", session.getRenewer());
-        MDC.put("session_id", session.getId());
-        LoggingUtils.logSuccess(RenewSessionToken.class.getSimpleName());
+        MDC.put(LoggingUtils.MDC_AUTH_MODE_KEY, LoggingUtils.MDC_AUTH_MODE_VALUE_DIRECT);
+        MDC.put(LoggingUtils.MDC_OWNER_KEY, session.getOwner());
+        MDC.put(LoggingUtils.MDC_RENEWER_KEY, session.getRenewer());
+        MDC.put(LoggingUtils.MDC_SESSION_ID_KEY, session.getId());
+        LoggingUtils.successAuditLog();
 
         // Return response
         RenewSessionTokenResponse response = RenewSessionTokenResponse.newBuilder()

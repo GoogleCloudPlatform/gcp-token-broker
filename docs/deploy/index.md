@@ -40,9 +40,9 @@ Before you start, you must set up some prerequisites for the demo:
 4.  Create a new GCP project under the GSuite organization and [enable billing](https://cloud.google.com/billing/docs/how-to/modify-project).
 5.  Install some tools on your local machine (The versions indicated below are the ones that have been officially tested.
     Newer versions might work but are untested):
-    *   [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v0.11.13
-    *   [Helm](https://docs.helm.sh/using_helm/#installing-helm) v2.16.1
-    *   [Google Cloud SDK](https://cloud.google.com/sdk/install) v267.0.0
+    *   [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v0.12.24
+    *   [Helm](https://docs.helm.sh/using_helm/#installing-helm) v3.1.2
+    *   [Google Cloud SDK](https://cloud.google.com/sdk/install) v285.0.1
 
 ### Deploying the demo architecture
 
@@ -95,7 +95,7 @@ Follow these steps to deploy the demo environment to GCP:
     ```conf
     datastore_region = "[your.datastore.region]"
     gsuite_domain = "[your.domain.name]"
-    authorizer_hostname = "[your.authorizer.hostname]"
+    authorizer_host = "[your.authorizer.hostname]"
     origin_realm = "[YOUR.REALM.NAME]"
     test_users = ["alice", "bob", "john"]
     ```
@@ -105,7 +105,7 @@ Follow these steps to deploy the demo environment to GCP:
         [available regions](https://cloud.google.com/datastore/docs/locations#location-r) for Cloud Datastore.
     *   `gsuite_domain` is the domain name (e.g. "your-domain.com") that you registered in the [Prerequisites](#prerequisites)
         section for your GSuite organization.
-    *   `authorizer_hostname` is the host name (e.g. "authorizer.your-domain.com") that
+    *   `authorizer_host` is the host (e.g. "authorizer.your-domain.com") that
         you wish to use to access the authorizer app. This value will be used to configure the
         authorizer app's load balancer.
     *   `origin_realm` is the Kerberos realm (e.g. "YOUR-DOMAIN.COM") that you wish
@@ -188,19 +188,23 @@ Follow these steps to deploy the demo environment to GCP:
 
 The broker and authorizer apps both use TLS encryption when serving requests.
 
-You may choose to use your own domain, certificates, and trusted Certificate
+You may choose to use your own hostname, certificates, and trusted Certificate
 Authority. Alternatively, for development and testing purposes only,
 you may create self-signed certificates as described below.
 
 1.  Create the broker certificate:
 
     ```shell
-    BROKER_DOMAIN="10.2.1.255.xip.io"
+    BROKER_HOST="10.2.1.255.nip.io"
     openssl genrsa -out broker-tls.key 2048
-    openssl req -new -key broker-tls.key -out broker-tls.csr -subj "/CN=${BROKER_DOMAIN}"
+    openssl req -new -key broker-tls.key -out broker-tls.csr -subj "/CN=${BROKER_HOST}"
     openssl x509 -req -days 365 -in broker-tls.csr -signkey broker-tls.key -out broker-tls.crt
     openssl pkcs8 -topk8 -nocrypt -in broker-tls.key -out broker-tls.pem
     ```
+    
+    Note: The [nip.io](https://nip.io/) domain is used here only for the purposes of the demo as it provides an easy
+    way to map an IP address to a hostname. However, in production, you should instead use a real hostname and configure
+    it in your DNS.
     
 2.  Create the authorizer certificate (Replace **`[your.authorizer.hostname]`** with your authorizer
     app's host name):
@@ -309,8 +313,7 @@ Authorizer:
     c)  Delete the secrets from your local filesystem: 
     
         ```shell
-        rm authorizer-tls.crt
-        rm authorizer-tls.key
+        rm authorizer-tls.crt authorizer-tls.key
         ```
 
 2.  Deploy the Authorizer app:
@@ -402,19 +405,18 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
     export PROJECT=$(gcloud info --format='value(config.project)')
     export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
     export REGION=${ZONE%-*}
-    export BROKER_HOSTNAME="10.2.1.255.xip.io"
-    export BROKER_URI="https://${BROKER_HOSTNAME}:443"
-    export BROKER_PRINCIPAL="broker/${BROKER_HOSTNAME}"
+    export BROKER_URI="https://10.2.1.255.nip.io"
+    export BROKER_PRINCIPAL="broker"
     export BROKER_VERSION=$(cat VERSION)
     export BROKER_CRT=$(gcloud beta secrets versions access latest --secret broker-tls-crt)
-    export INIT_ACTION="gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh"
-    export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${BROKER_VERSION}/broker-connector-hadoop2-${BROKER_VERSION}-jar-with-dependencies.jar"
+    export INIT_ACTION="gs://gcp-token-broker/broker-hadoop-connector.${BROKER_VERSION}.sh"
+    export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-hadoop-connector/hadoop2-${BROKER_VERSION}/broker-hadoop-connector-hadoop2-${BROKER_VERSION}-jar-with-dependencies.jar"
     ```
 
 4.  Create the Dataproc cluster:
 
     ```shell
-    gcloud beta dataproc clusters create test-cluster \
+    gcloud dataproc clusters create test-cluster \
       --single-node \
       --no-address \
       --zone ${ZONE} \
@@ -425,11 +427,11 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
       --scopes cloud-platform \
       --service-account "dataproc@${PROJECT}.iam.gserviceaccount.com" \
       --kerberos-config-file deploy/${PROJECT}/kerberos-config.yaml \
+      --initialization-actions ${INIT_ACTION} \
       --metadata "gcp-token-broker-tls-certificate=${BROKER_CRT}" \
       --metadata "gcp-token-broker-uri=${BROKER_URI}" \
       --metadata "gcp-token-broker-kerberos-principal=${BROKER_PRINCIPAL}" \
       --metadata "origin-realm=${REALM}" \
-      --initialization-actions ${INIT_ACTION} \
       --metadata "connector-jar-url=${CONNECTOR_JAR_URL}"
     ```
 
@@ -498,10 +500,10 @@ Follow these steps to view the broker application logs in Stackdriver:
 3.  Type the following in the text search box:
 
     ```conf
-    resource.type="container"
+    resource.type="k8s_container"
     resource.labels.cluster_name="broker"
-    resource.labels.namespace_id="default"
-    resource.labels.container_name="broker-container"
+    resource.labels.namespace_name="default"
+    labels.k8s-pod/run="broker-server"
     ```
 
 4.  Click "Submit Filter".

@@ -21,6 +21,7 @@ import com.google.api.client.googleapis.util.Utils;
 import com.google.api.services.directory.Directory;
 import com.google.api.services.directory.DirectoryScopes;
 import com.google.api.services.directory.model.Member;
+import com.google.cloud.broker.apps.brokerserver.logging.LoggingUtils;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import io.grpc.Status;
@@ -95,8 +96,7 @@ public class ProxyUserValidation {
     public static void validateImpersonator(String impersonator, String impersonated) {
         String mappedImpersonated = AbstractUserMapper.getInstance().map(impersonated);
         Validation.validateEmail(mappedImpersonated);
-        MDC.put("impersonated_user", impersonated);
-        MDC.put("impersonated_user_mapped", mappedImpersonated);
+        MDC.put(LoggingUtils.MDC_AUTH_MODE_PROXY_IMPERSONATED_USER_KEY, impersonated);
         List<? extends Config> proxyConfigs = AppSettings.getInstance().getConfigList(AppSettings.PROXY_USERS);
         for (Config proxyConfig : proxyConfigs) {
             String proxy = proxyConfig.getString(CONFIG_PROXY);

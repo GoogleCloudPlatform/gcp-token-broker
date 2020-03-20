@@ -60,23 +60,4 @@ public class CloudKMSBackendTest {
         assertArrayEquals(plainText, decrypted);
     }
 
-    /**
-     * Encryption backend shall handle at least 1000 QPS
-     */
-    @Test
-    public void testQPS() {
-        CloudKMSBackend aead = new CloudKMSBackend();
-        java.util.Random r = new java.util.Random();
-        byte[] plainText = new byte[512];
-        long t0 = System.currentTimeMillis();
-        for (int i = 0; i < 1000; i++) {
-            r.nextBytes(plainText);
-            byte[] cipherText = aead.encrypt(plainText);
-            byte[] decrypted = aead.decrypt(cipherText);
-            assertArrayEquals(decrypted, plainText);
-        }
-        long t1 = System.currentTimeMillis();
-        long dt = t1 - t0;
-        assertTrue(dt < 1000);
-    }
 }

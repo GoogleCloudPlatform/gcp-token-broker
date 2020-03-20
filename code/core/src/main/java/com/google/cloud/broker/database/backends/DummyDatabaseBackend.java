@@ -15,6 +15,7 @@ package com.google.cloud.broker.database.backends;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
+import com.google.cloud.broker.checks.CheckResult;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 
@@ -36,6 +37,20 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
 
     private String calculateKey(Class modelClass, String objectId) {
         return modelClass.getSimpleName() + "-" + objectId;
+    }
+
+    public static ConcurrentMap<String, Object> getMap() {
+        if (instance == null) {
+            CacheLoader<String, Object> loader;
+            loader = new CacheLoader<String, Object>(){
+                @Override
+                public Object load(String key) throws Exception {
+                    return null;
+                }
+            };
+            instance = CacheBuilder.newBuilder().build(loader).asMap();
+        }
+        return instance;
     }
 
     @Override
@@ -70,19 +85,9 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
     @Override
     public void initializeDatabase() {}
 
-    public static ConcurrentMap<String, Object> getMap() {
-        if (instance == null) {
-            CacheLoader<String, Object> loader;
-            loader = new CacheLoader<String, Object>(){
-                @Override
-                public Object load(String key) throws Exception {
-                    return null;
-                }
-            };
-            instance = CacheBuilder.newBuilder().build(loader).asMap();
-        }
-        return instance;
+    @Override
+    public CheckResult checkConnection() {
+        return new CheckResult(true);
     }
-
 
 }

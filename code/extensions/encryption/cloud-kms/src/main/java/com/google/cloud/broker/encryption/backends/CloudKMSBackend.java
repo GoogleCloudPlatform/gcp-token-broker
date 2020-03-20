@@ -17,6 +17,8 @@
 package com.google.cloud.broker.encryption.backends;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.security.GeneralSecurityException;
 
 import com.google.api.client.googleapis.util.Utils;
@@ -38,6 +40,7 @@ import com.google.crypto.tink.proto.KeyTemplate;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.Constants;
 import com.google.cloud.broker.encryption.backends.keyset.KeysetUtils;
+import com.google.cloud.broker.checks.CheckResult;
 
 /**
  * EnvelopeEncryptionBackend uses a static key stored in Cloud Storage or the local filesystem.
@@ -46,7 +49,6 @@ import com.google.cloud.broker.encryption.backends.keyset.KeysetUtils;
  */
 public class CloudKMSBackend extends AbstractEncryptionBackend {
 
-    private static final String MEMORY = "memory";
     private static final String KMS_API = "https://www.googleapis.com/auth/cloudkms";
 
     static {
@@ -59,35 +61,24 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
     private Aead aead;
     private static KeyTemplate KEY_TEMPLATE = AeadKeyTemplates.AES256_GCM;
 
-
-    public CloudKMSBackend(){
-        String kekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_KEK_URI);
-        String dekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_DEK_URI);
-
-        if (kekUri.equalsIgnoreCase(MEMORY)) {
-            // Experimental feature: Store the KEK in memory instead of Cloud KMS.
+    private Aead getAead() {
+        if (aead == null) {
+            String kekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_KEK_URI);
+            String dekUri = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_DEK_URI);
             try {
-                aead = KeysetHandle.generateNew(KEY_TEMPLATE).getPrimitive(Aead.class);
-                return;
+                CloudKMS kmsClient = getKMSClient();
+                aead = readKeyset(dekUri, kekUri, kmsClient).getPrimitive(Aead.class);
             } catch (GeneralSecurityException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Failed to initialize encryption backend", e);
             }
         }
-
-        try {
-            CloudKMS kmsClient = getKMSClient();
-            aead = readKeyset(dekUri, kekUri, kmsClient)
-                .getPrimitive(Aead.class);
-        } catch (GeneralSecurityException e) {
-            throw new RuntimeException("Failed to initialize encryption backend", e);
-        }
-
+        return aead;
     }
 
     @Override
     public byte[] decrypt(byte[] cipherText) {
         try {
-            return aead.decrypt(cipherText, null);
+            return getAead().decrypt(cipherText, null);
         } catch (GeneralSecurityException e){
             throw new RuntimeException(e);
         }
@@ -96,9 +87,21 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
     @Override
     public byte[] encrypt(byte[] plainText) {
         try {
-            return aead.encrypt(plainText, null);
+            return getAead().encrypt(plainText, null);
         } catch (GeneralSecurityException e){
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public CheckResult checkConnection() {
+        try {
+            encrypt("ABCDEFGH".getBytes());
+            return new CheckResult(true);
+        } catch(Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            return new CheckResult(false, sw.toString());
         }
     }
 
@@ -130,10 +133,10 @@ public class CloudKMSBackend extends AbstractEncryptionBackend {
 
     private static KeysetHandle generateAndWriteKeyset(KeyTemplate keyTemplate, String dekUri, String kekUri, CloudKMS kmsClient) {
         try {
-            Aead kek = new GcpKmsAead(kmsClient, kekUri);
+            Aead aead = new GcpKmsAead(kmsClient, kekUri);
             KeysetHandle keysetHandle = KeysetHandle.generateNew(keyTemplate);
             KeysetWriter keysetWriter = KeysetUtils.getKeysetManager(dekUri);
-            keysetHandle.write(keysetWriter, kek);
+            keysetHandle.write(keysetWriter, aead);
             return keysetHandle;
         } catch (IOException | GeneralSecurityException e) {
             throw new RuntimeException("Failed to write Keyset `" + dekUri + "` with KMS key `" + kekUri + "`", e);

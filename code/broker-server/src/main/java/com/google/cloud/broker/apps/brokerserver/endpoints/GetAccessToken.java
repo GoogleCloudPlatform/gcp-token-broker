@@ -14,8 +14,6 @@ package com.google.cloud.broker.apps.brokerserver.endpoints;
 import java.util.Arrays;
 import java.util.List;
 
-import com.google.common.base.Preconditions;
-import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
 
@@ -36,6 +34,8 @@ import com.google.cloud.broker.apps.brokerserver.protobuf.GetAccessTokenResponse
 public class GetAccessToken {
 
     public static void run(GetAccessTokenRequest request, StreamObserver<GetAccessTokenResponse> responseObserver) {
+        MDC.put(LoggingUtils.MDC_METHOD_NAME_KEY, GetAccessToken.class.getSimpleName());
+
         // First try to authenticate the session, if any.
         SessionAuthenticator sessionAuthenticator = new SessionAuthenticator();
         Session session = sessionAuthenticator.authenticateSession();
@@ -45,7 +45,7 @@ public class GetAccessToken {
         List<String> scopes = request.getScopesList();
         String target = request.getTarget();
 
-        if (session == null) {  // No session token was provided. The client is using direct authentication.
+        if (session == null) {  // No session token was provided. The client is using direct or proxy authentication.
             // Assert that the parameters were provided
             Validation.validateParameterNotEmpty("owner", owner);
             Validation.validateParameterNotEmpty("scopes", scopes);
@@ -59,12 +59,20 @@ public class GetAccessToken {
             // verify that it is allowed to do so.
             if (! authenticatedUser.equals(owner)) {
                 ProxyUserValidation.validateImpersonator(authenticatedUser, owner);
+                MDC.put(LoggingUtils.MDC_AUTH_MODE_KEY, LoggingUtils.KDC_AUTH_MODE_VALUE_PROXY);
+            }
+            else {
+                MDC.put(LoggingUtils.MDC_AUTH_MODE_KEY, LoggingUtils.MDC_AUTH_MODE_VALUE_DIRECT);
             }
         }
         else {  // A session token was provided. The client is using delegated authentication.
+            MDC.put(LoggingUtils.MDC_AUTH_MODE_KEY, LoggingUtils.MDC_AUTH_MODE_VALUE_DELEGATED);
+            MDC.put(LoggingUtils.MDC_AUTH_MODE_DELEGATED_SESSION_ID_KEY, session.getId());
+
             // Assert that no parameters were provided
             Validation.validateParameterIsEmpty("owner", owner);
             Validation.validateParameterIsEmpty("scopes", scopes);
+            Validation.validateParameterIsEmpty("target", target);
 
             // Fetch the correct parameters from the session
             owner = session.getOwner();
@@ -76,17 +84,10 @@ public class GetAccessToken {
             owner, scopes, target).fetch();
 
         // Log success message
-        MDC.put("owner", owner);
-        MDC.put("scopes", String.join(",", scopes));
-        MDC.put("target", target);
-        if (session == null) {
-            MDC.put("auth_mode", "direct");
-        }
-        else {
-            MDC.put("auth_mode", "delegated");
-            MDC.put("session_id", session.getId());
-        }
-        LoggingUtils.logSuccess(GetAccessToken.class.getSimpleName());
+        MDC.put(LoggingUtils.MDC_OWNER_KEY, owner);
+        MDC.put(LoggingUtils.MDC_SCOPES_KEY, String.join(",", scopes));
+        MDC.put(LoggingUtils.MDC_TARGET_KEY, target);
+        LoggingUtils.successAuditLog();
 
         // Return the response
         GetAccessTokenResponse response = GetAccessTokenResponse.newBuilder()

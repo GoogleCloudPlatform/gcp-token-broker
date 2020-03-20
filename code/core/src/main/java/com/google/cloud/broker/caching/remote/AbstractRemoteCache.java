@@ -11,10 +11,11 @@
 
 package com.google.cloud.broker.caching.remote;
 
+import java.util.concurrent.locks.Lock;
+
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
-
-import java.util.concurrent.locks.Lock;
+import com.google.cloud.broker.checks.CheckResult;
 
 public abstract class AbstractRemoteCache {
 
@@ -25,6 +26,7 @@ public abstract class AbstractRemoteCache {
     public abstract void set(String key, byte[] value, int expireIn);  // "expireIn" in seconds
     public abstract void delete(String key);
     public abstract Lock acquireLock(String lockName);
+    public abstract CheckResult checkConnection();
 
 
     public static AbstractRemoteCache getInstance() {

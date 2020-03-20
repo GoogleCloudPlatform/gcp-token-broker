@@ -13,14 +13,14 @@ package com.google.cloud.broker.encryption.backends;
 
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
+import com.google.cloud.broker.checks.CheckResult;
 
 public abstract class AbstractEncryptionBackend {
 
     private static AbstractEncryptionBackend instance;
-
     public abstract byte[] decrypt(byte[] cipherText);
-
     public abstract byte[] encrypt(byte[] plainText);
+    public abstract CheckResult checkConnection();
 
     public static AbstractEncryptionBackend getInstance() {
         String className = AppSettings.getInstance().getString(AppSettings.ENCRYPTION_BACKEND);

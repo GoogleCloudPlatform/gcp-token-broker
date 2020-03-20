@@ -33,6 +33,8 @@ import com.google.cloud.broker.apps.brokerserver.protobuf.GetSessionTokenRespons
 public class GetSessionToken {
 
     public static void run(GetSessionTokenRequest request, StreamObserver<GetSessionTokenResponse> responseObserver) {
+        MDC.put(LoggingUtils.MDC_METHOD_NAME_KEY, GetSessionToken.class.getSimpleName());
+
         AbstractAuthenticationBackend authenticator = AbstractAuthenticationBackend.getInstance();
         String authenticatedUser = authenticator.authenticateUser();
         List<String> scopes = (List<String>) ((UnmodifiableLazyStringList) request.getScopesList()).getUnmodifiableView().getUnderlyingElements();
@@ -40,13 +42,16 @@ public class GetSessionToken {
         Validation.validateParameterNotEmpty("owner", request.getOwner());
         Validation.validateParameterNotEmpty("renewer", request.getRenewer());
         Validation.validateParameterNotEmpty("scopes", scopes);
-        Validation.validateParameterNotEmpty("target", request.getTarget());
         Validation.validateScopes(scopes);
 
         // If the authenticated user requests a session token for another user,
         // verify that it is allowed to do so.
         if (! authenticatedUser.equals(request.getOwner())) {
             ProxyUserValidation.validateImpersonator(authenticatedUser, request.getOwner());
+            MDC.put(LoggingUtils.MDC_AUTH_MODE_KEY, LoggingUtils.KDC_AUTH_MODE_VALUE_PROXY);
+        }
+        else {
+            MDC.put(LoggingUtils.MDC_AUTH_MODE_KEY, LoggingUtils.MDC_AUTH_MODE_VALUE_DIRECT);
         }
 
         // Create session
@@ -65,11 +70,11 @@ public class GetSessionToken {
         String sessionToken = SessionTokenUtils.marshallSessionToken(session);
 
         // Log success message
-        MDC.put("owner", request.getOwner());
-        MDC.put("renewer", request.getRenewer());
-        MDC.put("target", request.getTarget());
-        MDC.put("session_id", session.getId());
-        LoggingUtils.logSuccess(GetSessionToken.class.getSimpleName());
+        MDC.put(LoggingUtils.MDC_OWNER_KEY, request.getOwner());
+        MDC.put(LoggingUtils.MDC_RENEWER_KEY, request.getRenewer());
+        MDC.put(LoggingUtils.MDC_TARGET_KEY, request.getTarget());
+        MDC.put(LoggingUtils.MDC_SESSION_ID_KEY, session.getId());
+        LoggingUtils.successAuditLog();
 
         // Return response
         GetSessionTokenResponse response = GetSessionTokenResponse.newBuilder()
