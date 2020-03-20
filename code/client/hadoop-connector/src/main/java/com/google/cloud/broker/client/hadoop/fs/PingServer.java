@@ -26,11 +26,11 @@ import org.apache.hadoop.security.token.Token;
  *
  * To run it:
  *
- *   java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.CheckConfig
+ *   java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.PingServer
  *
  */
 
-public class CheckConfig {
+public class PingServer {
 
     private final static String BUCKET = "gs://example";
     private final static Text SERVICE = new Text(BUCKET);

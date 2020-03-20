@@ -3,7 +3,7 @@
 - Disabled credential access boundary by default.
 - Added new base client library: `broker-client-lib`.
 - Renamed `broker-connector` package to `broker-hadoop-connector`.
-- Added `CheckConfig` command.
+- Added `PingServer` command.
 
 ## 0.9.2 (March 9, 2020)
 

@@ -49,8 +49,8 @@ Used only if `gcp.token.broker.tls.enabled` is `true` and `gcp.token.broker.tls.
 
 ## Configuration checks
 
-To verify that your client environment is correctly configured, you can run this simple command:
+Run this command to verify that your client environment is correctly configured to connect to the server:
 
 ```shell
-java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.CheckConfig
+java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.PingServer
 ```
