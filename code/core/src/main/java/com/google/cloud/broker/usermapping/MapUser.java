@@ -11,11 +11,21 @@
 
 package com.google.cloud.broker.usermapping;
 
+import com.google.cloud.broker.validation.EmailValidation;
+
 public class MapUser {
 
     public static void main(String[] args) {
-        String email = AbstractUserMapper.getInstance().map(args[1]);
-        System.out.println(email);
+        if (args.length == 1) {
+            String email = AbstractUserMapper.getInstance().map(args[0]);
+            EmailValidation.validateEmail(email);
+            System.out.println(email);
+        }
+        else {
+            System.err.println("This command requires one argument.");
+            System.exit(1);
+        }
+
     }
 
 }

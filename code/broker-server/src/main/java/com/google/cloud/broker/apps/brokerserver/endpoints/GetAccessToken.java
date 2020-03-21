@@ -18,8 +18,9 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
 
 import com.google.cloud.broker.apps.brokerserver.logging.LoggingUtils;
-import com.google.cloud.broker.apps.brokerserver.validation.Validation;
+import com.google.cloud.broker.apps.brokerserver.validation.GrpcRequestValidation;
 import com.google.cloud.broker.apps.brokerserver.validation.ProxyUserValidation;
+import com.google.cloud.broker.apps.brokerserver.validation.ScopeValidation;
 import com.google.cloud.broker.apps.brokerserver.sessions.SessionAuthenticator;
 import com.google.cloud.broker.authentication.backends.AbstractAuthenticationBackend;
 import com.google.cloud.broker.apps.brokerserver.sessions.Session;
@@ -46,9 +47,10 @@ public class GetAccessToken {
         String target = request.getTarget();
 
         if (session == null) {  // No session token was provided. The client is using direct or proxy authentication.
-            // Assert that the parameters were provided
-            Validation.validateParameterNotEmpty("owner", owner);
-            Validation.validateParameterNotEmpty("scopes", scopes);
+            // Assert that the required parameters were provided and are valid
+            GrpcRequestValidation.validateParameterNotEmpty("owner", owner);
+            GrpcRequestValidation.validateParameterNotEmpty("scopes", scopes);
+            ScopeValidation.validateScopes(scopes);
 
             // No session token was provided. The client is using direct authentication.
             // So let's authenticate the user.
@@ -70,9 +72,9 @@ public class GetAccessToken {
             MDC.put(LoggingUtils.MDC_AUTH_MODE_DELEGATED_SESSION_ID_KEY, session.getId());
 
             // Assert that no parameters were provided
-            Validation.validateParameterIsEmpty("owner", owner);
-            Validation.validateParameterIsEmpty("scopes", scopes);
-            Validation.validateParameterIsEmpty("target", target);
+            GrpcRequestValidation.validateParameterIsEmpty("owner", owner);
+            GrpcRequestValidation.validateParameterIsEmpty("scopes", scopes);
+            GrpcRequestValidation.validateParameterIsEmpty("target", target);
 
             // Fetch the correct parameters from the session
             owner = session.getOwner();
@@ -80,8 +82,8 @@ public class GetAccessToken {
             scopes = Arrays.asList(session.getScopes().split(","));
         }
 
-        AccessToken accessToken = (AccessToken) new AccessTokenCacheFetcher(
-            owner, scopes, target).fetch();
+        // Fetch the access token
+        AccessToken accessToken = (AccessToken) new AccessTokenCacheFetcher(owner, scopes, target).fetch();
 
         // Log success message
         MDC.put(LoggingUtils.MDC_OWNER_KEY, owner);

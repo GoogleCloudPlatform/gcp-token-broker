@@ -17,10 +17,11 @@ import com.google.protobuf.UnmodifiableLazyStringList;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.MDC;
 
+import com.google.cloud.broker.apps.brokerserver.validation.ScopeValidation;
 import com.google.cloud.broker.apps.brokerserver.logging.LoggingUtils;
 import com.google.cloud.broker.apps.brokerserver.sessions.Session;
 import com.google.cloud.broker.apps.brokerserver.sessions.SessionTokenUtils;
-import com.google.cloud.broker.apps.brokerserver.validation.Validation;
+import com.google.cloud.broker.apps.brokerserver.validation.GrpcRequestValidation;
 import com.google.cloud.broker.apps.brokerserver.validation.ProxyUserValidation;
 import com.google.cloud.broker.authentication.backends.AbstractAuthenticationBackend;
 import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
@@ -39,10 +40,10 @@ public class GetSessionToken {
         String authenticatedUser = authenticator.authenticateUser();
         List<String> scopes = (List<String>) ((UnmodifiableLazyStringList) request.getScopesList()).getUnmodifiableView().getUnderlyingElements();
 
-        Validation.validateParameterNotEmpty("owner", request.getOwner());
-        Validation.validateParameterNotEmpty("renewer", request.getRenewer());
-        Validation.validateParameterNotEmpty("scopes", scopes);
-        Validation.validateScopes(scopes);
+        GrpcRequestValidation.validateParameterNotEmpty("owner", request.getOwner());
+        GrpcRequestValidation.validateParameterNotEmpty("renewer", request.getRenewer());
+        GrpcRequestValidation.validateParameterNotEmpty("scopes", scopes);
+        ScopeValidation.validateScopes(scopes);
 
         // If the authenticated user requests a session token for another user,
         // verify that it is allowed to do so.

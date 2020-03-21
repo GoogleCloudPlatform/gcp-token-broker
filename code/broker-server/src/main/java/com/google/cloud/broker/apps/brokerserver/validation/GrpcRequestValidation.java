@@ -12,14 +12,11 @@
 package com.google.cloud.broker.apps.brokerserver.validation;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import io.grpc.Status;
 
-import com.google.cloud.broker.settings.AppSettings;
 
-public class Validation {
+public class GrpcRequestValidation {
 
     public static void validateParameterIsEmpty(String parameter, String value) {
         if (value.length() > 0) {
@@ -50,25 +47,6 @@ public class Validation {
             throw Status.INVALID_ARGUMENT
                 .withDescription(String.format("Request must provide `%s`", parameter))
                 .asRuntimeException();
-        }
-    }
-
-    public static void validateScopes(List<String> scopes) {
-        List<String> whitelist = AppSettings.getInstance().getStringList(AppSettings.SCOPES_WHITELIST);
-        Set<String> scopeSet = new HashSet<String>(scopes);
-        Set<String> whitelistSet = new HashSet<String>(whitelist);
-        if (!whitelistSet.containsAll(scopeSet)) {
-            throw Status.PERMISSION_DENIED
-                .withDescription(String.format("`[%s]` are not whitelisted scopes", String.join(",", scopes)))
-                .asRuntimeException();
-        }
-    }
-
-    public static void validateEmail(String email) {
-        Pattern parser = Pattern.compile("([a-zA-Z0-9\\.-]+)@([a-zA-Z0-9\\.-]+)");
-        Matcher match = parser.matcher(email);
-        if (!match.matches()) {
-            throw new IllegalArgumentException("Invalid email: " + email);
         }
     }
 
