@@ -302,6 +302,10 @@ authorizer:
       }
   ingress:
     host: '${var.authorizer_host}'
+
+# Session cleanup cron job ----------------
+sessionCleanup:
+  schedule: "*/10 * * * *"  # Every 10 minutes
 EOT
 
 

@@ -12,6 +12,7 @@
 
 package com.google.cloud.broker.database.backends;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
@@ -80,6 +81,20 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
         ConcurrentMap<String, Object> cache = getMap();
         String key = calculateKey(model);
         cache.remove(key);
+    }
+
+    public int deleteStaleItems(Class modelClass, String field, Long cutoffTime) {
+        ConcurrentMap<String, Object> cache = getMap();
+        int numDeletedItems = 0;
+        for (Map.Entry<String, Object> entry : cache.entrySet()) {
+            Model model = (Model) entry.getValue();
+            if (entry.getKey().startsWith(modelClass.getSimpleName() + "-")
+                && ((Long) model.toMap().get(field) <= cutoffTime)) {
+                cache.remove(entry.getKey());
+                numDeletedItems++;
+            }
+        }
+        return numDeletedItems;
     }
 
     @Override

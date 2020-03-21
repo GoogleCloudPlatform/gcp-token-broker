@@ -155,13 +155,28 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         String table = model.getClass().getSimpleName();
         String id = model.getDBId();
         String query = "DELETE FROM " + quote(table) + " WHERE " + quote("id") + "  = ?";
-
         Connection connection = getConnection();
         PreparedStatement statement = null;
         try {
             statement = connection.prepareStatement(query);
             formatValue(statement, id, 1);
             statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
+        }
+    }
+
+    public int deleteStaleItems(Class modelClass, String field, Long cutoffTime) {
+        String table = modelClass.getSimpleName();
+        String query = "DELETE FROM " + quote(table) + " WHERE " + quote(field) + "  <= ?";
+        Connection connection = getConnection();
+        PreparedStatement statement = null;
+        try {
+            statement = connection.prepareStatement(query);
+            formatValue(statement, cutoffTime, 1);
+            return statement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {

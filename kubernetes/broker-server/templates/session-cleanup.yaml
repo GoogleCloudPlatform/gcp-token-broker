@@ -1,0 +1,34 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ .Chart.Name }}-session-cleanup
+  labels:
+    app: {{ .Chart.Name }}
+    chart: '{{ .Chart.Name }}-{{ .Chart.Version }}'
+    release: '{{ .Release.Name }}'
+    heritage: '{{ .Release.Service }}'
+spec:
+  schedule: '{{ .Values.sessionCleanup.schedule }}'
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: {{ .Chart.Name }}-session-cleanup-container
+              image: {{ .Values.broker.image }}
+              env:
+              - name: CONFIG_FILE
+                value: "/config/application.conf"
+              command:
+                - java
+                - -cp
+                - /classpath/*
+                - com.google.cloud.broker.apps.brokerserver.sessions.Cleanup
+              volumeMounts:
+              - name: {{ .Chart.Name }}-config-volume
+                mountPath: '/config'
+          restartPolicy: OnFailure
+          volumes:
+            - name: {{ .Chart.Name }}-config-volume
+              configMap:
+                name: {{ .Chart.Name }}-settings-configmap

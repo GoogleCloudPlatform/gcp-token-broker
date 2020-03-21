@@ -84,4 +84,9 @@ public class PostgreSQLBackendTest extends JDBCBackendTest {
         JDBCBackendTest.testDelete(backend);
     }
 
+    @Test
+    public void testDeleteStaleItems() {
+        JDBCBackendTest.testDeleteStaleItems(backend);
+    }
+
 }

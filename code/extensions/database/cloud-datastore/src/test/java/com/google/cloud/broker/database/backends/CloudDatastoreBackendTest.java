@@ -13,10 +13,7 @@ package com.google.cloud.broker.database.backends;
 
 import static org.junit.Assert.*;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.datastore.*;
@@ -201,6 +198,42 @@ public class CloudDatastoreBackendTest {
         key = keyFactory.newKey("myid");
         entity = datastore.get(key);
         assertNull(entity);
+    }
+
+    /**
+     * Test deleting stale items from the database.
+     */
+    @Test
+    public void deleteStaleItems() {
+        Datastore datastore = getService();
+        KeyFactory keyFactory = datastore.newKeyFactory().setKind("Foo");
+
+        // Create records in the database
+        List<String> keys = Arrays.asList("a", "b", "c", "d", "e");
+        List<Long> longVals = Arrays.asList(1L, 6L, 7L, 3L, 4L);
+        for (int i=0; i < keys.size(); i++) {
+            Key key = keyFactory.newKey(keys.get(i));
+            Entity.Builder builder = Entity.newBuilder(key);
+            builder.set("longVal", longVals.get(i));
+            Entity entity = builder.build();
+            datastore.put(entity);
+        }
+
+        // Delete stale items
+        CloudDatastoreBackend backend = new CloudDatastoreBackend();
+        backend.deleteStaleItems(Foo.class, "longVal", 4L);
+
+        // Check that the stale items have been deleted
+        List<String> deletedKeys = Arrays.asList("a", "d", "e");
+        Query<Entity> query = Query.newEntityQueryBuilder().setKind("Foo").build();
+        QueryResults<Entity> entities = datastore.run(query);
+        int numberItemsLeft = 0;
+        while (entities.hasNext()) {
+            Entity entity = entities.next();
+            assertFalse(deletedKeys.contains(entity.getKey().getName()));
+            numberItemsLeft++;
+        }
+        assertEquals(numberItemsLeft, 2);
     }
 
     @Test

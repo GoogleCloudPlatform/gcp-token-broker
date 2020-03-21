@@ -14,6 +14,8 @@ package com.google.cloud.broker.database.backends;
 import static org.junit.Assert.*;
 
 import java.sql.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
@@ -287,6 +289,57 @@ public abstract class JDBCBackendTest {
             statement = connection.prepareStatement(query);
             rs = statement.executeQuery();
             assertFalse(rs.next());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try { if (rs != null) rs.close(); } catch (SQLException e) {throw new RuntimeException(e);}
+            try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
+        }
+    }
+
+    /**
+     * Test deleting stale items from the database.
+     */
+    static void testDeleteStaleItems(JDBCBackend backend) {
+        // Create records in the database
+        List<String> ids = Arrays.asList("a", "b", "c", "d", "e");
+        List<Long> longVals = Arrays.asList(1L, 6L, 7L, 3L, 4L);
+        Connection connection = backend.getConnection();
+        PreparedStatement statement = null;
+        for (int i=0; i < ids.size(); i++) {
+            try {
+                String query = "INSERT INTO " + quote("RefreshToken") + " (id, " + quote("creationTime") + ") VALUES (?, ?);";
+                statement = connection.prepareStatement(query);
+                statement.setString(1, ids.get(i));
+                statement.setLong(2, longVals.get(i));
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            } finally {
+                try {
+                    if (statement != null) statement.close();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        // Delete stale items
+        backend.deleteStaleItems(RefreshToken.class, "creationTime", 4L);
+
+        // Check that the stale items have been deleted
+        List<String> deletedKeys = Arrays.asList("a", "d", "e");
+        ResultSet rs = null;
+        try {
+            String query = "SELECT * from " + quote("RefreshToken");
+            statement = connection.prepareStatement(query);
+            rs = statement.executeQuery();
+            int numberItemsLeft = 0;
+            while(rs.next()) {
+                assertFalse(deletedKeys.contains(rs.getString("id")));
+                numberItemsLeft++;
+            }
+            assertEquals(numberItemsLeft, 2);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
