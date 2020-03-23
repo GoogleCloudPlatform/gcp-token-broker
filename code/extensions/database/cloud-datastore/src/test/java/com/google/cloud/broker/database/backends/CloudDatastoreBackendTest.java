@@ -203,14 +203,13 @@ public class CloudDatastoreBackendTest {
     /**
      * Test deleting stale items from the database.
      */
-    @Test
-    public void deleteStaleItems() {
+    public void deleteStaleItems(boolean withLimit) {
         Datastore datastore = getService();
         KeyFactory keyFactory = datastore.newKeyFactory().setKind("Foo");
 
         // Create records in the database
         List<String> keys = Arrays.asList("a", "b", "c", "d", "e");
-        List<Long> longVals = Arrays.asList(1L, 6L, 7L, 3L, 4L);
+        List<Long> longVals = Arrays.asList(1L, 6L, 7L, 4L, 3L);
         for (int i=0; i < keys.size(); i++) {
             Key key = keyFactory.newKey(keys.get(i));
             Entity.Builder builder = Entity.newBuilder(key);
@@ -221,10 +220,17 @@ public class CloudDatastoreBackendTest {
 
         // Delete stale items
         CloudDatastoreBackend backend = new CloudDatastoreBackend();
-        backend.deleteStaleItems(Foo.class, "longVal", 4L);
+        List<String> deletedKeys;
+        if (withLimit) {
+            backend.deleteStaleItems(Foo.class, "longVal", 4L, 2);
+            deletedKeys = Arrays.asList("a", "e");
+        }
+        else {
+            backend.deleteStaleItems(Foo.class, "longVal", 4L);
+            deletedKeys = Arrays.asList("a", "d", "e");
+        }
 
         // Check that the stale items have been deleted
-        List<String> deletedKeys = Arrays.asList("a", "d", "e");
         Query<Entity> query = Query.newEntityQueryBuilder().setKind("Foo").build();
         QueryResults<Entity> entities = datastore.run(query);
         int numberItemsLeft = 0;
@@ -233,7 +239,19 @@ public class CloudDatastoreBackendTest {
             assertFalse(deletedKeys.contains(entity.getKey().getName()));
             numberItemsLeft++;
         }
-        assertEquals(numberItemsLeft, 2);
+        assertEquals(keys.size() - deletedKeys.size(), numberItemsLeft);
+    }
+
+    @Test
+    public void testDeleteStaleItems() {
+        // Delete all stale items
+        deleteStaleItems(false);
+    }
+
+    @Test
+    public void testDeleteStaleItemsWithLimit() {
+        // Only delete the 2 most stale items
+        deleteStaleItems(true);
     }
 
     @Test

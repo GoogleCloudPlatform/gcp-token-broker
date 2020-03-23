@@ -78,7 +78,7 @@ public abstract class JDBCBackendTest {
     /**
      * Check that the initialization creates the tables
      */
-    static void testInitializeDatabase(JDBCBackend backend) {
+    static void initializeDatabase(JDBCBackend backend) {
         // Check that the database is empty
         dropTables(backend);
         assertEquals(getNumTables(backend), 0);
@@ -93,7 +93,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test saving a new model to the database.
      */
-    static void testSaveNew(JDBCBackend backend) {
+    static void saveNew(JDBCBackend backend) {
         // Check that there are no records
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
@@ -134,7 +134,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test updating an existing model to the database.
      */
-    static void testUpdate(JDBCBackend backend) {
+    static void update(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
@@ -176,7 +176,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test saving a model to the database, without specifying an ID. An ID should automatically be assigned.
      */
-    static void testSaveWithoutID(JDBCBackend backend) {
+    static void saveWithoutID(JDBCBackend backend) {
         // Check that there are no records
         Connection connection = backend.getConnection();
         Statement statement = null;
@@ -222,7 +222,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test retrieving a model from the database.
      */
-    static void testGet(JDBCBackend backend) {
+    static void get(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
@@ -249,7 +249,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test retrieving a model that doesn't exist. The DatabaseObjectNotFound exception should be thrown.
      */
-    static void testGetNotExist(JDBCBackend backend) {
+    static void getNotExist(JDBCBackend backend) {
         try {
             backend.get(RefreshToken.class, "whatever");
             fail("DatabaseObjectNotFound not thrown");
@@ -261,7 +261,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test deleting a model from the database.
      */
-    static void testDelete(JDBCBackend backend) {
+    static void delete(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
@@ -300,10 +300,10 @@ public abstract class JDBCBackendTest {
     /**
      * Test deleting stale items from the database.
      */
-    static void testDeleteStaleItems(JDBCBackend backend) {
+    static void deleteStaleItems(JDBCBackend backend, boolean withLimit) {
         // Create records in the database
         List<String> ids = Arrays.asList("a", "b", "c", "d", "e");
-        List<Long> longVals = Arrays.asList(1L, 6L, 7L, 3L, 4L);
+        List<Long> longVals = Arrays.asList(1L, 6L, 7L, 4L, 3L);
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
         for (int i=0; i < ids.size(); i++) {
@@ -325,10 +325,17 @@ public abstract class JDBCBackendTest {
         }
 
         // Delete stale items
-        backend.deleteStaleItems(RefreshToken.class, "creationTime", 4L);
+        List<String> deletedKeys;
+        if (withLimit) {
+            backend.deleteStaleItems(RefreshToken.class, "creationTime", 4L, 2);
+            deletedKeys = Arrays.asList("a", "e");
+        }
+        else {
+            backend.deleteStaleItems(RefreshToken.class, "creationTime", 4L);
+            deletedKeys = Arrays.asList("a", "d", "e");
+        }
 
         // Check that the stale items have been deleted
-        List<String> deletedKeys = Arrays.asList("a", "d", "e");
         ResultSet rs = null;
         try {
             String query = "SELECT * from " + quote("RefreshToken");
@@ -339,7 +346,7 @@ public abstract class JDBCBackendTest {
                 assertFalse(deletedKeys.contains(rs.getString("id")));
                 numberItemsLeft++;
             }
-            assertEquals(numberItemsLeft, 2);
+            assertEquals(ids.size() - deletedKeys.size(), numberItemsLeft);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {

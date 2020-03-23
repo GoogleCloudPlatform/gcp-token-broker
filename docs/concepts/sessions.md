@@ -8,12 +8,14 @@ This system is inspired by, and is fully compatible with, Hadoop's delegation to
 session token corresponds to a Hadoop-style delegation token that can be used to access the broker service in
 distributed jobs.
 
+## Session lifecycle
+
 The are 4 keys stages in the lifecycle of a session token: session creation, access token trade, session renewal,
 and session cancellation.
 
 <img src="../img/delegated-auth-architecture.svg">
 
-## Session creation
+### Session creation
 
 A session is created when a client calls the `GetSessionToken` broker endpoint right before submitting a new distributed
 job.
@@ -34,7 +36,7 @@ For each new session, the broker adds a new record in the [database](database.md
 
 The broker then generates a signed token for the session (i.e the "session token").
 
-## Access token trade
+### Access token trade
 
 After it obtains a new session token, the client submits the job and passes the token to the distributed job's tasks.
 When a task needs to access a GCP resource (e.g. a GCS bucket), the task calls the `GetAccessToken` broker endpoint
@@ -45,7 +47,7 @@ token to the caller.
 
 In other words, the `GetAccessToken` endpoint trades a session token for a GCP access token.
 
-## Session renewal
+### Session renewal
 
 When a session is about to expire during the execution of a job, the session token's renewer calls the
 `RenewSessionToken` broker endpoint.
@@ -60,7 +62,7 @@ A session can be renewed (i.e. have its lifetime extended) any number of times, 
 [`sessions.maximum-lifetime`](settings.md#sessionsmaximum-lifetime) value, at which point the token becomes obsolete and
 inoperable.
 
-## Session cancellation
+### Session cancellation
 
 When a distributed job is completed, the session token's renewer calls the `CancelSessionToken` broker endpoint.
 
@@ -69,3 +71,13 @@ that the caller is correctly authenticated with the renewer's credentials.
 
 If authentication is successful, then the session is deleted from the broker's [database](database.md), at which point
 the session token becomes obsolete and inoperable.
+
+### Purging stale sessions
+
+If a session isn't explicitly cancelled (for example if a Hadoop crashed before completion), a stale record may remain
+in the database. To purge such lingering records, you can run the following command (for example as part of a regular
+cron job):
+
+```shell
+CONFIG_FILE=/<path>/application.conf java com.google.cloud.broker.apps.brokerserver.sessions.Cleanup
+```

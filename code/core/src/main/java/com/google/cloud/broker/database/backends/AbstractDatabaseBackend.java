@@ -25,6 +25,7 @@ public abstract class AbstractDatabaseBackend {
     public abstract void save(Model model);
     public abstract void delete(Model model);
     public abstract int deleteStaleItems(Class modelClass, String field, Long cutoffTime);
+    public abstract int deleteStaleItems(Class modelClass, String field, Long cutoffTime, Integer limit);
     public abstract void initializeDatabase();
     public abstract CheckResult checkConnection();
 

@@ -51,42 +51,47 @@ public class SQLiteBackendTest extends JDBCBackendTest {
 
     @Test
     public void testInitializeDatabase() {
-        JDBCBackendTest.testInitializeDatabase(backend);
+        JDBCBackendTest.initializeDatabase(backend);
     }
 
     @Test
     public void testSaveNew() {
-        JDBCBackendTest.testSaveNew(backend);
+        JDBCBackendTest.saveNew(backend);
     }
 
     @Test
     public void testUpdate() {
-        JDBCBackendTest.testUpdate(backend);
+        JDBCBackendTest.update(backend);
     }
 
     @Test
     public void testSaveWithoutID() {
-        JDBCBackendTest.testSaveWithoutID(backend);
+        JDBCBackendTest.saveWithoutID(backend);
     }
 
     @Test
     public void testGet() {
-        JDBCBackendTest.testGet(backend);
+        JDBCBackendTest.get(backend);
     }
 
     @Test
     public void testGetNotExist() {
-        JDBCBackendTest.testGetNotExist(backend);
+        JDBCBackendTest.getNotExist(backend);
     }
 
     @Test
     public void testDelete() {
-        JDBCBackendTest.testDelete(backend);
+        JDBCBackendTest.delete(backend);
     }
 
     @Test
     public void testDeleteStaleItems() {
-        JDBCBackendTest.testDeleteStaleItems(backend);
+        JDBCBackendTest.deleteStaleItems(backend, false);
+    }
+
+    @Test
+    public void testDeleteStaleItemsWithLimit() {
+        JDBCBackendTest.deleteStaleItems(backend, true);
     }
 
 }

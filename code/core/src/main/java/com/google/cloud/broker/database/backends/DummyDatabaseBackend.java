@@ -83,7 +83,19 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
         cache.remove(key);
     }
 
+    @Override
     public int deleteStaleItems(Class modelClass, String field, Long cutoffTime) {
+        return deleteStaleItems(modelClass, field, cutoffTime, null);
+    }
+
+    @Override
+    public int deleteStaleItems(Class modelClass, String field, Long cutoffTime, Integer limit) {
+        if (limit != null) {
+            // Using a limit would require sorting entries by `field`
+            // but this backend doesn't (currently) have sorting capabilities.
+            throw new UnsupportedOperationException();
+        }
+
         ConcurrentMap<String, Object> cache = getMap();
         int numDeletedItems = 0;
         for (Map.Entry<String, Object> entry : cache.entrySet()) {
@@ -92,6 +104,9 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
                 && ((Long) model.toMap().get(field) <= cutoffTime)) {
                 cache.remove(entry.getKey());
                 numDeletedItems++;
+                if (limit != null && limit > 0 && numDeletedItems == limit) {
+                    return limit;
+                }
             }
         }
         return numDeletedItems;

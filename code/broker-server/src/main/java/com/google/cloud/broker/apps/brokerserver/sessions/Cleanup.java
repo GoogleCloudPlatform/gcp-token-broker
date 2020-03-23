@@ -13,8 +13,13 @@ public class Cleanup {
     private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static void main(String[] args) {
+        Integer limit = null;
+        if (args.length > 0) {
+            limit = Integer.parseInt(args[0]);
+        }
         long now = TimeUtils.currentTimeMillis();
-        int numDeletedSessions = AbstractDatabaseBackend.getInstance().deleteStaleItems(Session.class, "expiresAt", now);
+        int numDeletedSessions = AbstractDatabaseBackend.getInstance().deleteStaleItems(
+            Session.class, "expiresAt", now, limit);
         logger.info("SessionCleanup - Deleted stale session(s): " + numDeletedSessions);
     }
 

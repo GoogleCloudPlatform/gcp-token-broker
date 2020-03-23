@@ -56,6 +56,8 @@ public class JDBCBackend extends AbstractDatabaseBackend {
     private void formatValue(PreparedStatement statement, Object value, int index) throws SQLException {
         if (value instanceof String) {
             statement.setString(index, (String) value);
+        } else if (value instanceof Integer) {
+            statement.setInt(index, (int) value);
         } else if (value instanceof Long) {
             statement.setLong(index, (long) value);
         } else if (value instanceof byte[]) {
@@ -168,14 +170,34 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         }
     }
 
+    @Override
     public int deleteStaleItems(Class modelClass, String field, Long cutoffTime) {
-        String table = modelClass.getSimpleName();
-        String query = "DELETE FROM " + quote(table) + " WHERE " + quote(field) + "  <= ?";
+        return deleteStaleItems(modelClass, field, cutoffTime, null);
+    }
+
+    @Override
+    public int deleteStaleItems(Class modelClass, String field, Long cutoffTime, Integer limit) {
         Connection connection = getConnection();
+        String table = modelClass.getSimpleName();
         PreparedStatement statement = null;
         try {
-            statement = connection.prepareStatement(query);
-            formatValue(statement, cutoffTime, 1);
+            String query;
+            if (limit != null && limit > 0) {
+                if (getDialect().equals("mariadb") || getDialect().equals("mysql")) {
+                    query = "DELETE FROM " + quote(table) + " WHERE " + quote(field) + " <= ? ORDER BY " + quote(field) + " ASC LIMIT ?";
+                }
+                else {
+                    query = "DELETE FROM " + quote(table) + "WHERE " + getRowIdField() + " IN (SELECT " + getRowIdField() + " FROM" + quote(table) + " WHERE " + quote(field) + " <= ? ORDER BY " + quote(field) + " LIMIT ?)";
+                }
+                statement = connection.prepareStatement(query);
+                formatValue(statement, cutoffTime, 1);
+                formatValue(statement, limit, 2);
+            }
+            else {
+                query = "DELETE FROM " + quote(table) + " WHERE " + quote(field) + " <= ?";
+                statement = connection.prepareStatement(query);
+                formatValue(statement, cutoffTime, 1);
+            }
             return statement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -288,6 +310,18 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             case "mariadb":
             case "mysql":
                 return "ON DUPLICATE KEY UPDATE";
+            default:
+                throw new UnsupportedOperationException(String.format(DIALECT_NOT_SUPPORTED, dialect));
+        }
+    }
+
+    private static String getRowIdField() {
+        String dialect = getDialect();
+        switch (dialect) {
+            case "postgresql":
+                return "ctid";
+            case "sqlite":
+                return "rowid";
             default:
                 throw new UnsupportedOperationException(String.format(DIALECT_NOT_SUPPORTED, dialect));
         }

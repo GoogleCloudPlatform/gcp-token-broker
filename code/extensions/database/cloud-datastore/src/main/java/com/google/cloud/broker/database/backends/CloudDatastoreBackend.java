@@ -16,8 +16,7 @@ import java.io.StringWriter;
 import java.util.*;
 
 import com.google.cloud.datastore.*;
-import com.google.cloud.datastore.KeyQuery;
-import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
+import com.google.cloud.datastore.StructuredQuery.*;
 
 import com.google.cloud.broker.checks.CheckResult;
 import com.google.cloud.broker.database.models.Model;
@@ -125,11 +124,20 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
 
     @Override
     public int deleteStaleItems(Class modelClass, String field, Long cutoffTime) {
+        return deleteStaleItems(modelClass, field, cutoffTime, null);
+    }
+
+    @Override
+    public int deleteStaleItems(Class modelClass, String field, Long cutoffTime, Integer limit) {
         Datastore datastore = getService();
-        KeyQuery query = Query.newKeyQueryBuilder()
+        KeyQuery.Builder queryBuilder = Query.newKeyQueryBuilder()
             .setKind(modelClass.getSimpleName())
             .setFilter(PropertyFilter.le(field, cutoffTime))
-            .build();
+            .setOrderBy(OrderBy.asc(field));
+        if (limit != null) {
+            queryBuilder.setLimit(limit);
+        }
+        KeyQuery query = queryBuilder.build();
         final QueryResults<Key> keys = datastore.run(query);
         int numDeletedItems = 0;
         while (keys.hasNext()) {
