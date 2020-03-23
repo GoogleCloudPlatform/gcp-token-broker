@@ -104,14 +104,15 @@ public class RedisCacheTest {
         assertNull(bucket.get());
 
         // Let the backend set the key/value
-        cache.set("test", "abcd".getBytes(), 1);
+        int expireIn = 1;
+        cache.set("test", "abcd".getBytes(), expireIn);
 
         // Check that the key/value was correctly set
         assertArrayEquals("abcd".getBytes(), bucket.get());
 
         // Wait for a while
         try {
-            Thread.sleep(2000);
+            Thread.sleep(expireIn * 1000 + 1);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

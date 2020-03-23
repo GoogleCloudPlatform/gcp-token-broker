@@ -12,18 +12,31 @@
 package com.google.cloud.broker.caching.remote;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 
 import static org.junit.Assert.*;
-import com.google.cloud.broker.settings.AppSettings;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import com.google.cloud.datastore.*;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.utils.TimeUtils;
+import static com.google.cloud.broker.caching.remote.CloudDatastoreCache.*;
+
+@RunWith(PowerMockRunner.class)
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "javax.activation.*", "org.xml.*", "org.w3c.*"})
+@PrepareForTest({TimeUtils.class})  // Classes to be mocked
 public class CloudDatastoreCacheTest {
 
     private static CloudDatastoreCache cache;
@@ -42,7 +55,7 @@ public class CloudDatastoreCacheTest {
     public void teardown() {
         // Delete all records
         Datastore datastore = getService();
-        Query<Entity> query = Query.newEntityQueryBuilder().setKind(CloudDatastoreCache.CACHE_KIND).build();
+        Query<Entity> query = Query.newEntityQueryBuilder().setKind(CACHE_KIND).build();
         QueryResults<Entity> entities = datastore.run(query);
         while (entities.hasNext()) {
             Entity entity = entities.next();
@@ -54,11 +67,11 @@ public class CloudDatastoreCacheTest {
     public void testGet() {
         // Create a record in the cache
         Datastore datastore = getService();
-        KeyFactory keyFactory = datastore.newKeyFactory().setKind(CloudDatastoreCache.CACHE_KIND);
+        KeyFactory keyFactory = datastore.newKeyFactory().setKind(CACHE_KIND);
         Key key = keyFactory.newKey("test");
         Entity.Builder builder = Entity.newBuilder(key);
-        builder.set(CloudDatastoreCache.CACHE_VALUE_FIELD, BlobValue.of(Blob.copyFrom("abcd".getBytes())));
-        builder.set(CloudDatastoreCache.CACHE_EXPIRY_FIELD, 0);
+        builder.set(CACHE_VALUE_FIELD, BlobValue.of(Blob.copyFrom("abcd".getBytes())));
+        builder.set(CACHE_EXPIRY_FIELD, 0);
         Entity entity = builder.build();
         datastore.put(entity);
 
@@ -76,7 +89,7 @@ public class CloudDatastoreCacheTest {
     public void testSet() {
         // Check that the key doesn't exist
         Datastore datastore = getService();
-        KeyFactory keyFactory = datastore.newKeyFactory().setKind(CloudDatastoreCache.CACHE_KIND);
+        KeyFactory keyFactory = datastore.newKeyFactory().setKind(CACHE_KIND);
         Key datastoreKey = keyFactory.newKey("test");
         Entity entity = datastore.get(datastoreKey);
         assertNull(entity);
@@ -86,35 +99,46 @@ public class CloudDatastoreCacheTest {
 
         // Check that the key/value was correctly set
         entity = datastore.get(datastoreKey);
-        assertArrayEquals("abcd".getBytes(), entity.getBlob(CloudDatastoreCache.CACHE_VALUE_FIELD).toByteArray());
+        assertArrayEquals("abcd".getBytes(), entity.getBlob(CACHE_VALUE_FIELD).toByteArray());
     }
 
     @Test
     public void testSetExpire() {
         // Check that the key doesn't exist
         Datastore datastore = getService();
-        KeyFactory keyFactory = datastore.newKeyFactory().setKind(CloudDatastoreCache.CACHE_KIND);
+        KeyFactory keyFactory = datastore.newKeyFactory().setKind(CACHE_KIND);
         Key datastoreKey = keyFactory.newKey("test");
         Entity entity = datastore.get(datastoreKey);
         assertNull(entity);
 
+        // Mock the system time
+        mockStatic(TimeUtils.class);
+        long initialNow = 1000000000000L;
+        PowerMockito.when(TimeUtils.currentTimeMillis()).thenReturn(initialNow);
+
         // Let the backend set the key/value
-        cache.set("test", "abcd".getBytes(), 2);
+        int expireIn = 2;
+        cache.set("test", "abcd".getBytes(), expireIn);
 
         // Check that the key/value was correctly set
         entity = datastore.get(datastoreKey);
         assertArrayEquals("abcd".getBytes(), cache.get("test"));
-        assertArrayEquals("abcd".getBytes(), entity.getBlob(CloudDatastoreCache.CACHE_VALUE_FIELD).toByteArray());
+        assertArrayEquals("abcd".getBytes(), entity.getBlob(CACHE_VALUE_FIELD).toByteArray());
 
-        // Wait for a while
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        // Change the system time again to simulate elapsing time (up to 1 millisecond before the expiry time)
+        long newNow = initialNow + (expireIn * 1000) - 1;
+        PowerMockito.when(TimeUtils.currentTimeMillis()).thenReturn(newNow);
 
-        // Check that the key/value is now gone as far as the CloudDatastoreCache backend is concerned
-        // (The entity might still be in Datastore though. It's just that its 'expiry' field has expired).
+        // Check that the key/value is still accessible
+        entity = datastore.get(datastoreKey);
+        assertArrayEquals("abcd".getBytes(), cache.get("test"));
+        assertArrayEquals("abcd".getBytes(), entity.getBlob(CACHE_VALUE_FIELD).toByteArray());
+
+        // Change the system time again up to expiry time
+        newNow = initialNow + expireIn * 1000;
+        PowerMockito.when(TimeUtils.currentTimeMillis()).thenReturn(newNow);
+
+        // Check that the key/value is now inaccessible
         assertNull(cache.get("test"));
     }
 
@@ -122,11 +146,11 @@ public class CloudDatastoreCacheTest {
     public void testDelete() {
         // Set a key/value
         Datastore datastore = getService();
-        KeyFactory keyFactory = datastore.newKeyFactory().setKind(CloudDatastoreCache.CACHE_KIND);
+        KeyFactory keyFactory = datastore.newKeyFactory().setKind(CACHE_KIND);
         Key key = keyFactory.newKey("test");
         Entity.Builder builder = Entity.newBuilder(key);
-        builder.set(CloudDatastoreCache.CACHE_VALUE_FIELD, BlobValue.of(Blob.copyFrom("abcd".getBytes())));
-        builder.set(CloudDatastoreCache.CACHE_EXPIRY_FIELD, 0);
+        builder.set(CACHE_VALUE_FIELD, BlobValue.of(Blob.copyFrom("abcd".getBytes())));
+        builder.set(CACHE_EXPIRY_FIELD, 0);
         Entity entity = builder.build();
         datastore.put(entity);
 
@@ -135,6 +159,60 @@ public class CloudDatastoreCacheTest {
 
         // Check that the key was deleted
         assertNull(cache.get("test"));
+    }
+
+    public void deleteExpiredItems(boolean withLimit) {
+        // Mock the system time
+        mockStatic(TimeUtils.class);
+        long initialNow = 1000000000000L;
+        PowerMockito.when(TimeUtils.currentTimeMillis()).thenReturn(initialNow);
+
+        // Set some keys/values
+        Datastore datastore = getService();
+        KeyFactory keyFactory = datastore.newKeyFactory().setKind(CACHE_KIND);
+        List<String> keys = Arrays.asList("a", "b", "c", "d", "e");
+        List<Integer> expireIns = Arrays.asList(1, 6, 7, 4, 3);
+        for (int i=0; i < keys.size(); i++) {
+            cache.set(keys.get(i), "foo".getBytes(), expireIns.get(i));
+        }
+
+        // Change the system time again to simulate elapsing time
+        long newNow = initialNow + 4 * 1000;
+        PowerMockito.when(TimeUtils.currentTimeMillis()).thenReturn(newNow);
+
+        // Delete expired items
+        List<String> deletedKeys;
+        if (withLimit) {
+            cache.deleteExpiredItems(2);
+            deletedKeys = Arrays.asList("a", "e");
+        }
+        else {
+            cache.deleteExpiredItems();
+            deletedKeys = Arrays.asList("a", "d", "e");
+        }
+
+        // Check that the stale items have been deleted
+        Query<Entity> query = Query.newEntityQueryBuilder().setKind(CACHE_KIND).build();
+        QueryResults<Entity> entities = datastore.run(query);
+        int numberItemsLeft = 0;
+        while (entities.hasNext()) {
+            Entity entity = entities.next();
+            assertFalse(deletedKeys.contains(entity.getKey().getName()));
+            numberItemsLeft++;
+        }
+        assertEquals(keys.size() - deletedKeys.size(), numberItemsLeft);
+    }
+
+    @Test
+    public void testDeleteExpiredItems() {
+        // Delete all expired items
+        deleteExpiredItems(false);
+    }
+
+    @Test
+    public void testDeleteExpiredItemsWithLimit() {
+        // Only delete the 2 longest expired items
+        deleteExpiredItems(true);
     }
 
     @Test
