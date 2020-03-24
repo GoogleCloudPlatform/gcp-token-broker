@@ -14,6 +14,8 @@ package com.google.cloud.broker.database.backends;
 import static org.junit.Assert.*;
 
 import java.sql.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
@@ -76,7 +78,7 @@ public abstract class JDBCBackendTest {
     /**
      * Check that the initialization creates the tables
      */
-    static void testInitializeDatabase(JDBCBackend backend) {
+    static void initializeDatabase(JDBCBackend backend) {
         // Check that the database is empty
         dropTables(backend);
         assertEquals(getNumTables(backend), 0);
@@ -91,7 +93,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test saving a new model to the database.
      */
-    static void testSaveNew(JDBCBackend backend) {
+    static void saveNew(JDBCBackend backend) {
         // Check that there are no records
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
@@ -132,7 +134,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test updating an existing model to the database.
      */
-    static void testUpdate(JDBCBackend backend) {
+    static void update(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
@@ -174,7 +176,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test saving a model to the database, without specifying an ID. An ID should automatically be assigned.
      */
-    static void testSaveWithoutID(JDBCBackend backend) {
+    static void saveWithoutID(JDBCBackend backend) {
         // Check that there are no records
         Connection connection = backend.getConnection();
         Statement statement = null;
@@ -220,7 +222,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test retrieving a model from the database.
      */
-    static void testGet(JDBCBackend backend) {
+    static void get(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
@@ -247,7 +249,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test retrieving a model that doesn't exist. The DatabaseObjectNotFound exception should be thrown.
      */
-    static void testGetNotExist(JDBCBackend backend) {
+    static void getNotExist(JDBCBackend backend) {
         try {
             backend.get(RefreshToken.class, "whatever");
             fail("DatabaseObjectNotFound not thrown");
@@ -259,7 +261,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test deleting a model from the database.
      */
-    static void testDelete(JDBCBackend backend) {
+    static void delete(JDBCBackend backend) {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;
@@ -287,6 +289,64 @@ public abstract class JDBCBackendTest {
             statement = connection.prepareStatement(query);
             rs = statement.executeQuery();
             assertFalse(rs.next());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try { if (rs != null) rs.close(); } catch (SQLException e) {throw new RuntimeException(e);}
+            try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
+        }
+    }
+
+    /**
+     * Test deleting expired items from the database.
+     */
+    static void deleteExpiredItems(JDBCBackend backend, boolean withLimit) {
+        // Create records in the database
+        List<String> ids = Arrays.asList("a", "b", "c", "d", "e");
+        List<Long> longVals = Arrays.asList(1L, 6L, 7L, 4L, 3L);
+        Connection connection = backend.getConnection();
+        PreparedStatement statement = null;
+        for (int i=0; i < ids.size(); i++) {
+            try {
+                String query = "INSERT INTO " + quote("RefreshToken") + " (id, " + quote("creationTime") + ") VALUES (?, ?);";
+                statement = connection.prepareStatement(query);
+                statement.setString(1, ids.get(i));
+                statement.setLong(2, longVals.get(i));
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            } finally {
+                try {
+                    if (statement != null) statement.close();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        // Delete expired items
+        List<String> deletedKeys;
+        if (withLimit) {
+            backend.deleteExpiredItems(RefreshToken.class, "creationTime", 4L, 2);
+            deletedKeys = Arrays.asList("a", "e");
+        }
+        else {
+            backend.deleteExpiredItems(RefreshToken.class, "creationTime", 4L);
+            deletedKeys = Arrays.asList("a", "d", "e");
+        }
+
+        // Check that the expired items have been deleted
+        ResultSet rs = null;
+        try {
+            String query = "SELECT * from " + quote("RefreshToken");
+            statement = connection.prepareStatement(query);
+            rs = statement.executeQuery();
+            int numberItemsLeft = 0;
+            while(rs.next()) {
+                assertFalse(deletedKeys.contains(rs.getString("id")));
+                numberItemsLeft++;
+            }
+            assertEquals(ids.size() - deletedKeys.size(), numberItemsLeft);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {

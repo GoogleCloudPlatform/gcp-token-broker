@@ -1,3 +1,7 @@
+## 0.10.1 (March 24, 2020)
+
+- Added commands to purge expired sessions and Datastore cache items.
+
 ## 0.10.0 (March 20, 2020)
 
 - Disabled credential access boundary by default.

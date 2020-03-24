@@ -16,6 +16,7 @@ import java.io.StringWriter;
 import java.util.*;
 
 import com.google.cloud.datastore.*;
+import com.google.cloud.datastore.StructuredQuery.*;
 
 import com.google.cloud.broker.checks.CheckResult;
 import com.google.cloud.broker.database.models.Model;
@@ -122,6 +123,31 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
     }
 
     @Override
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime) {
+        return deleteExpiredItems(modelClass, field, cutoffTime, null);
+    }
+
+    @Override
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer limit) {
+        Datastore datastore = getService();
+        KeyQuery.Builder queryBuilder = Query.newKeyQueryBuilder()
+            .setKind(modelClass.getSimpleName())
+            .setFilter(PropertyFilter.le(field, cutoffTime))
+            .setOrderBy(OrderBy.asc(field));
+        if (limit != null) {
+            queryBuilder.setLimit(limit);
+        }
+        KeyQuery query = queryBuilder.build();
+        final QueryResults<Key> keys = datastore.run(query);
+        int numDeletedItems = 0;
+        while (keys.hasNext()) {
+            datastore.delete(keys.next());
+            numDeletedItems++;
+        }
+        return numDeletedItems;
+    }
+
+    @Override
     public void initializeDatabase() {
         // Cloud Datastore doesn't need to do any initialization.
         // A table is automatically be created when the first object is inserted.
@@ -142,4 +168,5 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
             return new CheckResult(false, sw.toString());
         }
     }
+
 }

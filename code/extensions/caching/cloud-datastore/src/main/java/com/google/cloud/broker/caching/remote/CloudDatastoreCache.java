@@ -18,6 +18,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
 import com.google.cloud.datastore.*;
+import com.google.cloud.datastore.StructuredQuery.*;
 
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.TimeUtils;
@@ -188,6 +189,34 @@ public class CloudDatastoreCache extends AbstractRemoteCache {
         KeyFactory keyFactory = datastore.newKeyFactory().setKind(CACHE_KIND);
         Key datastoreKey = keyFactory.newKey(key);
         datastore.delete(datastoreKey);
+    }
+
+    public int deleteExpiredItems() {
+        return deleteExpiredItems(null);
+    }
+
+    public int deleteExpiredItems(Integer limit) {
+        Datastore datastore = getService();
+        long now = TimeUtils.currentTimeMillis();
+        KeyQuery.Builder queryBuilder = Query.newKeyQueryBuilder()
+            .setKind(CACHE_KIND)
+            .setFilter(PropertyFilter.le(CACHE_EXPIRY_FIELD, now))
+            .setOrderBy(OrderBy.asc(CACHE_EXPIRY_FIELD));
+        if (limit != null) {
+            queryBuilder.setLimit(limit);
+        }
+        KeyQuery query = queryBuilder.build();
+        final QueryResults<Key> keys = datastore.run(query);
+        int numDeletedItems = 0;
+        while (keys.hasNext()) {
+            Key key = keys.next();
+            datastore.delete(key);
+            numDeletedItems++;
+            if (limit != null && limit > 0 && numDeletedItems == limit) {
+                return limit;
+            }
+        }
+        return numDeletedItems;
     }
 
     @Override

@@ -16,6 +16,11 @@
 
 package com.google.cloud.broker.encryption;
 
+import java.lang.invoke.MethodHandles;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.cloud.broker.encryption.backends.CloudKMSBackend;
 import com.google.cloud.broker.settings.AppSettings;
 
@@ -23,6 +28,8 @@ import com.google.cloud.broker.settings.AppSettings;
  * Command-line utility that generates a new data encryption key (DEK) and stores it in GCS
  */
 public class GenerateDEK {
+
+    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static void main(String[] args) {
         String dekUri = null;
@@ -36,21 +43,20 @@ public class GenerateDEK {
             kekUri = args[1];
         }
         else {
-            String USAGE = "[dekUri] [kekURI]";
-            System.err.println(USAGE);
+            logger.error("Invalid parameters");
             System.exit(1);
         }
 
-        System.out.println("Generating DEK...");
-        System.out.println("Wrapping with KEK `" + kekUri + "`...");
-        System.out.println("Writing to `" + dekUri + "`...");
+        logger.info("Generating DEK...");
+        logger.info("Wrapping with KEK `" + kekUri + "`...");
+        logger.info("Writing to `" + dekUri + "`...");
         try {
             CloudKMSBackend.generateAndWriteKeyset(dekUri, kekUri);
         } catch (Exception e) {
-            System.err.println("Failed to generate and write DEK");
+            logger.error("Failed to generate and write DEK");
             e.printStackTrace(System.err);
             System.exit(1);
         }
-        System.out.println("Done.");
+        logger.info("Done.");
     }
 }

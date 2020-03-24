@@ -24,6 +24,8 @@ public abstract class AbstractDatabaseBackend {
     public abstract Model get(Class modelClass, String objectId)  throws DatabaseObjectNotFound;
     public abstract void save(Model model);
     public abstract void delete(Model model);
+    public abstract int deleteExpiredItems(Class modelClass, String field, Long cutoffTime);
+    public abstract int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer limit);
     public abstract void initializeDatabase();
     public abstract CheckResult checkConnection();
 

@@ -12,6 +12,7 @@
 
 package com.google.cloud.broker.database.backends;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
@@ -80,6 +81,35 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
         ConcurrentMap<String, Object> cache = getMap();
         String key = calculateKey(model);
         cache.remove(key);
+    }
+
+    @Override
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime) {
+        return deleteExpiredItems(modelClass, field, cutoffTime, null);
+    }
+
+    @Override
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer limit) {
+        if (limit != null) {
+            // Using a limit would require sorting entries by `field`
+            // but this backend doesn't (currently) have sorting capabilities.
+            throw new UnsupportedOperationException();
+        }
+
+        ConcurrentMap<String, Object> cache = getMap();
+        int numDeletedItems = 0;
+        for (Map.Entry<String, Object> entry : cache.entrySet()) {
+            Model model = (Model) entry.getValue();
+            if (entry.getKey().startsWith(modelClass.getSimpleName() + "-")
+                && ((Long) model.toMap().get(field) <= cutoffTime)) {
+                cache.remove(entry.getKey());
+                numDeletedItems++;
+                if (limit != null && limit > 0 && numDeletedItems == limit) {
+                    return limit;
+                }
+            }
+        }
+        return numDeletedItems;
     }
 
     @Override

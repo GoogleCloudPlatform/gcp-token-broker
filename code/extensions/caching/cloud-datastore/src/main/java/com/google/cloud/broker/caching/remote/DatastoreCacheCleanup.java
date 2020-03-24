@@ -9,30 +9,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.usermapping;
+package com.google.cloud.broker.caching.remote;
 
 import java.lang.invoke.MethodHandles;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.cloud.broker.validation.EmailValidation;
-
-public class MapUser {
+public class DatastoreCacheCleanup {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static void main(String[] args) {
-        if (args.length == 1) {
-            String email = AbstractUserMapper.getInstance().map(args[0]);
-            EmailValidation.validateEmail(email);
-            logger.info(email);
+        Integer limit = null;
+        if (args.length > 0) {
+            limit = Integer.parseInt(args[0]);
         }
-        else {
-            logger.error("This command requires one argument.");
-            System.exit(1);
-        }
-
+        CloudDatastoreCache cache = new CloudDatastoreCache();
+        int numDeletedItems = cache.deleteExpiredItems(limit);
+        logger.info("DatastoreCacheCleanup - Deleted expired item(s): " + numDeletedItems);
     }
 
 }

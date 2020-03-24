@@ -9,30 +9,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.usermapping;
+package com.google.cloud.broker.apps.brokerserver.sessions;
 
 import java.lang.invoke.MethodHandles;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.cloud.broker.validation.EmailValidation;
+import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
+import com.google.cloud.broker.utils.TimeUtils;
 
-public class MapUser {
+public class SessionCleanup {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static void main(String[] args) {
-        if (args.length == 1) {
-            String email = AbstractUserMapper.getInstance().map(args[0]);
-            EmailValidation.validateEmail(email);
-            logger.info(email);
+        Integer limit = null;
+        if (args.length > 0) {
+            limit = Integer.parseInt(args[0]);
         }
-        else {
-            logger.error("This command requires one argument.");
-            System.exit(1);
-        }
-
+        long now = TimeUtils.currentTimeMillis();
+        int numDeletedSessions = AbstractDatabaseBackend.getInstance().deleteExpiredItems(
+            Session.class, "expiresAt", now, limit);
+        logger.info("SessionCleanup - Deleted expired session(s): " + numDeletedSessions);
     }
 
 }
