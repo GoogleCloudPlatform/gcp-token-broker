@@ -175,8 +175,8 @@ Follow these steps to deploy the demo environment to GCP:
     *   Upload the file to Secret Manager (Replace **`[CLIENT_SECRET.JSON]`** with the name of the file your downloaded in the
         previous step):
         ```shell
-        gcloud beta secrets create oauth-client --replication-policy="automatic"
-        gcloud beta secrets versions add oauth-client --data-file=[CLIENT_SECRET.JSON]
+        gcloud secrets create oauth-client --replication-policy="automatic"
+        gcloud secrets versions add oauth-client --data-file=[CLIENT_SECRET.JSON]
         ```
     *   You can now delete the file from your local filesystem (Replace  **`[CLIENT_SECRET.JSON]`** with the actual file
         name):
@@ -219,17 +219,17 @@ you may create self-signed certificates as described below.
 3.  Once the certificates and private keys are created, upload them to Secret Manager:
 
     ```shell
-    gcloud beta secrets create broker-tls-pem --replication-policy="automatic"
-    gcloud beta secrets versions add broker-tls-pem --data-file=broker-tls.pem
+    gcloud secrets create broker-tls-pem --replication-policy="automatic"
+    gcloud secrets versions add broker-tls-pem --data-file=broker-tls.pem
     
-    gcloud beta secrets create broker-tls-crt --replication-policy="automatic"
-    gcloud beta secrets versions add broker-tls-crt --data-file=broker-tls.crt
+    gcloud secrets create broker-tls-crt --replication-policy="automatic"
+    gcloud secrets versions add broker-tls-crt --data-file=broker-tls.crt
     
-    gcloud beta secrets create authorizer-tls-key --replication-policy="automatic"
-    gcloud beta secrets versions add authorizer-tls-key --data-file=authorizer-tls.key
+    gcloud secrets create authorizer-tls-key --replication-policy="automatic"
+    gcloud secrets versions add authorizer-tls-key --data-file=authorizer-tls.key
     
-    gcloud beta secrets create authorizer-tls-crt --replication-policy="automatic"
-    gcloud beta secrets versions add authorizer-tls-crt --data-file=authorizer-tls.crt
+    gcloud secrets create authorizer-tls-crt --replication-policy="automatic"
+    gcloud secrets versions add authorizer-tls-crt --data-file=authorizer-tls.crt
     ```
     
 4.  You can now delete the created files from your local filesystem: 
@@ -277,8 +277,8 @@ you may create self-signed certificates as described below.
 2.  Upload the DEK to Secret Manager:
 
     ```shell
-    gcloud beta secrets create dek --replication-policy="automatic"
-    gcloud beta secrets versions add dek --data-file=dek.json
+    gcloud secrets create dek --replication-policy="automatic"
+    gcloud secrets versions add dek --data-file=dek.json
     ```
     
 3.  You can now delete the DEK from your local filesystem:
@@ -298,8 +298,8 @@ Authorizer:
     a)  Download the Authorizer's TLS secrets from Secret Manager:
     
         ```shell
-        gcloud beta secrets versions access latest --secret authorizer-tls-crt > authorizer-tls.crt
-        gcloud beta secrets versions access latest --secret authorizer-tls-key > authorizer-tls.key
+        gcloud secrets versions access latest --secret authorizer-tls-crt > authorizer-tls.crt
+        gcloud secrets versions access latest --secret authorizer-tls-key > authorizer-tls.key
         ```
         
     b)  Upload the secrets to the Kubernetes Engine cluster:
@@ -408,7 +408,7 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
     export BROKER_URI="https://10.2.1.255.nip.io"
     export BROKER_PRINCIPAL="broker"
     export BROKER_VERSION=$(cat VERSION)
-    export BROKER_CRT=$(gcloud beta secrets versions access latest --secret broker-tls-crt)
+    export BROKER_CRT=$(gcloud secrets versions access latest --secret broker-tls-crt)
     export INIT_ACTION="gs://gcp-token-broker/broker-hadoop-connector.${BROKER_VERSION}.sh"
     export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-hadoop-connector/hadoop2-${BROKER_VERSION}/broker-hadoop-connector-hadoop2-${BROKER_VERSION}-jar-with-dependencies.jar"
     ```
@@ -453,8 +453,8 @@ The broker service needs a keytab to authenticate incoming requests.
 2.  Upload the keytab to Secret Manager:
 
     ```shell
-    gcloud beta secrets create keytab --replication-policy="automatic"
-    gcloud beta secrets versions add keytab --data-file=broker.keytab
+    gcloud secrets create keytab --replication-policy="automatic"
+    gcloud secrets versions add keytab --data-file=broker.keytab
     ```
 
 3.  You can now delete the keytab from your local filesystem:

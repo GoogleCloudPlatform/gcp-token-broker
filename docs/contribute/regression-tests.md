@@ -112,8 +112,8 @@ Follow these steps to run the test suite:
 17. Create a secret in Secret Manager:
 
     ```shell
-    gcloud beta secrets create secretstuff --replication-policy="automatic"
-    echo -n "This is secret stuff" | gcloud beta secrets versions add secretstuff --data-file=-
+    gcloud secrets create secretstuff --replication-policy="automatic"
+    echo -n "This is secret stuff" | gcloud secrets versions add secretstuff --data-file=-
     ```
 
 18. Allow the broker service account to access Secret Manager:

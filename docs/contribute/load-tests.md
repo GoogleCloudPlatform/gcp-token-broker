@@ -55,7 +55,7 @@ You can run the load tests from the sample Dataproc cluster that you created for
     a tunnel with the Dataproc master instance:
 
     ```shell
-    gcloud beta compute start-iap-tunnel test-cluster-m 8089 \
+    gcloud compute start-iap-tunnel test-cluster-m 8089 \
     --local-host-port=localhost:8089
     --zone $ZONE
     ```
