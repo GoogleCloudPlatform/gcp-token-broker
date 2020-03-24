@@ -191,7 +191,7 @@ public class CloudDatastoreCacheTest {
             deletedKeys = Arrays.asList("a", "d", "e");
         }
 
-        // Check that the stale items have been deleted
+        // Check that the expired items have been deleted
         Query<Entity> query = Query.newEntityQueryBuilder().setKind(CACHE_KIND).build();
         QueryResults<Entity> entities = datastore.run(query);
         int numberItemsLeft = 0;

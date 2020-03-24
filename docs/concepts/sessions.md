@@ -72,12 +72,12 @@ that the caller is correctly authenticated with the renewer's credentials.
 If authentication is successful, then the session is deleted from the broker's [database](database.md), at which point
 the session token becomes obsolete and inoperable.
 
-### Purging stale sessions
+### Purging expired sessions
 
 If a session isn't explicitly cancelled (for example if a Hadoop crashed before completion), a stale record may remain
-in the database. To purge such lingering records, you can run the following command (for example as part of a regular
-cron job):
+in the database after the session expires. To purge such expired records, you can run the following command (for example
+as part of a regular cron job):
 
 ```shell
-CONFIG_FILE=/<path>/application.conf java com.google.cloud.broker.apps.brokerserver.sessions.Cleanup
+CONFIG_FILE=/<path>/application.conf java com.google.cloud.broker.apps.brokerserver.sessions.SessionCleanup
 ```

@@ -171,12 +171,12 @@ public class JDBCBackend extends AbstractDatabaseBackend {
     }
 
     @Override
-    public int deleteStaleItems(Class modelClass, String field, Long cutoffTime) {
-        return deleteStaleItems(modelClass, field, cutoffTime, null);
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime) {
+        return deleteExpiredItems(modelClass, field, cutoffTime, null);
     }
 
     @Override
-    public int deleteStaleItems(Class modelClass, String field, Long cutoffTime, Integer limit) {
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer limit) {
         Connection connection = getConnection();
         String table = modelClass.getSimpleName();
         PreparedStatement statement = null;

@@ -34,7 +34,7 @@ spec:
                 - java
                 - -cp
                 - /classpath/*
-                - com.google.cloud.broker.apps.brokerserver.sessions.Cleanup
+                - com.google.cloud.broker.apps.brokerserver.sessions.SessionCleanup
               volumeMounts:
               - name: {{ .Chart.Name }}-config-volume
                 mountPath: '/config'

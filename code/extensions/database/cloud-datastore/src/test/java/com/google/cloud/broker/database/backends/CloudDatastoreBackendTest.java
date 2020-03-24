@@ -201,9 +201,9 @@ public class CloudDatastoreBackendTest {
     }
 
     /**
-     * Test deleting stale items from the database.
+     * Test deleting expired items from the database.
      */
-    public void deleteStaleItems(boolean withLimit) {
+    public void deleteExpiredItems(boolean withLimit) {
         Datastore datastore = getService();
         KeyFactory keyFactory = datastore.newKeyFactory().setKind("Foo");
 
@@ -218,19 +218,19 @@ public class CloudDatastoreBackendTest {
             datastore.put(entity);
         }
 
-        // Delete stale items
+        // Delete expired items
         CloudDatastoreBackend backend = new CloudDatastoreBackend();
         List<String> deletedKeys;
         if (withLimit) {
-            backend.deleteStaleItems(Foo.class, "longVal", 4L, 2);
+            backend.deleteExpiredItems(Foo.class, "longVal", 4L, 2);
             deletedKeys = Arrays.asList("a", "e");
         }
         else {
-            backend.deleteStaleItems(Foo.class, "longVal", 4L);
+            backend.deleteExpiredItems(Foo.class, "longVal", 4L);
             deletedKeys = Arrays.asList("a", "d", "e");
         }
 
-        // Check that the stale items have been deleted
+        // Check that the expired items have been deleted
         Query<Entity> query = Query.newEntityQueryBuilder().setKind("Foo").build();
         QueryResults<Entity> entities = datastore.run(query);
         int numberItemsLeft = 0;
@@ -243,15 +243,15 @@ public class CloudDatastoreBackendTest {
     }
 
     @Test
-    public void testDeleteStaleItems() {
-        // Delete all stale items
-        deleteStaleItems(false);
+    public void testDeleteExpiredItems() {
+        // Delete all expired items
+        deleteExpiredItems(false);
     }
 
     @Test
-    public void testDeleteStaleItemsWithLimit() {
-        // Only delete the 2 most stale items
-        deleteStaleItems(true);
+    public void testDeleteExpiredItemsWithLimit() {
+        // Only delete the 2 longest expired items
+        deleteExpiredItems(true);
     }
 
     @Test

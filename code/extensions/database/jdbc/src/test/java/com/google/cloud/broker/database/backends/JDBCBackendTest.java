@@ -298,9 +298,9 @@ public abstract class JDBCBackendTest {
     }
 
     /**
-     * Test deleting stale items from the database.
+     * Test deleting expired items from the database.
      */
-    static void deleteStaleItems(JDBCBackend backend, boolean withLimit) {
+    static void deleteExpiredItems(JDBCBackend backend, boolean withLimit) {
         // Create records in the database
         List<String> ids = Arrays.asList("a", "b", "c", "d", "e");
         List<Long> longVals = Arrays.asList(1L, 6L, 7L, 4L, 3L);
@@ -324,18 +324,18 @@ public abstract class JDBCBackendTest {
             }
         }
 
-        // Delete stale items
+        // Delete expired items
         List<String> deletedKeys;
         if (withLimit) {
-            backend.deleteStaleItems(RefreshToken.class, "creationTime", 4L, 2);
+            backend.deleteExpiredItems(RefreshToken.class, "creationTime", 4L, 2);
             deletedKeys = Arrays.asList("a", "e");
         }
         else {
-            backend.deleteStaleItems(RefreshToken.class, "creationTime", 4L);
+            backend.deleteExpiredItems(RefreshToken.class, "creationTime", 4L);
             deletedKeys = Arrays.asList("a", "d", "e");
         }
 
-        // Check that the stale items have been deleted
+        // Check that the expired items have been deleted
         ResultSet rs = null;
         try {
             String query = "SELECT * from " + quote("RefreshToken");
