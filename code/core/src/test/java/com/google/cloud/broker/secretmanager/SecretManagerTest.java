@@ -23,7 +23,7 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 import org.apache.commons.io.FileUtils;
-import org.junit.Test;
+import org.junit.*;
 import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -32,10 +32,25 @@ import com.google.cloud.broker.settings.SettingsOverride;
 
 public class SecretManagerTest {
 
+    private static final String projectId = AppSettings.getInstance().getString(AppSettings.GCP_PROJECT);
+    private static final Path secretsDirectory = getAvailableDirectory();
+    private static final Object downloads = ConfigFactory.parseString(
+    AppSettings.SECRET_MANAGER_DOWNLOADS + "=[" +
+        "{" +
+            "secret = \"projects/" + projectId + "/secrets/secretstuff/versions/latest\"," +
+            "file = \"" + secretsDirectory.resolve("secretstuff.txt") + "\"" +
+        "}" +
+    "]").getAnyRef(AppSettings.SECRET_MANAGER_DOWNLOADS);
+
+    @ClassRule
+    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
+        AppSettings.SECRET_MANAGER_DOWNLOADS, downloads
+    ));
+
     /**
      * Returns the name of a directory that doesn't yet exist.
      */
-    private Path getAvailableDirectory() {
+    private static Path getAvailableDirectory() {
         while(true) {
             String randomDirectory = "/tmp/" + RandomStringUtils.random(6, true, true);
             if (! Files.exists(Paths.get(randomDirectory))) {
@@ -46,19 +61,9 @@ public class SecretManagerTest {
 
     @Test
     public void testDownload() throws Exception {
-        String projectId = AppSettings.getInstance().getString(AppSettings.GCP_PROJECT);
-        Path secretsDirectory = getAvailableDirectory();
-        Object downloads = ConfigFactory.parseString(AppSettings.SECRET_MANAGER_DOWNLOADS + "=[" +
-            "{" +
-              "secret = \"projects/" + projectId + "/secrets/secretstuff/versions/latest\"," +
-              "file = \"" + secretsDirectory.resolve("secretstuff.txt") + "\"" +
-            "}" +
-        "]").getAnyRef(AppSettings.SECRET_MANAGER_DOWNLOADS);
-        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.SECRET_MANAGER_DOWNLOADS, downloads))) {
-            SecretManager.downloadSecrets();
-            String contents = Files.readString(secretsDirectory.resolve("secretstuff.txt"));
-            assertEquals(contents, "This is secret stuff");
-        }
+        SecretManager.downloadSecrets();
+        String contents = Files.readString(secretsDirectory.resolve("secretstuff.txt"));
+        assertEquals(contents, "This is secret stuff");
         // Clean up
         FileUtils.deleteDirectory(secretsDirectory.toFile());
     }

@@ -76,6 +76,13 @@ limitations under the License.
 
         <!-- Testing dependencies -->
         <dependency>
+            <groupId>com.google.cloud.broker</groupId>
+            <artifactId>broker-core</artifactId>
+            <version>${project.parent.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-testing</artifactId>
             <version>${io.grpc.version}</version>

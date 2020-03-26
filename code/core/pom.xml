@@ -127,6 +127,20 @@ limitations under the License.
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Allow some testing classes (e.g. SettingsOverride) to be imported in other modules' tests. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven-jar-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

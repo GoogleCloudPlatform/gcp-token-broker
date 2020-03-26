@@ -50,6 +50,15 @@ limitations under the License.
             <artifactId>conscrypt-openjdk-uber</artifactId>
             <version>${org.conscrypt.version}</version>
         </dependency>
+
+        <!-- Testing dependencies -->
+        <dependency>
+            <groupId>com.google.cloud.broker</groupId>
+            <artifactId>broker-core</artifactId>
+            <version>${project.parent.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

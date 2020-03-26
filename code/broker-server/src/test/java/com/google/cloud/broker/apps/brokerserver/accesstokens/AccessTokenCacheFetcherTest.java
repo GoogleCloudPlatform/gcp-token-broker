@@ -16,18 +16,19 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import com.google.cloud.broker.settings.SettingsOverride;
-import com.google.cloud.broker.settings.AppSettings;
+import org.junit.*;
 import org.junit.runner.RunWith;
+import org.junit.runners.BlockJUnit4ClassRunner;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.modules.junit4.PowerMockRunnerDelegate;
+
+import com.google.cloud.broker.settings.SettingsOverride;
+import com.google.cloud.broker.settings.AppSettings;
 
 @RunWith(PowerMockRunner.class)
+@PowerMockRunnerDelegate(BlockJUnit4ClassRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "javax.activation.*", "org.xml.*", "org.w3c.*"})
 @PrepareForTest({AccessBoundaryUtils.class})  // Classes to be mocked
 public class AccessTokenCacheFetcherTest {
@@ -36,25 +37,14 @@ public class AccessTokenCacheFetcherTest {
     private static final String TARGET = "//storage.googleapis.com/projects/_/buckets/example";
     private static final String ALICE = "alice@EXAMPLE.COM";
 
-    private static SettingsOverride backupSettings;
-
-    @BeforeClass
-    public static void setupClass() {
-        // Override settings
-        backupSettings = new SettingsOverride(Map.of(
-            AppSettings.REMOTE_CACHE, "com.google.cloud.broker.caching.remote.RedisCache",
-            AppSettings.PROVIDER_BACKEND, "com.google.cloud.broker.apps.brokerserver.accesstokens.providers.MockProvider",
-            AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper",
-            AppSettings.ACCESS_TOKEN_LOCAL_CACHE_TIME, "1234",
-            AppSettings.ACCESS_TOKEN_REMOTE_CACHE_TIME, "6789"
-        ));
-    }
-
-    @AfterClass
-    public static void teardownClass() throws Exception {
-        // Restore settings
-        backupSettings.restore();
-    }
+    @ClassRule
+    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
+        AppSettings.REMOTE_CACHE, "com.google.cloud.broker.caching.remote.RedisCache",
+        AppSettings.PROVIDER_BACKEND, "com.google.cloud.broker.apps.brokerserver.accesstokens.providers.MockProvider",
+        AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper",
+        AppSettings.ACCESS_TOKEN_LOCAL_CACHE_TIME, "1234",
+        AppSettings.ACCESS_TOKEN_REMOTE_CACHE_TIME, "6789"
+    ));
 
     @Test
     public void testComputeResult() {

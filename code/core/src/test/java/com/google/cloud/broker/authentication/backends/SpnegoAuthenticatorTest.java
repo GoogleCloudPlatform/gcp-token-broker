@@ -92,7 +92,7 @@ public class SpnegoAuthenticatorTest {
             "keytab", "/home/does-not-exist",
             "principal", "blah"
         ));
-        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, config))) {
+        try (SettingsOverride override = SettingsOverride.apply(Map.of(AppSettings.KEYTABS, config))) {
             try {
                 SpnegoAuthenticator auth = new SpnegoAuthenticator();
                 auth.authenticateUser();
@@ -113,7 +113,7 @@ public class SpnegoAuthenticatorTest {
             List.of(Map.of("principal", "bar"))  // Missing keytab
         );
         for (List<Map<String, String>> config: configs) {
-            try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, config))) {
+            try (SettingsOverride override = SettingsOverride.apply(Map.of(AppSettings.KEYTABS, config))) {
                 try {
                     SpnegoAuthenticator auth = new SpnegoAuthenticator();
                     auth.authenticateUser();
@@ -132,7 +132,7 @@ public class SpnegoAuthenticatorTest {
             "keytab", fakeKeytab.toString(),
             "principal", "blah"
         ));
-        try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, config))) {
+        try (SettingsOverride override = SettingsOverride.apply(Map.of(AppSettings.KEYTABS, config))) {
             try {
                 String token = generateSpnegoToken("alice");
                 SpnegoAuthenticator auth = new SpnegoAuthenticator();
@@ -151,7 +151,7 @@ public class SpnegoAuthenticatorTest {
             "keytab", fakeKDC.getKeytabPath(BROKER).toString(),
             "principal", BROKER
         ));
-        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, config))) {
+        try (SettingsOverride override = SettingsOverride.apply(Map.of(AppSettings.KEYTABS, config))) {
             SpnegoAuthenticator auth = new SpnegoAuthenticator();
             try {
                 auth.authenticateUser("xxx");
@@ -169,7 +169,7 @@ public class SpnegoAuthenticatorTest {
             "keytab", fakeKDC.getKeytabPath(BROKER).toString(),
             "principal", BROKER
         ));
-        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, config))) {
+        try (SettingsOverride override = SettingsOverride.apply(Map.of(AppSettings.KEYTABS, config))) {
             SpnegoAuthenticator auth = new SpnegoAuthenticator();
             try {
                 auth.authenticateUser("Negotiate xxx");
@@ -190,7 +190,7 @@ public class SpnegoAuthenticatorTest {
             "keytab", fakeKDC.getKeytabPath(BROKER).toString(),
             "principal", BROKER
         ));
-        try (SettingsOverride override = new SettingsOverride(Map.of(AppSettings.KEYTABS, config))) {
+        try (SettingsOverride override = SettingsOverride.apply(Map.of(AppSettings.KEYTABS, config))) {
             String token = generateSpnegoToken("alice");
             SpnegoAuthenticator auth = new SpnegoAuthenticator();
             String authenticateUser = auth.authenticateUser("Negotiate " + token);

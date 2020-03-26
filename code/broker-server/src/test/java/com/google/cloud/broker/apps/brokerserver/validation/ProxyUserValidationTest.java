@@ -20,9 +20,7 @@ import com.google.cloud.broker.settings.SettingsOverride;
 import com.typesafe.config.ConfigFactory;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 public class ProxyUserValidationTest {
 
@@ -38,58 +36,48 @@ public class ProxyUserValidationTest {
     private static final String GROUP_DATASCIENCE = "datascience";
     private static final String GROUP_FINANCE = "finance";
 
-    private SettingsOverride backupSettings;
-
-    @Before
-    public void setup() {
-        // Override settings
-        String GSUITE_DOMAIN = System.getenv("GSUITE_DOMAIN");
-        Object proxyUsers = ConfigFactory.parseString(
-            AppSettings.PROXY_USERS + "=[" +
-                "{" +
-                    "proxy=\"" + PRESTO + "\"," +
-                    "users=[\"*\"]" +
-                "}," +
-                "{" +
-                    "proxy=\"" + STORM + "\"," +
-                    "users=[\"alice@" + GSUITE_DOMAIN + "\", \"bob@" + GSUITE_DOMAIN + "\"]" +
-                "}," +
-                "{" +
-                    "proxy=\"" + OOZIE + "\"," +
-                    "groups=[\"*\"]" +
-                "}," +
-                "{" +
-                    "proxy=\"" + HIVE + "\"," +
-                    "groups=[\"" + GROUP_DATASCIENCE + "@" + GSUITE_DOMAIN + "\"]" +
-                "}," +
-                "{" +
-                    "proxy=\"" + SOLR + "\"," +
-                    "groups=[\"" + GROUP_FINANCE + "@" + GSUITE_DOMAIN + "\"]" +
-                "}," +
-            "]"
+    private static final String GSUITE_DOMAIN = System.getenv("GSUITE_DOMAIN");
+    private static final Object proxyUsers = ConfigFactory.parseString(
+    AppSettings.PROXY_USERS + "=[" +
+            "{" +
+                "proxy=\"" + PRESTO + "\"," +
+                "users=[\"*\"]" +
+            "}," +
+            "{" +
+                "proxy=\"" + STORM + "\"," +
+                "users=[\"alice@" + GSUITE_DOMAIN + "\", \"bob@" + GSUITE_DOMAIN + "\"]" +
+            "}," +
+            "{" +
+                "proxy=\"" + OOZIE + "\"," +
+                "groups=[\"*\"]" +
+            "}," +
+            "{" +
+                "proxy=\"" + HIVE + "\"," +
+                "groups=[\"" + GROUP_DATASCIENCE + "@" + GSUITE_DOMAIN + "\"]" +
+            "}," +
+            "{" +
+                "proxy=\"" + SOLR + "\"," +
+                "groups=[\"" + GROUP_FINANCE + "@" + GSUITE_DOMAIN + "\"]" +
+            "}," +
+        "]"
         ).getAnyRef(AppSettings.PROXY_USERS);
-        Object userMappingRules = ConfigFactory.parseString(
-        "rules=[" +
-                "{" +
-                    "if: \"true\"," +
-                    "then: \"primary + '@" + GSUITE_DOMAIN + "'\"" +
-                "}," +
-            "]"
+    private static final Object userMappingRules = ConfigFactory.parseString(
+    "rules=[" +
+            "{" +
+                "if: \"true\"," +
+                "then: \"primary + '@" + GSUITE_DOMAIN + "'\"" +
+            "}," +
+        "]"
         ).getAnyRef("rules");
-        backupSettings = new SettingsOverride(Map.of(
-            AppSettings.PROXY_USERS, proxyUsers,
-            AppSettings.PROVIDER_BACKEND, "com.google.cloud.broker.apps.brokerserver.accesstokens.providers.ServiceAccountProvider",
-            AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend",
-            AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend",
-            AppSettings.USER_MAPPING_RULES, userMappingRules
-        ));
-    }
 
-    @After
-    public void tearDown() throws Exception {
-        // Restore settings
-        backupSettings.restore();
-    }
+    @ClassRule
+    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
+        AppSettings.PROXY_USERS, proxyUsers,
+        AppSettings.PROVIDER_BACKEND, "com.google.cloud.broker.apps.brokerserver.accesstokens.providers.ServiceAccountProvider",
+        AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend",
+        AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend",
+        AppSettings.USER_MAPPING_RULES, userMappingRules
+    ));
 
     @Test
     public void testRequireProperty() {

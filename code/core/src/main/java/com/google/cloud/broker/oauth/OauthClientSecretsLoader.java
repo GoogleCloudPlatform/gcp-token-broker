@@ -52,7 +52,12 @@ public class OauthClientSecretsLoader {
                 clientSecrets.setWeb(details);
                 return clientSecrets;
             } catch (ConfigException.Missing ex) {
-                throw new RuntimeException("OAuth misconfigured");
+                throw new RuntimeException(String.format(
+                    "OAuth misconfigured. Please provide settings `%s` or `%s` and `%s`",
+                    AppSettings.OAUTH_CLIENT_SECRET_JSON_PATH,
+                    AppSettings.OAUTH_CLIENT_ID,
+                    AppSettings.OAUTH_CLIENT_SECRET
+                ));
             }
         }
     }

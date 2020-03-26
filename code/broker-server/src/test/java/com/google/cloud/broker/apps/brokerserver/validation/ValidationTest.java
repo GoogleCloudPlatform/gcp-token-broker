@@ -16,9 +16,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import com.typesafe.config.ConfigFactory;
 import io.grpc.Status;
@@ -33,25 +31,14 @@ public class ValidationTest {
     private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
     private static final String BIGQUERY = "https://www.googleapis.com/auth/bigquery";
     private static final String BIGTABLE = "https://www.googleapis.com/auth/bigtable.data.readonly";
+    private static final Object scopesWhitelist = ConfigFactory.parseString(
+        AppSettings.SCOPES_WHITELIST + "=[\"" + GCS + "\", \"" + BIGQUERY + "\"]"
+    ).getAnyRef(AppSettings.SCOPES_WHITELIST);
 
-    private SettingsOverride backupSettings;
-
-    @Before
-    public void setup() {
-        // Override settings
-        Object scopesWhitelist = ConfigFactory.parseString(
-            AppSettings.SCOPES_WHITELIST + "=[\"" + GCS + "\", \"" + BIGQUERY + "\"]"
-        ).getAnyRef(AppSettings.SCOPES_WHITELIST);
-        backupSettings = new SettingsOverride(Map.of(
-            AppSettings.SCOPES_WHITELIST, scopesWhitelist
-        ));
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        // Restore settings
-        backupSettings.restore();
-    }
+    @ClassRule
+    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
+        AppSettings.SCOPES_WHITELIST, scopesWhitelist
+    ));
 
     @Test
     public void testrequireProperty() {
