@@ -35,8 +35,7 @@ public class ProxyUserValidationTest {
     private static final String SOLR = "solr/testhost@EXAMPLE.COM";
     private static final String GROUP_DATASCIENCE = "datascience";
     private static final String GROUP_FINANCE = "finance";
-
-    private static final String GSUITE_DOMAIN = System.getenv("GSUITE_DOMAIN");
+    private static final String GSUITE_DOMAIN = System.getProperty("gsuite-domain");
     private static final Object proxyUsers = ConfigFactory.parseString(
     AppSettings.PROXY_USERS + "=[" +
             "{" +

@@ -165,26 +165,25 @@ function run_tests() {
         esac
     done
 
-    MVN_VARS="-Dgcp-project=${PROJECT}"
-    ENV_VARS="--env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json"
+    PROPERTIES="-Dgcp-project=${PROJECT}"
 
     if [[ -n "${SPECIFIC_TEST}" ]]; then
-        MVN_VARS="${MVN_VARS} -DfailIfNoTests=false -Dtest=${SPECIFIC_TEST}"
+        PROPERTIES="${PROPERTIES} -DfailIfNoTests=false -Dtest=${SPECIFIC_TEST}"
     fi
 
     if [[ -n "${GSUITE_ADMIN}" ]]; then
-        MVN_VARS="${MVN_VARS} -Dgsuite-admin=${GSUITE_ADMIN}"
+        PROPERTIES="${PROPERTIES} -Dgsuite-admin=${GSUITE_ADMIN}"
     fi
 
     if [[ -n "${GSUITE_DOMAIN}" ]]; then
-        ENV_VARS="${ENV_VARS} --env GSUITE_DOMAIN=${GSUITE_DOMAIN}"
+        PROPERTIES="${PROPERTIES} -Dgsuite-domain=${GSUITE_DOMAIN}"
     fi
 
     set_projects_arg
     validate_project_var
 
     set -x
-    docker exec -it ${ENV_VARS} ${CONTAINER} bash -c "mvn test ${PROJECTS_ARG} ${MVN_VARS}"
+    docker exec -it --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json ${CONTAINER} bash -c "mvn test ${PROJECTS_ARG} ${PROPERTIES}"
 }
 
 function mvn() {
