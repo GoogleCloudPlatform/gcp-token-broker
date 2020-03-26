@@ -30,7 +30,6 @@ import io.grpc.StatusRuntimeException;
 
 import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.testing.FakeKDC;
 
 
 public class SpnegoAuthenticatorTest {

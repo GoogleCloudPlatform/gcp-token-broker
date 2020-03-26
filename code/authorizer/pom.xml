@@ -72,12 +72,6 @@
 
         <!-- Testing dependencies -->
         <dependency>
-            <groupId>org.apache.kerby</groupId>
-            <artifactId>kerb-simplekdc</artifactId>
-            <version>${org.apache.kerby.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.google.cloud.broker</groupId>
             <artifactId>broker-core</artifactId>
             <version>${project.parent.version}</version>

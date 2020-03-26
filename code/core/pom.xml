@@ -101,9 +101,9 @@ limitations under the License.
 
       <!-- Testing dependencies -->
       <dependency>
-        <groupId>com.google.cloud.broker</groupId>
-        <artifactId>common</artifactId>
-        <version>${project.parent.version}</version>
+        <groupId>org.apache.kerby</groupId>
+        <artifactId>kerb-simplekdc</artifactId>
+        <version>${org.apache.kerby.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
@@ -128,7 +128,7 @@ limitations under the License.
                 </executions>
             </plugin>
 
-            <!-- Allow some testing classes (e.g. SettingsOverride) to be imported in other modules' tests. -->
+            <!-- Allow some testing classes (e.g. SettingsOverride, FakeKDC) to be imported in other modules' tests. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>

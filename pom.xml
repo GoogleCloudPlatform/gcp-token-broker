@@ -250,7 +250,6 @@ limitations under the License.
     </build>
 
     <modules>
-        <module>code/common</module>
         <module>code/authorizer</module>
         <module>code/broker-server</module>
         <module>code/core</module>
