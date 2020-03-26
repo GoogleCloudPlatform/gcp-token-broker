@@ -14,8 +14,8 @@ manage, and audit infrastructure and application-level secrets.
 You can create a secret in Secret Manager using the `gcloud` command, for example:
 
 ```shell
-gcloud beta secrets create keytab --replication-policy="automatic"
-gcloud beta secrets versions add keytab --data-file=broker.keytab
+gcloud secrets create keytab --replication-policy="automatic"
+gcloud secrets versions add keytab --data-file=broker.keytab
 ```
 
 ## Downloading secrets

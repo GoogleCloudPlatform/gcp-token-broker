@@ -22,21 +22,15 @@ import com.google.cloud.broker.settings.AppSettings;
 public class SQLiteBackendTest extends JDBCBackendTest {
 
     private static JDBCBackend backend;
-    private static SettingsOverride backupSettings;
+
+    @ClassRule
+    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
+        AppSettings.DATABASE_JDBC_URL, "jdbc:sqlite::memory:"
+    ));
 
     @BeforeClass
     public static void setupClass() {
         backend = new JDBCBackend();
-        // Override settings
-        backupSettings = new SettingsOverride(Map.of(
-            AppSettings.DATABASE_JDBC_URL, "jdbc:sqlite::memory:"
-        ));
-    }
-
-    @AfterClass
-    public static void teardDownClass() throws Exception {
-        // Restore settings
-        backupSettings.restore();
     }
 
     @Before

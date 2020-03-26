@@ -17,6 +17,7 @@
 package com.google.cloud.broker.apps.authorizer;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.Map;
 
 import ch.qos.logback.classic.Level;
@@ -26,11 +27,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.kerby.util.NetworkUtil;
+import org.junit.*;
 import org.slf4j.LoggerFactory;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import static org.junit.Assert.*;
 
 import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
@@ -48,26 +46,31 @@ public class AuthorizerTest {
     }
     private static Authorizer authorizer;
     private static int authorizerPort;
+    static {
+        try {
+            ServerSocket serverSocket = new ServerSocket(0);
+            authorizerPort = serverSocket.getLocalPort();
+            serverSocket.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to get an open port");
+        }
+    }
 
-    private static SettingsOverride backupSettings;
+    @ClassRule
+    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
+        AppSettings.AUTHORIZER_HOST, "localhost",
+        AppSettings.AUTHORIZER_PORT, String.valueOf(authorizerPort),
+        AppSettings.OAUTH_CLIENT_ID, "FakeClientId",
+        AppSettings.OAUTH_CLIENT_SECRET, "FakeClientSecret",
+        AppSettings.ENCRYPTION_BACKEND, DummyEncryptionBackend.class.getCanonicalName(),
+        AppSettings.DATABASE_BACKEND, DummyDatabaseBackend.class.getCanonicalName()
+    ));
 
     /**
      * set System property sun.security.krb5.debug=true to enable krb5 debug
      */
     @BeforeClass
     public static void setupClass() throws Exception {
-        authorizerPort = NetworkUtil.getServerPort();
-
-        // Override settings
-        backupSettings = new SettingsOverride(Map.of(
-            AppSettings.AUTHORIZER_HOST, "localhost",
-            AppSettings.AUTHORIZER_PORT, String.valueOf(authorizerPort),
-            AppSettings.OAUTH_CLIENT_ID, "FakeClientId",
-            AppSettings.OAUTH_CLIENT_SECRET, "FakeClientSecret",
-            AppSettings.ENCRYPTION_BACKEND, DummyEncryptionBackend.class.getCanonicalName(),
-            AppSettings.DATABASE_BACKEND, DummyDatabaseBackend.class.getCanonicalName()
-        ));
-
         authorizer = new Authorizer();
         authorizer.start();
     }
@@ -75,9 +78,6 @@ public class AuthorizerTest {
     @AfterClass
     public static void teardownClass() throws Exception {
         authorizer.close();
-
-        // Restore settings
-        backupSettings.restore();
     }
 
     /**

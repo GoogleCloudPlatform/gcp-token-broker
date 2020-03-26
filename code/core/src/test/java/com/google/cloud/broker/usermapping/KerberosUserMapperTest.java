@@ -15,66 +15,54 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 import static org.junit.Assert.fail;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import com.google.cloud.broker.settings.SettingsOverride;
+import org.junit.*;
 import com.typesafe.config.ConfigFactory;
 
 import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.settings.SettingsOverride;
 
 
 public class KerberosUserMapperTest {
 
-    private static SettingsOverride backupSettings;
-
-    @BeforeClass
-    public static void setUpClass() {
-        Object rules = ConfigFactory.parseString(
-        "rules=[" +
-                // Short names (no realms):
-                "{" +
-                    "if: \"realm == null and primary.endsWith('-hello')\"," +
-                    "then: \"primary[:-6] + '-bonjour@altostrat.net'\"" +
-                "}," +
-                "{" +
-                    "if: \"realm == null and primary.endsWith('-lowercase')\"," +
-                    "then: \"primary|lower + '@altostrat.com.au'\"" +
-                "}," +
-                "{" +
-                    "if: \"realm == null\"," +
-                    "then: \"primary + '@altostrat.com'\"" +
-                "}," +
-                // Kerberos usernames:
-                "{" +
-                    "if: \"instance == null and realm == 'EXAMPLE.COM'\"," +
-                    "then: \"primary + '@altostrat.com'\"" +
-                "}," +
-                "{" +
-                    "if: \"instance != null and realm == 'EXAMPLE.COM'\"," +
-                    "then: \"primary + '--' + instance + '@altostrat.com'\"" +
-                "}," +
-                "{" +
-                    "if: \"primary.endsWith('-app') and realm == 'FOO.ORG'\"," +
-                    "then: \"'robot-' + primary[:-4] + '@altostrat.org'\"" +
-                "}," +
-                "{" +
-                    "if: \"realm == 'FOO.ORG'\"," +
-                    "then: \"primary + '@altostrat.org'\"" +
-                "}" +
-            "]"
+    private static final Object rules = ConfigFactory.parseString(
+    "rules=[" +
+            // Short names (no realms):
+            "{" +
+                "if: \"realm == null and primary.endsWith('-hello')\"," +
+                "then: \"primary[:-6] + '-bonjour@altostrat.net'\"" +
+            "}," +
+            "{" +
+                "if: \"realm == null and primary.endsWith('-lowercase')\"," +
+                "then: \"primary|lower + '@altostrat.com.au'\"" +
+            "}," +
+            "{" +
+                "if: \"realm == null\"," +
+                "then: \"primary + '@altostrat.com'\"" +
+            "}," +
+            // Kerberos usernames:
+            "{" +
+                "if: \"instance == null and realm == 'EXAMPLE.COM'\"," +
+                "then: \"primary + '@altostrat.com'\"" +
+            "}," +
+            "{" +
+                "if: \"instance != null and realm == 'EXAMPLE.COM'\"," +
+                "then: \"primary + '--' + instance + '@altostrat.com'\"" +
+            "}," +
+            "{" +
+                "if: \"primary.endsWith('-app') and realm == 'FOO.ORG'\"," +
+                "then: \"'robot-' + primary[:-4] + '@altostrat.org'\"" +
+            "}," +
+            "{" +
+                "if: \"realm == 'FOO.ORG'\"," +
+                "then: \"primary + '@altostrat.org'\"" +
+            "}" +
+        "]"
         ).getAnyRef("rules");
-        // Override settings
-        backupSettings = new SettingsOverride(Map.of(
-            AppSettings.USER_MAPPING_RULES, rules
-        ));
-    }
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {
-        // Restore settings
-        backupSettings.restore();
-    }
+    @ClassRule
+    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
+        AppSettings.USER_MAPPING_RULES, rules
+    ));
 
     @Test
     public void testMapKerberosName() {
@@ -121,7 +109,7 @@ public class KerberosUserMapperTest {
             "]"
         ).getAnyRef("rules");
 
-        try(SettingsOverride override = new SettingsOverride(Map.of(
+        try (SettingsOverride override = SettingsOverride.apply(Map.of(
             AppSettings.USER_MAPPING_RULES, rules
         ))) {
             try {
@@ -144,7 +132,7 @@ public class KerberosUserMapperTest {
             "]"
         ).getAnyRef("rules");
 
-        try(SettingsOverride override = new SettingsOverride(Map.of(
+        try (SettingsOverride override = SettingsOverride.apply(Map.of(
             AppSettings.USER_MAPPING_RULES, rules
         ))) {
             try {
@@ -167,7 +155,7 @@ public class KerberosUserMapperTest {
             "]"
         ).getAnyRef("rules");
 
-        try(SettingsOverride override = new SettingsOverride(Map.of(
+        try (SettingsOverride override = SettingsOverride.apply(Map.of(
             AppSettings.USER_MAPPING_RULES, rules
         ))) {
             try {
@@ -190,7 +178,7 @@ public class KerberosUserMapperTest {
             "]"
         ).getAnyRef("rules");
 
-        try(SettingsOverride override = new SettingsOverride(Map.of(
+        try (SettingsOverride override = SettingsOverride.apply(Map.of(
             AppSettings.USER_MAPPING_RULES, rules
         ))) {
             try {

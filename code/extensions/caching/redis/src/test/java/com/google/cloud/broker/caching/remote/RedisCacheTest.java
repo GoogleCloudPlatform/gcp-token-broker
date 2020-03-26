@@ -11,21 +11,6 @@
 
 package com.google.cloud.broker.caching.remote;
 
-import static org.junit.Assert.*;
-
-import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.settings.SettingsOverride;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.redisson.Redisson;
-import org.redisson.api.RBucket;
-import org.redisson.api.RKeys;
-import org.redisson.api.RedissonClient;
-import org.redisson.client.codec.ByteArrayCodec;
-import org.redisson.config.Config;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -33,32 +18,36 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 
+import static org.junit.Assert.*;
+import org.junit.*;
+import org.redisson.Redisson;
+import org.redisson.api.RBucket;
+import org.redisson.api.RKeys;
+import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.ByteArrayCodec;
+import org.redisson.config.Config;
+
+import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.settings.SettingsOverride;
 
 public class RedisCacheTest {
 
     private static RedissonClient client;
     private static RedisCache cache;
-    private static SettingsOverride backupSettings;
+
+    @ClassRule
+    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
+        AppSettings.REDIS_CACHE_HOST, "localhost",
+        AppSettings.REDIS_CACHE_PORT, 6379,
+        AppSettings.REDIS_CACHE_DB, 0
+    ));
 
     @BeforeClass
     public static void setupClass() {
-        // Override settings
-        backupSettings = new SettingsOverride(Map.of(
-            AppSettings.REDIS_CACHE_HOST, "localhost",
-            AppSettings.REDIS_CACHE_PORT, 6379,
-            AppSettings.REDIS_CACHE_DB, 0
-        ));
-
         Config config = new Config();
         config.useSingleServer().setAddress("redis://localhost:6379").setDatabase(0);
         client = Redisson.create(config);
         cache = new RedisCache();
-    }
-
-    @AfterClass
-    public static void teardDownClass() throws Exception {
-        // Restore settings
-        backupSettings.restore();
     }
 
     @After
