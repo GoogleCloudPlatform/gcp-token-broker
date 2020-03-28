@@ -23,8 +23,8 @@ import com.google.cloud.broker.settings.AppSettings;
 public class AbstractRemoteCacheTest {
 
     @Test
-    public void testGetInstance() throws Exception {
-        try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.REMOTE_CACHE, "com.example.DoesNotExist"))) {
+    public void testGetInstance() {
+        try(SettingsOverride override = SettingsOverride.apply(Map.of(AppSettings.REMOTE_CACHE, "com.example.DoesNotExist"))) {
             try {
                 AbstractRemoteCache.getInstance();
                 fail();

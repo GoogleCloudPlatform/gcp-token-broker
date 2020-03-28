@@ -69,6 +69,13 @@ This backend is available as a [separate package on Maven Central](https://searc
 
 This backend requires that you set the following setting(s): [`gcp-project`](settings.md#gcp-project).
 
+Note: The Cloud Datastore cache backend does not have the ability to automatically purge expired cached items. To purge
+those items, you can run the following command (for example as part of a regular cron job):
+
+```shell
+CONFIG_FILE=/<path>/application.conf java com.google.cloud.broker.caching.remote.DatastoreCacheCleanup
+```
+
 ### Dummy backend
 
 _Class path:_ `com.google.cloud.broker.caching.remote.DummyCache`

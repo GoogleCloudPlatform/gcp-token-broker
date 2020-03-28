@@ -11,12 +11,15 @@
 
 package com.google.cloud.broker.database.backends;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.cloud.broker.checks.CheckResult;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.settings.AppSettings;
@@ -53,6 +56,8 @@ public class JDBCBackend extends AbstractDatabaseBackend {
     private void formatValue(PreparedStatement statement, Object value, int index) throws SQLException {
         if (value instanceof String) {
             statement.setString(index, (String) value);
+        } else if (value instanceof Integer) {
+            statement.setInt(index, (int) value);
         } else if (value instanceof Long) {
             statement.setLong(index, (long) value);
         } else if (value instanceof byte[]) {
@@ -152,13 +157,48 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         String table = model.getClass().getSimpleName();
         String id = model.getDBId();
         String query = "DELETE FROM " + quote(table) + " WHERE " + quote("id") + "  = ?";
-
         Connection connection = getConnection();
         PreparedStatement statement = null;
         try {
             statement = connection.prepareStatement(query);
             formatValue(statement, id, 1);
             statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
+        }
+    }
+
+    @Override
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime) {
+        return deleteExpiredItems(modelClass, field, cutoffTime, null);
+    }
+
+    @Override
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer limit) {
+        Connection connection = getConnection();
+        String table = modelClass.getSimpleName();
+        PreparedStatement statement = null;
+        try {
+            String query;
+            if (limit != null && limit > 0) {
+                if (getDialect().equals("mariadb") || getDialect().equals("mysql")) {
+                    query = "DELETE FROM " + quote(table) + " WHERE " + quote(field) + " <= ? ORDER BY " + quote(field) + " ASC LIMIT ?";
+                }
+                else {
+                    query = "DELETE FROM " + quote(table) + "WHERE " + getRowIdField() + " IN (SELECT " + getRowIdField() + " FROM" + quote(table) + " WHERE " + quote(field) + " <= ? ORDER BY " + quote(field) + " LIMIT ?)";
+                }
+                statement = connection.prepareStatement(query);
+                formatValue(statement, cutoffTime, 1);
+                formatValue(statement, limit, 2);
+            }
+            else {
+                query = "DELETE FROM " + quote(table) + " WHERE " + quote(field) + " <= ?";
+                statement = connection.prepareStatement(query);
+                formatValue(statement, cutoffTime, 1);
+            }
+            return statement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
@@ -212,6 +252,18 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         }
     }
 
+    @Override
+    public CheckResult checkConnection() {
+        try {
+            getConnection();
+            return new CheckResult(true);
+        } catch(Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            return new CheckResult(false, sw.toString());
+        }
+    }
+
     // Dialect-specific -----------------------------------------------------------------------------------------------
 
     private static final String DIALECT_NOT_SUPPORTED = "Dialect `%s` is not currently supported by the JDBCDatabaseBackend.";
@@ -258,6 +310,18 @@ public class JDBCBackend extends AbstractDatabaseBackend {
             case "mariadb":
             case "mysql":
                 return "ON DUPLICATE KEY UPDATE";
+            default:
+                throw new UnsupportedOperationException(String.format(DIALECT_NOT_SUPPORTED, dialect));
+        }
+    }
+
+    private static String getRowIdField() {
+        String dialect = getDialect();
+        switch (dialect) {
+            case "postgresql":
+                return "ctid";
+            case "sqlite":
+                return "rowid";
             default:
                 throw new UnsupportedOperationException(String.format(DIALECT_NOT_SUPPORTED, dialect));
         }

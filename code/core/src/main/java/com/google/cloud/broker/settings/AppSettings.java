@@ -70,6 +70,7 @@ public class AppSettings {
     public final static String USER_MAPPER = "user-mapping.mapper";
     public final static String USER_MAPPING_RULES = "user-mapping.rules";
     public final static String SECRET_MANAGER_DOWNLOADS = "secret-manager.downloads";
+    public final static String SYSTEM_CHECK_ENABLED = "system-check-enabled";
 
 
     private static Config instance;
@@ -81,7 +82,7 @@ public class AppSettings {
         return instance;
     }
 
-    static void setInstance(Config newInstance) {
+    public static void setInstance(Config newInstance) {
         instance = newInstance;
     }
 

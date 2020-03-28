@@ -26,6 +26,8 @@ import com.typesafe.config.ConfigException;
 import io.grpc.Status;
 import org.slf4j.MDC;
 
+import com.google.cloud.broker.apps.brokerserver.logging.LoggingUtils;
+import com.google.cloud.broker.validation.EmailValidation;
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 import com.google.cloud.broker.apps.brokerserver.accesstokens.providers.DomainWideDelegationAuthorityProvider;
 import com.google.cloud.broker.settings.AppSettings;
@@ -94,9 +96,8 @@ public class ProxyUserValidation {
 
     public static void validateImpersonator(String impersonator, String impersonated) {
         String mappedImpersonated = AbstractUserMapper.getInstance().map(impersonated);
-        Validation.validateEmail(mappedImpersonated);
-        MDC.put("impersonated_user", impersonated);
-        MDC.put("impersonated_user_mapped", mappedImpersonated);
+        EmailValidation.validateEmail(mappedImpersonated);
+        MDC.put(LoggingUtils.MDC_AUTH_MODE_PROXY_IMPERSONATED_USER_KEY, impersonated);
         List<? extends Config> proxyConfigs = AppSettings.getInstance().getConfigList(AppSettings.PROXY_USERS);
         for (Config proxyConfig : proxyConfigs) {
             String proxy = proxyConfig.getString(CONFIG_PROXY);

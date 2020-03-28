@@ -92,9 +92,9 @@ data "template_file" "startup_script_origin_kdc" {
     zone           = var.gcp_zone
     extra_commands = <<EOT
         # Create user principals
-        kadmin.local -q "addprinc -pw ${var.test_users[0]} ${var.test_users[0]}"
-        kadmin.local -q "addprinc -pw ${var.test_users[1]} ${var.test_users[1]}"
-        kadmin.local -q "addprinc -pw ${var.test_users[2]} ${var.test_users[2]}"
+        %{ for test_user in var.test_users ~}
+        kadmin.local -q "addprinc -pw ${test_user} ${test_user}"
+        %{ endfor ~}
 
         # One-way trust with Dataproc realm
         kadmin.local -q "addprinc -pw ${var.cross_realm_password} krbtgt/${local.dataproc_realm}@${var.origin_realm}"

@@ -16,6 +16,7 @@
 
 package com.google.cloud.broker.apps.authorizer;
 
+import ch.qos.logback.classic.Logger;
 import com.google.api.client.auth.oauth2.BearerToken;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.TokenResponse;
@@ -100,7 +101,7 @@ public class Authorizer implements AutoCloseable {
 
     private static void setLoggingLevel() {
         Level level = Level.toLevel(AppSettings.getInstance().getString(AppSettings.LOGGING_LEVEL));
-        final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger("org.eclipse.jetty");
+        final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger) logger;
         logbackLogger.setLevel(level);
     }

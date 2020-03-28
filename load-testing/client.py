@@ -21,7 +21,6 @@ from locust import Locust, TaskSet, events, task
 
 from brokerservice.protobuf import broker_pb2
 from brokerservice.protobuf.broker_pb2_grpc import BrokerStub
-from settings import REALM
 
 BROKER_PORT = 443
 BROKER_USER = 'broker'
@@ -55,7 +54,7 @@ class BrokerClient:
         Obtain a SPNEGO token for the broker service and set the token to
         the 'authorization' metadata header.
         """
-        service_name_string = '{}/{}@{}'.format(BROKER_USER, self.host, REALM)
+        service_name_string = BROKER_USER
         service_name = gssapi.Name(service_name_string, gssapi.NameType.kerberos_principal)
         spnego_mech_oid = gssapi.raw.OID.from_int_seq('1.3.6.1.5.5.2')
         context = gssapi.SecurityContext(
@@ -80,15 +79,14 @@ class BrokerClient:
         start_time = time.time()
         try:
             stub = self.get_stub()
+            if parameters is None:
+                parameters = {}
 
-            # Get the request object
-            request_name = '{}Request'.format(endpoint)
-            request = getattr(broker_pb2, request_name)()
+            # Get the request class name
+            request_class = '{}Request'.format(endpoint)
 
-            # Set given parameters to the request
-            if parameters is not None:
-                for key, value in parameters.items():
-                    setattr(request, key, value)
+            # Instantiate a new request object
+            request = getattr(broker_pb2, request_class)(**parameters)
 
             # Set SPNEGO token in the metadata
             metadata = self.get_metadata(session_token)

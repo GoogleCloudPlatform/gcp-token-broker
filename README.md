@@ -56,7 +56,6 @@ Included in the current **early** release:
 Plans for the **stable** releases:
 
 * Performance optimizations.
-* Rewrite of server application from Python to Java.
 * API stabilization.
 
 Plans for **future** releases:

@@ -54,30 +54,6 @@ MODULE=""
 PROJECTS_ARG=""
 CONTAINER="broker-dev"
 
-# Creates a directory and copies some files to it.
-# The copied files are keytabs and secrets created for the
-# demo environment (See: https://github.com/GoogleCloudPlatform/gcp-token-broker/blob/master/docs/deploy/index.md).
-function backup_artifacts() {
-    if [ $# -ne 1 ]; then
-        echo "Please provide a directory name"
-        exit 1
-    fi
-    set -x
-    mkdir -p backups/$1
-    cp authorizer-tls.crt backups/$1
-    cp authorizer-tls.csr backups/$1
-    cp authorizer-tls.key backups/$1
-    cp broker-tls.crt backups/$1
-    cp broker-tls.csr backups/$1
-    cp broker-tls.key backups/$1
-    cp broker-tls.pem backups/$1
-    cp broker.keytab backups/$1
-    cp client_secret.json backups/$1
-    cp kerberos-config.yaml backups/$1
-    cp kubernetes/values_override.yaml backups/$1
-    cp kubernetes/skaffold.yaml backups/$1
-}
-
 
 # Build the Maven packages
 function build_packages() {
@@ -115,28 +91,31 @@ function set_projects_arg() {
                 PROJECTS_ARG="--projects code/common,code/core"
                 ;;
             broker-server)
-                PROJECTS_ARG="--projects code/common,code/core,code/broker-server"
+                PROJECTS_ARG="--projects code/common,code/common,code/core,code/broker-server"
                 ;;
             authorizer)
-                PROJECTS_ARG="--projects code/core,code/authorizer"
+                PROJECTS_ARG="--projects code/common,code/core,code/authorizer"
                 ;;
             connector)
-                PROJECTS_ARG="--projects code/common,code/connector"
+                PROJECTS_ARG="--projects code/common,code/client/client-lib,code/client/hadoop-connector"
+                ;;
+            client)
+                PROJECTS_ARG="--projects ccode/common,ode/client/client-lib"
                 ;;
             db-datastore)
-                PROJECTS_ARG="--projects code/core,code/extensions/database/cloud-datastore"
+                PROJECTS_ARG="--projects code/common,code/core,code/extensions/database/cloud-datastore"
                 ;;
             jdbc)
-                PROJECTS_ARG="--projects code/core,code/extensions/database/jdbc"
+                PROJECTS_ARG="--projects code/common,code/core,code/extensions/database/jdbc"
                 ;;
-            cloud-kms)
-                PROJECTS_ARG="--projects code/core,code/extensions/encryption/cloud-kms"
+            kms)
+                PROJECTS_ARG="--projects code/common,code/core,code/extensions/encryption/cloud-kms"
                 ;;
             cache-redis)
-                PROJECTS_ARG="--projects code/core,code/extensions/caching/redis"
+                PROJECTS_ARG="--projects code/common,code/core,code/extensions/caching/redis"
                 ;;
             cache-datastore)
-                PROJECTS_ARG="--projects code/core,code/extensions/caching/cloud-datastore"
+                PROJECTS_ARG="--projects code/common,code/core,code/extensions/caching/cloud-datastore"
                 ;;
             *)
                 echo "Invalid module: '${MODULE}'" >&2
@@ -186,26 +165,25 @@ function run_tests() {
         esac
     done
 
-    MVN_VARS="-Dgcp-project=${PROJECT}"
-    ENV_VARS="--env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json"
+    PROPERTIES="-Dgcp-project=${PROJECT}"
 
     if [[ -n "${SPECIFIC_TEST}" ]]; then
-        MVN_VARS="${MVN_VARS} -DfailIfNoTests=false -Dtest=${SPECIFIC_TEST}"
+        PROPERTIES="${PROPERTIES} -DfailIfNoTests=false -Dtest=${SPECIFIC_TEST}"
     fi
 
     if [[ -n "${GSUITE_ADMIN}" ]]; then
-        MVN_VARS="${MVN_VARS} -Dgsuite-admin=${GSUITE_ADMIN}"
+        PROPERTIES="${PROPERTIES} -Dgsuite-admin=${GSUITE_ADMIN}"
     fi
 
     if [[ -n "${GSUITE_DOMAIN}" ]]; then
-        ENV_VARS="${ENV_VARS} --env GSUITE_DOMAIN=${GSUITE_DOMAIN}"
+        PROPERTIES="${PROPERTIES} -Dgsuite-domain=${GSUITE_DOMAIN}"
     fi
 
     set_projects_arg
     validate_project_var
 
     set -x
-    docker exec -it ${ENV_VARS} ${CONTAINER} bash -c "mvn test ${PROJECTS_ARG} ${MVN_VARS}"
+    docker exec -it --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json ${CONTAINER} bash -c "mvn test ${PROJECTS_ARG} ${PROPERTIES}"
 }
 
 function mvn() {
@@ -217,6 +195,11 @@ function mvn() {
 function clean() {
     set -x
     docker exec -it ${CONTAINER} bash -c "mvn clean"
+}
+
+function compile_protobuf {
+  set -x
+  docker exec -it ${CONTAINER} bash -c "mvn protobuf:compile --projects code/broker-server,code/client/client-lib"
 }
 
 function update_version() {
@@ -252,14 +235,13 @@ function restart_dev {
 function upload_connector {
     LIB_DIR="/usr/local/share/google/dataproc/lib"
     VERSION="$(cat VERSION)"
-    JAR="broker-connector-hadoop2-${VERSION}-jar-with-dependencies.jar"
-    LOCAL_JAR=""
+    JAR="broker-hadoop-connector-hadoop2-${VERSION}-jar-with-dependencies.jar"
     SSH="gcloud compute ssh $1 --tunnel-through-iap"
     set -x
     # Upload new JAR
-    gcloud compute scp code/connector/target/${JAR} $1:/tmp --tunnel-through-iap
+    gcloud compute scp code/client/hadoop-connector/target/${JAR} $1:/tmp --tunnel-through-iap
     # Delete old JAR
-    ${SSH} --command "sudo rm -f ${LIB_DIR}/broker-connector-*.jar"
+    ${SSH} --command "sudo rm -f ${LIB_DIR}/broker-hadoop-connector-*.jar"
     # Relocate new JAR
     ${SSH} --command "sudo mv /tmp/${JAR} ${LIB_DIR}"
     # Restart services
@@ -312,10 +294,6 @@ case "$1" in
         shift
         restart_dev
         ;;
-    backup_artifacts)
-        shift
-        backup_artifacts $@
-        ;;
     dependency)
         shift
         dependency
@@ -331,6 +309,10 @@ case "$1" in
     lint)
         shift
         lint
+        ;;
+    protobuf)
+        shift
+        compile_protobuf
         ;;
     *)
         echo "Error: Unsupported command: '$1'" >&2

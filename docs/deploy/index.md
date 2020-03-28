@@ -34,8 +34,8 @@ Before you start, you must set up some prerequisites for the demo:
 4.  Create a new GCP project under the GSuite organization and [enable billing](https://cloud.google.com/billing/docs/how-to/modify-project).
 5.  Install some tools on your local machine (The versions indicated below are the ones that have been officially tested.
     Newer versions might work but are untested):
-    *   [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v0.11.13
-    *   [Google Cloud SDK](https://cloud.google.com/sdk/install) v267.0.0
+    *   [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v0.12.24
+    *   [Google Cloud SDK](https://cloud.google.com/sdk/install) v285.0.1
 
 ### Deploying the demo architecture
 
@@ -152,8 +152,8 @@ Follow these steps to deploy the demo environment to GCP:
     *   Upload the file to Secret Manager (Replace **`[CLIENT_SECRET.JSON]`** with the name of the file your downloaded in the
         previous step):
         ```shell
-        gcloud beta secrets create oauth-client --replication-policy="automatic"
-        gcloud beta secrets versions add oauth-client --data-file=[CLIENT_SECRET.JSON]
+        gcloud secrets create oauth-client --replication-policy="automatic"
+        gcloud secrets versions add oauth-client --data-file=[CLIENT_SECRET.JSON]
         ```
     *   You can now delete the file from your local filesystem (Replace  **`[CLIENT_SECRET.JSON]`** with the actual file
         name):
@@ -179,8 +179,8 @@ Follow these steps to deploy the demo environment to GCP:
 2.  Upload the DEK to Secret Manager:
 
     ```shell
-    gcloud beta secrets create dek --replication-policy="automatic"
-    gcloud beta secrets versions add dek --data-file=dek.json
+    gcloud secrets create dek --replication-policy="automatic"
+    gcloud secrets versions add dek --data-file=dek.json
     ```
     
 3.  You can now delete the DEK from your local filesystem:
@@ -280,14 +280,14 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
     export BROKER_PRINCIPAL="broker"
     export BROKER_VERSION=$(cat VERSION)
     export BROKER_CRT=$(true | openssl s_client -connect `basename ${BROKER_URI}`:443 2>/dev/null | openssl x509)
-    export INIT_ACTION="gs://gcp-token-broker/broker-connector.${BROKER_VERSION}.sh"
-    export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-connector/hadoop2-${BROKER_VERSION}/broker-connector-hadoop2-${BROKER_VERSION}-jar-with-dependencies.jar"
+    export INIT_ACTION="gs://gcp-token-broker/broker-hadoop-connector.${BROKER_VERSION}.sh"
+    export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-hadoop-connector/hadoop2-${BROKER_VERSION}/broker-hadoop-connector-hadoop2-${BROKER_VERSION}-jar-with-dependencies.jar"
     ```
 
 4.  Create the Dataproc cluster:
 
     ```shell
-    gcloud beta dataproc clusters create test-cluster \
+    gcloud dataproc clusters create test-cluster \
       --single-node \
       --no-address \
       --zone ${ZONE} \
@@ -298,11 +298,11 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
       --scopes cloud-platform \
       --service-account "dataproc@${PROJECT}.iam.gserviceaccount.com" \
       --kerberos-config-file deploy/${PROJECT}/kerberos-config.yaml \
+      --initialization-actions ${INIT_ACTION} \
       --metadata "gcp-token-broker-tls-certificate=${BROKER_CRT}" \
       --metadata "gcp-token-broker-uri=${BROKER_URI}" \
       --metadata "gcp-token-broker-kerberos-principal=${BROKER_PRINCIPAL}" \
       --metadata "origin-realm=${REALM}" \
-      --initialization-actions ${INIT_ACTION} \
       --metadata "connector-jar-url=${CONNECTOR_JAR_URL}"
     ```
 
@@ -324,8 +324,8 @@ The broker service needs a keytab to authenticate incoming requests.
 2.  Upload the keytab to Secret Manager:
 
     ```shell
-    gcloud beta secrets create keytab --replication-policy="automatic"
-    gcloud beta secrets versions add keytab --data-file=broker.keytab
+    gcloud secrets create keytab --replication-policy="automatic"
+    gcloud secrets versions add keytab --data-file=broker.keytab
     ```
 
 3.  You can now delete the keytab from your local filesystem:
@@ -363,10 +363,10 @@ Follow these steps to view the broker application logs in Stackdriver:
 3.  Type the following in the text search box:
 
     ```conf
-    resource.type="container"
+    resource.type="k8s_container"
     resource.labels.cluster_name="broker"
-    resource.labels.namespace_id="default"
-    resource.labels.container_name="broker-container"
+    resource.labels.namespace_name="default"
+    labels.k8s-pod/run="broker-server"
     ```
 
 4.  Click "Submit Filter".

@@ -18,11 +18,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.grpc.Status;
 import org.slf4j.MDC;
 
+import com.google.cloud.broker.apps.brokerserver.logging.LoggingUtils;
 import com.google.cloud.broker.apps.brokerserver.accesstokens.providers.AbstractProvider;
-import com.google.cloud.broker.apps.brokerserver.validation.Validation;
 import com.google.cloud.broker.caching.CacheFetcher;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.usermapping.AbstractUserMapper;
+import com.google.cloud.broker.validation.EmailValidation;
 
 
 public class AccessTokenCacheFetcher extends CacheFetcher {
@@ -58,12 +59,12 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
         String googleIdentity;
         try {
             googleIdentity = AbstractUserMapper.getInstance().map(owner);
-            Validation.validateEmail(googleIdentity);
+            EmailValidation.validateEmail(googleIdentity);
         }
         catch (IllegalArgumentException e) {
             throw Status.PERMISSION_DENIED.withDescription("Principal `" + owner + "` cannot be matched to a Google identity.").asRuntimeException();
         }
-        MDC.put("access_token_user", googleIdentity);
+        MDC.put(LoggingUtils.MDC_ACCESS_TOKEN_USER_KEY, googleIdentity);
         AccessToken accessToken = AbstractProvider.getInstance().getAccessToken(googleIdentity, scopes);
         return AccessBoundaryUtils.addAccessBoundary(accessToken, target);
     }

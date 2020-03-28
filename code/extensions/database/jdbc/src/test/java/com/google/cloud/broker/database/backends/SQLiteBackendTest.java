@@ -22,21 +22,15 @@ import com.google.cloud.broker.settings.AppSettings;
 public class SQLiteBackendTest extends JDBCBackendTest {
 
     private static JDBCBackend backend;
-    private static SettingsOverride backupSettings;
+
+    @ClassRule
+    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
+        AppSettings.DATABASE_JDBC_URL, "jdbc:sqlite::memory:"
+    ));
 
     @BeforeClass
     public static void setupClass() {
         backend = new JDBCBackend();
-        // Override settings
-        backupSettings = new SettingsOverride(Map.of(
-            AppSettings.DATABASE_JDBC_URL, "jdbc:sqlite::memory:"
-        ));
-    }
-
-    @AfterClass
-    public static void teardDownClass() throws Exception {
-        // Restore settings
-        backupSettings.restore();
     }
 
     @Before
@@ -51,37 +45,47 @@ public class SQLiteBackendTest extends JDBCBackendTest {
 
     @Test
     public void testInitializeDatabase() {
-        JDBCBackendTest.testInitializeDatabase(backend);
+        JDBCBackendTest.initializeDatabase(backend);
     }
 
     @Test
     public void testSaveNew() {
-        JDBCBackendTest.testSaveNew(backend);
+        JDBCBackendTest.saveNew(backend);
     }
 
     @Test
     public void testUpdate() {
-        JDBCBackendTest.testUpdate(backend);
+        JDBCBackendTest.update(backend);
     }
 
     @Test
     public void testSaveWithoutID() {
-        JDBCBackendTest.testSaveWithoutID(backend);
+        JDBCBackendTest.saveWithoutID(backend);
     }
 
     @Test
     public void testGet() {
-        JDBCBackendTest.testGet(backend);
+        JDBCBackendTest.get(backend);
     }
 
     @Test
     public void testGetNotExist() {
-        JDBCBackendTest.testGetNotExist(backend);
+        JDBCBackendTest.getNotExist(backend);
     }
 
     @Test
     public void testDelete() {
-        JDBCBackendTest.testDelete(backend);
+        JDBCBackendTest.delete(backend);
+    }
+
+    @Test
+    public void testDeleteExpiredItems() {
+        JDBCBackendTest.deleteExpiredItems(backend, false);
+    }
+
+    @Test
+    public void testDeleteExpiredItemsWithLimit() {
+        JDBCBackendTest.deleteExpiredItems(backend, true);
     }
 
 }

@@ -123,7 +123,7 @@ tokens for those users, although only for the specified API scopes.
 
 ## Access boundary
 
-The broker can restrict the scope of an access token to a specific resource (e.g. a GCS bucket) by setting a
+The broker can restrict the scope of an access token to a specific resource (e.g. a GCS bucket) by applying a
 [Credential Access Boundary](https://cloud.google.com/iam/docs/restricting-short-lived-credentials) (CAB) on the tokens
 that are returned by the providers. To enable this feature, the client can pass a `target` attribute when it sends a
 request to the broker.
@@ -131,6 +131,15 @@ request to the broker.
 The `target` attribute must use the GCP [resource name format](https://cloud.google.com/apis/design/resource_names), for
 example `//storage.googleapis.com/projects/_/buckets/mybucket` for a bucket named `mybucket`.
 
-In the Hadoop use case, Hadoop systematically passes the target bucket to the broker [connector](connector.md). The
-broker connector then relays the target bucket to the broker service. Therefore, CAB is always applied on the
-generated access tokens to restrict access to the given bucket.
+In the Hadoop use case, Hadoop systematically passes the target bucket to the broker [connector](connector.md). To let
+the broker connector relay the target bucket to the broker service and apply CAB on the returned access token, set
+the `gcp.token.broker.access.boundary.enabled` property to `true`.
+
+Note: To use CAB with a Cloud Storage bucket, you must set [Uniform bucket-level access](https://cloud.google.com/storage/docs/uniform-bucket-level-access)
+on the bucket. Otherwise, you'll receive the error `The operation requires that Uniform Bucket Level Access be enabled`
+when you try to access the bucket with the returned access token. To set uniform bucket-level access, you can run this
+command (Replace *`[YOUR_BUCKET]`* with the name of your bucket):
+
+```shell
+gsutil ubla set on gs://[YOUR-BUCKET]
+```

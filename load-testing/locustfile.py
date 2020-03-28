@@ -11,14 +11,13 @@
 
 import subprocess
 
-import gssapi
 from locust import Locust, TaskSequence, task, seq_task
 
 from client import BrokerClient
 from settings import TEST_USERS, REALM
 
 SCOPE = 'https://www.googleapis.com/auth/devstorage.read_write'
-BROKER_HOST = '10.2.1.255.xip.io'
+BROKER_HOST = '10.2.1.255.nip.io'
 USER = TEST_USERS[0]
 USER_FULL = '{}@{}'.format(USER, REALM)
 
@@ -45,7 +44,7 @@ class JobSimulation(TaskSequence):
     def get_session_token(self):
         response = self.client.call_endpoint(
             'GetSessionToken',
-            dict(owner=USER_FULL, scope=SCOPE, renewer=USER_FULL)
+            parameters=dict(owner=USER_FULL, scopes=[SCOPE], renewer=USER_FULL)
         )
         self.session_token = response.session_token
 
@@ -53,7 +52,7 @@ class JobSimulation(TaskSequence):
     def renew_session_token(self):
         self.client.call_endpoint(
             'RenewSessionToken',
-            dict(session_token=self.session_token),
+            parameters=dict(session_token=self.session_token),
         )
 
     @seq_task(3)
@@ -61,15 +60,14 @@ class JobSimulation(TaskSequence):
     def get_access_token(self):
         self.client.call_endpoint(
             'GetAccessToken',
-            dict(owner=USER_FULL, scope=SCOPE),
-            self.session_token
+            session_token=self.session_token
         )
 
     @seq_task(4)
     def cancel_session_token(self):
         self.client.call_endpoint(
             'CancelSessionToken',
-            dict(session_token=self.session_token),
+            parameters=dict(session_token=self.session_token),
         )
 
 

@@ -1,3 +1,16 @@
+## 0.10.1 (March 24, 2020)
+
+- Added commands to purge expired sessions and Datastore cache items.
+
+## 0.10.0 (March 20, 2020)
+
+- Disabled credential access boundary by default.
+- Added new base client library: `broker-client-lib`.
+- Renamed `broker-connector` package to `broker-hadoop-connector`.
+- Added `PingServer` command.
+- Added system check when the broker server starts to test connectivity
+  with database, cache, and encryption backends.
+
 ## 0.9.2 (March 9, 2020)
 
 - Added support for credentials access boundary.

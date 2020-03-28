@@ -11,11 +11,28 @@
 
 package com.google.cloud.broker.usermapping;
 
+import java.lang.invoke.MethodHandles;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.cloud.broker.validation.EmailValidation;
+
 public class MapUser {
 
+    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     public static void main(String[] args) {
-        String email = AbstractUserMapper.getInstance().map(args[1]);
-        System.out.println(email);
+        if (args.length == 1) {
+            String email = AbstractUserMapper.getInstance().map(args[0]);
+            EmailValidation.validateEmail(email);
+            logger.info(email);
+        }
+        else {
+            logger.error("This command requires one argument.");
+            System.exit(1);
+        }
+
     }
 
 }

@@ -11,12 +11,16 @@
 
 package com.google.cloud.broker.database.backends;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.*;
 
+import com.google.cloud.datastore.*;
+import com.google.cloud.datastore.StructuredQuery.*;
+
+import com.google.cloud.broker.checks.CheckResult;
 import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.datastore.*;
-
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 
 
@@ -119,8 +123,50 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
     }
 
     @Override
-    public void initializeDatabase() {
-        // Cloud Datastore doesn't need to do any initialization. A table is automatically be created
-        // when the first object is inserted.
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime) {
+        return deleteExpiredItems(modelClass, field, cutoffTime, null);
     }
+
+    @Override
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer limit) {
+        Datastore datastore = getService();
+        KeyQuery.Builder queryBuilder = Query.newKeyQueryBuilder()
+            .setKind(modelClass.getSimpleName())
+            .setFilter(PropertyFilter.le(field, cutoffTime))
+            .setOrderBy(OrderBy.asc(field));
+        if (limit != null) {
+            queryBuilder.setLimit(limit);
+        }
+        KeyQuery query = queryBuilder.build();
+        final QueryResults<Key> keys = datastore.run(query);
+        int numDeletedItems = 0;
+        while (keys.hasNext()) {
+            datastore.delete(keys.next());
+            numDeletedItems++;
+        }
+        return numDeletedItems;
+    }
+
+    @Override
+    public void initializeDatabase() {
+        // Cloud Datastore doesn't need to do any initialization.
+        // A table is automatically be created when the first object is inserted.
+    }
+
+    @Override
+    public CheckResult checkConnection() {
+        try {
+            Datastore datastore = getService();
+            Query<Entity> query = Query.newEntityQueryBuilder()
+                .setKind("ABCDEFGHIJ1234567890")  // Arbitrary fictitious Kind
+                .build();
+            datastore.run(query);
+            return new CheckResult(true);
+        } catch(Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            return new CheckResult(false, sw.toString());
+        }
+    }
+
 }

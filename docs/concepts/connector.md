@@ -46,3 +46,11 @@ Used only if `gcp.token.broker.tls.enabled` is `true`.
 
 Alternative to `gcp.token.broker.tls.certificate`. File path of TLS certificate for the broker service.
 Used only if `gcp.token.broker.tls.enabled` is `true` and `gcp.token.broker.tls.certificate`  is not provided.
+
+## Configuration checks
+
+Run this command to verify that your client environment is correctly configured to connect to the server:
+
+```shell
+java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.PingServer
+```

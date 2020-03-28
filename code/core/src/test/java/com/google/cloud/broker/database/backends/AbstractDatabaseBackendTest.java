@@ -23,8 +23,8 @@ import com.google.cloud.broker.settings.AppSettings;
 public class AbstractDatabaseBackendTest {
 
     @Test
-    public void testGetInstance() throws Exception {
-        try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.DATABASE_BACKEND, "com.example.DoesNotExist"))) {
+    public void testGetInstance() {
+        try(SettingsOverride override = SettingsOverride.apply(Map.of(AppSettings.DATABASE_BACKEND, "com.example.DoesNotExist"))) {
             try {
                 AbstractDatabaseBackend.getInstance();
                 fail();

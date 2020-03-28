@@ -12,9 +12,11 @@
 
 package com.google.cloud.broker.database.backends;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
+import com.google.cloud.broker.checks.CheckResult;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 
@@ -36,6 +38,20 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
 
     private String calculateKey(Class modelClass, String objectId) {
         return modelClass.getSimpleName() + "-" + objectId;
+    }
+
+    public static ConcurrentMap<String, Object> getMap() {
+        if (instance == null) {
+            CacheLoader<String, Object> loader;
+            loader = new CacheLoader<String, Object>(){
+                @Override
+                public Object load(String key) throws Exception {
+                    return null;
+                }
+            };
+            instance = CacheBuilder.newBuilder().build(loader).asMap();
+        }
+        return instance;
     }
 
     @Override
@@ -68,21 +84,40 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
     }
 
     @Override
-    public void initializeDatabase() {}
-
-    public static ConcurrentMap<String, Object> getMap() {
-        if (instance == null) {
-            CacheLoader<String, Object> loader;
-            loader = new CacheLoader<String, Object>(){
-                @Override
-                public Object load(String key) throws Exception {
-                    return null;
-                }
-            };
-            instance = CacheBuilder.newBuilder().build(loader).asMap();
-        }
-        return instance;
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime) {
+        return deleteExpiredItems(modelClass, field, cutoffTime, null);
     }
 
+    @Override
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer limit) {
+        if (limit != null) {
+            // Using a limit would require sorting entries by `field`
+            // but this backend doesn't (currently) have sorting capabilities.
+            throw new UnsupportedOperationException();
+        }
+
+        ConcurrentMap<String, Object> cache = getMap();
+        int numDeletedItems = 0;
+        for (Map.Entry<String, Object> entry : cache.entrySet()) {
+            Model model = (Model) entry.getValue();
+            if (entry.getKey().startsWith(modelClass.getSimpleName() + "-")
+                && ((Long) model.toMap().get(field) <= cutoffTime)) {
+                cache.remove(entry.getKey());
+                numDeletedItems++;
+                if (limit != null && limit > 0 && numDeletedItems == limit) {
+                    return limit;
+                }
+            }
+        }
+        return numDeletedItems;
+    }
+
+    @Override
+    public void initializeDatabase() {}
+
+    @Override
+    public CheckResult checkConnection() {
+        return new CheckResult(true);
+    }
 
 }
