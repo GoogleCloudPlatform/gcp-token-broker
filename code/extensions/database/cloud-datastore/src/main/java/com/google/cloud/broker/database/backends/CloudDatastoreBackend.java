@@ -123,19 +123,14 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
     }
 
     @Override
-    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime) {
-        return deleteExpiredItems(modelClass, field, cutoffTime, null);
-    }
-
-    @Override
-    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer limit) {
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer numItems) {
         Datastore datastore = getService();
         KeyQuery.Builder queryBuilder = Query.newKeyQueryBuilder()
             .setKind(modelClass.getSimpleName())
             .setFilter(PropertyFilter.le(field, cutoffTime))
             .setOrderBy(OrderBy.asc(field));
-        if (limit != null) {
-            queryBuilder.setLimit(limit);
+        if (numItems != null) {
+            queryBuilder.setLimit(numItems);
         }
         KeyQuery query = queryBuilder.build();
         final QueryResults<Key> keys = datastore.run(query);

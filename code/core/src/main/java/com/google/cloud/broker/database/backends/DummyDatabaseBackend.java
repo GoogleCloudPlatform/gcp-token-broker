@@ -84,13 +84,8 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
     }
 
     @Override
-    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime) {
-        return deleteExpiredItems(modelClass, field, cutoffTime, null);
-    }
-
-    @Override
-    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer limit) {
-        if (limit != null) {
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer numItems) {
+        if (numItems != null) {
             // Using a limit would require sorting entries by `field`
             // but this backend doesn't (currently) have sorting capabilities.
             throw new UnsupportedOperationException();
@@ -104,9 +99,6 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
                 && ((Long) model.toMap().get(field) <= cutoffTime)) {
                 cache.remove(entry.getKey());
                 numDeletedItems++;
-                if (limit != null && limit > 0 && numDeletedItems == limit) {
-                    return limit;
-                }
             }
         }
         return numDeletedItems;

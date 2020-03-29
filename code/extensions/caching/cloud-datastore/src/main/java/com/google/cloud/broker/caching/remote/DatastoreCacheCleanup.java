@@ -18,7 +18,8 @@ import org.slf4j.LoggerFactory;
 
 public class DatastoreCacheCleanup {
 
-    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Class<?> klass = MethodHandles.lookup().lookupClass();
+    private static final Logger logger = LoggerFactory.getLogger(klass);
 
     public static void main(String[] args) {
         Integer limit = null;
@@ -27,7 +28,7 @@ public class DatastoreCacheCleanup {
         }
         CloudDatastoreCache cache = new CloudDatastoreCache();
         int numDeletedItems = cache.deleteExpiredItems(limit);
-        logger.info("DatastoreCacheCleanup - Deleted expired item(s): " + numDeletedItems);
+        logger.info(klass.getSimpleName() + " - Deleted expired item(s): " + numDeletedItems);
     }
 
 }

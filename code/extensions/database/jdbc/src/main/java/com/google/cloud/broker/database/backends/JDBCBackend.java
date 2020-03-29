@@ -171,18 +171,13 @@ public class JDBCBackend extends AbstractDatabaseBackend {
     }
 
     @Override
-    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime) {
-        return deleteExpiredItems(modelClass, field, cutoffTime, null);
-    }
-
-    @Override
-    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer limit) {
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer numItems) {
         Connection connection = getConnection();
         String table = modelClass.getSimpleName();
         PreparedStatement statement = null;
         try {
             String query;
-            if (limit != null && limit > 0) {
+            if (numItems != null && numItems > 0) {
                 if (getDialect().equals("mariadb") || getDialect().equals("mysql")) {
                     query = "DELETE FROM " + quote(table) + " WHERE " + quote(field) + " <= ? ORDER BY " + quote(field) + " ASC LIMIT ?";
                 }
@@ -191,7 +186,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
                 }
                 statement = connection.prepareStatement(query);
                 formatValue(statement, cutoffTime, 1);
-                formatValue(statement, limit, 2);
+                formatValue(statement, numItems, 2);
             }
             else {
                 query = "DELETE FROM " + quote(table) + " WHERE " + quote(field) + " <= ?";
