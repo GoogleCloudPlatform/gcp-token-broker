@@ -222,7 +222,7 @@ public abstract class JDBCBackendTest {
     /**
      * Test retrieving a model from the database.
      */
-    static void get(JDBCBackend backend) {
+    static void get(JDBCBackend backend) throws DatabaseObjectNotFound {
         // Create a record in the database
         Connection connection = backend.getConnection();
         PreparedStatement statement = null;

@@ -12,6 +12,8 @@
 
 package com.google.cloud.broker.database.backends;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
@@ -40,7 +42,7 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
         return modelClass.getSimpleName() + "-" + objectId;
     }
 
-    public static ConcurrentMap<String, Object> getMap() {
+    public static ConcurrentMap<String, Object> getCache() {
         if (instance == null) {
             CacheLoader<String, Object> loader;
             loader = new CacheLoader<String, Object>(){
@@ -55,8 +57,18 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
     }
 
     @Override
+    public List<Model> getAll(Class modelClass) {
+        ConcurrentMap<String, Object> cache = getCache();
+        List<Model> models = new ArrayList<>();
+        for (Object model: cache.values()) {
+            models.add((Model) model);
+        }
+        return models;
+    }
+
+    @Override
     public Model get(Class modelClass, String objectId) throws DatabaseObjectNotFound {
-        ConcurrentMap<String, Object> cache = getMap();
+        ConcurrentMap<String, Object> cache = getCache();
         String key = calculateKey(modelClass, objectId);
         Model model = (Model) cache.get(key);
         if (model == null) {
@@ -71,14 +83,14 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
         if (model.getDBId() == null) {
             model.setDBId(UUID.randomUUID().toString());
         }
-        ConcurrentMap<String, Object> cache = getMap();
+        ConcurrentMap<String, Object> cache = getCache();
         String key = calculateKey(model);
         cache.put(key, model);
     }
 
     @Override
     public void delete(Model model) {
-        ConcurrentMap<String, Object> cache = getMap();
+        ConcurrentMap<String, Object> cache = getCache();
         String key = calculateKey(model);
         cache.remove(key);
     }
@@ -91,7 +103,7 @@ public class DummyDatabaseBackend extends AbstractDatabaseBackend {
             throw new UnsupportedOperationException();
         }
 
-        ConcurrentMap<String, Object> cache = getMap();
+        ConcurrentMap<String, Object> cache = getCache();
         int numDeletedItems = 0;
         for (Map.Entry<String, Object> entry : cache.entrySet()) {
             Model model = (Model) entry.getValue();

@@ -15,6 +15,7 @@ import java.util.Map;
 
 import org.junit.*;
 
+import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
 
@@ -65,7 +66,7 @@ public class PostgreSQLBackendTest extends JDBCBackendTest {
     }
 
     @Test
-    public void testGet() {
+    public void testGet() throws DatabaseObjectNotFound {
         JDBCBackendTest.get(backend);
     }
 

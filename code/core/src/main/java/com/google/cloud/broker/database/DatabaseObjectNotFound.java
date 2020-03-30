@@ -11,7 +11,7 @@
 
 package com.google.cloud.broker.database;
 
-public class DatabaseObjectNotFound extends RuntimeException {
+public class DatabaseObjectNotFound extends Exception {
 
     public DatabaseObjectNotFound(String message) {
         super(message);

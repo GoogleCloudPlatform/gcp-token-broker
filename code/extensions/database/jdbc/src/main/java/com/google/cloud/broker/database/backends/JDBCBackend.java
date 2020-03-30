@@ -14,10 +14,7 @@ package com.google.cloud.broker.database.backends;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.*;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import com.google.cloud.broker.checks.CheckResult;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
@@ -68,6 +65,42 @@ public class JDBCBackend extends AbstractDatabaseBackend {
         }
     }
 
+    private Model convertResultSetToModel(ResultSet rs, Class modelClass) throws SQLException {
+        // Load result's values into a hashmap
+        HashMap<String, Object> values = new HashMap<>();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+            String name = rsmd.getColumnName(i);
+            values.put(name, rs.getObject(name));
+        }
+
+        // Instantiate a new object
+        return Model.fromMap(modelClass, values);
+    }
+
+    public List<Model> getAll(Class modelClass) {
+        Connection connection = getConnection();
+        PreparedStatement statement = null;
+        ResultSet rs = null;
+        try {
+            String table = modelClass.getSimpleName();
+            String query = "SELECT * FROM " + quote(table);
+            statement = connection.prepareStatement(query);
+            rs = statement.executeQuery();
+            List<Model> models = new ArrayList<>();
+            while (rs.next()) {
+                Model model = convertResultSetToModel(rs, modelClass);
+                models.add(model);
+            }
+            return models;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try { if (rs != null) rs.close(); } catch (SQLException e) {throw new RuntimeException(e);}
+            try { if (statement != null) statement.close(); } catch (SQLException e) {throw new RuntimeException(e);}
+        }
+    }
+
     @Override
     public Model get(Class modelClass, String objectId) throws DatabaseObjectNotFound {
         Connection connection = getConnection();
@@ -86,16 +119,7 @@ public class JDBCBackend extends AbstractDatabaseBackend {
                     String.format("%s object not found: %s", modelClass.getSimpleName(), objectId));
             }
 
-            // Load result's values into a hashmap
-            HashMap<String, Object> values = new HashMap<>();
-            ResultSetMetaData rsmd = rs.getMetaData();
-            for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-                String name = rsmd.getColumnName(i);
-                values.put(name, rs.getObject(name));
-            }
-
-            // Instantiate a new object
-            return Model.fromMap(modelClass, values);
+            return convertResultSetToModel(rs, modelClass);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {

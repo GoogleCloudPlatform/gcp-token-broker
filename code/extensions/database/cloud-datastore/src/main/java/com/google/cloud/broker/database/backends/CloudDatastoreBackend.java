@@ -31,23 +31,10 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
         return DatastoreOptions.newBuilder().setProjectId(projectId).build().getService();
     }
 
-    @Override
-    public Model get(Class modelClass, String objectId) throws DatabaseObjectNotFound {
-        // Load entity from Datastore
-        Datastore datastore = getService();
-        KeyFactory keyFactory = datastore.newKeyFactory().setKind(modelClass.getSimpleName());
-        Key key = keyFactory.newKey(objectId);
-        Entity entity = datastore.get(key);
-
-        // No entity found
-        if (entity == null) {
-            throw new DatabaseObjectNotFound(
-                    String.format("%s object not found: %s", modelClass.getSimpleName(), objectId));
-        }
-
+    private Model convertEntityToModel(Entity entity, Class modelClass) {
         // Load entity values into a hashmap
         HashMap<String, Object> values = new HashMap<>();
-        values.put("id", objectId);
+        values.put("id", entity.getKey().getName());
         for (String name : entity.getNames()) {
             Value<?> value = entity.getValue(name);
             if (value != null) {
@@ -69,6 +56,37 @@ public class CloudDatastoreBackend extends AbstractDatabaseBackend {
 
         // Instantiate a new object
         return Model.fromMap(modelClass, values);
+    }
+
+    @Override
+    public List<Model> getAll(Class modelClass) {
+        Datastore datastore = getService();
+        EntityQuery query = Query.newEntityQueryBuilder().setKind(modelClass.getSimpleName()).build();
+        final QueryResults<Entity> entities = datastore.run(query);
+        List<Model> models = new ArrayList<>();
+        while (entities.hasNext()) {
+            Entity entity = entities.next();
+            Model model = convertEntityToModel(entity, modelClass);
+            models.add(model);
+        }
+        return models;
+    }
+
+    @Override
+    public Model get(Class modelClass, String objectId) throws DatabaseObjectNotFound {
+        // Load entity from Datastore
+        Datastore datastore = getService();
+        KeyFactory keyFactory = datastore.newKeyFactory().setKind(modelClass.getSimpleName());
+        Key key = keyFactory.newKey(objectId);
+        Entity entity = datastore.get(key);
+
+        // No entity found
+        if (entity == null) {
+            throw new DatabaseObjectNotFound(
+                    String.format("%s object not found: %s", modelClass.getSimpleName(), objectId));
+        }
+
+        return convertEntityToModel(entity, modelClass);
     }
 
     public void save(Model model) {

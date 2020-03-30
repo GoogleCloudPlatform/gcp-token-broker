@@ -143,7 +143,7 @@ public class CloudDatastoreBackendTest {
      * Test retrieving a model from the database.
      */
     @Test
-    public void testGet() {
+    public void testGet() throws DatabaseObjectNotFound {
         // Create a record in the database
         Datastore datastore = getService();
         KeyFactory keyFactory = datastore.newKeyFactory().setKind("Foo");
@@ -168,7 +168,7 @@ public class CloudDatastoreBackendTest {
      * Test retrieving a model that doesn't exist. The DatabaseObjectNotFound exception should be thrown.
      */
     @Test(expected = DatabaseObjectNotFound.class)
-    public void testGetNotExist() {
+    public void testGetNotExist() throws DatabaseObjectNotFound {
         CloudDatastoreBackend backend = new CloudDatastoreBackend();
         backend.get(Foo.class, "whatever");
     }

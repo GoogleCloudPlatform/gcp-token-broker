@@ -31,6 +31,7 @@ import org.junit.*;
 import org.slf4j.LoggerFactory;
 import static org.junit.Assert.*;
 
+import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
@@ -97,7 +98,7 @@ public class AuthorizerTest {
     }
 
     @Test
-    public void testRefreshTokenStore() {
+    public void testRefreshTokenStore() throws DatabaseObjectNotFound {
         String token = "abcd";
         authorizer.servlet.saveRefreshToken("alice@example.com", token);
 

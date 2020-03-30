@@ -1,3 +1,7 @@
+## 0.10.2 (XXX)
+
+- Added RevokeRefreshTokens command.
+
 ## 0.10.1 (March 24, 2020)
 
 - Added commands to purge expired sessions and Datastore cache items.
