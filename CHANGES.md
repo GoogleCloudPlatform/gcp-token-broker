@@ -1,4 +1,4 @@
-## 0.10.2 (XXX)
+## 0.10.2 (March 30, 2020)
 
 - Added RevokeRefreshTokens command.
 
