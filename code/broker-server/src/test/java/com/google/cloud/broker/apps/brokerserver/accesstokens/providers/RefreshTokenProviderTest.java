@@ -41,8 +41,7 @@ public class RefreshTokenProviderTest {
     @After
     public void teardown() {
         // Clear the database
-        ConcurrentMap<String, Object> map = DummyDatabaseBackend.getMap();
-        map.clear();
+        DummyDatabaseBackend.getCache().clear();
     }
 
     @Test

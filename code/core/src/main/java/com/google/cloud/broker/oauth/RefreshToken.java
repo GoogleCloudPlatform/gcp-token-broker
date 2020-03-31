@@ -11,13 +11,13 @@
 
 package com.google.cloud.broker.oauth;
 
-import com.google.cloud.broker.utils.TimeUtils;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.cloud.broker.database.models.Model;
-
-
 import java.util.HashMap;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import com.google.cloud.broker.database.models.Model;
+import com.google.cloud.broker.utils.TimeUtils;
 
 public class RefreshToken extends Model {
 
@@ -83,4 +83,5 @@ public class RefreshToken extends Model {
     public void setCreationTime(Long creationTime) {
         this.creationTime = creationTime;
     }
+
 }

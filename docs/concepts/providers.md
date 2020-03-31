@@ -31,7 +31,8 @@ A [refresh token](https://developers.google.com/identity/protocols/OAuth2WebServ
 to generate new access tokens for Google identities.
 
 Refresh tokens are obtained by the [Authorizer app](authorizer.md), then stored in the broker's [database](database.md).
-**Refresh tokens are long-lived credentials, so they must be stored securely.**
+**Refresh tokens are long-lived credentials, so they must be stored securely. To reduce risk, consider [revoking](#revoking-refresh-tokens)
+those tokens periodically.**
 
 Below is the schema for the refresh token table:
 
@@ -59,6 +60,17 @@ Let's take an example:
 <img src="../img/access-example-users.svg">
 
 This provider requires that you set the following setting(s): [`oauth.client-secret-json-path`](settings.md#oauthclient-secret-json-path).
+
+#### Revoking refresh tokens
+
+Refresh tokens are long-lived credentials and are effective indefinitely unless they are explicitly revoked. To reduce
+risks associated with storing these tokens for an extensive period of time, it is recommended to revoke and delete them
+after they've reached a certain age (e.g. 24 hours or 7 days). To achieve this, you can periodically run (e.g. via a
+cron job) the following command (Replace `[AGE]` with the maximum allowed age, in hours):
+
+```shell
+CONFIG_FILE=/<path>/application.conf java com.google.cloud.broker.apps.brokerserver.accesstokens.providers.RevokeRefreshTokens [AGE]
+```
 
 ### Service account provider
 
