@@ -32,28 +32,16 @@ public class RefreshTokenProviderTest {
 
     private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
 
-    private static SettingsOverride backupSettings;
-
-    @BeforeClass
-    public static void setupClass() {
-        // Override settings
-        backupSettings = new SettingsOverride(Map.of(
-            AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend",
-            AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper"
-        ));
-    }
-
-    @AfterClass
-    public static void teardDownClass() throws Exception {
-        // Restore settings
-        backupSettings.restore();
-    }
+    @ClassRule
+    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
+        AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend",
+        AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper"
+    ));
 
     @After
     public void teardown() {
         // Clear the database
-        ConcurrentMap<String, Object> map = DummyDatabaseBackend.getMap();
-        map.clear();
+        DummyDatabaseBackend.getCache().clear();
     }
 
     @Test

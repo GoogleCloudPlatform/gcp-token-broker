@@ -23,8 +23,8 @@ import com.google.cloud.broker.settings.AppSettings;
 public class AbstractEncryptionBackendTest {
 
     @Test
-    public void testGetInstance() throws Exception {
-        try(SettingsOverride override = new SettingsOverride(Map.of(AppSettings.ENCRYPTION_BACKEND, "com.example.DoesNotExist"))) {
+    public void testGetInstance() {
+        try(SettingsOverride override = SettingsOverride.apply(Map.of(AppSettings.ENCRYPTION_BACKEND, "com.example.DoesNotExist"))) {
             try {
                 AbstractEncryptionBackend.getInstance();
                 fail();

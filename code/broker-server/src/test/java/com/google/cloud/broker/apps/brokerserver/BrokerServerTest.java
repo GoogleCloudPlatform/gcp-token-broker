@@ -105,8 +105,7 @@ public class BrokerServerTest {
             System.setProperty(AppSettings.CONFIG_FILE_PROPERTY, configFileBackup);
         }
         // Clear the database
-        ConcurrentMap<String, Object> map = DummyDatabaseBackend.getMap();
-        map.clear();
+        DummyDatabaseBackend.getCache().clear();
     }
 
     private BrokerBlockingStub getStub() {
@@ -202,7 +201,7 @@ public class BrokerServerTest {
     }
 
     @Test
-    public void testCancelSessionToken_WrongRenewer() {
+    public void testCancelSessionToken_WrongRenewer() throws DatabaseObjectNotFound {
         // Create a session in the database
         Session session = createSession();
 
@@ -224,7 +223,7 @@ public class BrokerServerTest {
     }
 
     @Test
-    public void testRenewSessionToken() {
+    public void testRenewSessionToken() throws DatabaseObjectNotFound {
         // Mock the system time
         mockStatic(TimeUtils.class);
         Long now = 1000000000000L;
@@ -250,7 +249,7 @@ public class BrokerServerTest {
     }
 
     @Test
-    public void testRenewSessionToken_MaxLifeTime() {
+    public void testRenewSessionToken_MaxLifeTime() throws DatabaseObjectNotFound {
         // Mock the system time
         mockStatic(TimeUtils.class);
         Long now = 1000000000000L;
@@ -276,7 +275,7 @@ public class BrokerServerTest {
     }
 
     @Test
-    public void testRenewSessionToken_WrongRenewer() {
+    public void testRenewSessionToken_WrongRenewer() throws DatabaseObjectNotFound {
         // Create a session in the database
         Session session = createSession();
 

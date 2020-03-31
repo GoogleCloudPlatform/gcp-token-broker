@@ -16,7 +16,17 @@
 
 package com.google.cloud.broker.apps.authorizer;
 
-import ch.qos.logback.classic.Logger;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.lang.invoke.MethodHandles;
+import java.net.InetSocketAddress;
+import java.util.Map;
+import java.util.Set;
+
 import com.google.api.client.auth.oauth2.BearerToken;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.TokenResponse;
@@ -37,32 +47,27 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
 import com.google.template.soy.SoyFileSet;
 import com.google.template.soy.jbcsrc.api.SoySauce;
+import org.slf4j.LoggerFactory;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.Level;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.net.InetSocketAddress;
-import java.util.Map;
-import java.util.Set;
-
 import com.google.cloud.broker.secretmanager.SecretManager;
+import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
 import com.google.cloud.broker.oauth.OauthClientSecretsLoader;
 import com.google.cloud.broker.oauth.RefreshToken;
+import com.google.cloud.broker.oauth.RefreshTokenUtils;
 import com.google.cloud.broker.settings.AppSettings;
 
 public class Authorizer implements AutoCloseable {
     private Server server;
     private static SoySauce soySauce;
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     static {
         SoyFileSet sfs = SoyFileSet.builder()
@@ -213,10 +218,20 @@ public class Authorizer implements AutoCloseable {
          * Stores the given refresh token in the database.
          */
         @VisibleForTesting
-        void saveRefreshToken(String id, String value){
+        void saveRefreshToken(String id, String value) {
+            // Check if there's already a refresh token for this user in the database
+            try {
+                RefreshToken existingToken = (RefreshToken) AbstractDatabaseBackend.getInstance().get(RefreshToken.class, id);
+                // Revoke the existing token
+                RefreshTokenUtils.revoke(existingToken);
+            } catch (DatabaseObjectNotFound databaseObjectNotFound) {
+                // There are no refresh token. We can proceed.
+            }
+            // Save the new refresh token in the database
             byte[] encryptedValue = AbstractEncryptionBackend.getInstance().encrypt(value.getBytes());
-            RefreshToken refreshToken = new RefreshToken(id, encryptedValue, null);
-            AbstractDatabaseBackend.getInstance().save(refreshToken);
+            RefreshToken newToken = new RefreshToken(id, encryptedValue, null);
+            AbstractDatabaseBackend.getInstance().save(newToken);
+            logger.info("Saved refresh token: " + newToken.getId());
         }
 
         /**

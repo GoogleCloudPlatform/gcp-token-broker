@@ -20,7 +20,7 @@ limitations under the License.
     <parent>
         <groupId>com.google.cloud.broker</groupId>
         <artifactId>broker-parent</artifactId>
-        <version>0.10.1</version>
+        <version>0.10.2</version>
         <relativePath>../../../../pom.xml</relativePath>
     </parent>
 
@@ -49,6 +49,15 @@ limitations under the License.
             <groupId>org.conscrypt</groupId>
             <artifactId>conscrypt-openjdk-uber</artifactId>
             <version>${org.conscrypt.version}</version>
+        </dependency>
+
+        <!-- Testing dependencies -->
+        <dependency>
+            <groupId>com.google.cloud.broker</groupId>
+            <artifactId>broker-core</artifactId>
+            <version>${project.parent.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

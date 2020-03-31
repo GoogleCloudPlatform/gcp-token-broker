@@ -21,40 +21,29 @@ import org.junit.*;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 
+import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.usermapping.KerberosUserMapper;
 import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 
 
 public class ServiceAccountProviderTest {
 
-    private static List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
-
-    private static SettingsOverride backupSettings;
-
-    @BeforeClass
-    public static void setupClass() {
-        // Override settings
-        String projectId = AppSettings.getInstance().getString(AppSettings.GCP_PROJECT);
-        Object rules = ConfigFactory.parseString(
-        "rules=[" +
-                "{" +
-                    "if: \"true\"," +
-                    "then: \"primary + '-shadow@" + projectId + ".iam.gserviceaccount.com'\"" +
-                "}," +
-            "]"
+    private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
+    private static final String projectId = AppSettings.getInstance().getString(AppSettings.GCP_PROJECT);
+    private static final Object rules = ConfigFactory.parseString(
+    "rules=[" +
+            "{" +
+                "if: \"true\"," +
+                "then: \"primary + '-shadow@" + projectId + ".iam.gserviceaccount.com'\"" +
+            "}," +
+        "]"
         ).getAnyRef("rules");
-        backupSettings = new SettingsOverride(Map.of(
-            AppSettings.USER_MAPPING_RULES, rules
-        ));
-    }
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {
-        // Restore settings
-        backupSettings.restore();
-    }
+    @ClassRule
+    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
+        AppSettings.USER_MAPPING_RULES, rules
+    ));
 
     @Test
     public void testSuccess() {

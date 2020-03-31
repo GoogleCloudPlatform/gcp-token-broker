@@ -11,6 +11,8 @@
 
 package com.google.cloud.broker.database.backends;
 
+import java.util.List;
+
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.models.Model;
@@ -21,11 +23,14 @@ public abstract class AbstractDatabaseBackend {
 
     private static AbstractDatabaseBackend instance;
 
-    public abstract Model get(Class modelClass, String objectId)  throws DatabaseObjectNotFound;
+    public abstract List<Model> getAll(Class modelClass);
+    public abstract Model get(Class modelClass, String objectId) throws DatabaseObjectNotFound;
     public abstract void save(Model model);
     public abstract void delete(Model model);
-    public abstract int deleteExpiredItems(Class modelClass, String field, Long cutoffTime);
-    public abstract int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer limit);
+    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime) {
+        return deleteExpiredItems(modelClass, field, cutoffTime, null);
+    }
+    public abstract int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer numItems);
     public abstract void initializeDatabase();
     public abstract CheckResult checkConnection();
 

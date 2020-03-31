@@ -13,31 +13,27 @@ package com.google.cloud.broker.database.backends;
 
 import java.util.Map;
 
-import com.google.cloud.broker.settings.SettingsOverride;
 import org.junit.*;
 
+import com.google.cloud.broker.database.DatabaseObjectNotFound;
+import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
 
 
 public class PostgreSQLBackendTest extends JDBCBackendTest {
 
     private static JDBCBackend backend;
-    private static SettingsOverride backupSettings;
+
+    @ClassRule
+    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
+        AppSettings.DATABASE_JDBC_URL, "jdbc:postgresql:broker?user=testuser&password=UNSECURE-PASSWORD"
+    ));
 
     @BeforeClass
     public static void setupClass() {
         backend = new JDBCBackend();
-        // Override settings
-        backupSettings = new SettingsOverride(Map.of(
-            AppSettings.DATABASE_JDBC_URL, "jdbc:postgresql:broker?user=testuser&password=UNSECURE-PASSWORD"
-        ));
     }
 
-    @AfterClass
-    public static void teardDownClass() throws Exception {
-        // Restore settings
-        backupSettings.restore();
-    }
 
     @Before
     public void setup() {
@@ -70,7 +66,7 @@ public class PostgreSQLBackendTest extends JDBCBackendTest {
     }
 
     @Test
-    public void testGet() {
+    public void testGet() throws DatabaseObjectNotFound {
         JDBCBackendTest.get(backend);
     }
 

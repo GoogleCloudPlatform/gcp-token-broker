@@ -22,7 +22,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.cloud.broker.testing.FakeKDC;
+import com.google.cloud.broker.authentication.backends.FakeKDC;
 import static com.google.cloud.broker.client.hadoop.fs.TestingTools.*;
 
 

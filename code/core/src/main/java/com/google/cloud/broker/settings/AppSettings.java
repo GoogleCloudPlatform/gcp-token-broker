@@ -82,7 +82,7 @@ public class AppSettings {
         return instance;
     }
 
-    static void setInstance(Config newInstance) {
+    public static void setInstance(Config newInstance) {
         instance = newInstance;
     }
 
