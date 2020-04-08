@@ -32,7 +32,7 @@ public class GrpcUtilsTest {
 
     @Test
     public void testManagedChannelAuthority() {
-        ManagedChannel channel = GrpcUtils.newManagedChannel("testhost", 8888, false, "");
+        ManagedChannel channel = GrpcUtils.newManagedChannel("testhost", 8888, false, null);
         assertEquals("testhost:8888", channel.authority());
     }
 
@@ -66,7 +66,7 @@ public class GrpcUtilsTest {
 
     @Test
     public void testNewStub() {
-        ManagedChannel channel = GrpcUtils.newManagedChannel("testhost", 8888, false, "");
+        ManagedChannel channel = GrpcUtils.newManagedChannel("testhost", 8888, false, null);
         BrokerGrpc.BrokerBlockingStub stub = GrpcUtils.newStub(channel);
         assertEquals(channel, stub.getChannel());
     }
