@@ -1,3 +1,8 @@
+## 0.10.3 (April 7, 2020)
+
+- Fixed a bug with the revocation of refresh tokens.
+- Made public certificate optional when using TLS from the Hadoop connector.
+
 ## 0.10.2 (March 30, 2020)
 
 - Added RevokeRefreshTokens command.
