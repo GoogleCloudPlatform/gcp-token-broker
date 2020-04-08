@@ -54,33 +54,40 @@ public class RefreshTokenUtils {
             throw new RuntimeException(e);
         }
         CloseableHttpClient httpclient = HttpClients.createDefault();
+        CloseableHttpResponse response;
         try {
-            CloseableHttpResponse response = httpclient.execute(request);
-            int statusCode = response.getStatusLine().getStatusCode();
-            if (statusCode == 200) {
-                // Token successfully revoked
-                logger.info("Revoked refresh token: " + token.getId());
-            }
-            else {
-                Gson gson = new Gson();
-                ErrorResponse errorResponse = gson.fromJson(EntityUtils.toString(response.getEntity()), ErrorResponse.class);
-                if (statusCode == 400 &&
-                    errorResponse.error.equals("invalid_token") &&
-                    errorResponse.error_description.equals("Token expired or revoked")) {
-                    // Token was already revoked
-                    logger.info("Refresh token already revoked: " + token.getId());
-                }
-                else {
-                    // Unhandled error
-                    throw new RuntimeException(String.format(
-                        "Error while revoking refresh token. Response (status code %s):\n%s",
-                        statusCode,
-                        EntityUtils.toString(response.getEntity())
-                    ));
-                }
-            }
+            response = httpclient.execute(request);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+        int statusCode = response.getStatusLine().getStatusCode();
+        if (statusCode == 200) {
+            // Token successfully revoked
+            logger.info("Revoked refresh token: " + token.getId());
+        }
+        else {
+            Gson gson = new Gson();
+            String responseString;
+            try {
+                responseString = EntityUtils.toString(response.getEntity());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            ErrorResponse errorResponse = gson.fromJson(responseString, ErrorResponse.class);
+            if (statusCode == 400 &&
+                errorResponse.error != null &&
+                errorResponse.error.equals("invalid_token")) {
+                // Token is invalid (e.g. it's already revoked)
+                logger.info("Refresh token already revoked: " + token.getId());
+            }
+            else {
+                // Unhandled error
+                throw new RuntimeException(String.format(
+                    "Error while revoking refresh token. Response (status code %s):\n%s",
+                    statusCode,
+                    responseString
+                ));
+            }
         }
     }
 
