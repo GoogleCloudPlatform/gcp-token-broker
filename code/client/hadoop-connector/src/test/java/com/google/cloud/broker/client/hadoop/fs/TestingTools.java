@@ -60,7 +60,7 @@ public class TestingTools {
         BrokerGrpc.BrokerBlockingStub stub = BrokerGrpc.newBlockingStub(channel);
 
         mockStatic(GrpcUtils.class);
-        when(GrpcUtils.newManagedChannel(BROKER_HOST, 1234, false, "")).thenReturn(channel);
+        when(GrpcUtils.newManagedChannel(BROKER_HOST, 1234, false, null)).thenReturn(channel);
         when(GrpcUtils.newStub(channel)).thenReturn(stub);
     }
 
