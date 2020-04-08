@@ -55,12 +55,32 @@ PROJECTS_ARG=""
 CONTAINER="broker-dev"
 
 
+function update_builds_dir() {
+  set +x
+  # Copy all the built files to a temporary directory.
+  # This is useful to trigger a new deployment with skaffold in watch mode.
+  temp_dir=$(mktemp -d)
+  built_jar_dir="./code/built-jars"
+  cp ./code/authorizer/target/authorizer-*-jar-with-dependencies.jar ${temp_dir}
+  cp ./code/broker-server/target/broker-server-*-jar-with-dependencies.jar ${temp_dir}
+  cp ./code/extensions/caching/cloud-datastore/target/cache-backend-cloud-datastore-*-jar-with-dependencies.jar ${temp_dir}
+  cp ./code/extensions/caching/redis/target/cache-backend-redis-*-jar-with-dependencies.jar ${temp_dir}
+  cp ./code/extensions/database/jdbc/target/database-backend-jdbc-*-jar-with-dependencies.jar ${temp_dir}
+  cp ./code/extensions/database/cloud-datastore/target/database-backend-cloud-datastore-*-jar-with-dependencies.jar ${temp_dir}
+  cp ./code/extensions/encryption/cloud-kms/target/encryption-backend-cloud-kms-*-jar-with-dependencies.jar ${temp_dir}
+  rm -rf ${built_jar_dir}
+  mv ${temp_dir} ${built_jar_dir}
+  set -x
+  echo "Copied built JARs to: ${built_jar_dir}"
+}
+
+
 # Build the Maven packages
 function build_packages() {
     while (( "$#" )); do
         case "$1" in
             -m|--module)
-                MODULE=$2
+                  MODULE=$2
                 shift 2
                 ;;
             -p|--project)
@@ -75,10 +95,10 @@ function build_packages() {
     done
 
     set_projects_arg
-    validate_project_var
 
     set -x
     docker exec -it ${CONTAINER} bash -c "mvn clean package -DskipTests ${PROJECTS_ARG}"
+    update_builds_dir
 }
 
 
@@ -125,15 +145,6 @@ function set_projects_arg() {
 }
 
 
-# Makes sure that the PROJECT env var is set.
-function validate_project_var() {
-    if [[ -z "${PROJECT}" ]]; then
-        echo "Please specify a project with the '-p' argument."
-        exit 1
-    fi
-}
-
-
 # Runs the regression tests
 function run_tests() {
     while (( "$#" )); do
@@ -147,7 +158,7 @@ function run_tests() {
                 shift 2
                 ;;
             -p|--project)
-                PROJECT=$2
+                TEST_PROJECT=$2
                 shift 2
                 ;;
             -ga|--gsuite-admin)
@@ -165,7 +176,11 @@ function run_tests() {
         esac
     done
 
-    PROPERTIES="-Dgcp-project=${PROJECT}"
+    if [[ -n "${TEST_PROJECT}" ]]; then
+        PROPERTIES="-Dgcp-project=${TEST_PROJECT}"
+    else
+        PROPERTIES="-Dgcp-project=${PROJECT}"
+    fi
 
     if [[ -n "${SPECIFIC_TEST}" ]]; then
         PROPERTIES="${PROPERTIES} -DfailIfNoTests=false -Dtest=${SPECIFIC_TEST}"
@@ -180,7 +195,6 @@ function run_tests() {
     fi
 
     set_projects_arg
-    validate_project_var
 
     set -x
     docker exec -it --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json ${CONTAINER} bash -c "mvn test ${PROJECTS_ARG} ${PROPERTIES}"

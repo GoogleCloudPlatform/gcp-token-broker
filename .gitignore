@@ -29,6 +29,7 @@ deploy/**
 *.jar
 **/target/**
 dependency-reduced-pom.xml
+code/built-jars
 
 # Redis artifacts
 dump.rdb
