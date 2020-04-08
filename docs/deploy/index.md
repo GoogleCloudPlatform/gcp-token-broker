@@ -279,7 +279,6 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
     export BROKER_URI=$(gcloud run services describe broker-server --platform managed --region ${REGION} --format "value(status.url)")
     export BROKER_PRINCIPAL="broker"
     export BROKER_VERSION=$(cat VERSION)
-    export BROKER_CRT=$(true | openssl s_client -connect `basename ${BROKER_URI}`:443 2>/dev/null | openssl x509)
     export INIT_ACTION="gs://gcp-token-broker/broker-hadoop-connector.${BROKER_VERSION}.sh"
     export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-hadoop-connector/hadoop2-${BROKER_VERSION}/broker-hadoop-connector-hadoop2-${BROKER_VERSION}-jar-with-dependencies.jar"
     ```
@@ -299,7 +298,6 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
       --service-account "dataproc@${PROJECT}.iam.gserviceaccount.com" \
       --kerberos-config-file deploy/${PROJECT}/kerberos-config.yaml \
       --initialization-actions ${INIT_ACTION} \
-      --metadata "gcp-token-broker-tls-certificate=${BROKER_CRT}" \
       --metadata "gcp-token-broker-uri=${BROKER_URI}" \
       --metadata "gcp-token-broker-kerberos-principal=${BROKER_PRINCIPAL}" \
       --metadata "origin-realm=${REALM}" \
