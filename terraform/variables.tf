@@ -103,6 +103,6 @@ locals {
 
 variable "test_users" {
   type    = list(string)
-  default = ["alice", "bob", "john"]
+  default = ["alice", "bob", "charlie"]
 }
 

@@ -82,8 +82,6 @@ public class BrokerGateway {
                 } catch (IOException e) {
                     throw new RuntimeException("Error reading the TLS certificate file: " + e.getMessage());
                 }
-            } else {
-                tlsCertificate = "";
             }
         }
 
