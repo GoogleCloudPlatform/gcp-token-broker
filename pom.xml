@@ -160,6 +160,7 @@ limitations under the License.
                         <configuration>
                             <additionalOptions>-Xdoclint:none</additionalOptions>
                             <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+                            <source>8</source>
                         </configuration>
                         <executions>
                             <execution>
