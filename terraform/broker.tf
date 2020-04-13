@@ -112,7 +112,7 @@ remote-cache.backend = "com.google.cloud.broker.caching.remote.CloudDatastoreCac
 logging.level = "INFO"
 secret-manager {
   downloads = [
-      {secret="projects/${var.gcp_project}/secrets/keytab/versions/latest", file="/secrets/keytab"},
+      {secret="projects/${var.gcp_project}/secrets/keytab/versions/latest", file="/secrets/keytab", required=false},
       {secret="projects/${var.gcp_project}/secrets/dek/versions/latest", file="/secrets/dek"},
       {secret="projects/${var.gcp_project}/secrets/oauth-client/versions/latest", file="/secrets/oauth-client"}
   ]

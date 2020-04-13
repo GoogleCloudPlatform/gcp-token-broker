@@ -48,13 +48,14 @@ import com.google.common.io.Resources;
 import com.google.template.soy.SoyFileSet;
 import com.google.template.soy.jbcsrc.api.SoySauce;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.Level;
 
+import com.google.cloud.broker.checks.SystemCheck;
 import com.google.cloud.broker.secretmanager.SecretManager;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
@@ -67,7 +68,7 @@ import com.google.cloud.broker.settings.AppSettings;
 public class Authorizer implements AutoCloseable {
     private Server server;
     private static SoySauce soySauce;
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     static {
         SoyFileSet sfs = SoyFileSet.builder()
@@ -106,7 +107,7 @@ public class Authorizer implements AutoCloseable {
 
     private static void setLoggingLevel() {
         Level level = Level.toLevel(AppSettings.getInstance().getString(AppSettings.LOGGING_LEVEL));
-        final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        final Logger logger = org.slf4j.LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger) logger;
         logbackLogger.setLevel(level);
     }
@@ -131,6 +132,10 @@ public class Authorizer implements AutoCloseable {
 
         // Download secrets
         SecretManager.downloadSecrets();
+
+        if (AppSettings.getInstance().getBoolean(AppSettings.SYSTEM_CHECK_ENABLED)) {
+            SystemCheck.runChecks();
+        }
 
         // Initialize the Oauth flow
         initOauthFlow();

@@ -11,15 +11,19 @@
 
 package com.google.cloud.broker.checks;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.cloud.broker.caching.remote.AbstractRemoteCache;
 import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SystemCheck {
 
+    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static List<CheckResult> results = new ArrayList<>();
 
     public static void runChecks() {
@@ -50,6 +54,8 @@ public class SystemCheck {
         if (sb.length() > 0) {
             throw new IllegalStateException("System check failures!\n\n" + sb.toString());
         }
+
+        logger.info("System checks passed");
     }
 
     public static void main(String[] args) {

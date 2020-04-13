@@ -134,6 +134,11 @@ resource "google_project_iam_member" "dataproc_minimalWorker" {
   member = "serviceAccount:${google_service_account.dataproc.email}"
 }
 
+resource "google_project_iam_member" "dataproc_logWriter" {
+  role   = "roles/logging.logWriter"
+  member = "serviceAccount:${google_service_account.dataproc.email}"
+}
+
 resource "google_storage_bucket" "secrets_bucket" {
   name          = "${var.gcp_project}-secrets"
   depends_on    = [google_project_service.service_compute] # Dependency required: https://github.com/terraform-providers/terraform-provider-google/issues/1089
