@@ -16,12 +16,14 @@
 
 package com.google.cloud.broker.secretmanager;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
 import static org.junit.Assert.*;
+import com.google.api.gax.rpc.NotFoundException;
 import org.apache.commons.io.FileUtils;
 import org.junit.*;
 import com.typesafe.config.ConfigFactory;
@@ -34,18 +36,6 @@ public class SecretManagerTest {
 
     private static final String projectId = AppSettings.getInstance().getString(AppSettings.GCP_PROJECT);
     private static final Path secretsDirectory = getAvailableDirectory();
-    private static final Object downloads = ConfigFactory.parseString(
-    AppSettings.SECRET_MANAGER_DOWNLOADS + "=[" +
-        "{" +
-            "secret = \"projects/" + projectId + "/secrets/secretstuff/versions/latest\"," +
-            "file = \"" + secretsDirectory.resolve("secretstuff.txt") + "\"" +
-        "}" +
-    "]").getAnyRef(AppSettings.SECRET_MANAGER_DOWNLOADS);
-
-    @ClassRule
-    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
-        AppSettings.SECRET_MANAGER_DOWNLOADS, downloads
-    ));
 
     /**
      * Returns the name of a directory that doesn't yet exist.
@@ -60,12 +50,64 @@ public class SecretManagerTest {
     }
 
     @Test
-    public void testDownload() throws Exception {
-        SecretManager.downloadSecrets();
-        String contents = Files.readString(secretsDirectory.resolve("secretstuff.txt"));
-        assertEquals(contents, "This is secret stuff");
-        // Clean up
-        FileUtils.deleteDirectory(secretsDirectory.toFile());
+    public void testDownload() throws IOException {
+        Object downloads = ConfigFactory.parseString(
+        AppSettings.SECRET_MANAGER_DOWNLOADS + "=[" +
+            "{" +
+                "secret = \"projects/" + projectId + "/secrets/secretstuff/versions/latest\"," +
+                "file = \"" + secretsDirectory.resolve("secretstuff.txt") + "\"" +
+            "}" +
+        "]").getAnyRef(AppSettings.SECRET_MANAGER_DOWNLOADS);
+
+        try(SettingsOverride override = SettingsOverride.apply(Map.of(AppSettings.SECRET_MANAGER_DOWNLOADS, downloads))) {
+            SecretManager.downloadSecrets();
+            String contents = Files.readString(secretsDirectory.resolve("secretstuff.txt"));
+            assertEquals(contents, "This is secret stuff");
+        }
+    }
+
+    /**
+     * Check that there is a loud failure if a required secret is missing.
+     */
+    @Test
+    public void testFailMissingRequired() throws IOException {
+        Object downloads = ConfigFactory.parseString(
+        AppSettings.SECRET_MANAGER_DOWNLOADS + "=[" +
+            "{" +
+                "secret = \"projects/" + projectId + "/secrets/missing-required/versions/latest\"," +
+                "file = \"" + secretsDirectory.resolve("missing-required.txt") + "\"" +
+            "}" +
+        "]").getAnyRef(AppSettings.SECRET_MANAGER_DOWNLOADS);
+        try(SettingsOverride override = SettingsOverride.apply(Map.of(AppSettings.SECRET_MANAGER_DOWNLOADS, downloads))) {
+            try {
+                SecretManager.downloadSecrets();
+                fail();
+            }
+            catch (RuntimeException e) {
+                // Expected
+                assertTrue(e.getCause().getClass().equals(NotFoundException.class));
+            }
+        }
+    }
+
+
+    /**
+     * Check that a missing optional secret doesn't cause a loud failure.
+     */
+    @Test
+    public void testFailMissingOptional() throws IOException {
+        Object downloads = ConfigFactory.parseString(
+        AppSettings.SECRET_MANAGER_DOWNLOADS + "=[" +
+            "{" +
+                "secret = \"projects/" + projectId + "/secrets/missing-optional/versions/latest\"," +
+                "file = \"" + secretsDirectory.resolve("missing-optional.txt") + "\"," +
+                "required = false" +
+            "}" +
+        "]").getAnyRef(AppSettings.SECRET_MANAGER_DOWNLOADS);
+        try(SettingsOverride override = SettingsOverride.apply(Map.of(AppSettings.SECRET_MANAGER_DOWNLOADS, downloads))) {
+            SecretManager.downloadSecrets();
+            assertFalse(Files.exists(secretsDirectory.resolve("missing-optional.txt")));
+        }
     }
 
 }
