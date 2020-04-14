@@ -1,3 +1,8 @@
+## 0.10.4 (April 13, 2020)
+
+- Allow secrets to be marked as optional.
+- Enforce system check for the authorizer app.
+
 ## 0.10.3 (April 7, 2020)
 
 - Fixed a bug with the revocation of refresh tokens.

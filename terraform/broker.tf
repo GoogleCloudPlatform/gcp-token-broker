@@ -271,7 +271,7 @@ broker:
       logging.level = "INFO"
       secret-manager {
         downloads = [
-            {secret="projects/${var.gcp_project}/secrets/keytab/versions/latest", file="/secrets/keytab"},
+            {secret="projects/${var.gcp_project}/secrets/keytab/versions/latest", file="/secrets/keytab", required=false},
             {secret="projects/${var.gcp_project}/secrets/broker-tls-pem/versions/latest", file="/secrets/broker-tls-pem"},
             {secret="projects/${var.gcp_project}/secrets/broker-tls-crt/versions/latest", file="/secrets/broker-tls-crt"},
             {secret="projects/${var.gcp_project}/secrets/dek/versions/latest", file="/secrets/dek"},

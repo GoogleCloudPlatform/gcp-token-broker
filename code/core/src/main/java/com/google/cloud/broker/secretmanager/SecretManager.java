@@ -22,11 +22,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import com.google.api.gax.rpc.NotFoundException;
 import com.google.cloud.secretmanager.v1beta1.AccessSecretVersionRequest;
 import com.google.cloud.secretmanager.v1beta1.AccessSecretVersionResponse;
 import com.google.cloud.secretmanager.v1beta1.SecretManagerServiceClient;
 import com.google.cloud.secretmanager.v1beta1.SecretVersionName;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +42,7 @@ public class SecretManager {
     /**
      * Download a specific secret.
      */
-    private static void downloadSecret(String secretUri, String fileName) {
+    private static void downloadSecret(String secretUri, String fileName, boolean required) {
         SecretManagerServiceClient client;
         try {
             client = SecretManagerServiceClient.create();
@@ -50,17 +52,30 @@ public class SecretManager {
         // Fetch the secret from Secret Manager
         SecretVersionName secretVersionName = SecretVersionName.parse(secretUri);
         AccessSecretVersionRequest request = AccessSecretVersionRequest.newBuilder().setName(secretVersionName.toString()).build();
-        AccessSecretVersionResponse response = client.accessSecretVersion(request);
-        byte[] secretValue = response.getPayload().getData().toByteArray();
-        // Save the secret value to disk
-        Path secretPath = Path.of(fileName);
-        secretPath.getParent().toFile().mkdirs();
+        AccessSecretVersionResponse response = null;
         try {
-            Files.write(secretPath, secretValue);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            response = client.accessSecretVersion(request);
         }
-        logger.info("Downloaded secret `" + secretUri + "`" + " to `" + fileName + "`");
+        catch (NotFoundException e) {
+            if (required) {
+                throw new RuntimeException(e);
+            }
+            else {
+                logger.warn("Could not download secret `" + secretUri + "`" + " to `" + fileName + "`. Error was: " + e.getMessage());
+            }
+        }
+        if (response != null) {
+            byte[] secretValue = response.getPayload().getData().toByteArray();
+            // Save the secret value to disk
+            Path secretPath = Path.of(fileName);
+            secretPath.getParent().toFile().mkdirs();
+            try {
+                Files.write(secretPath, secretValue);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            logger.info("Downloaded secret `" + secretUri + "`" + " to `" + fileName + "`");
+        }
     }
 
     /**
@@ -71,7 +86,14 @@ public class SecretManager {
         if (downloads.size() > 0) {
             // Download all secrets specified in the settings
             for (Config download : downloads) {
-                downloadSecret(download.getString("secret"), download.getString("file"));
+                boolean required;
+                try {
+                    required = download.getBoolean("required");
+                }
+                catch (ConfigException.Missing e) {
+                    required = true;
+                }
+                downloadSecret(download.getString("secret"), download.getString("file"), required);
             }
         }
     }
