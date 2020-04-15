@@ -98,7 +98,7 @@ data "template_file" "startup_script_origin_kdc" {
         %{ endfor ~}
 
         # One-way trust with Dataproc realm
-        kadmin.local -q "addprinc -pw ${var.cross_realm_password} krbtgt/${local.dataproc_realm}@${var.origin_realm}"
+        kadmin.local -q "addprinc -pw ${var.cross_realm_password} krbtgt/${var.dataproc_realm}@${var.origin_realm}"
     
 EOT
 
