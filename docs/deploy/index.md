@@ -316,7 +316,6 @@ The broker service needs a keytab to authenticate incoming requests.
 
     ```shell
     gcloud compute ssh test-cluster-m \
-      --tunnel-through-iap \
       -- "sudo cat /etc/security/keytab/broker.keytab" | perl -pne 's/\r$//g' > broker.keytab
 
 2.  Upload the keytab to Secret Manager:

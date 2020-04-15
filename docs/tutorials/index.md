@@ -4,7 +4,7 @@ This section provides a few simple test scenarios that you can run on the test D
 To SSH in the Dataproc cluster's master node, run this command:
 
 ```shell
-gcloud compute ssh test-cluster-m --tunnel-through-iap
+gcloud compute ssh test-cluster-m
 ```
 
 Once you're SSH'ed in, log in as one of your test users with Kerberos, for example:

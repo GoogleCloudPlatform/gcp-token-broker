@@ -56,8 +56,8 @@ variable "cross_realm_password" {
   default = "change-me"
 }
 
-locals {
-  dataproc_realm = "${upper(var.gcp_zone)}.C.${upper(var.gcp_project)}.INTERNAL"
+variable dataproc_realm {
+  default = "DATAPROC_REALM"
 }
 
 // Test users ------------------------------------

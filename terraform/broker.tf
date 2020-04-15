@@ -98,14 +98,14 @@ gcp-project = "${var.gcp_project}"
 encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
 encryption.cloud-kms.dek-uri = "file:///secrets/dek"
 proxy-users = [{
-    proxy = "hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${local.dataproc_realm}"
+    proxy = "hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${var.dataproc_realm}"
     users = ["${var.test_users[0]}@${var.gsuite_domain}"]
 }]
 user-mapping.rules=[{
     if: "realm == '${var.origin_realm}'",
     then: "primary + '@${var.gsuite_domain}'"
 }]
-authentication.spnego.keytabs = [{keytab="/secrets/keytab", principal="broker@${local.dataproc_realm}"}]
+authentication.spnego.keytabs = [{keytab="/secrets/keytab", principal="broker@${var.dataproc_realm}"}]
 server.tls.enabled = false
 oauth.client-secret-json-path = "/secrets/oauth-client"
 remote-cache.backend = "com.google.cloud.broker.caching.remote.CloudDatastoreCache"
