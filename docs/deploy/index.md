@@ -240,24 +240,11 @@ you may create self-signed certificates as described below.
 
 ### Initializing the GKE cluster
 
-1.  Configure credentials for the cluster:
+Configure credentials for the cluster:
 
-    ```shell
-    gcloud container clusters get-credentials broker
-    ```
-
-2.  Create a Kubernetes service account with the cluster admin role for Tiller, the Helm server:
-
-    ```shell
-    kubectl create serviceaccount --namespace kube-system tiller
-    kubectl create clusterrolebinding tiller --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-    ```
-
-3.  Install Helm tiller in the cluster:
-
-    ```shell
-    helm init --service-account tiller
-    ```
+```shell
+gcloud container clusters get-credentials broker
+```
 
 ### Generating the data encryption key (DEK)
 
