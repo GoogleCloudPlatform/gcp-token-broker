@@ -133,7 +133,7 @@ Follow these steps to deploy the demo environment to GCP:
     *   Go to: <https://console.cloud.google.com/apis/credentials/consent>
     *   For "Application type", select "Internal".
     *   For "Application name", type "GCP Token Broker".
-    *   For "Scopes for Google APIs", click "Add scope", then search for 
+    *   For "Scopes for Google APIs", click "Add scope", then search for
         "Google Cloud Storage JSON API", then tick the checkbox for
         "auth/devstorage.read_write", then click "Add".
     *   For "Authorized domains":
@@ -224,7 +224,7 @@ Authorizer:
 3.  Configure the OAuth client:
     *   Go to: <https://console.cloud.google.com/apis/credentials>
     *   Click on the "GCP Token Broker" OAuth 2.0 Client ID.
-    *   Click "Add URI".
+    *   Under "Authorized redirect URIs", click "Add URI".
     *   Type the following (Replace **`[APP_ID]`** with the ID in the url that you noted in the previous step):
         `https://authorizer-[APP_ID].a.run.app/google/oauth2callback`
     * Click "Save".
