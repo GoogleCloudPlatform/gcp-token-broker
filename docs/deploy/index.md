@@ -471,9 +471,9 @@ The broker service needs a keytab to authenticate incoming requests.
 *   Run these commands if you'd like to delete the broker and authorizer deployments:
     
     ```shell
-    helm delete broker-server --purge
-    helm delete authorizer --purge
-    ```    
+    helm delete broker-server
+    helm delete authorizer
+    ```
 
 ## Broker application logs
 
