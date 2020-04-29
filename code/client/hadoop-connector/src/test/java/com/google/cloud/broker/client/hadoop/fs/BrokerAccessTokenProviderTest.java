@@ -108,7 +108,7 @@ public class BrokerAccessTokenProviderTest {
         } catch (Exception e) {
             assertEquals(RuntimeException.class, e.getClass());
             assertEquals(
-                "User is not logged-in with Kerberos or cannot authenticate with the broker. Kerberos error message: " + TGT_ERROR,
+                "Failed creating a SPNEGO token. Make sure that you have run kinit and that your Kerberos configuration is correct. See the full Kerberos error message: " + TGT_ERROR,
                 e.getMessage()
             );
         }
