@@ -1,4 +1,6 @@
-This section describes how to set up a demo environment to test the broker service.
+This guide describes how to set up a demo environment to test the broker service based on Kubernetes Engine. (Another
+version of this guide using Cloud Run is also available in the "cloud-run" branch. Click [here](https://github.com/GoogleCloudPlatform/gcp-token-broker/blob/cloud-run/docs/deploy/index.md)
+if you'd like to try out that version instead).
 
 **_Important note:_ The following instructions are provided only as a reference
 to create the demo environment and _should not_ be used as-is in production.**
