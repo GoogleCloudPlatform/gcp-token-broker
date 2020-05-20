@@ -108,9 +108,9 @@ user-mapping {
 
 The above example sets explicit one-to-one mappings:
 
-- `alice@MYREALM` maps to `alice@my-domain.com`
-- `etl-pipeline/1.2.3.4@MYREALM` maps to `etl-pipeline@myproject.iam.gserviceaccount.com`
-- Any other Kerberos names would be rejected as un-mappable.
+-   `alice@MYREALM` maps to `alice@my-domain.com`
+-   `etl-pipeline/1.2.3.4@MYREALM` maps to `etl-pipeline@myproject.iam.gserviceaccount.com`
+-   Any other Kerberos names would be rejected as un-mappable.
 
 #### Important warning about short names
 
