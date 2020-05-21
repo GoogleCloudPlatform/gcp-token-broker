@@ -130,8 +130,8 @@ If you get the following error when using hive:
 
 ```
 FAILED: Execution Error, return code 1 from org.apache.hadoop.hive.ql.exec.DDLTask. MetaException(message:java.lang.RuntimeException:
-User is not logged-in with Kerberos or cannot authenticate with the broker.
-Kerberos error message: No valid credentials provided
+Failed creating a SPNEGO token. Make sure that you have run kinit and that your Kerberos configuration is correct.
+See the full Kerberos error message: No valid credentials provided
 (Mechanism level: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)))
 ```
 

@@ -105,7 +105,7 @@ public class BrokerGateway {
             // Clean up the channel before re-throwing the exception
             managedChannel.shutdownNow();
             throw new RuntimeException(
-                "User is not logged-in with Kerberos or cannot authenticate with the broker. Kerberos error message: " + e.getMessage());
+                "Failed creating a SPNEGO token. Make sure that you have run kinit and that your Kerberos configuration is correct. See the full Kerberos error message: " + e.getMessage());
         }
 
         // Set the 'authorization' header with the SPNEGO token

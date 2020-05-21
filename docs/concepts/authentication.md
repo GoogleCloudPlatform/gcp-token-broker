@@ -149,3 +149,9 @@ proxy-users = [
   { proxy = "oozie/oozie.your-domain.com@YOUR.REALM.COM", groups = ["datascience@your-domain.com"] }
 ]
 ```
+
+#### Proxy users and short names
+
+When using Hadoop, some proxy users such as Hive translate the impersonated Kerberos name to a POSIX username (often
+referred to as short name) that is local to the cluster. Short names must be handled with caution. See
+[this section](user-mapping.md#important-warning-about-short-names) for more details.
