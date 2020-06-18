@@ -207,7 +207,7 @@ Authorizer:
       --allow-unauthenticated \
       --service-account "broker@${PROJECT}.iam.gserviceaccount.com" \
       --region ${REGION} \
-      --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/authorizer.conf)
+      --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/authorizer.conf | tr -d '\n')
     ```
     
 2.  Retrieve the app's URL:
@@ -256,7 +256,7 @@ gcloud run deploy broker-server \
   --allow-unauthenticated \
   --region ${REGION} \
   --service-account broker@${PROJECT}.iam.gserviceaccount.com \
-  --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/broker-server.conf)
+  --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/broker-server.conf | tr -d '\n')
 ```
 
 ### Creating a Dataproc cluster
