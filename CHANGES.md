@@ -1,3 +1,7 @@
+## Unreleased
+
+- Changed 'whitelist' terms to 'allowlist'.
+
 ## 0.10.5 (May 20, 2020)
 
 - Made new "principal" variable available in user mapping rules

@@ -116,7 +116,7 @@ When a Hive job is running, the GCS connector calls the broker and sends a SPNEG
 [logged-in principal](https://hadoop.apache.org/docs/current/api/org/apache/hadoop/security/UserGroupInformation.html#getLoginUser())
 (e.g. "hive") in the request authentication header and the [`currentUser`](https://hadoop.apache.org/docs/current/api/org/apache/hadoop/security/UserGroupInformation.html#getCurrentUser())'s
 username (e.g. "alice") as a request parameter. The broker then checks that the SPNEGO token's Kerberos
-principal is whitelisted in the [`proxy-users`](settings.md#proxy-users) setting, and if so, returns a GCP access token
+principal is allowlisted in the [`proxy-users`](settings.md#proxy-users) setting, and if so, returns a GCP access token
 for the "alice@your-domain.com" Cloud Identity.
 
 The `proxy-users` setting is formatted as follows:

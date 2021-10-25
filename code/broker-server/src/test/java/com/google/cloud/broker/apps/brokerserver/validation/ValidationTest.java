@@ -31,13 +31,13 @@ public class ValidationTest {
     private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
     private static final String BIGQUERY = "https://www.googleapis.com/auth/bigquery";
     private static final String BIGTABLE = "https://www.googleapis.com/auth/bigtable.data.readonly";
-    private static final Object scopesWhitelist = ConfigFactory.parseString(
-        AppSettings.SCOPES_WHITELIST + "=[\"" + GCS + "\", \"" + BIGQUERY + "\"]"
-    ).getAnyRef(AppSettings.SCOPES_WHITELIST);
+    private static final Object scopesAllowlist = ConfigFactory.parseString(
+        AppSettings.SCOPES_ALLOWLIST + "=[\"" + GCS + "\", \"" + BIGQUERY + "\"]"
+    ).getAnyRef(AppSettings.SCOPES_ALLOWLIST);
 
     @ClassRule
     public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
-        AppSettings.SCOPES_WHITELIST, scopesWhitelist
+        AppSettings.SCOPES_ALLOWLIST, scopesAllowlist
     ));
 
     @Test
@@ -63,7 +63,7 @@ public class ValidationTest {
             fail();
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("`[https://www.googleapis.com/auth/bigtable.data.readonly]` are not whitelisted scopes", e.getStatus().getDescription());
+            assertEquals("`[https://www.googleapis.com/auth/bigtable.data.readonly]` are not allowlisted scopes", e.getStatus().getDescription());
         }
     }
 

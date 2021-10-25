@@ -133,7 +133,7 @@ The sub-provider used by the [hybrid provider](providers.md#hybrid-provider) for
 
 Default: `[]` (Empty string)
 
-Whitelist of [proxy users](authentication.md#proxy-user-impersonation).
+Allowlist of [proxy users](authentication.md#proxy-user-impersonation).
 
 ### `remote-cache.backend`
 
@@ -159,11 +159,11 @@ Default: `6379`
 
 Port of the Redis cache server. Only necessary if you use the [Redis cache backend](caching.md#redis-backend).
 
-### `scopes.whitelist`
+### `scopes.allowlist`
 
 Default: `["https://www.googleapis.com/auth/devstorage.read_write"]`
 
-Whitelist of API scopes for access tokens.
+Allowlist of API scopes for access tokens.
 
 ### `secret-manager.downloads`
 

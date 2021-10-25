@@ -47,7 +47,7 @@ Once the broker has a refresh token for a user, it can use the `RefreshTokenProv
 user on demand as requested by the broker clients.
 
 This provider offers tight scoping on a per-user basis. This allows to ensure that the broker may only generate access
-tokens for a specific whitelist of Google users.
+tokens for a specific allowlist of Google users.
 
 Let's take an example:
 

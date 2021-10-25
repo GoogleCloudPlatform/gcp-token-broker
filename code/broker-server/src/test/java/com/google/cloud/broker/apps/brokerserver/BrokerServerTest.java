@@ -60,7 +60,7 @@ public class BrokerServerTest {
 
     // TODO: Still needs tests:
     //  - "UNAUTHENTICATED: Session token is invalid or has expired"
-    //  - Not whitelisted scopes
+    //  - Not allowlisted scopes
 
     private static final String ALICE = "alice@EXAMPLE.COM";
     private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
@@ -84,7 +84,7 @@ public class BrokerServerTest {
         map.put(AppSettings.REMOTE_CACHE, "com.google.cloud.broker.caching.remote.DummyCache");
         map.put(AppSettings.ENCRYPTION_BACKEND, "com.google.cloud.broker.encryption.backends.DummyEncryptionBackend");
         map.put(AppSettings.AUTHENTICATION_BACKEND, "com.google.cloud.broker.authentication.backends.MockAuthenticator");
-        map.put(AppSettings.SCOPES_WHITELIST, "[\"https://www.googleapis.com/auth/devstorage.read_write\", \"https://www.googleapis.com/auth/bigquery\"]");
+        map.put(AppSettings.SCOPES_ALLOWLIST, "[\"https://www.googleapis.com/auth/devstorage.read_write\", \"https://www.googleapis.com/auth/bigquery\"]");
         map.put(AppSettings.SESSION_RENEW_PERIOD, SESSION_RENEW_PERIOD.toString());
         map.put(AppSettings.SESSION_MAXIMUM_LIFETIME, SESSION_MAXIMUM_LIFETIME.toString());
         map.put(AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper");
