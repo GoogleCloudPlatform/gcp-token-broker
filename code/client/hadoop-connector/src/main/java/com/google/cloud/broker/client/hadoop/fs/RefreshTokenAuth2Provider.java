@@ -6,6 +6,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -17,6 +20,7 @@ import com.google.common.flogger.GoogleLogger;
 
 public class RefreshTokenAuth2Provider implements AccessTokenProvider {
     private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
+    private static DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneId.systemDefault());
 
     private static final int CONNECT_TIMEOUT = 30 * 1000;
     private static final int READ_TIMEOUT = 30 * 1000;
@@ -29,17 +33,17 @@ public class RefreshTokenAuth2Provider implements AccessTokenProvider {
     private Configuration config;
     private AccessToken accessToken = EXPIRED_TOKEN;
 
-    public AccessToken getAccessToken() {
 
-        try {
-            refresh();
-        } catch (IOException e) {
-            logger.atSevere().log("Couldn't refresh the access token", e);
-        }
+    @Override
+    public AccessToken getAccessToken() {
         return this.accessToken;
     }
 
-    public void refresh() throws IOException {
+    @Override
+    public void refresh() {
+        logger.atFine().log("Our token is set to expire at '"
+                + dateFormat.format(Instant.ofEpochMilli(accessToken.getExpirationTimeMilliSeconds()))
+                + "' and it is now '" + dateFormat.format(Instant.now()) + "'");
         logger.atFine().log("Refreshing access-token based token");
         String tokenEndpoint = this.config.get(CONFIG_TOKEN_ENDPOINT);
         String refreshToken = this.config.get(CONFIG_REFRESH_TOKEN);
@@ -48,6 +52,7 @@ public class RefreshTokenAuth2Provider implements AccessTokenProvider {
         logger.atFine().log("Refresh token calling endpoint '" + tokenEndpoint + "' with client id '" + clientId + "'");
         try {
             this.accessToken =  getAccessToken(tokenEndpoint, clientId, clientSecret, refreshToken);
+            logger.atFine().log("New token expires at '" + dateFormat.format(Instant.ofEpochMilli(this.accessToken.getExpirationTimeMilliSeconds())) + "'");
         } catch (IOException e) {
             logger.atSevere().log("Couldn't refresh token", e);
         }
@@ -113,17 +118,17 @@ public class RefreshTokenAuth2Provider implements AccessTokenProvider {
             return response.toString();
     }
 
-    private static AccessToken parseTokenFromStream(
+    private AccessToken parseTokenFromStream(
             InputStream httpResponseStream) throws IOException {
         AccessToken token;
         try {
-            int expiryPeriodInSecs = 0;
+            int expirationPeriodInSecs = 0;
 
             JsonFactory jf = new JsonFactory();
             JsonParser jp = jf.createJsonParser(httpResponseStream);
             String fieldName, fieldValue;
             jp.nextToken();
-            String accessToken = "";
+            String accessTokenFromResponse = "";
             while (jp.hasCurrentToken()) {
                 if (jp.getCurrentToken() == JsonToken.FIELD_NAME) {
                     fieldName = jp.getCurrentName();
@@ -131,17 +136,17 @@ public class RefreshTokenAuth2Provider implements AccessTokenProvider {
                     fieldValue = jp.getText();
 
                     if (fieldName.equals("access_token")) {
-                        accessToken = fieldValue;
+                        accessTokenFromResponse = fieldValue;
                     }
 
                     if (fieldName.equals("expires_in")) {
-                        expiryPeriodInSecs = Integer.parseInt(fieldValue);
+                        expirationPeriodInSecs = Integer.parseInt(fieldValue);
                     }
                 }
                 jp.nextToken();
             }
 
-            token = new AccessToken(accessToken, expiryPeriodInSecs * 1000L);
+            token = new AccessToken(accessTokenFromResponse, System.currentTimeMillis() + (expirationPeriodInSecs * 1000L));
             jp.close();
         } finally {
             httpResponseStream.close();
