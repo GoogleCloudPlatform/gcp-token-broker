@@ -55,6 +55,14 @@ public class KerberosUserMapperTest {
             "{" +
                 "if: \"realm == 'FOO.ORG'\"," +
                 "then: \"primary + '@altostrat.org'\"" +
+            "}," +
+            "{" +
+                "if: \"principal == 'bob@SUPER.REALM'\"," +
+                "then: \"'bob-super@super-domain.com'\"" +
+            "}," +
+            "{" +
+                "if: \"principal == 'bob/6.7.8.9@HELLO'\"," +
+                "then: \"'bobby@some-domain.org'\"" +
             "}" +
         "]"
         ).getAnyRef("rules");
@@ -71,6 +79,8 @@ public class KerberosUserMapperTest {
         assertEquals("hive--example.com@altostrat.com", mapper.map("hive/example.com@EXAMPLE.COM"));
         assertEquals("robot-yarn@altostrat.org", mapper.map("yarn-app@FOO.ORG"));
         assertEquals("bob@altostrat.org", mapper.map("bob@FOO.ORG"));
+        assertEquals("bob-super@super-domain.com", mapper.map("bob@SUPER.REALM"));
+        assertEquals("bobby@some-domain.org", mapper.map("bob/6.7.8.9@HELLO"));
     }
 
     @Test
@@ -126,7 +136,7 @@ public class KerberosUserMapperTest {
         Object rules = ConfigFactory.parseString(
         "rules=[" +
                 "{" +
-                    "if: \"principal.realm == 'FOO'\"," +
+                    "if: \"realm == 'FOO'\"," +
                     "then: \"bar\"" +  // Undefined variable
                 "}," +
             "]"
@@ -172,7 +182,7 @@ public class KerberosUserMapperTest {
         Object rules = ConfigFactory.parseString(
         "rules=[" +
                 "{" +
-                    "if: \"principal.realm == 'FOO'\"," +
+                    "if: \"realm == 'FOO'\"," +
                     "then: \"****\"" +   // Syntax error
                 "}," +
             "]"

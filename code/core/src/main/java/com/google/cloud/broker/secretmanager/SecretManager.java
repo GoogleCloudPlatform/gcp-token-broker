@@ -23,10 +23,10 @@ import java.nio.file.Path;
 import java.util.List;
 
 import com.google.api.gax.rpc.NotFoundException;
-import com.google.cloud.secretmanager.v1beta1.AccessSecretVersionRequest;
-import com.google.cloud.secretmanager.v1beta1.AccessSecretVersionResponse;
-import com.google.cloud.secretmanager.v1beta1.SecretManagerServiceClient;
-import com.google.cloud.secretmanager.v1beta1.SecretVersionName;
+import com.google.cloud.secretmanager.v1.AccessSecretVersionRequest;
+import com.google.cloud.secretmanager.v1.AccessSecretVersionResponse;
+import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
+import com.google.cloud.secretmanager.v1.SecretVersionName;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import org.slf4j.Logger;

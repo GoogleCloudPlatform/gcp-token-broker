@@ -49,22 +49,24 @@ rules and applies the following logic:
 -   If the loop reaches the end of the list and none of the specified rules were found to be applicable, then the Kerberos
     name is rejected as un-mappable.
 
-The Kerberos principal is available in both the `if` and `then` expressions as 3 variables corresponding to the 3
-possible parts of a Kerberos principal:
+The Kerberos principal's information is available in both the `if` and `then` expressions through 4 variables:
 
--   `primary`: The user or service name (e.g. `alice` or `hive`).
+-   `principal`: The full principal name (e.g. `alice@MYREALM`, `hive/example.com@MYREALM`).
+-   `primary`: The principal's user name or service name (e.g. `alice`, `hive`).
 -   `instance`: (Optional) If present, the `instance` is separated from the `primary` with a slash (`/`). In the 
     case of a user principal, the `instance` is typically `null`. In the case of a service principal, the `instance`
-    may be the fully qualified domain name of the host where the service is running.
+    may be the fully qualified domain name (e.g. `example.com`) of the host where the service is running.
 -   `realm`: The principal's Kerberos realm.
 
-Take the following example:
+#### Examples
+
+##### Example #1
 
 ```
 user-mapping {
   rules = [
     {
-        if: "primary.endsWith('-app') and instance != null and realm == 'YOUR.REALM.COM'",
+        if: "primary.endsWith('-pipeline') and instance != null and realm == 'YOUR.REALM.COM'",
         then: "primary + '-serviceaccount@myproject.iam.gserviceaccount.com'"
     },
     {
@@ -77,23 +79,46 @@ user-mapping {
 
 The above example configuration would yield mappings like the following:
 
--   `spark-app/example.com@YOUR.REALM.COM` maps to `spark-serviceaccount@myproject.iam.gserviceaccount.com`
+-   `etl-pipeline/example.com@YOUR.REALM.COM` maps to `etl-serviceaccount@myproject.iam.gserviceaccount.com`
 -   `alice@MYREALM` maps to `alice@my-domain.com`
 -   `bob@MYREALM` maps to `bob@my-domain.com`
 
-Still with the above example configuration, the following example Kerberos names would be rejected as un-mappable:
+The above example configuration would also cause the following example Kerberos names to be rejected as un-mappable:
 
 -   `spark-app/example.com@ANOTHER.REALM.COM` (rejected because the realm is not `YOUR.REALM.COM`)
 -   `spark-app@YOUR.REALM.COM` (rejected because the `instance` is `null`)
 -   `alice@FOO` (rejected because the realm is not `MYREALM`)
 
+##### Example #2
+
+```
+user-mapping {
+  rules = [
+    {
+        if: "principal == 'alice@MYREALM'",
+        then: "alice@my-domain.com"
+    },
+    {
+        if: "principal == 'etl-pipeline/1.2.3.4@MYREALM'",
+        then: "'etl-pipeline@myproject.iam.gserviceaccount.com'"
+    }
+  ]
+}
+```
+
+The above example sets explicit one-to-one mappings:
+
+-   `alice@MYREALM` maps to `alice@my-domain.com`
+-   `etl-pipeline/1.2.3.4@MYREALM` maps to `etl-pipeline@myproject.iam.gserviceaccount.com`
+-   Any other Kerberos names would be rejected as un-mappable.
+
 #### Important warning about short names
 
-When using Hadoop, some [proxy users](authentication.md#proxy-user-impersonation) like Hive initially translate the
+When using Hadoop, some [proxy users](authentication.md#proxy-user-impersonation) such as Hive translate the
 impersonated Kerberos name to a POSIX username (often referred to as short name) that is local to the cluster. This
 translation is typically performed on the Hadoop cluster by applying regular expression rules that are defined in the
 `auth_to_local` attribute of the [`krb5.conf`](https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html)
-configuration file. 
+configuration file.
 
 In some cases, when those services call the broker, they only provide the short name (e.g. `alice`) for the impersonated
 Kerberos principal instead of the full name (e.g. `alice@YOUR.REALM.COM`). To allow these services to work with the

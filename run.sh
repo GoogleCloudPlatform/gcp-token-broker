@@ -19,7 +19,7 @@
 # Usage:
 #   * Start the development container:
 #
-#     ./run.sh start_dev
+#     ./run.sh init_dev
 #
 #   * Build all Maven packages:
 #

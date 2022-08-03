@@ -47,7 +47,7 @@ Once the broker has a refresh token for a user, it can use the `RefreshTokenProv
 user on demand as requested by the broker clients.
 
 This provider offers tight scoping on a per-user basis. This allows to ensure that the broker may only generate access
-tokens for a specific whitelist of Google users.
+tokens for a specific allowlist of Google users.
 
 Let's take an example:
 
@@ -65,8 +65,8 @@ This provider requires that you set the following setting(s): [`oauth.client-sec
 
 Refresh tokens are long-lived credentials and are effective indefinitely unless they are explicitly revoked. To reduce
 risks associated with storing these tokens for an extensive period of time, it is recommended to revoke and delete them
-after they've reached a certain age (e.g. 24 hours or 7 days). To achieve this, you can periodically run (e.g. via a
-cron job) the following command (Replace `[AGE]` with the maximum allowed age, in hours):
+after they've reached a certain age (best practice is at most 24 hours). To achieve this, you can periodically run
+(e.g. via a cron job) the following command (Replace `[AGE]` with the maximum allowed age, in hours):
 
 ```shell
 CONFIG_FILE=/<path>/application.conf java com.google.cloud.broker.apps.brokerserver.accesstokens.providers.RevokeRefreshTokens [AGE]

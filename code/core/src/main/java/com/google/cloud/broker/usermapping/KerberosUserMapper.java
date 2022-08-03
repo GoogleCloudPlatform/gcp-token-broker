@@ -61,6 +61,15 @@ public class KerberosUserMapper extends AbstractUserMapper {
         public String getRealm() {
             return realm;
         }
+
+        public String getFullName() {
+            if (instance == null) {
+                return primary + "@" + realm;
+            }
+            else {
+                return primary + "/" + instance + "@" + realm;
+            }
+        }
     }
 
     public KerberosUserMapper() {
@@ -78,12 +87,19 @@ public class KerberosUserMapper extends AbstractUserMapper {
         }
 
         public void validate() {
-            // Create dummy context for the validation
+            // Create dummy values for the validation
+            String dummyPrimary = "abcd";
+            String dummyInstance = "1.2.3.4";
+            String dummyRealm = "MYREALM";
+            String dummyPrincipal = dummyPrimary + "/" + dummyInstance + "@" + dummyRealm;
+
+            // Create dummy context
             Jinjava jinjava = new Jinjava();
             Context context = new Context();
-            context.put("primary", "abcd");
-            context.put("instance", "1.2.3.4");
-            context.put("realm", "MYREALM");
+            context.put("principal", dummyPrincipal);
+            context.put("primary", dummyPrimary);
+            context.put("instance", dummyInstance);
+            context.put("realm", dummyRealm);
             JinjavaConfig config = JinjavaConfig.newBuilder()
                 .withValidationMode(true)
                 .withFailOnUnknownTokens(true)
@@ -159,6 +175,7 @@ public class KerberosUserMapper extends AbstractUserMapper {
     public String map(String name) {
         Context context = new Context();
         KerberosName principal = new KerberosName(name);
+        context.put("principal", principal.getFullName());
         context.put("primary", principal.getPrimary());
         context.put("instance", principal.getInstance());
         context.put("realm", principal.getRealm());

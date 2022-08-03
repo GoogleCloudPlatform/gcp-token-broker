@@ -105,7 +105,7 @@ public class ProxyUserValidationTest {
     }
 
     @Test
-    public void testValidateImpersonatorByUserWhitelist() {
+    public void testValidateImpersonatorByUserAllowlist() {
         // Wildcard
         ProxyUserValidation.validateImpersonator(PRESTO, ALICE);
         ProxyUserValidation.validateImpersonator(PRESTO, BOB);
@@ -124,7 +124,7 @@ public class ProxyUserValidationTest {
     }
 
     @Test
-    public void testValidateImpersonatorByGroupWhitelist() {
+    public void testValidateImpersonatorByGroupAllowlist() {
         // Wildcard
         ProxyUserValidation.validateImpersonator(OOZIE, ALICE);
         ProxyUserValidation.validateImpersonator(OOZIE, BOB);

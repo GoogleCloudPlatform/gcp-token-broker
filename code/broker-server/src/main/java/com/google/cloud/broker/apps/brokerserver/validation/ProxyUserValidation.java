@@ -40,8 +40,8 @@ public class ProxyUserValidation {
     private final static String CONFIG_GROUPS = "groups";
     private final static String CONFIG_USERS = "users";
 
-    private static boolean isWhitelistedByUsername(Config proxyConfig, String impersonated) {
-        // Check if user is whitelisted directly by name
+    private static boolean isAllowlistedByUsername(Config proxyConfig, String impersonated) {
+        // Check if user is allowlisted directly by name
         List<String> proxyableUsers;
         try {
             proxyableUsers = proxyConfig.getStringList(CONFIG_USERS);
@@ -58,7 +58,7 @@ public class ProxyUserValidation {
         return proxyableUsers.contains(impersonated);
     }
 
-    private static boolean isWhitelistedByGroupMembership(Config proxyConfig, String impersonated) {
+    private static boolean isAllowlistedByGroupMembership(Config proxyConfig, String impersonated) {
         List<String> proxyableGroups;
         try {
             proxyableGroups = proxyConfig.getStringList(CONFIG_GROUPS);
@@ -79,7 +79,7 @@ public class ProxyUserValidation {
                     List<Member> members = directory.members().list(proxyableGroup).execute().getMembers();
                     for (Member member : members) {
                         if (member.getEmail().equals(impersonated)) {
-                            // User is member of whitelisted group
+                            // User is member of allowlisted group
                             return true;
                         }
                     }
@@ -102,12 +102,12 @@ public class ProxyUserValidation {
         for (Config proxyConfig : proxyConfigs) {
             String proxy = proxyConfig.getString(CONFIG_PROXY);
             if (impersonator.equals(proxy)) {
-                if (isWhitelistedByUsername(proxyConfig, mappedImpersonated)) {
-                    // The user is directly whitelisted by its username
+                if (isAllowlistedByUsername(proxyConfig, mappedImpersonated)) {
+                    // The user is directly allowlisted by its username
                     return;
                 }
-                else if (isWhitelistedByGroupMembership(proxyConfig, mappedImpersonated)) {
-                    // The user is whitelisted by group membership
+                else if (isAllowlistedByGroupMembership(proxyConfig, mappedImpersonated)) {
+                    // The user is allowlisted by group membership
                     return;
                 }
             }

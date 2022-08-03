@@ -98,8 +98,12 @@ gcp-project = "${var.gcp_project}"
 encryption.cloud-kms.kek-uri = "${google_kms_crypto_key.broker_key.self_link}"
 encryption.cloud-kms.dek-uri = "file:///secrets/dek"
 proxy-users = [{
-    proxy = "hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${var.dataproc_realm}"
-    users = ["${var.test_users[0]}@${var.gsuite_domain}"]
+  proxy = "hive/test-cluster-m.${var.gcp_zone}.c.${var.gcp_project}.internal@${var.dataproc_realm}",
+  users = [
+    %{ for test_user in var.test_users ~}
+    "${test_user}@${var.gsuite_domain}"
+    %{ endfor ~}
+  ]
 }]
 user-mapping.rules=[{
     if: "realm == '${var.origin_realm}'",

@@ -22,12 +22,12 @@ import com.google.cloud.broker.settings.AppSettings;
 public class ScopeValidation {
 
     public static void validateScopes(List<String> scopes) {
-        List<String> whitelist = AppSettings.getInstance().getStringList(AppSettings.SCOPES_WHITELIST);
+        List<String> allowlist = AppSettings.getInstance().getStringList(AppSettings.SCOPES_ALLOWLIST);
         Set<String> scopeSet = new HashSet<String>(scopes);
-        Set<String> whitelistSet = new HashSet<String>(whitelist);
-        if (!whitelistSet.containsAll(scopeSet)) {
+        Set<String> allowlistSet = new HashSet<String>(allowlist);
+        if (!allowlistSet.containsAll(scopeSet)) {
             throw Status.PERMISSION_DENIED
-                .withDescription(String.format("`[%s]` are not whitelisted scopes", String.join(",", scopes)))
+                .withDescription(String.format("`[%s]` are not allowlisted scopes", String.join(",", scopes)))
                 .asRuntimeException();
         }
     }

@@ -1,7 +1,15 @@
+## Unreleased
+
+- Changed 'whitelist' terms to 'allowlist'.
+
+## 0.10.5 (May 20, 2020)
+
+- Made new "principal" variable available in user mapping rules
+
 ## 0.10.4 (April 13, 2020)
 
-- Allow secrets to be marked as optional.
-- Enforce system check for the authorizer app.
+- Allowed secrets to be marked as optional.
+- Enforced system check for the authorizer app.
 
 ## 0.10.3 (April 7, 2020)
 

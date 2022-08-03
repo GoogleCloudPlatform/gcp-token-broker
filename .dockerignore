@@ -12,7 +12,7 @@
 # Ignore all by default:
 *
 
-# Whitelist only the required assets:
+# Allowlist only the required assets:
 !/code/authorizer/install.sh
 !code/broker-server/install.sh
 !code/built-jars
