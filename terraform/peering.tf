@@ -17,8 +17,8 @@ resource "google_compute_network_peering" "client_origin_peering1" {
   network      = google_compute_network.client.self_link
   peer_network = google_compute_network.origin.self_link
   depends_on = [
-    "google_compute_subnetwork.origin_subnet",
-    "google_compute_subnetwork.client_subnet",
+    google_compute_subnetwork.origin_subnet,
+    google_compute_subnetwork.client_subnet,
   ]
 }
 

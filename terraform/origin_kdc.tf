@@ -91,10 +91,12 @@ data "template_file" "startup_script_origin_kdc" {
     project        = var.gcp_project
     zone           = var.gcp_zone
     extra_commands = <<EOT
+        set +x
         # Create user principals
         %{ for test_user in var.test_users ~}
         kadmin.local -q "addprinc -pw ${test_user} ${test_user}"
         %{ endfor ~}
+        set -x
 
         # One-way trust with Dataproc realm
         kadmin.local -q "addprinc -pw ${var.cross_realm_password} krbtgt/${var.dataproc_realm}@${var.origin_realm}"
@@ -109,7 +111,7 @@ resource "google_compute_instance" "origin_kdc" {
   machine_type = "n1-standard-1"
   boot_disk {
     initialize_params {
-      image = "debian-cloud/debian-9"
+      image = "ubuntu-2204-lts"
     }
   }
   network_interface {

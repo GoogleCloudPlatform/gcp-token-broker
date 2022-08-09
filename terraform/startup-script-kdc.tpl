@@ -9,6 +9,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# In general we want to enable debug through -x
+# But there are also some commands involving passwords/keys
+# so make sure you turn it off (set +x) before such commands.
+set -xeuo pipefail
+
 apt-get update
 
 DEBIAN_FRONTEND=noninteractive apt-get -yq install krb5-kdc krb5-admin-server
@@ -32,14 +37,14 @@ cat << EOF > /etc/krb5kdc/kdc.conf
 
 [realms]
     ${realm} = {
-        database_name = /etc/krb5kdc/principal
+        database_name = /var/lib/krb5kdc/principal
         admin_keytab = FILE:/etc/krb5kdc/kadm5.keytab
         acl_file = /etc/krb5kdc/kadm5.acl
-        key_stash_file = /etc/krb5kdc/.k5.${realm}
+        key_stash_file = /etc/krb5kdc/stash
         kdc_ports = 750,88
         max_life = 10h 0m 0s
         max_renewable_life = 7d 0h 0m 0s
-        master_key_type = des3-hmac-sha1
+        master_key_type = aes256-cts
         supported_enctypes = aes256-cts:normal arcfour-hmac:normal des3-hmac-sha1:normal des-cbc-crc:normal des:normal des:v4 des:norealm des:onlyrealm des:afs3
         default_principal_flags = +preauth
     }

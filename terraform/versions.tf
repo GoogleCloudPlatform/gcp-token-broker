@@ -13,21 +13,29 @@ terraform {
   required_version = ">= 0.12"
 }
 
+terraform {
+  required_providers {
+    google = {
+      source = "hashicorp/google"
+      version = "4.31.0"
+    }
+    null = {
+      source = "hashicorp/null"
+      version = "3.1.1"
+    }
+    template = {
+      source = "hashicorp/template"
+      version = "2.2.0"
+    }
+    local = {
+      source = "hashicorp/local"
+      version = "2.2.3"
+    }
+  }
+}
+
 provider "google" {
-  version = "3.12.0"
   project = var.gcp_project
   region  = var.gcp_region
   zone    = var.gcp_zone
-}
-
-provider "null" {
-  version = "2.1.2"
-}
-
-provider "template" {
-  version = "2.1.2"
-}
-
-provider "local" {
-  version = "1.4.0"
 }

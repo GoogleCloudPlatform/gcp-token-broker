@@ -90,7 +90,7 @@ resource "google_compute_firewall" "client_allow_internal" {
 
 resource "google_compute_router" "client" {
   name    = "client"
-  network = google_compute_network.client.self_link
+  network = google_compute_network.client.id
 }
 
 resource "google_compute_router_nat" "client_nat" {
@@ -117,14 +117,41 @@ resource "google_project_iam_custom_role" "minimalWorker" {
   ]
 }
 
-resource "google_storage_bucket" "staging_bucket" {
-  name          = "${var.gcp_project}-staging"
+resource "google_storage_bucket" "dataproc_staging_bucket" {
+  name          = "${var.gcp_project}-dataproc-staging"
   depends_on    = [google_project_service.service_compute] # Dependency required: https://github.com/terraform-providers/terraform-provider-google/issues/1089
   force_destroy = true
+  location      = var.gcp_region
+}
+
+resource "google_storage_bucket" "dataproc_temp_bucket" {
+  name          = "${var.gcp_project}-dataproc-temp"
+  depends_on    = [google_project_service.service_compute] # Dependency required: https://github.com/terraform-providers/terraform-provider-google/issues/1089
+  force_destroy = true
+  location      = var.gcp_region
+}
+
+resource "google_storage_bucket" "assets_bucket" {
+  name          = "${var.gcp_project}-assets"
+  depends_on    = [google_project_service.service_compute] # Dependency required: https://github.com/terraform-providers/terraform-provider-google/issues/1089
+  force_destroy = true
+  location      = var.gcp_region
 }
 
 resource "google_storage_bucket_iam_member" "staging_bucket_perms" {
-  bucket = google_storage_bucket.staging_bucket.name
+  bucket = google_storage_bucket.dataproc_staging_bucket.name
+  role   = "roles/storage.admin"
+  member = "serviceAccount:${google_service_account.dataproc.email}"
+}
+
+resource "google_storage_bucket_iam_member" "temp_bucket_perms" {
+  bucket = google_storage_bucket.dataproc_temp_bucket.name
+  role   = "roles/storage.admin"
+  member = "serviceAccount:${google_service_account.dataproc.email}"
+}
+
+resource "google_storage_bucket_iam_member" "assets_bucket_perms" {
+  bucket = google_storage_bucket.assets_bucket.name
   role   = "roles/storage.admin"
   member = "serviceAccount:${google_service_account.dataproc.email}"
 }
@@ -132,17 +159,20 @@ resource "google_storage_bucket_iam_member" "staging_bucket_perms" {
 resource "google_project_iam_member" "dataproc_minimalWorker" {
   role   = "projects/${var.gcp_project}/roles/dataproc.minimalWorker"
   member = "serviceAccount:${google_service_account.dataproc.email}"
+  project = var.gcp_project
 }
 
 resource "google_project_iam_member" "dataproc_logWriter" {
   role   = "roles/logging.logWriter"
   member = "serviceAccount:${google_service_account.dataproc.email}"
+  project = var.gcp_project
 }
 
 resource "google_storage_bucket" "secrets_bucket" {
   name          = "${var.gcp_project}-secrets"
   depends_on    = [google_project_service.service_compute] # Dependency required: https://github.com/terraform-providers/terraform-provider-google/issues/1089
   force_destroy = true
+  location      = var.gcp_region
 }
 
 resource "google_storage_bucket_iam_member" "secrets_bucket_perms" {
@@ -159,7 +189,7 @@ resource "google_kms_key_ring" "dataproc_ring" {
 
 resource "google_kms_crypto_key" "dataproc_key" {
   name     = "dataproc-key"
-  key_ring = google_kms_key_ring.dataproc_ring.self_link
+  key_ring = google_kms_key_ring.dataproc_ring.id
 }
 
 resource "google_kms_crypto_key_iam_binding" "crypto_key" {

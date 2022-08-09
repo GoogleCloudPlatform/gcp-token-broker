@@ -35,6 +35,10 @@ resource "google_project_service" "service_containerregistry" {
   service = "containerregistry.googleapis.com"
 }
 
+resource "google_project_service" "service_artifactregistry" {
+  service = "artifactregistry.googleapis.com"
+}
+
 // Used for proxy user support to check group membership
 resource "google_project_service" "service_admin" {
   service = "admin.googleapis.com"
@@ -54,6 +58,7 @@ resource "google_storage_bucket" "demo_bucket" {
   name          = "${var.gcp_project}-demo-bucket"
   depends_on    = [google_project_service.service_compute] # Dependency required: https://github.com/terraform-providers/terraform-provider-google/issues/1089
   force_destroy = true
+  location      = var.gcp_region
 }
 
 resource "google_storage_bucket_iam_member" "demo_bucket_perms_user" {
