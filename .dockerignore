@@ -16,3 +16,10 @@
 !/code/authorizer/install.sh
 !code/broker-server/install.sh
 !code/built-jars
+!code/authorizer/target/authorizer-*-jar-with-dependencies.jar
+!code/broker-server/target/broker-server-*-jar-with-dependencies.jar
+!code/extensions/caching/cloud-datastore/target/cache-backend-cloud-datastore-*-jar-with-dependencies.jar
+!code/extensions/caching/redis/target/cache-backend-redis-*-jar-with-dependencies.jar
+!code/extensions/database/jdbc/target/database-backend-jdbc-*-jar-with-dependencies.jar
+!code/extensions/database/cloud-datastore/target/database-backend-cloud-datastore-*-jar-with-dependencies.jar
+!code/extensions/encryption/cloud-kms/target/encryption-backend-cloud-kms-*-jar-with-dependencies.jar
