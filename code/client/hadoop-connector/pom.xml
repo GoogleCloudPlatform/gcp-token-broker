@@ -144,7 +144,7 @@ limitations under the License.
                                 <includes>
                                     <include>com.google.cloud.broker:broker-client-lib</include>
                                     <include>com.google.auth</include>
-                                    <include>com.google.http-client:google-http-client</include>
+                                    <include>com.google.http-client</include>
                                     <include>com.google.guava</include>
                                     <include>com.google.protobuf</include>
                                     <include>io.grpc</include>

@@ -32,7 +32,7 @@ public abstract class AbstractAuthenticationBackend {
     }
 
     public String authenticateUser() {
-        String authorizationHeader = AuthorizationHeaderServerInterceptor.AUTHORIZATION_CONTEXT_KEY.get();
+        String authorizationHeader = AuthorizationHeaderServerInterceptor.BROKER_AUTHORIZATION_CONTEXT_KEY.get();
         String authenticatedUser = authenticateUser(authorizationHeader);
         MDC.put(AUTHENTICATED_USER, authenticatedUser);
         return authenticatedUser;

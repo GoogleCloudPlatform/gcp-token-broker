@@ -124,7 +124,7 @@ public class BrokerServerTest {
 
     public BrokerBlockingStub addSPNEGOTokenToMetadata(BrokerBlockingStub stub, String principal) {
         Metadata metadata = new Metadata();
-        Metadata.Key<String> key = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
+        Metadata.Key<String> key = Metadata.Key.of("broker-authorization", Metadata.ASCII_STRING_MARSHALLER);
         metadata.put(key, "Negotiate " + principal);
         stub = MetadataUtils.attachHeaders(stub, metadata);
         return stub;
@@ -132,7 +132,7 @@ public class BrokerServerTest {
 
     public BrokerBlockingStub addSessionTokenToMetadata(BrokerBlockingStub stub, Session session) {
         Metadata metadata = new Metadata();
-        Metadata.Key<String> key = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
+        Metadata.Key<String> key = Metadata.Key.of("broker-authorization", Metadata.ASCII_STRING_MARSHALLER);
         metadata.put(key, "BrokerSession " + SessionTokenUtils.marshallSessionToken(session));
         stub = MetadataUtils.attachHeaders(stub, metadata);
         return stub;

@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import com.google.auth.oauth2.*;
 import io.grpc.ManagedChannel;
 import io.grpc.Metadata;
 import io.grpc.stub.MetadataUtils;
@@ -33,6 +34,10 @@ import com.google.cloud.broker.apps.brokerserver.protobuf.BrokerGrpc;
 
 public class BrokerGateway {
 
+    public static final Metadata.Key<String> GCP_AUTHORIZATION_METADATA_KEY =
+        Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
+    public static final Metadata.Key<String> BROKER_AUTHORIZATION_METADATA_KEY =
+        Metadata.Key.of("broker-authorization", Metadata.ASCII_STRING_MARSHALLER);
     public static String REQUEST_AUTH_HEADER = "BrokerSession";
     private BrokerGrpc.BrokerBlockingStub stub;
     private ManagedChannel managedChannel;
@@ -97,6 +102,24 @@ public class BrokerGateway {
         return managedChannel;
     }
 
+    protected com.google.auth.oauth2.AccessToken getGoogleAccessToken() {
+        GoogleCredentials credentials;
+        try {
+            credentials = GoogleCredentials.getApplicationDefault();
+            if (!(credentials instanceof IdTokenProvider)) {
+                throw new IllegalArgumentException("Credentials are not an instance of IdTokenProvider.");
+            }
+            IdTokenCredentials tokenCredential =
+                IdTokenCredentials.newBuilder()
+                    .setIdTokenProvider((IdTokenProvider) credentials)
+                    .setTargetAudience(serverInfo.getServerUri())
+                    .build();
+            return tokenCredential.refreshAccessToken();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void setSPNEGOToken() {
         String encodedToken;
         try {
@@ -110,16 +133,16 @@ public class BrokerGateway {
 
         // Set the 'authorization' header with the SPNEGO token
         Metadata metadata = new Metadata();
-        Metadata.Key<String> key = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
-        metadata.put(key, "Negotiate " + encodedToken);
+        metadata.put(GCP_AUTHORIZATION_METADATA_KEY, "Bearer " + getGoogleAccessToken().getTokenValue());
+        metadata.put(BROKER_AUTHORIZATION_METADATA_KEY, "Negotiate " + encodedToken);
         stub = MetadataUtils.attachHeaders(stub, metadata);
     }
 
     public void setSessionToken(String sessionToken) {
         // Set the session token in the 'authorization' header
         Metadata metadata = new Metadata();
-        Metadata.Key<String> key = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
-        metadata.put(key, REQUEST_AUTH_HEADER + " " + sessionToken);
+        metadata.put(GCP_AUTHORIZATION_METADATA_KEY, "Bearer " + getGoogleAccessToken().getTokenValue());
+        metadata.put(BROKER_AUTHORIZATION_METADATA_KEY, REQUEST_AUTH_HEADER + " " + sessionToken);
         stub = MetadataUtils.attachHeaders(stub, metadata);
     }
 

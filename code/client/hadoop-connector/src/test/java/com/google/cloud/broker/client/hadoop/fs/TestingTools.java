@@ -95,7 +95,7 @@ public class TestingTools {
 
     public static class AuthorizationHeaderServerInterceptor implements ServerInterceptor {
 
-        static final Metadata.Key<String> AUTHORIZATION_METADATA_KEY = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
+        static final Metadata.Key<String> AUTHORIZATION_METADATA_KEY = Metadata.Key.of("broker-authorization", Metadata.ASCII_STRING_MARSHALLER);
         static final Context.Key<String> AUTHORIZATION_CONTEXT_KEY = Context.key("AuthorizationHeader");
 
         @Override

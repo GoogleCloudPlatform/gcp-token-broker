@@ -18,7 +18,7 @@ import io.grpc.Status;
 public class SessionAuthenticator {
 
     public Session authenticateSession() {
-        String authorizationHeader = AuthorizationHeaderServerInterceptor.AUTHORIZATION_CONTEXT_KEY.get();
+        String authorizationHeader = AuthorizationHeaderServerInterceptor.BROKER_AUTHORIZATION_CONTEXT_KEY.get();
 
         // Make sure this is indeed
         if (! authorizationHeader.startsWith("BrokerSession ")) {
