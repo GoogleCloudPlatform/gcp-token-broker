@@ -24,7 +24,7 @@ set -xeuo pipefail
 # used as-is in production.
 #####################################################################
 
-GCS_CONN_VERSION="hadoop2-2.0.0"
+GCS_CONN_VERSION="hadoop2-2.2.7"
 ROLE="$(/usr/share/google/get_metadata_value attributes/dataproc-role)"
 WORKER_COUNT="$(/usr/share/google/get_metadata_value attributes/dataproc-worker-count)"
 HADOOP_CONF_DIR="/etc/hadoop/conf"
@@ -85,7 +85,7 @@ set -x
 
 # Get connector's lib directory
 if [[ -d ${DATAPROC_LIB_DIR} ]]; then
-    # For Dataproc 1.4
+    # For Dataproc >= 1.4
     lib_dir=${DATAPROC_LIB_DIR}
 else
     # For Dataproc < 1.4
