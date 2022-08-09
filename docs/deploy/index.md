@@ -1,5 +1,5 @@
-This guide describes how to set up a demo environment to test the broker service based on Kubernetes Engine. (Another
-version of this guide using Cloud Run is also available in the "cloud-run" branch. Click [here](https://github.com/GoogleCloudPlatform/gcp-token-broker/blob/cloud-run/docs/deploy/index.md)
+This guide describes how to set up a demo environment to test the broker service based on Cloud Run. (Another
+version of this guide using Kubernetes Engine is also available in the "gke" branch. Click [here](https://github.com/GoogleCloudPlatform/gcp-token-broker/blob/cloud-run/docs/deploy/index.md)
 if you'd like to try out that version instead).
 
 **_Important note:_ The following instructions are provided only as a reference
@@ -36,8 +36,8 @@ Before you start, you must set up some prerequisites for the demo:
 4.  Create a new GCP project under the GSuite organization and [enable billing](https://cloud.google.com/billing/docs/how-to/modify-project).
 5.  Install some tools on your local machine (The versions indicated below are the ones that have been officially tested.
     Newer versions might work but are untested):
-    *   [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v0.12.24
-    *   [Google Cloud SDK](https://cloud.google.com/sdk/install) v285.0.1
+    *   [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) v1.2.6
+    *   [Google Cloud SDK](https://cloud.google.com/sdk/install) v396.0.0
 
 ### Deploying the demo architecture
 
@@ -65,7 +65,7 @@ Follow these steps to deploy the demo environment to GCP:
 
     ```shell
     export PROJECT=$(gcloud info --format='value(config.project)')
-    export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
+    export ZONE=$(gcloud info --format='value(config.properties.compute.zone.value)')
     export REGION=${ZONE%-*}
     ```
 
@@ -131,25 +131,28 @@ Follow these steps to deploy the demo environment to GCP:
 
 ### Configuring the OAuth client
 
+To enable the use of the Authorizer app, you need to create an OAuth client
+so the app can create refresh tokens for Google users.
+
 1.  Create an OAuth consent screen:
-    *   Go to: <https://console.cloud.google.com/apis/credentials/consent>
-    *   For "Application type", select "Internal".
-    *   For "Application name", type "GCP Token Broker".
-    *   For "Scopes for Google APIs", click "Add scope", then search for
-        "Google Cloud Storage JSON API", then tick the checkbox for
-        "auth/devstorage.read_write", then click "Add".
-    *   For "Authorized domains":
+    * Go to: <https://console.cloud.google.com/apis/credentials/consent>
+    * For "User type", select "Internal".
+    * For "App name", type "GCP Token Broker".
+    * For "User support email", select your email address.
+    * For "Authorized domains":
         -   Type the authorizer app's [top private domain](https://github.com/google/guava/wiki/InternetDomainNameExplained#public-suffixes-and-private-domains),
         -   **Press `Enter`** on your keyboard to add the top private domain to the list.
-    *   Click "Save".
+    * For "Developer contact information", type your email address.
+    * For "Scopes", click "Add scope", then search for "storage", then tick the checkbox for
+      "auth/devstorage.read_write", then click "Update".
+    * Click "Save".
 
-3.  Create a new OAuth client ID:
+2.  Create a new OAuth client ID:
     *   Go to: <https://console.cloud.google.com/apis/credentials>
     *   Click "Create credentials" > "OAuth client ID"
     *   For "Application type", select "Web application".
     *   For "Name", type "GCP Token Broker".
     *   Click "Create".
-    *   Click "Ok" to close the confirmation popup.
     *   Click the "Download JSON" icon for your client ID.
     *   Upload the file to Secret Manager (Replace **`[CLIENT_SECRET.JSON]`** with the name of the file your downloaded in the
         previous step):
@@ -163,16 +166,23 @@ Follow these steps to deploy the demo environment to GCP:
         rm [CLIENT_SECRET.JSON]
         ```
 
+### Compiling the code
+
+Compile and package the JAR files by running the following command:
+
+```shell
+mvn package -DskipTests
+```
+
 ### Generating the data encryption key (DEK)
 
 1.  Generate the data encryption key (DEK) for the Cloud KMS encryption backend:
 
     ```shell
-    export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
+    export BROKER_VERSION=$(cat VERSION)
+    export ZONE=$(gcloud info --format='value(config.properties.compute.zone.value)')
     export REGION=${ZONE%-*}
-    curl "https://repo1.maven.org/maven2/com/google/cloud/broker/broker-core/${BROKER_VERSION}/broker-core-${BROKER_VERSION}-jar-with-dependencies.jar" -o broker-core-${BROKER_VERSION}-jar-with-dependencies.jar
-    curl "https://repo1.maven.org/maven2/com/google/cloud/broker/encryption-backend-cloud-kms/${BROKER_VERSION}/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar" -o encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar
-    java -cp broker-core-${BROKER_VERSION}-jar-with-dependencies.jar:encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar \
+    java -cp code/core/target/broker-core-${BROKER_VERSION}-jar-with-dependencies.jar:code/extensions/encryption/cloud-kms/target/encryption-backend-cloud-kms-${BROKER_VERSION}-jar-with-dependencies.jar \
       com.google.cloud.broker.encryption.GenerateDEK \
       file://dek.json \
       projects/${PROJECT}/locations/${REGION}/keyRings/broker-key-ring/cryptoKeys/broker-key
@@ -191,28 +201,68 @@ Follow these steps to deploy the demo environment to GCP:
     rm dek.json
     ```
 
+### Creating a Docker repository
+
+1. Create a Docker repository in Artifact Registry:
+
+   ```shell
+   gcloud artifacts repositories create gcp-token-broker \
+     --location=us-central1 \
+     --repository-format=docker
+   ```
+
+2. Configure `gcloud` as the credential helper for the Artifact Registry domain associated with the
+   repository's location:
+
+   ```shell
+   gcloud auth configure-docker us-central1-docker.pkg.dev
+   ```
+
 ### Using the Authorizer
 
 The Authorizer is a simple Web UI that users must use to authorize the broker. Follow these steps to deploy and use the
 Authorizer:
 
-1.  Deploy the Authorizer app:
+1. Build the Authorizer app's image:
+
+   ```shell
+   docker build \
+     -t us-central1-docker.pkg.dev/$PROJECT/gcp-token-broker/authorizer \
+     -f ./code/authorizer/Dockerfile .
+   ```
+
+2. Push the image to the registry:
+
+   ```shell
+   docker push us-central1-docker.pkg.dev/$PROJECT/gcp-token-broker/authorizer
+   ```
+
+3. Deploy the Authorizer app:
 
     ```shell
     export BROKER_VERSION=$(cat VERSION)
     export PROJECT=$(gcloud info --format='value(config.project)')
-    export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
+    export ZONE=$(gcloud info --format='value(config.properties.compute.zone.value)')
     export REGION=${ZONE%-*}
     gcloud run deploy authorizer \
-      --image gcr.io/gcp-token-broker/authorizer:${BROKER_VERSION} \
+      --image us-central1-docker.pkg.dev/${PROJECT}/gcp-token-broker/authorizer:latest \
       --platform managed \
-      --allow-unauthenticated \
+      --no-allow-unauthenticated \
       --service-account "broker@${PROJECT}.iam.gserviceaccount.com" \
       --region ${REGION} \
       --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/authorizer.conf | tr -d '\n')
     ```
+
+4. Give yourself permission to access the app (Replace [YOUR_EMAIL] with your email address):
+
+  ```shell
+  gcloud run services add-iam-policy-binding authorizer \
+    --member='user:[YOUR_EMAIL]' \
+    --role='roles/run.invoker' \
+    --region ${REGION}
+  ```
     
-2.  Retrieve the app's URL:
+6. Retrieve the app's URL:
     
     ```shell
     gcloud run services describe authorizer \
@@ -223,7 +273,7 @@ Authorizer:
     
     Take note of this URL. You will need it in the next step.
 
-3.  Configure the OAuth client:
+7. Configure the OAuth client:
     *   Go to: <https://console.cloud.google.com/apis/credentials>
     *   Click on the "GCP Token Broker" OAuth 2.0 Client ID.
     *   Under "Authorized redirect URIs", click "Add URI".
@@ -231,61 +281,99 @@ Authorizer:
         `https://authorizer-[APP_ID].a.run.app/google/oauth2callback`
     * Click "Save".
 
-2.  Open the authorizer page in your browser: `https://authorizer-[APP_ID].a.run.app` (Replace **`[APP_ID]`** with the
+8. Open the authorizer page in your browser: `https://authorizer-[APP_ID].a.run.app` (Replace **`[APP_ID]`** with the
     ID in your URL).
 
-3.  Click "Authorize". You are redirected to the Google login page.
+9. Click "Authorize". You are redirected to the Google login page.
 
-4.  Enter the credentials for one of the three users you created in the [Prerequisites](#prerequisites) section.
+10. Enter the credentials for one of the three users you created in the [Prerequisites](#prerequisites) section.
 
-5.  Read the consent form, then click "Allow". You are redirected back to
-    the authorizer page, and are greeted with a "Success" message. The
-    broker now has authority to generate GCP access tokens on the user's behalf.
+11. Read the consent form, then click "Allow". You are redirected back to
+     the authorizer page, and are greeted with a "Success" message. The
+     broker now has authority to generate GCP access tokens on the user's behalf.
 
 
 ### Starting the broker service
 
-Run the following command to deploy the broker service:
+1. Build the Broker service's image:
 
-```shell
-export BROKER_VERSION=$(cat VERSION)
-export PROJECT=$(gcloud info --format='value(config.project)')
-export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
-export REGION=${ZONE%-*}
-gcloud run deploy broker-server \
-  --image gcr.io/gcp-token-broker/broker-server:${BROKER_VERSION} \
-  --platform managed \
-  --allow-unauthenticated \
-  --region ${REGION} \
-  --service-account broker@${PROJECT}.iam.gserviceaccount.com \
-  --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/broker-server.conf | tr -d '\n')
-```
+   ```shell
+   docker build \
+     -t us-central1-docker.pkg.dev/$PROJECT/gcp-token-broker/broker-server \
+     -f ./code/broker-server/Dockerfile .
+   ```
+
+2. Push the image to the registry:
+
+   ```shell
+   docker push us-central1-docker.pkg.dev/$PROJECT/gcp-token-broker/broker-server
+   ```
+
+3. Deploy the broker service:
+
+   ```shell
+   export BROKER_VERSION=$(cat VERSION)
+   export PROJECT=$(gcloud info --format='value(config.project)')
+   export ZONE=$(gcloud info --format='value(config.properties.compute.zone.value)')
+   export REGION=${ZONE%-*}
+   gcloud run deploy broker-server \
+     --image us-central1-docker.pkg.dev/${PROJECT}/gcp-token-broker/broker-server:latest \
+     --platform managed \
+     --no-allow-unauthenticated \
+     --region ${REGION} \
+     --service-account broker@${PROJECT}.iam.gserviceaccount.com \
+     --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/broker-server.conf | tr -d '\n')
+   ```
+
+4. Give the Dataproc service account permission to invoke the broker service:
+
+   ```shell
+   gcloud run services add-iam-policy-binding broker-server \
+   --member=serviceAccount:dataproc@${PROJECT}.iam.gserviceaccount.com \
+   --region ${REGION} \
+   --project ${PROJECT} \
+   --role=roles/run.invoker
+   ```
+
 
 ### Creating a Dataproc cluster
 
 In this section, you create a Dataproc cluster that can be used to run Hadoop jobs and interact with the broker.
 
-1.  Set an environment variable for the Kerberos realm (Replace **`[ORIGIN.REALM.COM]`** with the
+1. Set an environment variable for the Kerberos realm (Replace **`[ORIGIN.REALM.COM]`** with the
     same Kerberos realm you used in the Terraform variables file (with the `.tfvars` extension):
 
     ```shell
     export REALM=[ORIGIN.REALM.COM]
     ```
 
-2.  Set a few more environment variables:
+2. Set a few more environment variables:
 
     ```shell
     export PROJECT=$(gcloud info --format='value(config.project)')
-    export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
+    export ZONE=$(gcloud info --format='value(config.properties.compute.zone.value)')
     export REGION=${ZONE%-*}
     export BROKER_URI=$(gcloud run services describe broker-server --platform managed --region ${REGION} --format "value(status.url)")
     export BROKER_PRINCIPAL="broker"
     export BROKER_VERSION=$(cat VERSION)
-    export INIT_ACTION="gs://gcp-token-broker/broker-hadoop-connector.${BROKER_VERSION}.sh"
-    export CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/google/cloud/broker/broker-hadoop-connector/hadoop2-${BROKER_VERSION}/broker-hadoop-connector-hadoop2-${BROKER_VERSION}-jar-with-dependencies.jar"
+    export ASSETS_BUCKET="gs://${PROJECT}-assets"
+    export INIT_ACTION="broker-hadoop-connector.${BROKER_VERSION}.sh"
+    export CONNECTOR_JAR="broker-hadoop-connector-hadoop2-${BROKER_VERSION}-jar-with-dependencies.jar"
     ```
 
-4.  Create the Dataproc cluster:
+4. Upload the init action to the assets bucket:
+
+   ```shell
+   gsutil cp init-action/broker-hadoop-connector.sh ${ASSETS_BUCKET}/${INIT_ACTION}
+   ```
+
+5. Upload the connector JAR file to the bucket:
+
+   ```shell
+   gsutil cp code/client/hadoop-connector/target/${CONNECTOR_JAR} ${ASSETS_BUCKET}
+   ```
+
+7. Create the Dataproc cluster:
 
     ```shell
     gcloud dataproc clusters create test-cluster \
@@ -294,16 +382,17 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
       --zone ${ZONE} \
       --region ${REGION} \
       --subnet client-subnet \
-      --image-version 1.4 \
-      --bucket ${PROJECT}-staging \
+      --image-version 1.5 \
+      --bucket ${PROJECT}-dataproc-staging \
+      --temp-bucket ${PROJECT}-dataproc-temp \
       --scopes cloud-platform \
       --service-account "dataproc@${PROJECT}.iam.gserviceaccount.com" \
-      --kerberos-config-file deploy/${PROJECT}/kerberos-config.yaml \
-      --initialization-actions ${INIT_ACTION} \
+      --kerberos-config-file "deploy/${PROJECT}/kerberos-config.yaml" \
+      --initialization-actions "${ASSETS_BUCKET}/${INIT_ACTION}" \
       --metadata "gcp-token-broker-uri=${BROKER_URI}" \
       --metadata "gcp-token-broker-kerberos-principal=${BROKER_PRINCIPAL}" \
       --metadata "origin-realm=${REALM}" \
-      --metadata "connector-jar-url=${CONNECTOR_JAR_URL}"
+      --metadata "connector-jar-gcs=${ASSETS_BUCKET}/${CONNECTOR_JAR}"
     ```
 
     *Note:* The command creates a [single-node](https://cloud.google.com/dataproc/docs/concepts/configuring-clusters/single-node-clusters)
@@ -319,6 +408,7 @@ The broker service needs a keytab to authenticate incoming requests.
     ```shell
     gcloud compute ssh test-cluster-m \
       -- "sudo cat /etc/security/keytab/broker.keytab" | perl -pne 's/\r$//g' > broker.keytab
+    ```
 
 2.  Upload the keytab to Secret Manager:
 
@@ -337,15 +427,15 @@ The broker service needs a keytab to authenticate incoming requests.
 
     ```shell
     export PROJECT=$(gcloud info --format='value(config.project)')
-    export ZONE=$(gcloud info --format='value(config.properties.compute.zone)')
+    export ZONE=$(gcloud info --format='value(config.properties.compute.zone.value)')
     export REGION=${ZONE%-*}
     gcloud run deploy broker-server \
-      --image gcr.io/gcp-token-broker/broker-server:${BROKER_VERSION} \
+      --image us-central1-docker.pkg.dev/${PROJECT}/gcp-token-broker/broker-server:latest \
       --platform managed \
-      --allow-unauthenticated \
+      --no-allow-unauthenticated \
       --region ${REGION} \
       --service-account broker@${PROJECT}.iam.gserviceaccount.com \
-      --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/broker-server.conf)
+      --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/broker-server.conf | tr -d '\n')
     ```
     
 5.  You are now ready to do some testing. Refer to the [tutorials](../tutorials/index.md) section to run
@@ -362,10 +452,10 @@ Follow these steps to view the broker application logs in Stackdriver:
 3.  Type the following in the text search box:
 
     ```conf
-    resource.type="k8s_container"
-    resource.labels.cluster_name="broker"
-    resource.labels.namespace_name="default"
-    labels.k8s-pod/run="broker-server"
+    resource.type = "cloud_run_revision"
+    resource.labels.service_name = "broker-server"
+    resource.labels.location = "us-central1"
+    severity>=DEFAULT
     ```
 
 4.  Click "Submit Filter".
