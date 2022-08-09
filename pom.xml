@@ -99,7 +99,7 @@ limitations under the License.
         <google.template.soy.version>2019-10-08</google.template.soy.version>
         <apache.httpcomponents.httpclient.version>4.5.11</apache.httpcomponents.httpclient.version>
         <google.api.services.admin.directory.version>directory_v1-rev20191003-1.30.8</google.api.services.admin.directory.version>
-        <google-auth-library-oauth2-http.version>0.20.0</google-auth-library-oauth2-http.version>
+        <google-auth-library-oauth2-http.version>1.9.0</google-auth-library-oauth2-http.version>
         <gcs-connector-hadoop2.version>hadoop2-2.1.2</gcs-connector-hadoop2.version>
         <gcs-connector-hadoop3.version>hadoop3-2.1.2</gcs-connector-hadoop3.version>
         <google-cloud-secretmanager.version>0.3.0</google-cloud-secretmanager.version>
