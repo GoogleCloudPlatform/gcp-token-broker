@@ -14,9 +14,9 @@ package com.google.cloud.broker.client.hadoop.fs;
 import java.io.IOException;
 import java.security.PrivilegedAction;
 
-import com.google.broker.client.endpoints.CancelSessionToken;
-import com.google.broker.client.endpoints.RenewSessionToken;
-import com.google.broker.client.connect.BrokerServerInfo;
+import com.google.cloud.broker.client.endpoints.CancelSessionToken;
+import com.google.cloud.broker.client.endpoints.RenewSessionToken;
+import com.google.cloud.broker.client.connect.BrokerServerInfo;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenRenewer;

@@ -31,7 +31,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.google.broker.client.utils.GrpcUtils;
+import com.google.cloud.broker.client.utils.GrpcUtils;
 import com.google.cloud.broker.authentication.backends.FakeKDC;
 import static com.google.cloud.broker.client.hadoop.fs.TestingTools.*;
 

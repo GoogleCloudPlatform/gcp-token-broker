@@ -23,8 +23,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenIdentifier;
 import com.google.cloud.hadoop.fs.gcs.auth.DelegationTokenIOException;
 
-import com.google.broker.client.endpoints.GetSessionToken;
-import com.google.broker.client.connect.BrokerServerInfo;
+import com.google.cloud.broker.client.endpoints.GetSessionToken;
+import com.google.cloud.broker.client.connect.BrokerServerInfo;
 
 
 public class BrokerTokenIdentifier extends DelegationTokenIdentifier {

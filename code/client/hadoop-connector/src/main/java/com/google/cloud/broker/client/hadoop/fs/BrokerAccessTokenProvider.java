@@ -20,10 +20,10 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;
 import com.google.cloud.hadoop.util.AccessTokenProvider;
 
-import com.google.broker.client.credentials.BrokerBaseCredentials;
-import com.google.broker.client.credentials.BrokerKerberosCredentials;
-import com.google.broker.client.credentials.BrokerSessionCredentials;
-import com.google.broker.client.connect.BrokerServerInfo;
+import com.google.cloud.broker.client.credentials.BrokerBaseCredentials;
+import com.google.cloud.broker.client.credentials.BrokerKerberosCredentials;
+import com.google.cloud.broker.client.credentials.BrokerSessionCredentials;
+import com.google.cloud.broker.client.connect.BrokerServerInfo;
 
 public final class BrokerAccessTokenProvider implements AccessTokenProvider {
 

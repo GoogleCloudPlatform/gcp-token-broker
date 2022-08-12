@@ -9,24 +9,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.broker.client.credentials;
+package com.google.cloud.broker.client.credentials;
 
 import com.google.auth.oauth2.AccessToken;
 
-import com.google.broker.client.endpoints.GetAccessToken;
-import com.google.broker.client.connect.BrokerServerInfo;
+import com.google.cloud.broker.client.endpoints.GetAccessToken;
+import com.google.cloud.broker.client.connect.BrokerServerInfo;
 
-public class BrokerSessionCredentials extends BrokerBaseCredentials {
+public class BrokerKerberosCredentials extends BrokerBaseCredentials {
 
-    private String sessionToken;
+    private String owner;
+    private Iterable<String> scopes;
+    private String target;
 
-    public BrokerSessionCredentials(BrokerServerInfo serverInfo, String sessionToken) {
+    public BrokerKerberosCredentials(BrokerServerInfo serverInfo, String owner, Iterable<String> scopes, String target) {
         super(serverInfo);
-        this.sessionToken = sessionToken;
+        this.owner = owner;
+        this.scopes = scopes;
+        this.target = target;
     }
 
+    @Override
     public AccessToken refreshAccessToken() {
-        return GetAccessToken.submitDelegatedAuth(serverInfo, sessionToken);
+        return GetAccessToken.submitDirectAuth(serverInfo, owner, scopes, target);
     }
-
 }

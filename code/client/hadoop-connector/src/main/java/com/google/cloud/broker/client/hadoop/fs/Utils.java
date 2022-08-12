@@ -14,7 +14,7 @@ package com.google.cloud.broker.client.hadoop.fs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 
-import com.google.broker.client.connect.BrokerServerInfo;
+import com.google.cloud.broker.client.connect.BrokerServerInfo;
 
 public class Utils {
 

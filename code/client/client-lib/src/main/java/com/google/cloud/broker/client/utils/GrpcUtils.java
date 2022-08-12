@@ -9,7 +9,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.broker.client.utils;
+package com.google.cloud.broker.client.utils;
 
 import javax.net.ssl.SSLException;
 import java.io.ByteArrayInputStream;

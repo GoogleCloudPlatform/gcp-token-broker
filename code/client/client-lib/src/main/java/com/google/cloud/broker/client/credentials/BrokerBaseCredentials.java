@@ -9,8 +9,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.broker.client.credentials;
+package com.google.cloud.broker.client.credentials;
 
+import com.google.cloud.broker.client.connect.BrokerServerInfo;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
@@ -26,8 +27,7 @@ import com.google.common.base.Preconditions;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.Credentials;
 
-import com.google.broker.client.connect.BrokerServerInfo;
-import com.google.broker.client.connect.BrokerGateway;
+import com.google.cloud.broker.client.connect.BrokerGateway;
 
 
 public abstract class BrokerBaseCredentials extends Credentials {

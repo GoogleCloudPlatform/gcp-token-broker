@@ -14,7 +14,6 @@ package com.google.cloud.broker.client.utils;
 import javax.security.auth.Subject;
 import java.security.PrivilegedAction;
 
-import com.google.broker.client.utils.SpnegoUtils;
 import org.ietf.jgss.*;
 
 import static org.junit.Assert.*;
