@@ -11,6 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -xeuo pipefail
+
 source "/base/code/broker-server/install.sh"
 
 # Maven and its dependencies
@@ -26,18 +28,26 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql
 echo "CREATE ROLE testuser LOGIN ENCRYPTED PASSWORD 'UNSECURE-PASSWORD';" | su postgres -c "psql"
 su postgres -c "createdb broker --owner testuser"
 echo "service postgresql restart" >> /restart-services.sh
+# Make the Postgres server available outside the container
+sed -Ei "s/#listen_addresses\s+=\s+'localhost'/listen_addresses = '*'/g" /etc/postgresql/*/main/postgresql.conf
+echo "host    all    all    0.0.0.0/0    md5" >> /etc/postgresql/14/main/pg_hba.conf
 
 # MariaDB
 apt install -y mariadb-server
 echo "CREATE DATABASE broker DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;" | mariadb
 echo "CREATE USER 'testuser' IDENTIFIED BY 'UNSECURE-PASSWORD';" | mariadb
 echo "GRANT ALL privileges ON *.* TO 'testuser'@'%';" | mariadb
-echo "service mysql restart" >> /restart-services.sh
+echo "service mariadb restart" >> /restart-services.sh
+# Make the MariaDB server available outside the container
+sed -Ei 's/bind-address\s+=\s+127.0.0.1/bind-address=0.0.0.0/g' /etc/mysql/mariadb.conf.d/50-server.cnf
 
 # Redis
 apt-get install -y redis-server
-sed 's/^bind 127.0.0.1 ::1/bind 127.0.0.1/' -i /etc/redis/redis.conf
-echo "service redis-server restart" >> /restart-services.sh
+# Apparently need to run 'shutdown' as 'service stop' and 'service restart' don't seem to kill the process
+echo "redis-cli shutdown && service redis-server start" >> /restart-services.sh
+# Make the Redis server available outside the container
+sed 's/^bind 127.0.0.1 ::1/bind 0.0.0.0/' -i /etc/redis/redis.conf
+sed 's/^protected-mode yes/protected-mode no/' -i /etc/redis/redis.conf
 
 # Node.JS tools
 apt install -y npm

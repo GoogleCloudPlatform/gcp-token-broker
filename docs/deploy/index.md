@@ -423,19 +423,12 @@ The broker service needs a keytab to authenticate incoming requests.
     rm broker.keytab
     ```
     
-4.  Reload the broker service so it can fetch the keytab:
+4.  Restart the broker service to let it load the keytab:
 
     ```shell
-    export PROJECT=$(gcloud info --format='value(config.project)')
-    export ZONE=$(gcloud info --format='value(config.properties.compute.zone.value)')
-    export REGION=${ZONE%-*}
-    gcloud run deploy broker-server \
-      --image us-central1-docker.pkg.dev/${PROJECT}/gcp-token-broker/broker-server:latest \
-      --platform managed \
-      --no-allow-unauthenticated \
-      --region ${REGION} \
-      --service-account broker@${PROJECT}.iam.gserviceaccount.com \
-      --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/broker-server.conf | tr -d '\n')
+    gcloud run services describe broker-server --format export --region $REGION > broker-server.export.yaml \
+      && gcloud run services replace broker-server.export.yaml \
+      && rm broker-server.export.yaml
     ```
     
 5.  You are now ready to do some testing. Refer to the [tutorials](../tutorials/index.md) section to run

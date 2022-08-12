@@ -49,3 +49,6 @@ dek.json
 # Ignore IDE specific files
 .idea
 *.iml
+
+# NodeJS
+npm-debug.log

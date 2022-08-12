@@ -51,16 +51,18 @@ public class BrokerAccessTokenProviderTest {
 
     @BeforeClass
     public static void setUpClass() {
-        TestingTools.initHadoop();
         fakeKDC = new FakeKDC(REALM);
         fakeKDC.start();
         fakeKDC.createPrincipal(ALICE);
         fakeKDC.createPrincipal(BROKER);
+        TestingTools.initHadoop();
     }
 
     @AfterClass
     public static void tearDownClass() {
-        fakeKDC.stop();
+        if (fakeKDC != null) {
+            fakeKDC.stop();
+        }
     }
 
     public AccessToken refresh(Configuration conf) {

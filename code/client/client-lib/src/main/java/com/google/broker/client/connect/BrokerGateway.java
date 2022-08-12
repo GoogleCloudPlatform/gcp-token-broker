@@ -38,7 +38,9 @@ public class BrokerGateway {
         Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
     public static final Metadata.Key<String> BROKER_AUTHORIZATION_METADATA_KEY =
         Metadata.Key.of("broker-authorization", Metadata.ASCII_STRING_MARSHALLER);
-    public static String REQUEST_AUTH_HEADER = "BrokerSession";
+    public static String SESSION_AUTH_HEADER = "BrokerSession";
+    public static String NEGOTIATE_AUTH_HEADER = "Negotiate";
+    public static String BEARER_AUTH_HEADER = "Bearer";
     private BrokerGrpc.BrokerBlockingStub stub;
     private ManagedChannel managedChannel;
     private BrokerServerInfo serverInfo;
@@ -130,19 +132,18 @@ public class BrokerGateway {
             throw new RuntimeException(
                 "Failed creating a SPNEGO token. Make sure that you have run kinit and that your Kerberos configuration is correct. See the full Kerberos error message: " + e.getMessage());
         }
-
-        // Set the 'authorization' header with the SPNEGO token
+        // Set authorization headers
         Metadata metadata = new Metadata();
-        metadata.put(GCP_AUTHORIZATION_METADATA_KEY, "Bearer " + getGoogleAccessToken().getTokenValue());
-        metadata.put(BROKER_AUTHORIZATION_METADATA_KEY, "Negotiate " + encodedToken);
+        metadata.put(GCP_AUTHORIZATION_METADATA_KEY, BEARER_AUTH_HEADER + " " + getGoogleAccessToken().getTokenValue());
+        metadata.put(BROKER_AUTHORIZATION_METADATA_KEY, NEGOTIATE_AUTH_HEADER + " " + encodedToken);
         stub = MetadataUtils.attachHeaders(stub, metadata);
     }
 
     public void setSessionToken(String sessionToken) {
-        // Set the session token in the 'authorization' header
+        // Set authorization headers
         Metadata metadata = new Metadata();
-        metadata.put(GCP_AUTHORIZATION_METADATA_KEY, "Bearer " + getGoogleAccessToken().getTokenValue());
-        metadata.put(BROKER_AUTHORIZATION_METADATA_KEY, REQUEST_AUTH_HEADER + " " + sessionToken);
+        metadata.put(GCP_AUTHORIZATION_METADATA_KEY, BEARER_AUTH_HEADER + " " + getGoogleAccessToken().getTokenValue());
+        metadata.put(BROKER_AUTHORIZATION_METADATA_KEY, SESSION_AUTH_HEADER + " " + sessionToken);
         stub = MetadataUtils.attachHeaders(stub, metadata);
     }
 

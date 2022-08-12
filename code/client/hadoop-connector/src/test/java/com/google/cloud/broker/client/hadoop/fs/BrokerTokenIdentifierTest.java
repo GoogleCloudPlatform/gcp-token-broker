@@ -61,7 +61,9 @@ public class BrokerTokenIdentifierTest {
 
     @AfterClass
     public static void tearDownClass() {
-        fakeKDC.stop();
+        if (fakeKDC != null) {
+            fakeKDC.stop();
+        }
     }
 
     public String getSessionToken(Configuration conf) {

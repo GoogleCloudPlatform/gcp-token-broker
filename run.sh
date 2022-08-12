@@ -169,6 +169,10 @@ function run_tests() {
                 GSUITE_DOMAIN=$2
                 shift 2
                 ;;
+            -d|--debug)
+                DEBUG=1
+                shift
+                ;;
             *)
                 echo "Error: Unsupported argument: '$1'" >&2
                 exit 1
@@ -194,16 +198,14 @@ function run_tests() {
         PROPERTIES="${PROPERTIES} -Dgsuite-domain=${GSUITE_DOMAIN}"
     fi
 
+    if [[ -n "${DEBUG}" ]]; then
+        PROPERTIES="${PROPERTIES} -Dmaven.surefire.debug"
+    fi
+
     set_projects_arg
 
     set -x
-    docker exec -it --env GOOGLE_APPLICATION_CREDENTIALS=/base/service-account-key.json ${CONTAINER} bash -c "mvn test ${PROJECTS_ARG} ${PROPERTIES}"
-}
-
-function mvn() {
-    set -x
-    ARGS="$@"
-    docker exec -it ${CONTAINER} bash -c "mvn ${ARGS}"
+    GOOGLE_APPLICATION_CREDENTIALS=$PWD/service-account-key.json sh -c "mvn test ${PROJECTS_ARG} ${PROPERTIES}"
 }
 
 function clean() {
@@ -234,7 +236,13 @@ function ssh_function() {
 # Initializes a development container
 function init_dev() {
     set -x
-	  docker run -it -v $PWD:/base -w /base -p 7070:7070 --detach --name ${CONTAINER} ubuntu:18.04 && \
+    # Ports:
+    # 7070: Test coverage UI
+    # 5005: Java remote debugging
+    # 5432: PostgreSQL
+    # 3306: MariaDB
+    # 6379: Redis
+	  docker run -it -v $PWD:/base -w /base -p 7070:7070 -p 5005:5005 -p 5432:5432 -p 3306:3306 -p 6379:6379 --detach --name ${CONTAINER} ubuntu:22.04 && \
 	  docker exec -it ${CONTAINER} bash -c "code/broker-server/install-dev.sh"
 }
 

@@ -11,6 +11,7 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
@@ -59,7 +60,7 @@ public class HybridProviderTest {
         HybridProvider provider = new HybridProvider();
         AccessToken accessToken = provider.getAccessToken("alice-shadow@" + projectId + ".iam.gserviceaccount.com", SCOPES);
         assertTrue(accessToken.getValue().startsWith("y"));
-        assertEquals(2, CharMatcher.is('.').countIn(accessToken.getValue()));
+        assertEquals(1024, accessToken.getValue().getBytes(StandardCharsets.UTF_8).length);
         assertTrue(accessToken.getExpiresAt() > 0);
     }
 

@@ -50,7 +50,9 @@ public class SpnegoAuthenticatorTest {
 
     @AfterClass
     public static void tearDownClass() {
-        fakeKDC.stop();
+        if (fakeKDC != null) {
+            fakeKDC.stop();
+        }
     }
 
     private static String generateSpnegoToken(String principal) {

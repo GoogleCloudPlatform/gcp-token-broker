@@ -11,6 +11,7 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -51,7 +52,7 @@ public class ServiceAccountProviderTest {
         KerberosUserMapper mapper = new KerberosUserMapper();
         AccessToken accessToken = provider.getAccessToken(mapper.map("alice@EXAMPLE.COM"), SCOPES);
         assertTrue(accessToken.getValue().startsWith("y"));
-        assertEquals(2, CharMatcher.is('.').countIn(accessToken.getValue()));
+        assertEquals(1024, accessToken.getValue().getBytes(StandardCharsets.UTF_8).length);
         assertTrue(accessToken.getExpiresAt() > 0);
     }
 

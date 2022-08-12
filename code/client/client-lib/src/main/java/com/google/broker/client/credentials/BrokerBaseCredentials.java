@@ -113,7 +113,7 @@ public abstract class BrokerBaseCredentials extends Credentials {
         this.requestMetadata =
             Collections.singletonMap(
                 AuthHttpConstants.AUTHORIZATION,
-                Collections.singletonList(BrokerGateway.REQUEST_AUTH_HEADER + " " + token.getTokenValue()));
+                Collections.singletonList(BrokerGateway.SESSION_AUTH_HEADER + " " + token.getTokenValue()));
     }
 
     public final AccessToken getAccessToken() {
