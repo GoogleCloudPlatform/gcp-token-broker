@@ -29,5 +29,5 @@ public abstract class AbstractUserMapper {
         return instance;
     }
 
-    abstract public String map(String name);
+    abstract public String map(String name) throws IllegalArgumentException;
 }

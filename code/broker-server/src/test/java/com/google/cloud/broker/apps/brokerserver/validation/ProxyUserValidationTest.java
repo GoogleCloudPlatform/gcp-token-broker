@@ -99,7 +99,7 @@ public class ProxyUserValidationTest {
                 fail();
             } catch (StatusRuntimeException e) {
                 assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-                assertEquals("Impersonation disallowed for `spark/testhost@EXAMPLE.COM`", e.getStatus().getDescription());
+                assertEquals(String.format("Impersonation of `%s` by `spark/testhost@EXAMPLE.COM` is not allowed", user), e.getStatus().getDescription());
             }
         }
     }
@@ -119,7 +119,7 @@ public class ProxyUserValidationTest {
             fail();
         } catch (StatusRuntimeException e) {
             assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("Impersonation disallowed for `storm/testhost@EXAMPLE.COM`", e.getStatus().getDescription());
+            assertEquals("Impersonation of `charlie@EXAMPLE.COM` by `storm/testhost@EXAMPLE.COM` is not allowed", e.getStatus().getDescription());
         }
     }
 
@@ -139,7 +139,7 @@ public class ProxyUserValidationTest {
                 fail();
             } catch (StatusRuntimeException e) {
                 assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-                assertEquals("Impersonation disallowed for `hive/testhost@EXAMPLE.COM`", e.getStatus().getDescription());
+                assertEquals(String.format("Impersonation of `%s` by `hive/testhost@EXAMPLE.COM` is not allowed", user), e.getStatus().getDescription());
             }
         }
 
@@ -151,7 +151,7 @@ public class ProxyUserValidationTest {
                 fail();
             } catch (StatusRuntimeException e) {
                 assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-                assertEquals("Impersonation disallowed for `solr/testhost@EXAMPLE.COM`", e.getStatus().getDescription());
+                assertEquals(String.format("Impersonation of `%s` by `solr/testhost@EXAMPLE.COM` is not allowed", user), e.getStatus().getDescription());
             }
         }
     }

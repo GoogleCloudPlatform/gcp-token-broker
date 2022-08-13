@@ -12,6 +12,7 @@
 package com.google.cloud.broker.apps.brokerserver.validation;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import com.google.api.client.auth.oauth2.BearerToken;
@@ -24,6 +25,7 @@ import com.google.api.services.directory.model.Member;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import io.grpc.Status;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import com.google.cloud.broker.apps.brokerserver.logging.LoggingUtils;
@@ -35,6 +37,8 @@ import com.google.cloud.broker.usermapping.AbstractUserMapper;
 import com.google.cloud.broker.utils.Constants;
 
 public class ProxyUserValidation {
+
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final static String CONFIG_PROXY = "proxy";
     private final static String CONFIG_GROUPS = "groups";
@@ -95,25 +99,33 @@ public class ProxyUserValidation {
     }
 
     public static void validateImpersonator(String impersonator, String impersonated) {
-        String mappedImpersonated = AbstractUserMapper.getInstance().map(impersonated);
-        EmailValidation.validateEmail(mappedImpersonated);
-        MDC.put(LoggingUtils.MDC_AUTH_MODE_PROXY_IMPERSONATED_USER_KEY, impersonated);
-        List<? extends Config> proxyConfigs = AppSettings.getInstance().getConfigList(AppSettings.PROXY_USERS);
-        for (Config proxyConfig : proxyConfigs) {
-            String proxy = proxyConfig.getString(CONFIG_PROXY);
-            if (impersonator.equals(proxy)) {
-                if (isAllowlistedByUsername(proxyConfig, mappedImpersonated)) {
-                    // The user is directly allowlisted by its username
-                    return;
-                }
-                else if (isAllowlistedByGroupMembership(proxyConfig, mappedImpersonated)) {
-                    // The user is allowlisted by group membership
-                    return;
+        String mappedImpersonated;
+        try {
+            mappedImpersonated = AbstractUserMapper.getInstance().map(impersonated);
+        } catch (IllegalArgumentException e) {
+            logger.error(e.getMessage());
+            mappedImpersonated = null;
+        }
+        if (mappedImpersonated != null) {
+            EmailValidation.validateEmail(mappedImpersonated);
+            MDC.put(LoggingUtils.MDC_AUTH_MODE_PROXY_IMPERSONATED_USER_KEY, impersonated);
+            List<? extends Config> proxyConfigs = AppSettings.getInstance()
+                .getConfigList(AppSettings.PROXY_USERS);
+            for (Config proxyConfig : proxyConfigs) {
+                String proxy = proxyConfig.getString(CONFIG_PROXY);
+                if (impersonator.equals(proxy)) {
+                    if (isAllowlistedByUsername(proxyConfig, mappedImpersonated)) {
+                        // The user is directly allowlisted by its username
+                        return;
+                    } else if (isAllowlistedByGroupMembership(proxyConfig, mappedImpersonated)) {
+                        // The user is allowlisted by group membership
+                        return;
+                    }
                 }
             }
         }
         throw Status.PERMISSION_DENIED
-            .withDescription("Impersonation disallowed for `" + impersonator + "`")
+            .withDescription("Impersonation of `" + impersonated + "` by `" + impersonator + "` is not allowed")
             .asRuntimeException();
     }
 

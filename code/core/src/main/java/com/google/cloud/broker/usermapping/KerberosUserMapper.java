@@ -172,7 +172,7 @@ public class KerberosUserMapper extends AbstractUserMapper {
     }
 
     @Override
-    public String map(String name) {
+    public String map(String name) throws IllegalArgumentException {
         Context context = new Context();
         KerberosName principal = new KerberosName(name);
         context.put("principal", principal.getFullName());
