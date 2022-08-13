@@ -9,8 +9,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.broker.client.hadoop.fs;
+package com.google.cloud.broker.client.hadoop.fs.commands;
 
+import com.google.cloud.broker.client.hadoop.fs.BrokerAccessTokenProvider;
+import com.google.cloud.broker.client.hadoop.fs.BrokerTokenIdentifier;
+import com.google.cloud.broker.client.hadoop.fs.BrokerTokenRenewer;
+import com.google.cloud.broker.client.hadoop.fs.Utils;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -26,7 +30,7 @@ import org.apache.hadoop.security.token.Token;
  *
  * To run it:
  *
- *   java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.PingServer
+ *   java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.commands.PingServer
  *
  */
 
@@ -36,25 +40,6 @@ public class PingServer {
     private final static Text SERVICE = new Text(BUCKET);
     private final static String CHECK_SUCCESS = "✅ Check successful\n";
     private final static String CHECK_FAIL = "\uD83D\uDED1 Check failed\n";
-
-    private static BrokerTokenIdentifier getBTI(String sessionToken) throws IOException {
-        UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
-        Text username = new Text(loginUser.getUserName());
-        BrokerTokenIdentifier identifier = new BrokerTokenIdentifier();
-        identifier.setOwner(username);
-        identifier.setRenewer(username);
-        identifier.setRealUser(username);
-        identifier.setSessionToken(sessionToken);
-        return identifier;
-    }
-
-    private static Token<BrokerTokenIdentifier> getTokenBTI(String sessionToken) throws IOException {
-        BrokerTokenIdentifier identifier = getBTI(sessionToken);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        DataOutputStream data = new DataOutputStream(byteArrayOutputStream);
-        identifier.write(data);
-        return new Token<>(byteArrayOutputStream.toByteArray(), new byte[0], BrokerTokenIdentifier.KIND, SERVICE);
-    }
 
     private static void checkProviderDirectAuth(Configuration config) {
         System.out.println("Checking direct authentication...\n");
@@ -74,7 +59,7 @@ public class PingServer {
     private static void checkProviderDelegatedAuth(Configuration config, String sessionToken) {
         System.out.println("Checking delegated authentication...\n");
         try {
-            BrokerAccessTokenProvider provider = new BrokerAccessTokenProvider(SERVICE, getBTI(sessionToken));
+            BrokerAccessTokenProvider provider = new BrokerAccessTokenProvider(SERVICE, CommandUtils.getBTI(sessionToken));
             provider.setConf(config);
             provider.refresh();
             assert provider.getAccessToken().getToken().startsWith("ya29.");
@@ -105,7 +90,7 @@ public class PingServer {
 
     private static void checkRenewSessionToken(Configuration config, String sessionToken) throws IOException {
         try {
-            Token<BrokerTokenIdentifier> token = getTokenBTI(sessionToken);
+            Token<BrokerTokenIdentifier> token = CommandUtils.getTokenBTI(sessionToken, SERVICE);
             BrokerTokenRenewer renewer = new BrokerTokenRenewer();
             renewer.renew(token, config);
             System.out.println(CHECK_SUCCESS);
@@ -118,7 +103,7 @@ public class PingServer {
 
     private static void checkCancelSessionToken(Configuration config, String sessionToken) throws IOException {
         try {
-            Token<BrokerTokenIdentifier> token = getTokenBTI(sessionToken);
+            Token<BrokerTokenIdentifier> token = CommandUtils.getTokenBTI(sessionToken, SERVICE);
             BrokerTokenRenewer renewer = new BrokerTokenRenewer();
             renewer.cancel(token, config);
             System.out.println(CHECK_SUCCESS);
@@ -131,18 +116,7 @@ public class PingServer {
 
     public static void main(String[] args) throws IOException {
         Configuration config = new Configuration();
-
-        System.out.println("> Current configuration:\n");
-        String[] configKeys = new String[] {
-            Utils.CONFIG_URI,
-            Utils.CONFIG_PRINCIPAL,
-            Utils.CONFIG_CERTIFICATE,
-            Utils.CONFIG_CERTIFICATE_PATH,
-            Utils.CONFIG_ACCESS_BOUNDARY_ENABLED
-        };
-        for (String configKey : configKeys) {
-            System.out.println(String.format("* %s: %s", configKey, config.get(configKey)));
-        }
+        CommandUtils.showConfig(config);
 
         System.out.println("\n> Checking the broker server endpoints:\n");
 

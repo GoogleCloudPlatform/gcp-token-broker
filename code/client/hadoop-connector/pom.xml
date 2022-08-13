@@ -77,6 +77,11 @@ limitations under the License.
             <version>${hadoop.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>info.picocli</groupId>
+            <artifactId>picocli</artifactId>
+            <version>3.9.6</version>
+        </dependency>
 
         <!-- Testing dependencies -->
         <dependency>
@@ -109,6 +114,19 @@ limitations under the License.
             </extension>
         </extensions>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <!--
+                    Use Java 8 in client environments for better chance of compatibility,
+                    especially with old versions of Hadoop.
+                    -->
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
@@ -158,6 +176,7 @@ limitations under the License.
                                     <include>io.netty:netty-codec</include>
                                     <include>io.netty:netty-resolver</include>
                                     <include>io.perfmark</include>
+                                    <include>info.picocli</include>
                                 </includes>
                             </artifactSet>
                             <relocations>

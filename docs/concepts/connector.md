@@ -52,5 +52,5 @@ Used only if `gcp.token.broker.tls.enabled` is `true` and `gcp.token.broker.tls.
 Run this command to verify that your client environment is correctly configured to connect to the server:
 
 ```shell
-java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.PingServer
+java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.commands.PingServer
 ```

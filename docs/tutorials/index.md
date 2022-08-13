@@ -26,12 +26,61 @@ described the following sub-sections. After each command, you can verify in the 
 that the demo GCS bucket is in fact accessed by the expected GSuite user, that is
 "alice@your-domain.com" (See the [Logging](../concepts/logging.md) section to learn how to view the logs).
 
-### Configuration checks
+### Server endpoint testing
+
+In this section, you test the different endpoints of the broker server.
+
+#### Quick configuration check
 
 Run this command to verify that your client environment is correctly configured to connect to the server:
 
 ```shell
-java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.PingServer
+java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.commands.PingServer
+```
+
+### Test simple direct authentication
+
+```shell
+kinit alice@$REALM
+java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.commands.GetAccessToken -u gs://example
+```
+
+### Test proxy user authentication
+
+```shell
+sudo kinit "hive/$(hostname -f)@DATAPROC_REALM" -k -t  /etc/security/keytab/hive.service.keytab
+sudo java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.commands.GetAccessToken -u gs://example -i alice@JPHALIP.JOONIX.NET
+```
+
+### Test delegated authentication
+
+Get session token for Alice:
+
+```shell
+kinit alice@$REALM
+java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.commands.GetSessionToken -u gs://example -r "yarn/$(hostname -f)@DATAPROC_REALM" -f session-token.txt
+```
+
+Log out and trade the session token for an access token:
+
+```shell
+kdestroy
+java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.commands.GetAccessToken -u gs://example -f session-token.txt
+```
+
+### Test renewing and cancelling a session token
+
+Let Yarn renew the session token:
+
+```shell
+sudo kinit "yarn/$(hostname -f)@DATAPROC_REALM" -k -t  /etc/security/keytab/yarn.service.keytab
+sudo java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.commands.RenewSessionToken -u gs://example -f session-token.txt
+```
+
+Then cancel the session token:
+
+```shell
+sudo java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.commands.CancelSessionToken -u gs://example -f session-token.txt
 ```
 
 ### Hadoop FS
