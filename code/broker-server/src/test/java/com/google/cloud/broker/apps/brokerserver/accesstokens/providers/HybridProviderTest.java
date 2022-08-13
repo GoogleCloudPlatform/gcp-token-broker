@@ -59,7 +59,7 @@ public class HybridProviderTest {
     public void testServiceAccount() {
         HybridProvider provider = new HybridProvider();
         AccessToken accessToken = provider.getAccessToken("alice-shadow@" + projectId + ".iam.gserviceaccount.com", SCOPES);
-        assertTrue(accessToken.getValue().startsWith("y"));
+        assertTrue(accessToken.getValue().startsWith("ya29."));
         assertEquals(1024, accessToken.getValue().getBytes(StandardCharsets.UTF_8).length);
         assertTrue(accessToken.getExpiresAt() > 0);
     }

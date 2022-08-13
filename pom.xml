@@ -162,8 +162,6 @@ limitations under the License.
                         <configuration>
                             <additionalOptions>-Xdoclint:none</additionalOptions>
                             <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
-                            <source>${java.version}</source>
-                            <target>${java.version}</target>
                         </configuration>
                         <executions>
                             <execution>

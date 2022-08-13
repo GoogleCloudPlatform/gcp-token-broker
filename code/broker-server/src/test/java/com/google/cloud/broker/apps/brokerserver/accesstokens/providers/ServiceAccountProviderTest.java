@@ -51,7 +51,7 @@ public class ServiceAccountProviderTest {
         ServiceAccountProvider provider = new ServiceAccountProvider();
         KerberosUserMapper mapper = new KerberosUserMapper();
         AccessToken accessToken = provider.getAccessToken(mapper.map("alice@EXAMPLE.COM"), SCOPES);
-        assertTrue(accessToken.getValue().startsWith("y"));
+        assertTrue(accessToken.getValue().startsWith("ya29."));
         assertEquals(1024, accessToken.getValue().getBytes(StandardCharsets.UTF_8).length);
         assertTrue(accessToken.getExpiresAt() > 0);
     }

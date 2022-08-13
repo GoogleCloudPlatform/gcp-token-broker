@@ -233,6 +233,17 @@ function ssh_function() {
     docker exec -it ${CONTAINER} bash
 }
 
+function update_keytab() {
+      set -x
+      gcloud compute ssh $1 \
+        -- "sudo cat /etc/security/keytab/broker.keytab" | perl -pne 's/\r$//g' > broker.keytab \
+      && gcloud secrets versions add keytab --data-file=broker.keytab \
+      && rm broker.keytab \
+      && gcloud run services describe broker-server --format export --region ${REGION} > broker-server.export.yaml \
+      && gcloud run services replace broker-server.export.yaml \
+      && rm broker-server.export.yaml
+}
+
 # Initializes a development container
 function init_dev() {
     set -x
@@ -327,6 +338,10 @@ case "$1" in
     upload_connector)
         shift
         upload_connector $@
+        ;;
+    update_keytab)
+        shift
+        update_keytab $@
         ;;
     lint)
         shift

@@ -112,6 +112,21 @@ user-mapping.rules=[{
     if: "realm == '${var.origin_realm}'",
     then: "primary + '@${var.gsuite_domain}'"
 }]
+
+user-mapping.rules=[
+  {
+    if: "realm == '${var.origin_realm}'",
+    then: "primary + '@jphalip.joonix.net'"
+  },
+  # Be cautious when using short names (i.e. without a realm).
+  # See documentation at https://github.com/GoogleCloudPlatform/gcp-token-broker/blob/master/docs/concepts/user-mapping.md#important-warning-about-short-names
+  # for more details.
+  {
+    if: "realm == null",
+    then: "primary + '@${var.gsuite_domain}'"
+  }
+]
+
 authentication.spnego.keytabs = [{keytab="/secrets/keytab", principal="broker@${var.dataproc_realm}"}]
 server.tls.enabled = false
 oauth.client-secret-json-path = "/secrets/oauth-client"

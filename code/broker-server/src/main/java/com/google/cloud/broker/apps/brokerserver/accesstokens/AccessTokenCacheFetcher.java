@@ -62,7 +62,7 @@ public class AccessTokenCacheFetcher extends CacheFetcher {
             EmailValidation.validateEmail(googleIdentity);
         }
         catch (IllegalArgumentException e) {
-            throw Status.PERMISSION_DENIED.withDescription("Principal `" + owner + "` cannot be matched to a Google identity.").asRuntimeException();
+            throw Status.PERMISSION_DENIED.withDescription("Principal `" + owner + "` cannot be mapped to a Google identity.").asRuntimeException();
         }
         MDC.put(LoggingUtils.MDC_ACCESS_TOKEN_USER_KEY, googleIdentity);
         AccessToken accessToken = AbstractProvider.getInstance().getAccessToken(googleIdentity, scopes);

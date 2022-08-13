@@ -58,5 +58,7 @@ public class CancelSessionToken {
         CancelSessionTokenResponse response = CancelSessionTokenResponse.newBuilder().build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+
+        // TODO: Delete session token from SessionCacheFetcher
     }
 }

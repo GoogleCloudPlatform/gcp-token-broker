@@ -51,7 +51,7 @@ sed 's/^protected-mode yes/protected-mode no/' -i /etc/redis/redis.conf
 
 # Node.JS tools
 apt install -y npm
-npm install --global remark-cli remark-validate-links
+npm install --global remark-cli remark-validate-links  # Used for code linting (`./run.sh lint`)
 export NODE_PATH="/usr/local/lib/node_modules"
 
 # (Re)start all services
