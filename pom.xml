@@ -102,11 +102,12 @@ limitations under the License.
         <apache.httpcomponents.httpclient.version>4.5.11</apache.httpcomponents.httpclient.version>
         <google.api.services.admin.directory.version>directory_v1-rev20191003-1.30.8</google.api.services.admin.directory.version>
         <google-auth.version>1.10.0</google-auth.version>
-        <gcs-connector-hadoop2.version>hadoop2-2.1.2</gcs-connector-hadoop2.version>
-        <gcs-connector-hadoop3.version>hadoop3-2.1.2</gcs-connector-hadoop3.version>
+        <gcs-connector-hadoop2.version>hadoop2-2.2.7</gcs-connector-hadoop2.version>
+        <gcs-connector-hadoop3.version>hadoop3-2.2.7</gcs-connector-hadoop3.version>
         <google-cloud-secretmanager.version>0.3.0</google-cloud-secretmanager.version>
         <jinjava.version>2.5.2</jinjava.version>
         <info.picocli.version>3.9.6</info.picocli.version>
+        <google-http-client-apache-v2.version>1.42.2</google-http-client-apache-v2.version>
         <maven-assembly-plugin.version>3.2.0</maven-assembly-plugin.version>
         <os-maven-plugin.version>1.6.2</os-maven-plugin.version>
         <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
