@@ -11,10 +11,15 @@
 
 package com.google.cloud.broker.client.hadoop.fs;
 
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.broker.client.utils.OAuthUtils;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.security.PrivilegedAction;
+import java.util.Arrays;
 import java.util.Collections;
 
+import java.util.List;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -24,8 +29,15 @@ import com.google.cloud.broker.client.credentials.BrokerBaseCredentials;
 import com.google.cloud.broker.client.credentials.BrokerKerberosCredentials;
 import com.google.cloud.broker.client.credentials.BrokerSessionCredentials;
 import com.google.cloud.broker.client.connect.BrokerServerInfo;
+import org.slf4j.LoggerFactory;
 
 public final class BrokerAccessTokenProvider implements AccessTokenProvider {
+
+    public static final String CLOUD_PLATFORM_SCOPE =
+        "https://www.googleapis.com/auth/cloud-platform";
+
+    private static final org.slf4j.Logger logger =
+        LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private Configuration config;
     private AccessToken accessToken;
@@ -45,7 +57,19 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
 
     @Override
     public AccessToken getAccessToken() {
-        return this.accessToken;
+        return accessToken;
+    }
+
+    private void refreshCredentialsFromApplicationDefault() {
+        GoogleCredentials applicationDefaultCredentials =
+            OAuthUtils.getApplicationDefaultCredentials().createScoped(CLOUD_PLATFORM_SCOPE);
+        try {
+            applicationDefaultCredentials.refresh();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        com.google.auth.oauth2.AccessToken token = applicationDefaultCredentials.getAccessToken();
+        accessToken = new AccessToken(token.getTokenValue(), token.getExpirationTime().getTime());
     }
 
     @Override
@@ -63,16 +87,19 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
         // Instantiate the proper credentials class based on the type of authentication (direct or delegated)
         BrokerServerInfo serverInfo = Utils.getBrokerDetailsFromConfig(config);
         BrokerBaseCredentials credentials;
-        if (tokenIdentifier == null) {
-            // Use direct authentication
+        if (tokenIdentifier == null) {  // Using direct authentication
+            if (!loginUser.hasKerberosCredentials()) {
+                logger.info("Not logged-in with Kerberos, so defaulting to Google application default credentials");
+                refreshCredentialsFromApplicationDefault();
+                return;
+            }
             credentials = new BrokerKerberosCredentials(
                 serverInfo,
                 currentUser.getUserName(),
                 Collections.singleton(BrokerTokenIdentifier.GCS_SCOPE),
                 Utils.getTarget(config, service));
         }
-        else {
-            // Use delegated authentication
+        else {  // Using delegated authentication
             credentials = new BrokerSessionCredentials(serverInfo, tokenIdentifier.getSessionToken());
         }
 
@@ -80,8 +107,14 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
         loginUser.doAs((PrivilegedAction<Void>) () -> {
             try {
                 credentials.refresh();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            } catch (Exception e) {
+                throw new RuntimeException(
+                    String.format(
+                        "Failed refreshing credentials for currentUser=[`%s`, hasKerberosCredentials=`%s`], loginUser=[`%s`, hasKerberosCredentials=`%s`], service=`%s`",
+                        currentUser, currentUser.hasKerberosCredentials(), loginUser, loginUser.hasKerberosCredentials(), service
+                    ),
+                    e
+                );
             }
             return null;
         });
@@ -96,7 +129,7 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
 
     @Override
     public Configuration getConf() {
-        return this.config;
+        return config;
     }
 
 }

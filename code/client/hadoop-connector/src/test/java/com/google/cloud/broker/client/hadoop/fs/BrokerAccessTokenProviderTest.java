@@ -11,26 +11,27 @@
 
 package com.google.cloud.broker.client.hadoop.fs;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import javax.security.auth.Subject;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem;
+import org.slf4j.LoggerFactory;
 
-import static com.google.cloud.broker.client.utils.SpnegoUtilsTest.TGT_ERROR;
 import static com.google.cloud.broker.client.hadoop.fs.TestingTools.*;
 import com.google.cloud.hadoop.util.AccessTokenProvider.AccessToken;
 import com.google.cloud.broker.authentication.backends.FakeKDC;
@@ -103,17 +104,16 @@ public class BrokerAccessTokenProviderTest {
 
     @Test
     public void testProviderRefreshWhileNotLoggedIn() {
-        try {
-            Configuration conf = TestingTools.getBrokerConfig();
-            refresh(conf);
-            fail();
-        } catch (Exception e) {
-            assertEquals(RuntimeException.class, e.getClass());
-            assertEquals(
-                "Failed creating a SPNEGO token. Make sure that you have run kinit and that your Kerberos configuration is correct. See the full Kerberos error message: " + TGT_ERROR,
-                e.getMessage()
-            );
-        }
+        ListAppender<ILoggingEvent> logWatcher = new ListAppender<>();
+        Configuration conf = TestingTools.getBrokerConfig();
+        logWatcher.start();
+        ((Logger) LoggerFactory.getLogger(BrokerAccessTokenProvider.class)).addAppender(logWatcher);
+        refresh(conf);
+        int logSize = logWatcher.list.size();
+        assertEquals(logWatcher.list.get(logSize - 1).getFormattedMessage(),
+            "Not logged-in with Kerberos, so defaulting to Google application default credentials"
+        );
+        ((Logger) LoggerFactory.getLogger(BrokerAccessTokenProvider.class)).detachAndStopAllAppenders();
     }
 
     @Test

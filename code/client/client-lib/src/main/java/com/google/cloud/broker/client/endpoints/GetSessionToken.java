@@ -22,7 +22,16 @@ public class GetSessionToken {
 
     public static String submit(BrokerServerInfo serverInfo, String owner, String renewer, Iterable<String> scopes, String target) {
         BrokerGateway gateway = new BrokerGateway(serverInfo);
-        gateway.setSPNEGOToken();
+        try {
+            gateway.setSPNEGOToken();
+        } catch (Exception e) {
+            throw new RuntimeException(
+                String.format(
+                    "Error while getting SPNEGO token for owner=`%s`, renewer=`%s`, scopes=`%s`, target=`%s`",
+                    owner, renewer, scopes, target
+                ), e
+            );
+        }
         GetSessionTokenRequest request = GetSessionTokenRequest.newBuilder()
             .addAllScopes(scopes)
             .setOwner(owner)

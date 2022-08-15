@@ -106,7 +106,7 @@ public class BrokerTokenIdentifierTest {
             assertEquals(RuntimeException.class, e.getClass());
             Assert.assertEquals(
                 "Failed creating a SPNEGO token. Make sure that you have run kinit and that your Kerberos configuration is correct. See the full Kerberos error message: " + SpnegoUtilsTest.TGT_ERROR,
-                e.getMessage()
+                e.getCause().getMessage()
             );
         }
     }

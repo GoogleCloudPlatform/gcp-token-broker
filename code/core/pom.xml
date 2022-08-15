@@ -97,6 +97,12 @@ limitations under the License.
         <groupId>com.hubspot.jinjava</groupId>
         <artifactId>jinjava</artifactId>
         <version>${jinjava.version}</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>slf4j-api</artifactId>
+            <groupId>org.slf4j</groupId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <!-- Testing dependencies -->
@@ -105,6 +111,12 @@ limitations under the License.
         <artifactId>kerb-simplekdc</artifactId>
         <version>${org.apache.kerby.version}</version>
         <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <artifactId>slf4j-api</artifactId>
+            <groupId>org.slf4j</groupId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
 

@@ -26,7 +26,16 @@ public class GetAccessToken {
 
     public static AccessToken submitDirectAuth(BrokerServerInfo serverInfo, String owner, Iterable<String> scopes, String target) {
         BrokerGateway gateway = new BrokerGateway(serverInfo);
-        gateway.setSPNEGOToken();
+        try {
+            gateway.setSPNEGOToken();
+        } catch (Exception e) {
+            throw new RuntimeException(
+                String.format(
+                    "Error while getting SPNEGO token for owner=`%s`, scopes=`%s`, target=`%s`",
+                    owner, scopes, target
+                ), e
+            );
+        }
         GetAccessTokenRequest request = GetAccessTokenRequest.newBuilder()
             .addAllScopes(scopes)
             .setOwner(owner)

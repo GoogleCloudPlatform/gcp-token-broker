@@ -90,6 +90,7 @@ limitations under the License.
         <javax.annotation-api.version>1.3.2</javax.annotation-api.version>
         <google-cloud-datastore.version>1.102.3</google-cloud-datastore.version>
         <google-api-services-iam.version>v1-rev20200221-1.30.8</google-api-services-iam.version>
+        <logback-classic.version>1.2.11</logback-classic.version>
         <ch.qos.logback.version>1.2.3</ch.qos.logback.version>
         <ch.qos.logback.contrib.version>0.1.5</ch.qos.logback.contrib.version>
         <logstash-logback-encoder.version>6.3</logstash-logback-encoder.version>
@@ -105,6 +106,7 @@ limitations under the License.
         <gcs-connector-hadoop3.version>hadoop3-2.1.2</gcs-connector-hadoop3.version>
         <google-cloud-secretmanager.version>0.3.0</google-cloud-secretmanager.version>
         <jinjava.version>2.5.2</jinjava.version>
+        <info.picocli.version>3.9.6</info.picocli.version>
         <maven-assembly-plugin.version>3.2.0</maven-assembly-plugin.version>
         <os-maven-plugin.version>1.6.2</os-maven-plugin.version>
         <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
