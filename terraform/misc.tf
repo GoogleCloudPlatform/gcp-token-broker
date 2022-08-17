@@ -73,7 +73,7 @@ resource "google_storage_bucket_iam_member" "demo_bucket_perms_svcacct" {
   member = "serviceAccount:${google_service_account.test_user_serviceaccount[0].email}"
 }
 
-resource "null_resource" "upload_demo_files" {
+resource "null_resource" "upload_demo_parquet_file" {
   provisioner "local-exec" {
     command = <<EOT
         gsutil cp \
@@ -86,3 +86,15 @@ EOT
   depends_on = [google_storage_bucket.demo_bucket]
 }
 
+resource "null_resource" "upload_demo_macbeth_file" {
+  provisioner "local-exec" {
+    command = <<EOT
+        gsutil cp \
+            gs://apache-beam-samples/shakespeare/macbeth.txt \
+            gs://${google_storage_bucket.demo_bucket.name}/datasets/shakespeare/macbeth.txt
+
+EOT
+
+  }
+  depends_on = [google_storage_bucket.demo_bucket]
+}

@@ -138,16 +138,30 @@ resource "google_storage_bucket" "assets_bucket" {
   location      = var.gcp_region
 }
 
-resource "google_storage_bucket_iam_member" "staging_bucket_perms" {
+resource "google_storage_bucket_iam_member" "staging_bucket_perms_sa" {
   bucket = google_storage_bucket.dataproc_staging_bucket.name
   role   = "roles/storage.admin"
   member = "serviceAccount:${google_service_account.dataproc.email}"
 }
 
-resource "google_storage_bucket_iam_member" "temp_bucket_perms" {
+resource "google_storage_bucket_iam_member" "staging_bucket_perms_user" {
+  for_each = toset(var.test_users)
+  bucket = google_storage_bucket.dataproc_staging_bucket.name
+  role   = "roles/storage.admin"
+  member = "user:${each.value}@${var.gsuite_domain}"
+}
+
+resource "google_storage_bucket_iam_member" "temp_bucket_perms_sa" {
   bucket = google_storage_bucket.dataproc_temp_bucket.name
   role   = "roles/storage.admin"
   member = "serviceAccount:${google_service_account.dataproc.email}"
+}
+
+resource "google_storage_bucket_iam_member" "temp_bucket_perms_user" {
+  for_each = toset(var.test_users)
+  bucket = google_storage_bucket.dataproc_temp_bucket.name
+  role   = "roles/storage.admin"
+  member = "user:${each.value}@${var.gsuite_domain}"
 }
 
 resource "google_storage_bucket_iam_member" "assets_bucket_perms" {

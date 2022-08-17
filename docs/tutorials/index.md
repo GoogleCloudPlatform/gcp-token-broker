@@ -100,7 +100,7 @@ Run a simple wordcount job:
 
 ```shell
 hadoop jar /usr/lib/hadoop-mapreduce/hadoop-mapreduce-examples.jar wordcount \
-  gs://apache-beam-samples/shakespeare/macbeth.txt \
+  gs://$PROJECT-demo-bucket/datasets/shakespeare/macbeth.txt \
   gs://$PROJECT-demo-bucket/wordcount/output-$(uuidgen)
 ```
 
