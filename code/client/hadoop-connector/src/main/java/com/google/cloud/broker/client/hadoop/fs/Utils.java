@@ -23,6 +23,7 @@ public class Utils {
     public final static String CONFIG_PRINCIPAL = "gcp.token.broker.kerberos.principal";
     public final static String CONFIG_CERTIFICATE = "gcp.token.broker.tls.certificate";
     public final static String CONFIG_CERTIFICATE_PATH = "gcp.token.broker.tls.certificate.path";
+    public final static String CONFIG_USE_APP_DEFAULT_CREDENTIALS = "gcp.token.broker.use.app.default.credentials";
 
     public static String getTarget(Configuration config, Text service) {
         boolean accessBoundaryEnabled = Boolean.parseBoolean(

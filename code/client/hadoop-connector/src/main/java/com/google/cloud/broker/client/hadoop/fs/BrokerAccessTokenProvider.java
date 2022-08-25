@@ -16,10 +16,11 @@ import com.google.cloud.broker.client.utils.OAuthUtils;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.security.PrivilegedAction;
-import java.util.Arrays;
 import java.util.Collections;
-
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -35,11 +36,11 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
 
     public static final String CLOUD_PLATFORM_SCOPE =
         "https://www.googleapis.com/auth/cloud-platform";
-
     private static final org.slf4j.Logger logger =
         LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private Configuration config;
+    private List<String> appDefaultCredsUsers;
     private AccessToken accessToken;
     private BrokerTokenIdentifier tokenIdentifier;
     private Text service;
@@ -93,6 +94,14 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
                 refreshCredentialsFromApplicationDefault();
                 return;
             }
+            if (appDefaultCredsUsers.contains(loginUser.getUserName())) {
+                // Experimental feature: Let some users systematically use the default credentials.
+                // This is useful for Dataproc as some users (e.g. "mapred" for the job history
+                // server) need to access GCS directly.
+                logger.info(String.format("Using Google application default credentials for %s", loginUser.getUserName()));
+                refreshCredentialsFromApplicationDefault();
+                return;
+            }
             credentials = new BrokerKerberosCredentials(
                 serverInfo,
                 currentUser.getUserName(),
@@ -125,6 +134,11 @@ public final class BrokerAccessTokenProvider implements AccessTokenProvider {
     @Override
     public void setConf(Configuration config) {
         this.config = config;
+        this.appDefaultCredsUsers =
+            Stream.of(config.get(Utils.CONFIG_USE_APP_DEFAULT_CREDENTIALS, "").split(","))
+                .map(String::trim)
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toList());
     }
 
     @Override

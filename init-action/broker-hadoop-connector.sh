@@ -77,6 +77,7 @@ function restart_worker_services() {
 
 # Set some hadoop config properties
 set_property_core_site "fs.gs.delegation.token.binding" "com.google.cloud.broker.client.hadoop.fs.BrokerDelegationTokenBinding"
+set_property_core_site "gcp.token.broker.use.app.default.credentials" "mapred/$(hostname -f)@DATAPROC_REALM,spark/$(hostname -f)@DATAPROC_REALM,yarn/$(hostname -f)@DATAPROC_REALM"
 set_property_core_site "gcp.token.broker.uri" "$broker_uri"
 set_property_core_site "gcp.token.broker.kerberos.principal" "$broker_kerberos_principal"
 set +x
