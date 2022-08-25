@@ -44,7 +44,7 @@ sed -Ei 's/bind-address\s+=\s+127.0.0.1/bind-address=0.0.0.0/g' /etc/mysql/maria
 # Redis
 apt-get install -y redis-server
 # Apparently need to run 'shutdown' as 'service stop' and 'service restart' don't seem to kill the process
-echo "redis-cli shutdown && service redis-server start" >> /restart-services.sh
+echo "redis-cli shutdown; service redis-server start" >> /restart-services.sh
 # Make the Redis server available outside the container
 sed 's/^bind 127.0.0.1 ::1/bind 0.0.0.0/' -i /etc/redis/redis.conf
 sed 's/^protected-mode yes/protected-mode no/' -i /etc/redis/redis.conf
