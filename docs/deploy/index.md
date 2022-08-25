@@ -136,12 +136,10 @@ so the app can create refresh tokens for Google users.
 
 1.  Create an OAuth consent screen:
     * Go to: <https://console.cloud.google.com/apis/credentials/consent>
-    * For "User type", select "Internal".
+    * For "User type", select "Internal". This limits the app to Google Workspace users within your
+      organization
     * For "App name", type "GCP Token Broker".
     * For "User support email", select your email address.
-    * For "Authorized domains":
-        -   Type the authorizer app's [top private domain](https://github.com/google/guava/wiki/InternetDomainNameExplained#public-suffixes-and-private-domains),
-        -   **Press `Enter`** on your keyboard to add the top private domain to the list.
     * For "Developer contact information", type your email address.
     * For "Scopes", click "Add scope", then search for "storage", then tick the checkbox for
       "auth/devstorage.read_write", then click "Update".
@@ -207,7 +205,7 @@ mvn package -DskipTests
 
    ```shell
    gcloud artifacts repositories create gcp-token-broker \
-     --location=us-central1 \
+     --location=${REGION} \
      --repository-format=docker
    ```
 
@@ -215,7 +213,7 @@ mvn package -DskipTests
    repository's location:
 
    ```shell
-   gcloud auth configure-docker us-central1-docker.pkg.dev
+   gcloud auth configure-docker ${REGION}-docker.pkg.dev
    ```
 
 ### Using the Authorizer
@@ -227,14 +225,14 @@ Authorizer:
 
    ```shell
    docker build \
-     -t us-central1-docker.pkg.dev/$PROJECT/gcp-token-broker/authorizer \
+     -t ${REGION}-docker.pkg.dev/$PROJECT/gcp-token-broker/authorizer \
      -f ./code/authorizer/Dockerfile .
    ```
 
 2. Push the image to the registry:
 
    ```shell
-   docker push us-central1-docker.pkg.dev/$PROJECT/gcp-token-broker/authorizer
+   docker push ${REGION}-docker.pkg.dev/$PROJECT/gcp-token-broker/authorizer
    ```
 
 3. Deploy the Authorizer app:
@@ -245,22 +243,13 @@ Authorizer:
     export ZONE=$(gcloud info --format='value(config.properties.compute.zone.value)')
     export REGION=${ZONE%-*}
     gcloud run deploy authorizer \
-      --image us-central1-docker.pkg.dev/${PROJECT}/gcp-token-broker/authorizer:latest \
+      --image ${REGION}-docker.pkg.dev/${PROJECT}/gcp-token-broker/authorizer:latest \
       --platform managed \
-      --no-allow-unauthenticated \
+      --allow-unauthenticated \
       --service-account "broker@${PROJECT}.iam.gserviceaccount.com" \
       --region ${REGION} \
       --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/authorizer.conf | tr -d '\n')
     ```
-
-4. Give yourself permission to access the app (Replace [YOUR_EMAIL] with your email address):
-
-  ```shell
-  gcloud run services add-iam-policy-binding authorizer \
-    --member='user:[YOUR_EMAIL]' \
-    --role='roles/run.invoker' \
-    --region ${REGION}
-  ```
     
 6. Retrieve the app's URL:
     
@@ -299,14 +288,14 @@ Authorizer:
 
    ```shell
    docker build \
-     -t us-central1-docker.pkg.dev/$PROJECT/gcp-token-broker/broker-server \
+     -t ${REGION}-docker.pkg.dev/$PROJECT/gcp-token-broker/broker-server \
      -f ./code/broker-server/Dockerfile .
    ```
 
 2. Push the image to the registry:
 
    ```shell
-   docker push us-central1-docker.pkg.dev/$PROJECT/gcp-token-broker/broker-server
+   docker push ${REGION}-docker.pkg.dev/$PROJECT/gcp-token-broker/broker-server
    ```
 
 3. Deploy the broker service:
@@ -317,7 +306,7 @@ Authorizer:
    export ZONE=$(gcloud info --format='value(config.properties.compute.zone.value)')
    export REGION=${ZONE%-*}
    gcloud run deploy broker-server \
-     --image us-central1-docker.pkg.dev/${PROJECT}/gcp-token-broker/broker-server:latest \
+     --image ${REGION}-docker.pkg.dev/${PROJECT}/gcp-token-broker/broker-server:latest \
      --platform managed \
      --no-allow-unauthenticated \
      --region ${REGION} \
@@ -334,7 +323,6 @@ Authorizer:
    --project ${PROJECT} \
    --role=roles/run.invoker
    ```
-
 
 ### Creating a Dataproc cluster
 
@@ -353,7 +341,7 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
     export PROJECT=$(gcloud info --format='value(config.project)')
     export ZONE=$(gcloud info --format='value(config.properties.compute.zone.value)')
     export REGION=${ZONE%-*}
-    export BROKER_URI=$(gcloud run services describe broker-server --platform managed --region ${REGION} --format "value(status.url)")
+    export BROKER_URI=$(gcloud run services describe broker-server --platform managed --project ${PROJECT} --region ${REGION} --format "value(status.url)")
     export BROKER_PRINCIPAL="broker"
     export BROKER_VERSION=$(cat VERSION)
     export ASSETS_BUCKET="gs://${PROJECT}-assets"
@@ -403,35 +391,39 @@ In this section, you create a Dataproc cluster that can be used to run Hadoop jo
 
 The broker service needs a keytab to authenticate incoming requests.
 
-1.  Download the keytab from the Dataproc cluster's realm:
+1. Download the keytab from the Dataproc cluster's realm:
 
     ```shell
     gcloud compute ssh test-cluster-m \
       -- "sudo cat /etc/security/keytab/broker.keytab" | perl -pne 's/\r$//g' > broker.keytab
     ```
 
-2.  Upload the keytab to Secret Manager:
+2. Upload the keytab to Secret Manager:
 
     ```shell
     gcloud secrets create keytab --replication-policy="automatic"
     gcloud secrets versions add keytab --data-file=broker.keytab
     ```
 
-3.  You can now delete the keytab from your local filesystem:
+3. You can now delete the keytab from your local filesystem:
 
     ```shell
     rm broker.keytab
     ```
     
-4.  Restart the broker service to let it load the keytab:
+4. Restart the broker service to let it load the keytab:
 
     ```shell
-    gcloud run services describe broker-server --format export --region $REGION > broker-server.export.yaml \
-      && gcloud run services replace broker-server.export.yaml \
-      && rm broker-server.export.yaml
+    gcloud run deploy broker-server \
+     --image ${REGION}-docker.pkg.dev/${PROJECT}/gcp-token-broker/broker-server:latest \
+     --platform managed \
+     --no-allow-unauthenticated \
+     --region ${REGION} \
+     --service-account broker@${PROJECT}.iam.gserviceaccount.com \
+     --set-env-vars=CONFIG_BASE64=$(base64 deploy/${PROJECT}/broker-server.conf | tr -d '\n')
     ```
-    
-5.  You are now ready to do some testing. Refer to the [tutorials](../tutorials/index.md) section to run
+
+5. You are now ready to do some testing. Refer to the [tutorials](../tutorials/index.md) section to run
     some sample Hadoop jobs and try out the broker's functionality.
 
 ## Broker application logs
@@ -447,7 +439,6 @@ Follow these steps to view the broker application logs in Stackdriver:
     ```conf
     resource.type = "cloud_run_revision"
     resource.labels.service_name = "broker-server"
-    resource.labels.location = "us-central1"
     severity>=DEFAULT
     ```
 

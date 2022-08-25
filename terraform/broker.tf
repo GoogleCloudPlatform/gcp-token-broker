@@ -116,7 +116,7 @@ user-mapping.rules=[{
 user-mapping.rules=[
   {
     if: "realm == '${var.origin_realm}'",
-    then: "primary + '@jphalip.joonix.net'"
+    then: "primary + '@${var.gsuite_domain}'"
   },
   # Be cautious when using short names (i.e. without a realm).
   # See documentation at https://github.com/GoogleCloudPlatform/gcp-token-broker/blob/master/docs/concepts/user-mapping.md#important-warning-about-short-names

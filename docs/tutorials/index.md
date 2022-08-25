@@ -49,7 +49,7 @@ java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.commands.G
 
 ```shell
 sudo kinit "hive/$(hostname -f)@DATAPROC_REALM" -k -t  /etc/security/keytab/hive.service.keytab
-sudo java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.commands.GetAccessToken -u gs://example -i alice@JPHALIP.JOONIX.NET
+sudo java -cp $(hadoop classpath) com.google.cloud.broker.client.hadoop.fs.commands.GetAccessToken -u gs://example -i alice@$REALM
 ```
 
 ### Test delegated authentication
