@@ -1,8 +1,4 @@
-# GCP Token Broker (Deprecated)
-
-## Deprecation notice
-
-This library is deprecated. For alternatives, please refer to Google Cloud's [Hadoop Connectors](https://github.com/GoogleCloudDataproc/hadoop-connectors), the [Dataproc security configuration](https://cloud.google.com/dataproc/docs/concepts/configuring-clusters/security) and [Dataproc's Kerberos authentication for Ranger](https://cloud.google.com/dataproc/docs/concepts/components/ranger-w-kerberos).
+# GCP Token Broker
 
 ## About this project
 
