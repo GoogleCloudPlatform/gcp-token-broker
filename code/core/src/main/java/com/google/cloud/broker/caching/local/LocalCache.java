@@ -11,32 +11,28 @@
 
 package com.google.cloud.broker.caching.local;
 
+import java.util.concurrent.TimeUnit;
 import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
 
-import java.util.concurrent.TimeUnit;
-
-
 public class LocalCache {
 
-    private static ExpiringMap<String, Object> cache = ExpiringMap.builder()
-            .variableExpiration()
-            .build();
+  private static ExpiringMap<String, Object> cache =
+      ExpiringMap.builder().variableExpiration().build();
 
-    public static Object get(String key) {
-        return cache.get(key);
-    }
+  public static Object get(String key) {
+    return cache.get(key);
+  }
 
-    public static void set(String key, Object value) {
-        cache.put(key, value);
-    }
+  public static void set(String key, Object value) {
+    cache.put(key, value);
+  }
 
-    public static void set(String key, Object value, int expireIn) {
-        cache.put(key, value, ExpirationPolicy.CREATED, expireIn, TimeUnit.SECONDS);
-    }
+  public static void set(String key, Object value, int expireIn) {
+    cache.put(key, value, ExpirationPolicy.CREATED, expireIn, TimeUnit.SECONDS);
+  }
 
-    public static void delete(String key) {
-        cache.remove(key);
-    }
-
+  public static void delete(String key) {
+    cache.remove(key);
+  }
 }

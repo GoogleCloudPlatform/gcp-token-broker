@@ -11,45 +11,43 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
-import java.lang.invoke.MethodHandles;
-import java.util.List;
-
 import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
 import com.google.cloud.broker.database.models.Model;
 import com.google.cloud.broker.oauth.RefreshToken;
 import com.google.cloud.broker.oauth.RefreshTokenUtils;
 import com.google.cloud.broker.utils.TimeUtils;
+import java.lang.invoke.MethodHandles;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RevokeRefreshTokens {
 
-    private static final Class<?> klass = MethodHandles.lookup().lookupClass();
-    private static final Logger logger = LoggerFactory.getLogger(klass);
+  private static final Class<?> klass = MethodHandles.lookup().lookupClass();
+  private static final Logger logger = LoggerFactory.getLogger(klass);
 
-    public static void main(String[] args) {
-        long numHours;
-        if (args.length == 1) {
-            numHours = Long.parseLong(args[0]);
-        }
-        else {
-            throw new IllegalArgumentException("Wrong arguments");
-        }
-        long numMilliseconds = numHours * 3600 * 1000;
-        long now = TimeUtils.currentTimeMillis();
-        List<Model> models = AbstractDatabaseBackend.getInstance().getAll(RefreshToken.class);
-        int numRevokedToken = 0;
-        for (Model model : models) {
-            RefreshToken token = (RefreshToken) model;
-            if (now >= token.getCreationTime() + numMilliseconds) {
-                // Revoke the token
-                RefreshTokenUtils.revoke(token);
-                // Delete the token from the database
-                AbstractDatabaseBackend.getInstance().delete(token);
-                numRevokedToken++;
-            }
-        }
-        logger.info(klass.getSimpleName() + " - Revoked and deleted refresh token(s): " + numRevokedToken);
+  public static void main(String[] args) {
+    long numHours;
+    if (args.length == 1) {
+      numHours = Long.parseLong(args[0]);
+    } else {
+      throw new IllegalArgumentException("Wrong arguments");
     }
-
+    long numMilliseconds = numHours * 3600 * 1000;
+    long now = TimeUtils.currentTimeMillis();
+    List<Model> models = AbstractDatabaseBackend.getInstance().getAll(RefreshToken.class);
+    int numRevokedToken = 0;
+    for (Model model : models) {
+      RefreshToken token = (RefreshToken) model;
+      if (now >= token.getCreationTime() + numMilliseconds) {
+        // Revoke the token
+        RefreshTokenUtils.revoke(token);
+        // Delete the token from the database
+        AbstractDatabaseBackend.getInstance().delete(token);
+        numRevokedToken++;
+      }
+    }
+    logger.info(
+        klass.getSimpleName() + " - Revoked and deleted refresh token(s): " + numRevokedToken);
+  }
 }

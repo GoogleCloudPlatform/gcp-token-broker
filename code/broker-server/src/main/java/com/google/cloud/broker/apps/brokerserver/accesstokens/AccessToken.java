@@ -16,23 +16,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AccessToken {
 
-    private String value;
-    private long expiresAt;
+  private String value;
+  private long expiresAt;
 
-    @JsonCreator
-    public AccessToken(@JsonProperty("value") String value, @JsonProperty("expiresAt") long expiresAt) {
-        this.value = value;
-        this.expiresAt = expiresAt;
-    }
+  @JsonCreator
+  public AccessToken(
+      @JsonProperty("value") String value, @JsonProperty("expiresAt") long expiresAt) {
+    this.value = value;
+    this.expiresAt = expiresAt;
+  }
 
-    @JsonProperty("value")
-    public String getValue() {
-        return value;
-    }
+  @JsonProperty("value")
+  public String getValue() {
+    return value;
+  }
 
-    @JsonProperty("expiresAt")
-    public long getExpiresAt() {
-        return expiresAt;
-    }
-
+  @JsonProperty("expiresAt")
+  public long getExpiresAt() {
+    return expiresAt;
+  }
 }

@@ -24,65 +24,71 @@ import picocli.CommandLine.Option;
 
 @Command(
     name = "GetSessionToken",
-    description = "Retrieves a broker session token for delegated authentication"
-)
+    description = "Retrieves a broker session token for delegated authentication")
 public class GetSessionToken implements Runnable {
 
-    @Option(names = {"-u", "--uri"}, required = true, description = "GCS URI for the access token")
-    private String uri;
+  @Option(
+      names = {"-u", "--uri"},
+      required = true,
+      description = "GCS URI for the access token")
+  private String uri;
 
-    @Option(names = {"-r", "--renewer"}, required = true, description = "Renewer for the session token")
-    private String renewer;
+  @Option(
+      names = {"-r", "--renewer"},
+      required = true,
+      description = "Renewer for the session token")
+  private String renewer;
 
-    @Option(names = {"-f", "--session-token-file"}, required = true, description = "Output file for the session token")
-    private String file;
+  @Option(
+      names = {"-f", "--session-token-file"},
+      required = true,
+      description = "Output file for the session token")
+  private String file;
 
-    @Option(names = {"-h", "--help"}, usageHelp = true, description = "Display this help")
-    boolean help;
+  @Option(
+      names = {"-h", "--help"},
+      usageHelp = true,
+      description = "Display this help")
+  boolean help;
 
-    private void sendRequest(Configuration config) {
-        String bucket = CommandUtils.extractBucketNameFromGcsUri(uri);
-        Text service = new Text(bucket);
-        UserGroupInformation ugi;
-        try {
-            ugi = UserGroupInformation.getCurrentUser();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        String user = ugi.getUserName();
-        Text owner = new Text(user);
-        Text realUser = null;
-        if (ugi.getRealUser() != null) {
-            realUser = new Text(ugi.getRealUser().getUserName());
-        }
-        BrokerTokenIdentifier identifier = new BrokerTokenIdentifier(
-            config,
-            owner,
-            new Text(renewer),
-            realUser,
-            service);
-        String sessionToken = identifier.getSessionToken();
-        BufferedWriter writer;
-        try {
-            writer = new BufferedWriter(new FileWriter(file));
-            writer.write(sessionToken);
-            writer.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("\n> Session token successfully written to:\n");
-        System.out.println(file);
+  private void sendRequest(Configuration config) {
+    String bucket = CommandUtils.extractBucketNameFromGcsUri(uri);
+    Text service = new Text(bucket);
+    UserGroupInformation ugi;
+    try {
+      ugi = UserGroupInformation.getCurrentUser();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-
-    @Override
-    public void run() {
-        Configuration config = new Configuration();
-        CommandUtils.showConfig(config);
-        sendRequest(config);
+    String user = ugi.getUserName();
+    Text owner = new Text(user);
+    Text realUser = null;
+    if (ugi.getRealUser() != null) {
+      realUser = new Text(ugi.getRealUser().getUserName());
     }
-
-    public static void main(String[] args) {
-        CommandLine.run(new GetSessionToken(), args);
+    BrokerTokenIdentifier identifier =
+        new BrokerTokenIdentifier(config, owner, new Text(renewer), realUser, service);
+    String sessionToken = identifier.getSessionToken();
+    BufferedWriter writer;
+    try {
+      writer = new BufferedWriter(new FileWriter(file));
+      writer.write(sessionToken);
+      writer.close();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
+    System.out.println("\n> Session token successfully written to:\n");
+    System.out.println(file);
+  }
 
+  @Override
+  public void run() {
+    Configuration config = new Configuration();
+    CommandUtils.showConfig(config);
+    sendRequest(config);
+  }
+
+  public static void main(String[] args) {
+    CommandLine.run(new GetSessionToken(), args);
+  }
 }

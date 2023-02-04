@@ -11,51 +11,46 @@
 
 package com.google.cloud.broker.apps.brokerserver.sessions;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.google.cloud.broker.caching.CacheFetcher;
 import com.google.cloud.broker.settings.AppSettings;
-
+import java.io.IOException;
 
 public class SessionCacheFetcher extends CacheFetcher {
 
-    private String rawToken;
+  private String rawToken;
 
+  public SessionCacheFetcher(String rawToken) {
+    this.rawToken = rawToken;
+    // Disallow remote cache because the cache key contains sensitive information
+    // (i.e. the session tokens)
+    this.allowRemoteCache = false;
+  }
 
-    public SessionCacheFetcher(String rawToken) {
-        this.rawToken = rawToken;
-        // Disallow remote cache because the cache key contains sensitive information
-        // (i.e. the session tokens)
-        this.allowRemoteCache = false;
-    }
+  @Override
+  protected String getCacheKey() {
+    return String.format("session-%s", rawToken);
+  }
 
-    @Override
-    protected String getCacheKey() {
-        return String.format("session-%s", rawToken);
-    }
+  @Override
+  protected int getLocalCacheTime() {
+    return AppSettings.getInstance().getInt(AppSettings.SESSION_LOCAL_CACHE_TIME);
+  }
 
-    @Override
-    protected int getLocalCacheTime() {
-        return AppSettings.getInstance().getInt(AppSettings.SESSION_LOCAL_CACHE_TIME);
-    }
+  @Override
+  protected int getRemoteCacheTime() {
+    // Remote cache not enabled
+    throw new UnsupportedOperationException();
+  }
 
-    @Override
-    protected int getRemoteCacheTime() {
-        // Remote cache not enabled
-        throw new UnsupportedOperationException();
-    }
+  @Override
+  protected Object computeResult() {
+    return SessionTokenUtils.getSessionFromRawToken(rawToken);
+  }
 
-    @Override
-    protected Object computeResult() {
-        return SessionTokenUtils.getSessionFromRawToken(rawToken);
-    }
-
-    @Override
-    protected Object fromJson(String json) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readValue(json, Session.class);
-    }
-
+  @Override
+  protected Object fromJson(String json) throws IOException {
+    ObjectMapper objectMapper = new ObjectMapper();
+    return objectMapper.readValue(json, Session.class);
+  }
 }

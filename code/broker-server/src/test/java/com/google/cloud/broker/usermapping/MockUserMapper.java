@@ -13,9 +13,8 @@ package com.google.cloud.broker.usermapping;
 
 public class MockUserMapper extends AbstractUserMapper {
 
-    @Override
-    public String map(String name) throws IllegalArgumentException {
-        return name.split("@")[0] + "@altostrat.com";
-    }
-
+  @Override
+  public String map(String name) throws IllegalArgumentException {
+    return name.split("@")[0] + "@altostrat.com";
+  }
 }

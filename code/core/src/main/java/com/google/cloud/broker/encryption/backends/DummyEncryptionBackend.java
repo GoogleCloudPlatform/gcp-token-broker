@@ -14,24 +14,23 @@ package com.google.cloud.broker.encryption.backends;
 import com.google.cloud.broker.checks.CheckResult;
 
 /**
- Dummy encryption backend that does not encrypt nor decrypt anything.
- Use only for testing. Do NOT use in production!
+ * Dummy encryption backend that does not encrypt nor decrypt anything. Use only for testing. Do NOT
+ * use in production!
  */
 public class DummyEncryptionBackend extends AbstractEncryptionBackend {
 
-    @Override
-    public byte[] decrypt(byte[] cipherText) {
-        return cipherText;
-    }
+  @Override
+  public byte[] decrypt(byte[] cipherText) {
+    return cipherText;
+  }
 
-    @Override
-    public byte[] encrypt(byte[] plainText) {
-        return plainText;
-    }
+  @Override
+  public byte[] encrypt(byte[] plainText) {
+    return plainText;
+  }
 
-    @Override
-    public CheckResult checkConnection() {
-        return new CheckResult(true);
-    }
-
+  @Override
+  public CheckResult checkConnection() {
+    return new CheckResult(true);
+  }
 }

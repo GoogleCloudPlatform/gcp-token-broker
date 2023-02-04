@@ -11,42 +11,40 @@
 
 package com.google.cloud.broker.client.hadoop.fs;
 
+import com.google.cloud.broker.client.connect.BrokerServerInfo;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 
-import com.google.cloud.broker.client.connect.BrokerServerInfo;
-
 public class Utils {
 
-    public final static String CONFIG_ACCESS_BOUNDARY_ENABLED = "gcp.token.broker.access.boundary.enabled";
-    public final static String CONFIG_URI = "gcp.token.broker.uri";
-    public final static String CONFIG_PRINCIPAL = "gcp.token.broker.kerberos.principal";
-    public final static String CONFIG_CERTIFICATE = "gcp.token.broker.tls.certificate";
-    public final static String CONFIG_CERTIFICATE_PATH = "gcp.token.broker.tls.certificate.path";
-    public final static String CONFIG_USE_APP_DEFAULT_CREDENTIALS = "gcp.token.broker.use.app.default.credentials";
+  public static final String CONFIG_ACCESS_BOUNDARY_ENABLED =
+      "gcp.token.broker.access.boundary.enabled";
+  public static final String CONFIG_URI = "gcp.token.broker.uri";
+  public static final String CONFIG_PRINCIPAL = "gcp.token.broker.kerberos.principal";
+  public static final String CONFIG_CERTIFICATE = "gcp.token.broker.tls.certificate";
+  public static final String CONFIG_CERTIFICATE_PATH = "gcp.token.broker.tls.certificate.path";
+  public static final String CONFIG_USE_APP_DEFAULT_CREDENTIALS =
+      "gcp.token.broker.use.app.default.credentials";
 
-    public static String getTarget(Configuration config, Text service) {
-        boolean accessBoundaryEnabled = Boolean.parseBoolean(
-            config.get(CONFIG_ACCESS_BOUNDARY_ENABLED, "false"));
-        if (accessBoundaryEnabled) {
-            String uri = service.toString();
-            if (uri.startsWith("gs://")) {
-                uri = "//storage.googleapis.com/projects/_/buckets/" + uri.substring(5);
-            }
-            return uri;
-        }
-        else {
-            return "";
-        }
+  public static String getTarget(Configuration config, Text service) {
+    boolean accessBoundaryEnabled =
+        Boolean.parseBoolean(config.get(CONFIG_ACCESS_BOUNDARY_ENABLED, "false"));
+    if (accessBoundaryEnabled) {
+      String uri = service.toString();
+      if (uri.startsWith("gs://")) {
+        uri = "//storage.googleapis.com/projects/_/buckets/" + uri.substring(5);
+      }
+      return uri;
+    } else {
+      return "";
     }
+  }
 
-    public static BrokerServerInfo getBrokerDetailsFromConfig(Configuration config) {
-        return new BrokerServerInfo(
-            config.get(CONFIG_URI),
-            config.get(CONFIG_PRINCIPAL),
-            config.get(CONFIG_CERTIFICATE),
-            config.get(CONFIG_CERTIFICATE_PATH)
-        );
-    }
-
+  public static BrokerServerInfo getBrokerDetailsFromConfig(Configuration config) {
+    return new BrokerServerInfo(
+        config.get(CONFIG_URI),
+        config.get(CONFIG_PRINCIPAL),
+        config.get(CONFIG_CERTIFICATE),
+        config.get(CONFIG_CERTIFICATE_PATH));
+  }
 }

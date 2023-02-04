@@ -12,25 +12,25 @@
 package com.google.cloud.broker.client.credentials;
 
 import com.google.auth.oauth2.AccessToken;
-
-import com.google.cloud.broker.client.endpoints.GetAccessToken;
 import com.google.cloud.broker.client.connect.BrokerServerInfo;
+import com.google.cloud.broker.client.endpoints.GetAccessToken;
 
 public class BrokerKerberosCredentials extends BrokerBaseCredentials {
 
-    private String owner;
-    private Iterable<String> scopes;
-    private String target;
+  private String owner;
+  private Iterable<String> scopes;
+  private String target;
 
-    public BrokerKerberosCredentials(BrokerServerInfo serverInfo, String owner, Iterable<String> scopes, String target) {
-        super(serverInfo);
-        this.owner = owner;
-        this.scopes = scopes;
-        this.target = target;
-    }
+  public BrokerKerberosCredentials(
+      BrokerServerInfo serverInfo, String owner, Iterable<String> scopes, String target) {
+    super(serverInfo);
+    this.owner = owner;
+    this.scopes = scopes;
+    this.target = target;
+  }
 
-    @Override
-    public AccessToken refreshAccessToken() {
-        return GetAccessToken.submitDirectAuth(serverInfo, owner, scopes, target);
-    }
+  @Override
+  public AccessToken refreshAccessToken() {
+    return GetAccessToken.submitDirectAuth(serverInfo, owner, scopes, target);
+  }
 }

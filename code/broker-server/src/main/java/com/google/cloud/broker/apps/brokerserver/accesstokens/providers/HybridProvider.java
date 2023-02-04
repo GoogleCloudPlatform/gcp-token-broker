@@ -11,31 +11,28 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
-import java.util.List;
-
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
+import java.util.List;
 
 public class HybridProvider extends AbstractProvider {
 
-    AbstractUserProvider userProvider;
-    ServiceAccountProvider serviceAccountProvider;
+  AbstractUserProvider userProvider;
+  ServiceAccountProvider serviceAccountProvider;
 
-    public HybridProvider() {
-        String className = AppSettings.getInstance().getString(AppSettings.HYBRID_USER_PROVIDER);
-        userProvider = (AbstractUserProvider) InstanceUtils.invokeConstructor(className);
-        serviceAccountProvider = new ServiceAccountProvider();
+  public HybridProvider() {
+    String className = AppSettings.getInstance().getString(AppSettings.HYBRID_USER_PROVIDER);
+    userProvider = (AbstractUserProvider) InstanceUtils.invokeConstructor(className);
+    serviceAccountProvider = new ServiceAccountProvider();
+  }
+
+  @Override
+  public AccessToken getAccessToken(String googleIdentity, List<String> scopes) {
+    if (googleIdentity.endsWith(".iam.gserviceaccount.com")) {
+      return serviceAccountProvider.getAccessToken(googleIdentity, scopes);
+    } else {
+      return userProvider.getAccessToken(googleIdentity, scopes);
     }
-
-    @Override
-    public AccessToken getAccessToken(String googleIdentity, List<String> scopes) {
-        if (googleIdentity.endsWith(".iam.gserviceaccount.com")) {
-            return serviceAccountProvider.getAccessToken(googleIdentity, scopes);
-        }
-        else {
-            return userProvider.getAccessToken(googleIdentity, scopes);
-        }
-    }
-
+  }
 }

@@ -14,26 +14,28 @@ package com.google.cloud.broker.apps.brokerserver.sessions;
 import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
 import io.grpc.Status;
 
-
 public class SessionAuthenticator {
 
-    public Session authenticateSession() {
-        String authorizationHeader = AuthorizationHeaderServerInterceptor.BROKER_AUTHORIZATION_CONTEXT_KEY.get();
+  public Session authenticateSession() {
+    String authorizationHeader =
+        AuthorizationHeaderServerInterceptor.BROKER_AUTHORIZATION_CONTEXT_KEY.get();
 
-        // Make sure this is indeed
-        if (! authorizationHeader.startsWith("BrokerSession ")) {
-            return null;
-        }
-
-        // Extract the session token from the authorization header
-        String token = authorizationHeader.split("\\s")[1];
-
-        Session session = (Session) new SessionCacheFetcher(token).fetch();
-
-        if (session.isExpired()) {
-            throw Status.UNAUTHENTICATED.withDescription("Expired session ID: " + session.getId()).asRuntimeException();
-        }
-
-        return session;
+    // Make sure this is indeed
+    if (!authorizationHeader.startsWith("BrokerSession ")) {
+      return null;
     }
+
+    // Extract the session token from the authorization header
+    String token = authorizationHeader.split("\\s")[1];
+
+    Session session = (Session) new SessionCacheFetcher(token).fetch();
+
+    if (session.isExpired()) {
+      throw Status.UNAUTHENTICATED
+          .withDescription("Expired session ID: " + session.getId())
+          .asRuntimeException();
+    }
+
+    return session;
+  }
 }

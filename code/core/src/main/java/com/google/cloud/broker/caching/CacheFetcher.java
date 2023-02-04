@@ -11,101 +11,94 @@
 
 package com.google.cloud.broker.caching;
 
-import java.io.IOException;
-import java.util.concurrent.locks.Lock;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.google.cloud.broker.caching.local.LocalCache;
 import com.google.cloud.broker.caching.remote.AbstractRemoteCache;
 import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
-
+import java.io.IOException;
+import java.util.concurrent.locks.Lock;
 
 public abstract class CacheFetcher {
 
-    protected boolean allowRemoteCache = true;
+  protected boolean allowRemoteCache = true;
 
+  public Object fetch() {
+    String cacheKey = getCacheKey();
 
-    public Object fetch() {
-        String cacheKey = getCacheKey();
-
-        // First check in local cache
-        Object result = LocalCache.get(cacheKey);
-        if (result != null) {
-            return result;
-        }
-
-        // Not found in local cache, so look in remote cache.
-        if (allowRemoteCache) {
-            AbstractRemoteCache cache = AbstractRemoteCache.getInstance();
-            byte[] encryptedValue = cache.get(cacheKey);
-            if (encryptedValue != null) {
-                // Cache hit... Let's load the value.
-                String json = new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
-                try {
-                    result = fromJson(json);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            else {
-                // Cache miss...
-                // Start by acquiring a lock to avoid cache stampede
-                Lock lock = cache.acquireLock(cacheKey + "_lock");
-
-                try {
-                    // Check again if there's still no value
-                    encryptedValue = cache.get(cacheKey);
-                    if (encryptedValue != null) {
-                        // This time it's a cache hit. The value must have been generated
-                        // by a competing thread. So we just load the value.
-                        String json = new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
-                        try {
-                            result = fromJson(json);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    } else {
-                        // Compute the result
-                        result = computeResult();
-                        // Encrypt and cache the value for possible future requests
-                        String json = null;
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        try {
-                            json = objectMapper.writeValueAsString(result);
-                        } catch (JsonProcessingException e) {
-                            throw new RuntimeException(e);
-                        }
-                        encryptedValue = AbstractEncryptionBackend.getInstance().encrypt(json.getBytes());
-                        cache.set(cacheKey, encryptedValue, getRemoteCacheTime());
-                    }
-                }
-                finally {
-                    // Release the lock
-                    lock.unlock();
-                }
-            }
-        }
-        else {
-            // Remote cache is disabled, so simply compute the result.
-            result = computeResult();
-        }
-
-        // Add unencrypted value to local cache
-        LocalCache.set(cacheKey, result, getLocalCacheTime());
-
-        return result;
+    // First check in local cache
+    Object result = LocalCache.get(cacheKey);
+    if (result != null) {
+      return result;
     }
 
-    protected abstract String getCacheKey();
+    // Not found in local cache, so look in remote cache.
+    if (allowRemoteCache) {
+      AbstractRemoteCache cache = AbstractRemoteCache.getInstance();
+      byte[] encryptedValue = cache.get(cacheKey);
+      if (encryptedValue != null) {
+        // Cache hit... Let's load the value.
+        String json = new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
+        try {
+          result = fromJson(json);
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      } else {
+        // Cache miss...
+        // Start by acquiring a lock to avoid cache stampede
+        Lock lock = cache.acquireLock(cacheKey + "_lock");
 
-    protected abstract int getLocalCacheTime();
+        try {
+          // Check again if there's still no value
+          encryptedValue = cache.get(cacheKey);
+          if (encryptedValue != null) {
+            // This time it's a cache hit. The value must have been generated
+            // by a competing thread. So we just load the value.
+            String json =
+                new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
+            try {
+              result = fromJson(json);
+            } catch (IOException e) {
+              throw new RuntimeException(e);
+            }
+          } else {
+            // Compute the result
+            result = computeResult();
+            // Encrypt and cache the value for possible future requests
+            String json = null;
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+              json = objectMapper.writeValueAsString(result);
+            } catch (JsonProcessingException e) {
+              throw new RuntimeException(e);
+            }
+            encryptedValue = AbstractEncryptionBackend.getInstance().encrypt(json.getBytes());
+            cache.set(cacheKey, encryptedValue, getRemoteCacheTime());
+          }
+        } finally {
+          // Release the lock
+          lock.unlock();
+        }
+      }
+    } else {
+      // Remote cache is disabled, so simply compute the result.
+      result = computeResult();
+    }
 
-    protected abstract int getRemoteCacheTime();
+    // Add unencrypted value to local cache
+    LocalCache.set(cacheKey, result, getLocalCacheTime());
 
-    protected abstract Object computeResult();
+    return result;
+  }
 
-    protected abstract Object fromJson(String json) throws IOException;
+  protected abstract String getCacheKey();
 
+  protected abstract int getLocalCacheTime();
+
+  protected abstract int getRemoteCacheTime();
+
+  protected abstract Object computeResult();
+
+  protected abstract Object fromJson(String json) throws IOException;
 }

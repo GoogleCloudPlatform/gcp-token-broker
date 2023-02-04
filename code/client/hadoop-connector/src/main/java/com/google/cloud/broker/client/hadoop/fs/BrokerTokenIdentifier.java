@@ -11,71 +11,72 @@
 
 package com.google.cloud.broker.client.hadoop.fs;
 
+import com.google.cloud.broker.client.connect.BrokerServerInfo;
+import com.google.cloud.broker.client.endpoints.GetSessionToken;
+import com.google.cloud.hadoop.fs.gcs.auth.DelegationTokenIOException;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.security.PrivilegedAction;
 import java.util.Collections;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenIdentifier;
-import com.google.cloud.hadoop.fs.gcs.auth.DelegationTokenIOException;
-
-import com.google.cloud.broker.client.endpoints.GetSessionToken;
-import com.google.cloud.broker.client.connect.BrokerServerInfo;
-
 
 public class BrokerTokenIdentifier extends DelegationTokenIdentifier {
 
-    public static final Text KIND = new Text("GCPBrokerSessionToken");
-    static final String GCS_SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
-    private String sessionToken;
+  public static final Text KIND = new Text("GCPBrokerSessionToken");
+  static final String GCS_SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
+  private String sessionToken;
 
-    public BrokerTokenIdentifier() {
-        super(KIND);
+  public BrokerTokenIdentifier() {
+    super(KIND);
+  }
+
+  public BrokerTokenIdentifier(
+      Configuration config, Text owner, Text renewer, Text realUser, Text service) {
+    super(KIND, owner, renewer, realUser);
+    UserGroupInformation currentUser;
+    UserGroupInformation loginUser;
+    try {
+      currentUser = UserGroupInformation.getCurrentUser();
+      loginUser = UserGroupInformation.getLoginUser();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
 
-    public BrokerTokenIdentifier(Configuration config, Text owner, Text renewer, Text realUser, Text service) {
-        super(KIND, owner, renewer, realUser);
-        UserGroupInformation currentUser;
-        UserGroupInformation loginUser;
-        try {
-            currentUser = UserGroupInformation.getCurrentUser();
-            loginUser = UserGroupInformation.getLoginUser();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    BrokerServerInfo serverInfo = Utils.getBrokerDetailsFromConfig(config);
+    setSessionToken(
+        loginUser.doAs(
+            (PrivilegedAction<String>)
+                () -> {
+                  return GetSessionToken.submit(
+                      serverInfo,
+                      currentUser.getUserName(),
+                      renewer.toString(),
+                      Collections.singleton(GCS_SCOPE),
+                      Utils.getTarget(config, service));
+                }));
+  }
 
-        BrokerServerInfo serverInfo = Utils.getBrokerDetailsFromConfig(config);
-        setSessionToken(loginUser.doAs((PrivilegedAction<String>) () -> {
-            return GetSessionToken.submit(
-                serverInfo,
-                currentUser.getUserName(),
-                renewer.toString(),
-                Collections.singleton(GCS_SCOPE),
-                Utils.getTarget(config, service));
-        }));
-    }
+  @Override
+  public void write(DataOutput out) throws IOException {
+    super.write(out);
+    Text.writeString(out, sessionToken);
+  }
 
-    @Override
-    public void write(DataOutput out) throws IOException {
-        super.write(out);
-        Text.writeString(out, sessionToken);
-    }
+  @Override
+  public void readFields(DataInput in) throws DelegationTokenIOException, IOException {
+    super.readFields(in);
+    this.sessionToken = Text.readString(in, 32 * 1024);
+  }
 
-    @Override
-    public void readFields(DataInput in) throws DelegationTokenIOException, IOException {
-        super.readFields(in);
-        this.sessionToken = Text.readString(in, 32 * 1024);
-    }
+  public void setSessionToken(String sessionToken) {
+    this.sessionToken = sessionToken;
+  }
 
-    public void setSessionToken(String sessionToken) {
-        this.sessionToken = sessionToken;
-    }
-
-    public String getSessionToken(){
-        return sessionToken;
-    }
+  public String getSessionToken() {
+    return sessionToken;
+  }
 }

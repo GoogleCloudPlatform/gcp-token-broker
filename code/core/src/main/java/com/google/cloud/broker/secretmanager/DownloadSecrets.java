@@ -13,8 +13,7 @@ package com.google.cloud.broker.secretmanager;
 
 public class DownloadSecrets {
 
-    public static void main(String[] args) {
-        SecretManager.downloadSecrets();
-    }
-
+  public static void main(String[] args) {
+    SecretManager.downloadSecrets();
+  }
 }

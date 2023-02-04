@@ -67,7 +67,7 @@
 
 ## 0.6.0 (December 13, 2019)
 
-- Moved Authorizer and Broker server code to the `com.google.cloud.broker.apps` package. 
+- Moved Authorizer and Broker server code to the `com.google.cloud.broker.apps` package.
 - Renamed all settings to fit better Typesafe Config conventions. Settings can now be passed as configuration files.
 - Moved providers to the `com.google.cloud.broker.apps.brokerserver.accesstokens.providers` package.
 - Renamed the broker service's Maven artifact from `broker` to `broker-server`.

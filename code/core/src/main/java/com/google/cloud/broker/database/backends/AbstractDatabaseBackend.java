@@ -11,35 +11,41 @@
 
 package com.google.cloud.broker.database.backends;
 
-import java.util.List;
-
-import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.checks.CheckResult;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.models.Model;
+import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
-import com.google.cloud.broker.checks.CheckResult;
+import java.util.List;
 
 public abstract class AbstractDatabaseBackend {
 
-    private static AbstractDatabaseBackend instance;
+  private static AbstractDatabaseBackend instance;
 
-    public abstract List<Model> getAll(Class modelClass);
-    public abstract Model get(Class modelClass, String objectId) throws DatabaseObjectNotFound;
-    public abstract void save(Model model);
-    public abstract void delete(Model model);
-    public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime) {
-        return deleteExpiredItems(modelClass, field, cutoffTime, null);
+  public abstract List<Model> getAll(Class modelClass);
+
+  public abstract Model get(Class modelClass, String objectId) throws DatabaseObjectNotFound;
+
+  public abstract void save(Model model);
+
+  public abstract void delete(Model model);
+
+  public int deleteExpiredItems(Class modelClass, String field, Long cutoffTime) {
+    return deleteExpiredItems(modelClass, field, cutoffTime, null);
+  }
+
+  public abstract int deleteExpiredItems(
+      Class modelClass, String field, Long cutoffTime, Integer numItems);
+
+  public abstract void initializeDatabase();
+
+  public abstract CheckResult checkConnection();
+
+  public static AbstractDatabaseBackend getInstance() {
+    String className = AppSettings.getInstance().getString(AppSettings.DATABASE_BACKEND);
+    if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
+      instance = (AbstractDatabaseBackend) InstanceUtils.invokeConstructor(className);
     }
-    public abstract int deleteExpiredItems(Class modelClass, String field, Long cutoffTime, Integer numItems);
-    public abstract void initializeDatabase();
-    public abstract CheckResult checkConnection();
-
-    public static AbstractDatabaseBackend getInstance() {
-        String className = AppSettings.getInstance().getString(AppSettings.DATABASE_BACKEND);
-        if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
-            instance = (AbstractDatabaseBackend) InstanceUtils.invokeConstructor(className);
-        }
-        return instance;
-    }
-
+    return instance;
+  }
 }

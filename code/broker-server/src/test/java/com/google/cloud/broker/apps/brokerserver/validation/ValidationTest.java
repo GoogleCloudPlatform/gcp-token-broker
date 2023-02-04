@@ -11,73 +11,72 @@
 
 package com.google.cloud.broker.apps.brokerserver.validation;
 
-import java.util.List;
-import java.util.Map;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import org.junit.*;
 
+import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.settings.SettingsOverride;
+import com.google.cloud.broker.validation.EmailValidation;
 import com.typesafe.config.ConfigFactory;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
-
-import com.google.cloud.broker.settings.SettingsOverride;
-import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.validation.EmailValidation;
+import java.util.List;
+import java.util.Map;
+import org.junit.*;
 
 public class ValidationTest {
 
-    private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
-    private static final String BIGQUERY = "https://www.googleapis.com/auth/bigquery";
-    private static final String BIGTABLE = "https://www.googleapis.com/auth/bigtable.data.readonly";
-    private static final Object scopesAllowlist = ConfigFactory.parseString(
-        AppSettings.SCOPES_ALLOWLIST + "=[\"" + GCS + "\", \"" + BIGQUERY + "\"]"
-    ).getAnyRef(AppSettings.SCOPES_ALLOWLIST);
+  private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
+  private static final String BIGQUERY = "https://www.googleapis.com/auth/bigquery";
+  private static final String BIGTABLE = "https://www.googleapis.com/auth/bigtable.data.readonly";
+  private static final Object scopesAllowlist =
+      ConfigFactory.parseString(
+              AppSettings.SCOPES_ALLOWLIST + "=[\"" + GCS + "\", \"" + BIGQUERY + "\"]")
+          .getAnyRef(AppSettings.SCOPES_ALLOWLIST);
 
-    @ClassRule
-    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
-        AppSettings.SCOPES_ALLOWLIST, scopesAllowlist
-    ));
+  @ClassRule
+  public static SettingsOverride settingsOverride =
+      new SettingsOverride(Map.of(AppSettings.SCOPES_ALLOWLIST, scopesAllowlist));
 
-    @Test
-    public void testrequireProperty() {
-        GrpcRequestValidation.validateParameterNotEmpty("my-param", "Request must provide `%s`");
-        try {
-            GrpcRequestValidation.validateParameterNotEmpty("my-param", "");
-            fail("StatusRuntimeException not thrown");
-        } catch (StatusRuntimeException e) {
-            assertEquals(Status.INVALID_ARGUMENT.getCode(), e.getStatus().getCode());
-            assertEquals("Request must provide `my-param`", e.getStatus().getDescription());
-        }
+  @Test
+  public void testrequireProperty() {
+    GrpcRequestValidation.validateParameterNotEmpty("my-param", "Request must provide `%s`");
+    try {
+      GrpcRequestValidation.validateParameterNotEmpty("my-param", "");
+      fail("StatusRuntimeException not thrown");
+    } catch (StatusRuntimeException e) {
+      assertEquals(Status.INVALID_ARGUMENT.getCode(), e.getStatus().getCode());
+      assertEquals("Request must provide `my-param`", e.getStatus().getDescription());
     }
+  }
 
-    @Test
-    public void testValidateScope() {
-        ScopeValidation.validateScopes(List.of(GCS));
-        ScopeValidation.validateScopes(List.of(BIGQUERY));
-        ScopeValidation.validateScopes(List.of(GCS, BIGQUERY));
-        ScopeValidation.validateScopes(List.of(BIGQUERY, GCS));
-        try {
-            ScopeValidation.validateScopes(List.of(BIGTABLE));
-            fail();
-        } catch (StatusRuntimeException e) {
-            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals("`[https://www.googleapis.com/auth/bigtable.data.readonly]` are not allowlisted scopes", e.getStatus().getDescription());
-        }
+  @Test
+  public void testValidateScope() {
+    ScopeValidation.validateScopes(List.of(GCS));
+    ScopeValidation.validateScopes(List.of(BIGQUERY));
+    ScopeValidation.validateScopes(List.of(GCS, BIGQUERY));
+    ScopeValidation.validateScopes(List.of(BIGQUERY, GCS));
+    try {
+      ScopeValidation.validateScopes(List.of(BIGTABLE));
+      fail();
+    } catch (StatusRuntimeException e) {
+      assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
+      assertEquals(
+          "`[https://www.googleapis.com/auth/bigtable.data.readonly]` are not allowlisted scopes",
+          e.getStatus().getDescription());
     }
+  }
 
-    @Test
-    public void validateEmail() {
-        EmailValidation.validateEmail("alice@example.com");
-        EmailValidation.validateEmail("alice-shadow@my-project.iam.gserviceaccount.com");
-        for (String value : new String[]{"alice", "alice@", "@example.com", "xxx()@xxx"})
-        try {
-            EmailValidation.validateEmail(value);
-            fail();
-        } catch (IllegalArgumentException e) {
-            // Expected
-        }
-    }
-
+  @Test
+  public void validateEmail() {
+    EmailValidation.validateEmail("alice@example.com");
+    EmailValidation.validateEmail("alice-shadow@my-project.iam.gserviceaccount.com");
+    for (String value : new String[] {"alice", "alice@", "@example.com", "xxx()@xxx"})
+      try {
+        EmailValidation.validateEmail(value);
+        fail();
+      } catch (IllegalArgumentException e) {
+        // Expected
+      }
+  }
 }

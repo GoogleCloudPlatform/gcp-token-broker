@@ -20,35 +20,37 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.template.soy.SoyFileSet;
 import com.google.template.soy.jbcsrc.api.SoySauce;
+import java.util.Map;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Map;
-
 public class TemplateTest {
-    private static SoySauce soySauce;
+  private static SoySauce soySauce;
 
-    @BeforeClass
-    public static void setup() {
-        SoyFileSet sfs = SoyFileSet.builder()
+  @BeforeClass
+  public static void setup() {
+    SoyFileSet sfs =
+        SoyFileSet.builder()
             .add(Resources.getResource("index.soy"))
             .add(Resources.getResource("success.soy"))
             .build();
-        soySauce = sfs.compileTemplates();
-    }
+    soySauce = sfs.compileTemplates();
+  }
 
-    @Test
-    public void testIndex() {
-        Map<String, Object> data = ImmutableMap.<String, Object>builder()
+  @Test
+  public void testIndex() {
+    Map<String, Object> data =
+        ImmutableMap.<String, Object>builder()
             .put("principal", "user@EXAMPLE.COM")
             .put("email", "user@example.com")
             .put("picture", "https://cdn.example.com/user.jpg")
             .build();
-        String content = soySauce
+    String content =
+        soySauce
             .renderTemplate("Authorizer.Templates.success")
             .setData(data)
             .renderHtml()
             .get()
             .getContent();
-    }
+  }
 }

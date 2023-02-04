@@ -12,21 +12,19 @@
 package com.google.cloud.broker.client.credentials;
 
 import com.google.auth.oauth2.AccessToken;
-
-import com.google.cloud.broker.client.endpoints.GetAccessToken;
 import com.google.cloud.broker.client.connect.BrokerServerInfo;
+import com.google.cloud.broker.client.endpoints.GetAccessToken;
 
 public class BrokerSessionCredentials extends BrokerBaseCredentials {
 
-    private String sessionToken;
+  private String sessionToken;
 
-    public BrokerSessionCredentials(BrokerServerInfo serverInfo, String sessionToken) {
-        super(serverInfo);
-        this.sessionToken = sessionToken;
-    }
+  public BrokerSessionCredentials(BrokerServerInfo serverInfo, String sessionToken) {
+    super(serverInfo);
+    this.sessionToken = sessionToken;
+  }
 
-    public AccessToken refreshAccessToken() {
-        return GetAccessToken.submitDelegatedAuth(serverInfo, sessionToken);
-    }
-
+  public AccessToken refreshAccessToken() {
+    return GetAccessToken.submitDelegatedAuth(serverInfo, sessionToken);
+  }
 }

@@ -14,17 +14,20 @@ package com.google.cloud.broker.apps.brokerserver.accesstokens;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
+
 import org.powermock.api.mockito.PowerMockito;
 
 public class MockAccessBoundary {
 
-    public static void mock() {
-        mockStatic(AccessBoundaryUtils.class);
-        PowerMockito.when(AccessBoundaryUtils.addAccessBoundary(any(), anyString())).thenAnswer(invocation -> {
-            AccessToken accessToken = (AccessToken) invocation.getArgument(0);
-            String target = (String) invocation.getArgument(1);
-            return new AccessToken(accessToken.getValue() + ";Target=" + target, accessToken.getExpiresAt());
-        });
-    }
-
+  public static void mock() {
+    mockStatic(AccessBoundaryUtils.class);
+    PowerMockito.when(AccessBoundaryUtils.addAccessBoundary(any(), anyString()))
+        .thenAnswer(
+            invocation -> {
+              AccessToken accessToken = (AccessToken) invocation.getArgument(0);
+              String target = (String) invocation.getArgument(1);
+              return new AccessToken(
+                  accessToken.getValue() + ";Target=" + target, accessToken.getExpiresAt());
+            });
+  }
 }

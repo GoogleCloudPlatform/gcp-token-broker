@@ -11,25 +11,22 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
-import java.util.List;
-
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
-
+import java.util.List;
 
 public abstract class AbstractProvider {
 
-    private static AbstractProvider instance;
+  private static AbstractProvider instance;
 
-    public static AbstractProvider getInstance() {
-        String className = AppSettings.getInstance().getString(AppSettings.PROVIDER_BACKEND);
-        if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
-            instance = (AbstractProvider) InstanceUtils.invokeConstructor(className);
-        }
-        return instance;
+  public static AbstractProvider getInstance() {
+    String className = AppSettings.getInstance().getString(AppSettings.PROVIDER_BACKEND);
+    if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
+      instance = (AbstractProvider) InstanceUtils.invokeConstructor(className);
     }
+    return instance;
+  }
 
-    public abstract AccessToken getAccessToken(String googleIdentity, List<String> scopes);
-
+  public abstract AccessToken getAccessToken(String googleIdentity, List<String> scopes);
 }

@@ -11,43 +11,40 @@
 
 package com.google.cloud.broker.apps.brokerserver.validation;
 
-import java.util.*;
-
 import io.grpc.Status;
-
+import java.util.*;
 
 public class GrpcRequestValidation {
 
-    public static void validateParameterIsEmpty(String parameter, String value) {
-        if (value.length() > 0) {
-            throw Status.INVALID_ARGUMENT
-                .withDescription(String.format("Request's parameter `%s` must be empty", parameter))
-                .asRuntimeException();
-        }
+  public static void validateParameterIsEmpty(String parameter, String value) {
+    if (value.length() > 0) {
+      throw Status.INVALID_ARGUMENT
+          .withDescription(String.format("Request's parameter `%s` must be empty", parameter))
+          .asRuntimeException();
     }
+  }
 
-    public static void validateParameterIsEmpty(String parameter, List<String> values) {
-        if (values.size() > 0) {
-            throw Status.INVALID_ARGUMENT
-                .withDescription(String.format("Request's parameter `%s` must be empty", parameter))
-                .asRuntimeException();
-        }
+  public static void validateParameterIsEmpty(String parameter, List<String> values) {
+    if (values.size() > 0) {
+      throw Status.INVALID_ARGUMENT
+          .withDescription(String.format("Request's parameter `%s` must be empty", parameter))
+          .asRuntimeException();
     }
+  }
 
-    public static void validateParameterNotEmpty(String parameter, String value) {
-        if (value.length() == 0) {
-            throw Status.INVALID_ARGUMENT
-                .withDescription(String.format("Request must provide `%s`", parameter))
-                .asRuntimeException();
-        }
+  public static void validateParameterNotEmpty(String parameter, String value) {
+    if (value.length() == 0) {
+      throw Status.INVALID_ARGUMENT
+          .withDescription(String.format("Request must provide `%s`", parameter))
+          .asRuntimeException();
     }
+  }
 
-    public static void validateParameterNotEmpty(String parameter, List<String> values) {
-        if (values.size() == 0) {
-            throw Status.INVALID_ARGUMENT
-                .withDescription(String.format("Request must provide `%s`", parameter))
-                .asRuntimeException();
-        }
+  public static void validateParameterNotEmpty(String parameter, List<String> values) {
+    if (values.size() == 0) {
+      throw Status.INVALID_ARGUMENT
+          .withDescription(String.format("Request must provide `%s`", parameter))
+          .asRuntimeException();
     }
-
+  }
 }

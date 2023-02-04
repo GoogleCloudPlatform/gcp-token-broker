@@ -11,49 +11,47 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers.experimental;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Paths;
-import java.nio.file.Path;
-import java.util.List;
-
 import com.google.auth.oauth2.GoogleCredentials;
-
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
 import com.google.cloud.broker.apps.brokerserver.accesstokens.providers.AbstractProvider;
 import com.google.cloud.broker.settings.AppSettings;
 import io.grpc.Status;
-
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 /**
- * Uses the credentials in a JSON file to generate access tokens.
- * The JSON file can contain a Service Account key file in JSON format from
- * the Google Developers Console or a stored user credential using the format
- * supported by the Cloud SDK.
- * This is an experimental backend that might be removed or modified in a future release.
- * This is NOT recommended for production.
+ * Uses the credentials in a JSON file to generate access tokens. The JSON file can contain a
+ * Service Account key file in JSON format from the Google Developers Console or a stored user
+ * credential using the format supported by the Cloud SDK. This is an experimental backend that
+ * might be removed or modified in a future release. This is NOT recommended for production.
  */
 public class JSONFileCredentialsProvider extends AbstractProvider {
 
-    private static String AUTHZ_ERROR_MESSAGE = "GCP Token Broker authorization is invalid or has expired for identity: %s";
+  private static String AUTHZ_ERROR_MESSAGE =
+      "GCP Token Broker authorization is invalid or has expired for identity: %s";
 
-    @Override
-    public AccessToken getAccessToken(String googleIdentity, List<String> scopes) {
-        try {
-            String basedir = AppSettings.getInstance().getString(AppSettings.JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR);
-            Path path = Paths.get(basedir, googleIdentity.split("@")[0] + ".json");
-            GoogleCredentials credentials = GoogleCredentials.fromStream(new ByteArrayInputStream(Files.readAllBytes(path)));
-            com.google.auth.oauth2.AccessToken token = credentials
-                    .createScoped(scopes)
-                    .refreshAccessToken();
-            return new AccessToken(token.getTokenValue(), token.getExpirationTime().getTime());
-        } catch (NoSuchFileException e) {
-            throw Status.PERMISSION_DENIED.withDescription(String.format(AUTHZ_ERROR_MESSAGE, googleIdentity)).asRuntimeException();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+  @Override
+  public AccessToken getAccessToken(String googleIdentity, List<String> scopes) {
+    try {
+      String basedir =
+          AppSettings.getInstance().getString(AppSettings.JSON_FILE_CREDENTIALS_PROVIDER_BASE_DIR);
+      Path path = Paths.get(basedir, googleIdentity.split("@")[0] + ".json");
+      GoogleCredentials credentials =
+          GoogleCredentials.fromStream(new ByteArrayInputStream(Files.readAllBytes(path)));
+      com.google.auth.oauth2.AccessToken token =
+          credentials.createScoped(scopes).refreshAccessToken();
+      return new AccessToken(token.getTokenValue(), token.getExpirationTime().getTime());
+    } catch (NoSuchFileException e) {
+      throw Status.PERMISSION_DENIED
+          .withDescription(String.format(AUTHZ_ERROR_MESSAGE, googleIdentity))
+          .asRuntimeException();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-
+  }
 }

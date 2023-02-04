@@ -13,15 +13,18 @@ package com.google.cloud.broker.apps.brokerserver;
 
 import io.grpc.*;
 
-
 public class ClientAddressServerInterceptor implements ServerInterceptor {
 
-    public static final Context.Key<String> CLIENT_ADDRESS_CONTEXT_KEY = Context.key("ClientAddress");
+  public static final Context.Key<String> CLIENT_ADDRESS_CONTEXT_KEY = Context.key("ClientAddress");
 
-    @Override
-    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall, Metadata metadata, ServerCallHandler<ReqT, RespT> serverCallHandler) {
-        String clientAddress = serverCall.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR).toString();
-        Context ctx = Context.current().withValue(CLIENT_ADDRESS_CONTEXT_KEY, clientAddress);
-        return Contexts.interceptCall(ctx, serverCall, metadata, serverCallHandler);
-    }
+  @Override
+  public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
+      ServerCall<ReqT, RespT> serverCall,
+      Metadata metadata,
+      ServerCallHandler<ReqT, RespT> serverCallHandler) {
+    String clientAddress =
+        serverCall.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR).toString();
+    Context ctx = Context.current().withValue(CLIENT_ADDRESS_CONTEXT_KEY, clientAddress);
+    return Contexts.interceptCall(ctx, serverCall, metadata, serverCallHandler);
+  }
 }

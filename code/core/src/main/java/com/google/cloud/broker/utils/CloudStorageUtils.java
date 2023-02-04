@@ -16,34 +16,29 @@
 
 package com.google.cloud.broker.utils;
 
-import java.io.IOException;
-
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import java.io.IOException;
 
 public class CloudStorageUtils {
 
-    public static final String GCS_API = "https://www.googleapis.com/auth/devstorage.read_write";
+  public static final String GCS_API = "https://www.googleapis.com/auth/devstorage.read_write";
 
-    public static GoogleCredentials getCloudStorageCredentials() {
-        try {
-            return GoogleCredentials.getApplicationDefault().createScoped(GCS_API);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+  public static GoogleCredentials getCloudStorageCredentials() {
+    try {
+      return GoogleCredentials.getApplicationDefault().createScoped(GCS_API);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    public static Storage getCloudStorageClient() {
-        GoogleCredentials credentials = getCloudStorageCredentials();
-        return getCloudStorageClient(credentials);
-    }
+  public static Storage getCloudStorageClient() {
+    GoogleCredentials credentials = getCloudStorageCredentials();
+    return getCloudStorageClient(credentials);
+  }
 
-    public static Storage getCloudStorageClient(GoogleCredentials credentials) {
-        return StorageOptions.newBuilder()
-            .setCredentials(credentials)
-            .build()
-            .getService();
-    }
-
+  public static Storage getCloudStorageClient(GoogleCredentials credentials) {
+    return StorageOptions.newBuilder().setCredentials(credentials).build().getService();
+  }
 }

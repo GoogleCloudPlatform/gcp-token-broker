@@ -18,16 +18,13 @@ package com.google.cloud.broker.encryption.backends.keyset;
 
 public class KeysetUtils {
 
-    public static KeysetManager getKeysetManager(String dekUri) {
-        if (dekUri.startsWith("gs://")) {
-            return new CloudStorageKeysetManager(dekUri);
-        }
-        else if (dekUri.startsWith("file://")) {
-            return new FilesystemKeysetManager(dekUri.substring(7));
-        }
-        else {
-            throw new RuntimeException("Invalid DEK URI: " + dekUri);
-        }
+  public static KeysetManager getKeysetManager(String dekUri) {
+    if (dekUri.startsWith("gs://")) {
+      return new CloudStorageKeysetManager(dekUri);
+    } else if (dekUri.startsWith("file://")) {
+      return new FilesystemKeysetManager(dekUri.substring(7));
+    } else {
+      throw new RuntimeException("Invalid DEK URI: " + dekUri);
     }
-
+  }
 }

@@ -11,51 +11,50 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
-
 import static org.junit.Assert.*;
-import org.junit.*;
+
+import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
+import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.settings.SettingsOverride;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
-
-import com.google.cloud.broker.settings.SettingsOverride;
-import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
-
+import java.util.List;
+import java.util.Map;
+import org.junit.*;
 
 public class RefreshTokenProviderTest {
 
-    // TODO: Still needs tests:
-    // - Happy path.
+  // TODO: Still needs tests:
+  // - Happy path.
 
-    private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
+  private static final List<String> SCOPES =
+      List.of("https://www.googleapis.com/auth/devstorage.read_write");
 
-    @ClassRule
-    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
-        AppSettings.DATABASE_BACKEND, "com.google.cloud.broker.database.backends.DummyDatabaseBackend",
-        AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper"
-    ));
+  @ClassRule
+  public static SettingsOverride settingsOverride =
+      new SettingsOverride(
+          Map.of(
+              AppSettings.DATABASE_BACKEND,
+                  "com.google.cloud.broker.database.backends.DummyDatabaseBackend",
+              AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper"));
 
-    @After
-    public void teardown() {
-        // Clear the database
-        DummyDatabaseBackend.getCache().clear();
+  @After
+  public void teardown() {
+    // Clear the database
+    DummyDatabaseBackend.getCache().clear();
+  }
+
+  @Test
+  public void testUnauthorized() {
+    RefreshTokenProvider provider = new RefreshTokenProvider();
+    try {
+      provider.getAccessToken("bob@example.com", SCOPES);
+      fail("StatusRuntimeException not thrown");
+    } catch (StatusRuntimeException e) {
+      assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
+      assertEquals(
+          "GCP Token Broker authorization is invalid or has expired for identity: bob@example.com",
+          e.getStatus().getDescription());
     }
-
-    @Test
-    public void testUnauthorized() {
-        RefreshTokenProvider provider = new RefreshTokenProvider();
-        try {
-            provider.getAccessToken("bob@example.com", SCOPES);
-            fail("StatusRuntimeException not thrown");
-        } catch (StatusRuntimeException e) {
-            assertEquals(Status.PERMISSION_DENIED.getCode(), e.getStatus().getCode());
-            assertEquals(
-                "GCP Token Broker authorization is invalid or has expired for identity: bob@example.com",
-                e.getStatus().getDescription());
-        }
-    }
-
+  }
 }
