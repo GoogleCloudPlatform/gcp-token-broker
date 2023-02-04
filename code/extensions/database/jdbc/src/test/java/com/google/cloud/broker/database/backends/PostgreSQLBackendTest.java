@@ -11,83 +11,80 @@
 
 package com.google.cloud.broker.database.backends;
 
-import java.util.Map;
-
-import org.junit.*;
-
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
-import com.google.cloud.broker.settings.SettingsOverride;
 import com.google.cloud.broker.settings.AppSettings;
-
+import com.google.cloud.broker.settings.SettingsOverride;
+import java.util.Map;
+import org.junit.*;
 
 public class PostgreSQLBackendTest extends JDBCBackendTest {
 
-    private static JDBCBackend backend;
+  private static JDBCBackend backend;
 
-    @ClassRule
-    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
-        AppSettings.DATABASE_JDBC_URL, "jdbc:postgresql:broker?user=testuser&password=UNSECURE-PASSWORD"
-    ));
+  @ClassRule
+  public static SettingsOverride settingsOverride =
+      new SettingsOverride(
+          Map.of(
+              AppSettings.DATABASE_JDBC_URL,
+              "jdbc:postgresql:broker?user=testuser&password=UNSECURE-PASSWORD"));
 
-    @BeforeClass
-    public static void setupClass() {
-        backend = new JDBCBackend();
-    }
+  @BeforeClass
+  public static void setupClass() {
+    backend = new JDBCBackend();
+  }
 
+  @Before
+  public void setup() {
+    JDBCBackendTest.setup(backend);
+  }
 
-    @Before
-    public void setup() {
-        JDBCBackendTest.setup(backend);
-    }
+  @After
+  public void teardown() {
+    JDBCBackendTest.teardown(backend);
+  }
 
-    @After
-    public void teardown() {
-        JDBCBackendTest.teardown(backend);
-    }
+  @Test
+  public void testInitializeDatabase() {
+    JDBCBackendTest.initializeDatabase(backend);
+  }
 
-    @Test
-    public void testInitializeDatabase() {
-        JDBCBackendTest.initializeDatabase(backend);
-    }
+  @Test
+  public void testSaveNew() {
+    JDBCBackendTest.saveNew(backend);
+  }
 
-    @Test
-    public void testSaveNew() {
-        JDBCBackendTest.saveNew(backend);
-    }
+  @Test
+  public void testUpdate() {
+    JDBCBackendTest.update(backend);
+  }
 
-    @Test
-    public void testUpdate() {
-        JDBCBackendTest.update(backend);
-    }
+  @Test
+  public void testSaveWithoutID() {
+    JDBCBackendTest.saveWithoutID(backend);
+  }
 
-    @Test
-    public void testSaveWithoutID() {
-        JDBCBackendTest.saveWithoutID(backend);
-    }
+  @Test
+  public void testGet() throws DatabaseObjectNotFound {
+    JDBCBackendTest.get(backend);
+  }
 
-    @Test
-    public void testGet() throws DatabaseObjectNotFound {
-        JDBCBackendTest.get(backend);
-    }
+  @Test
+  public void testGetNotExist() {
+    JDBCBackendTest.getNotExist(backend);
+  }
 
-    @Test
-    public void testGetNotExist() {
-        JDBCBackendTest.getNotExist(backend);
-    }
+  @Test
+  public void testDelete() {
+    JDBCBackendTest.delete(backend);
+  }
 
-    @Test
-    public void testDelete() {
-        JDBCBackendTest.delete(backend);
-    }
+  @Test
+  public void testDeleteExpiredItems() {
+    JDBCBackendTest.deleteExpiredItems(backend, false);
+  }
 
-    @Test
-    public void testDeleteExpiredItems() {
-        JDBCBackendTest.deleteExpiredItems(backend, false);
-    }
-
-    @Test
-    public void testDeleteExpiredItemsWithLimit() {
-        JDBCBackendTest.deleteExpiredItems(backend, true);
-    }
-
+  @Test
+  public void testDeleteExpiredItemsWithLimit() {
+    JDBCBackendTest.deleteExpiredItems(backend, true);
+  }
 }

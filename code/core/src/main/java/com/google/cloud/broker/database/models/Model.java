@@ -17,23 +17,23 @@ import java.util.Map;
 
 public abstract class Model {
 
-    public abstract Map<String, Object> toMap();
+  public abstract Map<String, Object> toMap();
 
-    public abstract void setDBId(String id);
-    public abstract String getDBId();
+  public abstract void setDBId(String id);
 
-    public static Model fromMap(Class<?> klass, Map<String, Object> map) {
-        Method method;
-        try {
-            method = klass.getMethod("fromMap", Map.class);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            return (Model) method.invoke(null, map);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
+  public abstract String getDBId();
+
+  public static Model fromMap(Class<?> klass, Map<String, Object> map) {
+    Method method;
+    try {
+      method = klass.getMethod("fromMap", Map.class);
+    } catch (NoSuchMethodException e) {
+      throw new RuntimeException(e);
     }
-
+    try {
+      return (Model) method.invoke(null, map);
+    } catch (IllegalAccessException | InvocationTargetException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }

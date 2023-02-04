@@ -11,95 +11,98 @@
 
 package com.google.cloud.broker.client.utils;
 
-import javax.security.auth.Subject;
-import java.security.PrivilegedAction;
-
-import org.ietf.jgss.*;
-
+import static com.google.cloud.broker.client.hadoop.fs.TestingTools.*;
 import static org.junit.Assert.*;
+
+import com.google.cloud.broker.authentication.backends.FakeKDC;
+import java.security.PrivilegedAction;
+import javax.security.auth.Subject;
+import org.ietf.jgss.*;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.cloud.broker.authentication.backends.FakeKDC;
-import static com.google.cloud.broker.client.hadoop.fs.TestingTools.*;
-
-
 public class SpnegoUtilsTest {
 
-    private static FakeKDC fakeKDC;
-    public static final String TGT_ERROR = "No valid credentials provided (Mechanism level: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt))";
+  private static FakeKDC fakeKDC;
+  public static final String TGT_ERROR =
+      "No valid credentials provided (Mechanism level: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt))";
 
-    @BeforeClass
-    public static void setUpClass() {
-        fakeKDC = new FakeKDC(REALM);
-        fakeKDC.start();
-        fakeKDC.createPrincipal(ALICE);
-        fakeKDC.createPrincipal(BROKER);
+  @BeforeClass
+  public static void setUpClass() {
+    fakeKDC = new FakeKDC(REALM);
+    fakeKDC.start();
+    fakeKDC.createPrincipal(ALICE);
+    fakeKDC.createPrincipal(BROKER);
+  }
+
+  @AfterClass
+  public static void tearDownClass() {
+    if (fakeKDC != null) {
+      fakeKDC.stop();
     }
+  }
 
-    @AfterClass
-    public static void tearDownClass() {
-        if (fakeKDC != null) {
-            fakeKDC.stop();
-        }
-    }
+  /** Check the happy path: a user logs in and can generate a SPNEGO token. */
+  @Test
+  public void testLoggedIn() {
+    // Let a logged-in user generate a token
+    Subject alice = fakeKDC.login(ALICE);
+    byte[] spnegoToken =
+        Subject.doAs(
+            alice,
+            (PrivilegedAction<byte[]>)
+                () -> {
+                  try {
+                    return SpnegoUtils.newSPNEGOToken(BROKER);
+                  } catch (GSSException e) {
+                    throw new RuntimeException(e);
+                  }
+                });
 
-    /**
-     * Check the happy path: a user logs in and can generate a SPNEGO token.
-     */
-    @Test
-    public void testLoggedIn() {
-        // Let a logged-in user generate a token
-        Subject alice = fakeKDC.login(ALICE);
-        byte[] spnegoToken = Subject.doAs(alice, (PrivilegedAction<byte[]>) () -> {
-            try {
-                return SpnegoUtils.newSPNEGOToken(BROKER);
-            } catch (GSSException e) {
-                throw new RuntimeException(e);
-            }
-        });
+    // Let the broker decrypt the token and verify the user's identity
+    Subject broker = fakeKDC.login(BROKER);
+    String decrypted =
+        Subject.doAs(broker, (PrivilegedAction<String>) () -> decryptToken(spnegoToken));
+    assertEquals("alice@EXAMPLE.COM", decrypted);
+  }
 
-        // Let the broker decrypt the token and verify the user's identity
-        Subject broker = fakeKDC.login(BROKER);
-        String decrypted = Subject.doAs(broker, (PrivilegedAction<String>) () ->
-            decryptToken(spnegoToken)
-        );
-        assertEquals("alice@EXAMPLE.COM", decrypted);
-    }
-
-    /**
-     * Check that a GSSException is thrown if the user is not logged in and attempts to generate a SPNEGO token.
-     */
-    @Test
-    public void testNotLoggedIn() {
-        Subject anonymous = new Subject();
-        Subject.doAs(anonymous, (PrivilegedAction<Void>) () -> {
-            try {
+  /**
+   * Check that a GSSException is thrown if the user is not logged in and attempts to generate a
+   * SPNEGO token.
+   */
+  @Test
+  public void testNotLoggedIn() {
+    Subject anonymous = new Subject();
+    Subject.doAs(
+        anonymous,
+        (PrivilegedAction<Void>)
+            () -> {
+              try {
                 SpnegoUtils.newSPNEGOToken(BROKER);
                 fail();
-            } catch (GSSException e) {
+              } catch (GSSException e) {
                 assertEquals(TGT_ERROR, e.getMessage());
-            }
-            return null;
-        });
-    }
+              }
+              return null;
+            });
+  }
 
-    /**
-     * Check that a GSSException is thrown if the provided broker principal is wrong.
-     */
-    @Test
-    public void testWrongBrokerPrincipal() {
-        Subject alice = fakeKDC.login(ALICE);
-        Subject.doAs(alice, (PrivilegedAction<byte[]>) () -> {
-            try {
+  /** Check that a GSSException is thrown if the provided broker principal is wrong. */
+  @Test
+  public void testWrongBrokerPrincipal() {
+    Subject alice = fakeKDC.login(ALICE);
+    Subject.doAs(
+        alice,
+        (PrivilegedAction<byte[]>)
+            () -> {
+              try {
                 SpnegoUtils.newSPNEGOToken("blah/foo@BAR");
                 fail();
-            } catch (Exception e) {
+              } catch (Exception e) {
                 assertEquals(GSSException.class, e.getClass());
-            }
-            return null;
-        });
-    }
-
+              }
+              return null;
+            });
+  }
 }

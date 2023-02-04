@@ -11,114 +11,112 @@
 
 package com.google.cloud.broker.client.credentials;
 
+import com.google.api.client.util.Clock;
+import com.google.auth.Credentials;
+import com.google.auth.RequestMetadataCallback;
+import com.google.auth.http.AuthHttpConstants;
+import com.google.auth.oauth2.AccessToken;
+import com.google.cloud.broker.client.connect.BrokerGateway;
 import com.google.cloud.broker.client.connect.BrokerServerInfo;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import java.util.Date;
-
-import com.google.api.client.util.Clock;
-import com.google.auth.http.AuthHttpConstants;
-import com.google.auth.oauth2.AccessToken;
-import com.google.common.base.Preconditions;
-import com.google.auth.RequestMetadataCallback;
-import com.google.auth.Credentials;
-
-import com.google.cloud.broker.client.connect.BrokerGateway;
-
 
 public abstract class BrokerBaseCredentials extends Credentials {
 
-    private static final long MINIMUM_TOKEN_MILLISECONDS = 60000L * 5L;
-    private final Object lock = new byte[0];
-    private Map<String, List<String>> requestMetadata;
-    protected BrokerServerInfo serverInfo;
-    private AccessToken cachedAccessToken;
-    transient Clock clock = Clock.SYSTEM;
+  private static final long MINIMUM_TOKEN_MILLISECONDS = 60000L * 5L;
+  private final Object lock = new byte[0];
+  private Map<String, List<String>> requestMetadata;
+  protected BrokerServerInfo serverInfo;
+  private AccessToken cachedAccessToken;
+  transient Clock clock = Clock.SYSTEM;
 
-    public BrokerBaseCredentials(BrokerServerInfo serverInfo) {
-        this.serverInfo = serverInfo;
+  public BrokerBaseCredentials(BrokerServerInfo serverInfo) {
+    this.serverInfo = serverInfo;
+  }
+
+  @Override
+  public String getAuthenticationType() {
+    return null;
+  }
+
+  @Override
+  public void getRequestMetadata(
+      final URI uri, Executor executor, final RequestMetadataCallback callback) {
+    Map<String, List<String>> metadata;
+    synchronized (lock) {
+      if (shouldRefresh()) {
+        // The base class implementation will do a blocking get in the executor.
+        super.getRequestMetadata(uri, executor, callback);
+        return;
+      }
+      metadata = Preconditions.checkNotNull(requestMetadata, "cached requestMetadata");
     }
+    callback.onSuccess(metadata);
+  }
 
-    @Override
-    public String getAuthenticationType() {
-        return null;
+  @Override
+  public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
+    synchronized (lock) {
+      if (shouldRefresh()) {
+        refresh();
+      }
+      return Preconditions.checkNotNull(requestMetadata, "requestMetadata");
     }
+  }
 
-    @Override
-    public void getRequestMetadata(
-        final URI uri, Executor executor, final RequestMetadataCallback callback) {
-        Map<String, List<String>> metadata;
-        synchronized (lock) {
-            if (shouldRefresh()) {
-                // The base class implementation will do a blocking get in the executor.
-                super.getRequestMetadata(uri, executor, callback);
-                return;
-            }
-            metadata = Preconditions.checkNotNull(requestMetadata, "cached requestMetadata");
-        }
-        callback.onSuccess(metadata);
+  private boolean shouldRefresh() {
+    Long expiresIn = getExpiresInMilliseconds();
+    return requestMetadata == null || expiresIn != null && expiresIn <= MINIMUM_TOKEN_MILLISECONDS;
+  }
+
+  private Long getExpiresInMilliseconds() {
+    if (cachedAccessToken == null) {
+      return null;
     }
-
-    @Override
-    public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
-        synchronized (lock) {
-            if (shouldRefresh()) {
-                refresh();
-            }
-            return Preconditions.checkNotNull(requestMetadata, "requestMetadata");
-        }
+    Date expirationTime = cachedAccessToken.getExpirationTime();
+    if (expirationTime == null) {
+      return null;
     }
+    return (expirationTime.getTime() - clock.currentTimeMillis());
+  }
 
-    private boolean shouldRefresh() {
-        Long expiresIn = getExpiresInMilliseconds();
-        return requestMetadata == null || expiresIn != null && expiresIn <= MINIMUM_TOKEN_MILLISECONDS;
+  @Override
+  public boolean hasRequestMetadata() {
+    return true;
+  }
+
+  @Override
+  public boolean hasRequestMetadataOnly() {
+    return true;
+  }
+
+  @Override
+  public void refresh() throws IOException {
+    synchronized (lock) {
+      requestMetadata = null;
+      cachedAccessToken = null;
+      useAccessToken(Preconditions.checkNotNull(refreshAccessToken(), "new access token"));
     }
+  }
 
-    private Long getExpiresInMilliseconds() {
-        if (cachedAccessToken == null) {
-            return null;
-        }
-        Date expirationTime = cachedAccessToken.getExpirationTime();
-        if (expirationTime == null) {
-            return null;
-        }
-        return (expirationTime.getTime() - clock.currentTimeMillis());
-    }
+  private void useAccessToken(AccessToken token) {
+    this.cachedAccessToken = token;
+    this.requestMetadata =
+        Collections.singletonMap(
+            AuthHttpConstants.AUTHORIZATION,
+            Collections.singletonList(
+                BrokerGateway.SESSION_AUTH_HEADER + " " + token.getTokenValue()));
+  }
 
-    @Override
-    public boolean hasRequestMetadata() {
-        return true;
-    }
+  public final AccessToken getAccessToken() {
+    return cachedAccessToken;
+  }
 
-    @Override
-    public boolean hasRequestMetadataOnly() {
-        return true;
-    }
-
-    @Override
-    public void refresh() throws IOException {
-        synchronized (lock) {
-            requestMetadata = null;
-            cachedAccessToken = null;
-            useAccessToken(Preconditions.checkNotNull(refreshAccessToken(), "new access token"));
-        }
-    }
-
-    private void useAccessToken(AccessToken token) {
-        this.cachedAccessToken = token;
-        this.requestMetadata =
-            Collections.singletonMap(
-                AuthHttpConstants.AUTHORIZATION,
-                Collections.singletonList(BrokerGateway.SESSION_AUTH_HEADER + " " + token.getTokenValue()));
-    }
-
-    public final AccessToken getAccessToken() {
-        return cachedAccessToken;
-    }
-
-    public abstract AccessToken refreshAccessToken();
+  public abstract AccessToken refreshAccessToken();
 }

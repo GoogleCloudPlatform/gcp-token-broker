@@ -11,78 +11,65 @@
 
 package com.google.cloud.broker.caching.remote;
 
-
+import com.google.cloud.broker.checks.CheckResult;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
-import com.google.cloud.broker.checks.CheckResult;
-
 /**
- * Dummy caching backend that does not actually cache anything.
- * Use only for testing. Do NOT use in production!
+ * Dummy caching backend that does not actually cache anything. Use only for testing. Do NOT use in
+ * production!
  */
-
 public class DummyCache extends AbstractRemoteCache {
 
-    @Override
-    public byte[] get(String key) {
-        return null;
-    }
+  @Override
+  public byte[] get(String key) {
+    return null;
+  }
+
+  @Override
+  public void set(String key, byte[] value) {}
+
+  @Override
+  public void set(String key, byte[] value, int expireIn) {}
+
+  @Override
+  public void delete(String key) {}
+
+  @Override
+  public Lock acquireLock(String lockName) {
+    return new NoOpLock();
+  }
+
+  @Override
+  public CheckResult checkConnection() {
+    return new CheckResult(true);
+  }
+
+  public static class NoOpLock implements Lock {
 
     @Override
-    public void set(String key, byte[] value) {
+    public void lock() {}
+
+    @Override
+    public void lockInterruptibly() throws InterruptedException {}
+
+    @Override
+    public boolean tryLock() {
+      return true;
     }
 
     @Override
-    public void set(String key, byte[] value, int expireIn) {
+    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
+      return true;
     }
 
     @Override
-    public void delete(String key) {
-    }
+    public void unlock() {}
 
     @Override
-    public Lock acquireLock(String lockName) {
-        return new NoOpLock();
+    public Condition newCondition() {
+      throw new UnsupportedOperationException();
     }
-
-    @Override
-    public CheckResult checkConnection() {
-        return new CheckResult(true);
-    }
-
-    public static class NoOpLock implements Lock {
-
-        @Override
-        public void lock() {
-
-        }
-
-        @Override
-        public void lockInterruptibly() throws InterruptedException {
-
-        }
-
-        @Override
-        public boolean tryLock() {
-            return true;
-        }
-
-        @Override
-        public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
-            return true;
-        }
-
-        @Override
-        public void unlock() {
-
-        }
-
-        @Override
-        public Condition newCondition() {
-            throw new UnsupportedOperationException();
-        }
-    }
-
+  }
 }

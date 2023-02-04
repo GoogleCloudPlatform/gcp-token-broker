@@ -15,26 +15,26 @@ import org.ietf.jgss.*;
 
 public final class SpnegoUtils {
 
-    private static final String SPNEGO_OID = "1.3.6.1.5.5.2";
-    private static final String KRB5_MECHANISM_OID = "1.2.840.113554.1.2.2";
-    private static final String KRB5_PRINCIPAL_NAME_OID = "1.2.840.113554.1.2.2.1";
+  private static final String SPNEGO_OID = "1.3.6.1.5.5.2";
+  private static final String KRB5_MECHANISM_OID = "1.2.840.113554.1.2.2";
+  private static final String KRB5_PRINCIPAL_NAME_OID = "1.2.840.113554.1.2.2.1";
 
-    public static byte[] newSPNEGOToken(String servicePrincipal) throws GSSException {
-        // Create GSS context for the broker service and the logged-in user
-        Oid krb5Mechanism = new Oid(KRB5_MECHANISM_OID);
-        Oid krb5PrincipalNameType = new Oid(KRB5_PRINCIPAL_NAME_OID);
-        Oid spnegoOid = new Oid(SPNEGO_OID);
-        GSSManager manager = GSSManager.getInstance();
-        GSSName gssServerName = manager.createName(servicePrincipal , krb5PrincipalNameType, krb5Mechanism);
-        GSSContext gssContext = manager.createContext(
-            gssServerName, spnegoOid, null, GSSCredential.DEFAULT_LIFETIME);
-        gssContext.requestMutualAuth(true);
-        gssContext.requestCredDeleg(true);
+  public static byte[] newSPNEGOToken(String servicePrincipal) throws GSSException {
+    // Create GSS context for the broker service and the logged-in user
+    Oid krb5Mechanism = new Oid(KRB5_MECHANISM_OID);
+    Oid krb5PrincipalNameType = new Oid(KRB5_PRINCIPAL_NAME_OID);
+    Oid spnegoOid = new Oid(SPNEGO_OID);
+    GSSManager manager = GSSManager.getInstance();
+    GSSName gssServerName =
+        manager.createName(servicePrincipal, krb5PrincipalNameType, krb5Mechanism);
+    GSSContext gssContext =
+        manager.createContext(gssServerName, spnegoOid, null, GSSCredential.DEFAULT_LIFETIME);
+    gssContext.requestMutualAuth(true);
+    gssContext.requestCredDeleg(true);
 
-        // Generate the SPNEGO token
-        byte[] token = new byte[0];
-        token = gssContext.initSecContext(token, 0, token.length);
-        return token;
-    }
-
+    // Generate the SPNEGO token
+    byte[] token = new byte[0];
+    token = gssContext.initSecContext(token, 0, token.length);
+    return token;
+  }
 }

@@ -68,7 +68,8 @@ public class CommandUtils {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    return new Token<>(byteArrayOutputStream.toByteArray(), new byte[0], BrokerTokenIdentifier.KIND, service);
+    return new Token<>(
+        byteArrayOutputStream.toByteArray(), new byte[0], BrokerTokenIdentifier.KIND, service);
   }
 
   /** Retrieves the bucket name from a fully-qualified GCS URI. */
@@ -90,16 +91,16 @@ public class CommandUtils {
     }
     System.out.println("> Current configuration:\n");
     System.out.println(String.format("* Authenticated user: %s", loginUser));
-    String[] configKeys = new String[] {
-        Utils.CONFIG_URI,
-        Utils.CONFIG_PRINCIPAL,
-        Utils.CONFIG_CERTIFICATE,
-        Utils.CONFIG_CERTIFICATE_PATH,
-        Utils.CONFIG_ACCESS_BOUNDARY_ENABLED
-    };
+    String[] configKeys =
+        new String[] {
+          Utils.CONFIG_URI,
+          Utils.CONFIG_PRINCIPAL,
+          Utils.CONFIG_CERTIFICATE,
+          Utils.CONFIG_CERTIFICATE_PATH,
+          Utils.CONFIG_ACCESS_BOUNDARY_ENABLED
+        };
     for (String configKey : configKeys) {
       System.out.println(String.format("* %s: %s", configKey, config.get(configKey)));
     }
   }
-
 }

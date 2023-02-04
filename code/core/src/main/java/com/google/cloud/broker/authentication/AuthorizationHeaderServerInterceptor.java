@@ -13,16 +13,21 @@ package com.google.cloud.broker.authentication;
 
 import io.grpc.*;
 
-
 public class AuthorizationHeaderServerInterceptor implements ServerInterceptor {
 
-    private static final Metadata.Key<String> BROKER_AUTHORIZATION_METADATA_KEY = Metadata.Key.of("broker-authorization", Metadata.ASCII_STRING_MARSHALLER);
-    public static final Context.Key<String> BROKER_AUTHORIZATION_CONTEXT_KEY = Context.key("BrokerAuthorizationHeader");
+  private static final Metadata.Key<String> BROKER_AUTHORIZATION_METADATA_KEY =
+      Metadata.Key.of("broker-authorization", Metadata.ASCII_STRING_MARSHALLER);
+  public static final Context.Key<String> BROKER_AUTHORIZATION_CONTEXT_KEY =
+      Context.key("BrokerAuthorizationHeader");
 
-    @Override
-    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall, Metadata metadata, ServerCallHandler<ReqT, RespT> serverCallHandler) {
-        String authorizationHeader = metadata.get(BROKER_AUTHORIZATION_METADATA_KEY);
-        Context ctx = Context.current().withValue(BROKER_AUTHORIZATION_CONTEXT_KEY, authorizationHeader);
-        return Contexts.interceptCall(ctx, serverCall, metadata, serverCallHandler);
-    }
+  @Override
+  public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
+      ServerCall<ReqT, RespT> serverCall,
+      Metadata metadata,
+      ServerCallHandler<ReqT, RespT> serverCallHandler) {
+    String authorizationHeader = metadata.get(BROKER_AUTHORIZATION_METADATA_KEY);
+    Context ctx =
+        Context.current().withValue(BROKER_AUTHORIZATION_CONTEXT_KEY, authorizationHeader);
+    return Contexts.interceptCall(ctx, serverCall, metadata, serverCallHandler);
+  }
 }

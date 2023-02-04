@@ -19,5 +19,4 @@ package com.google.cloud.broker.encryption.backends.keyset;
 import com.google.crypto.tink.KeysetReader;
 import com.google.crypto.tink.KeysetWriter;
 
-public abstract class KeysetManager implements KeysetWriter, KeysetReader {
-}
+public abstract class KeysetManager implements KeysetWriter, KeysetReader {}

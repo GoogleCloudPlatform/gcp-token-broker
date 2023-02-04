@@ -11,42 +11,39 @@
 
 package com.google.cloud.broker.client.hadoop.fs;
 
-import java.io.IOException;
-
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import org.junit.Test;
-
 
 public class BrokerDelegationTokenBindingTest {
 
-    @Test
-    public void testDeployUnbonded() {
-        BrokerDelegationTokenBinding binding = new BrokerDelegationTokenBinding();
-        try {
-            BrokerAccessTokenProvider provider = (BrokerAccessTokenProvider) binding.deployUnbonded();
-            // TODO...
-        } catch (IOException e) {
-            fail();
-        }
+  @Test
+  public void testDeployUnbonded() {
+    BrokerDelegationTokenBinding binding = new BrokerDelegationTokenBinding();
+    try {
+      BrokerAccessTokenProvider provider = (BrokerAccessTokenProvider) binding.deployUnbonded();
+      // TODO...
+    } catch (IOException e) {
+      fail();
     }
+  }
 
-    @Test
-    public void testCreateTokenIdentifier() {
-        BrokerDelegationTokenBinding binding = new BrokerDelegationTokenBinding();
-        BrokerTokenIdentifier identifier = (BrokerTokenIdentifier) binding.createEmptyIdentifier();
-        // TODO...
+  @Test
+  public void testCreateTokenIdentifier() {
+    BrokerDelegationTokenBinding binding = new BrokerDelegationTokenBinding();
+    BrokerTokenIdentifier identifier = (BrokerTokenIdentifier) binding.createEmptyIdentifier();
+    // TODO...
+  }
+
+  @Test
+  public void testCreateEmptyIdentifier() {
+    BrokerDelegationTokenBinding binding = new BrokerDelegationTokenBinding();
+    try {
+      BrokerTokenIdentifier identifier = (BrokerTokenIdentifier) binding.createTokenIdentifier();
+      // TODO...
+    } catch (IOException e) {
+      fail();
     }
-
-    @Test
-    public void testCreateEmptyIdentifier() {
-        BrokerDelegationTokenBinding binding = new BrokerDelegationTokenBinding();
-        try {
-            BrokerTokenIdentifier identifier = (BrokerTokenIdentifier) binding.createTokenIdentifier();
-            // TODO...
-        } catch (IOException e) {
-            fail();
-        }
-    }
-
+  }
 }

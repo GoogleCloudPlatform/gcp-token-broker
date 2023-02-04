@@ -11,42 +11,39 @@
 
 package com.google.cloud.broker.apps.brokerserver.sessions;
 
-import java.util.HashMap;
-import java.util.List;
-
 import static org.junit.Assert.*;
-import org.junit.Test;
 
 import com.google.cloud.broker.database.models.Model;
+import java.util.HashMap;
+import org.junit.Test;
 
 public class SessionTest {
 
-    private static final String ALICE = "alice@EXAMPLE.COM";
-    private static final String YARN = "yarn@FOO.BAR";
-    private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
-    private static final String MOCK_BUCKET = "//storage.googleapis.com/projects/_/buckets/example";
+  private static final String ALICE = "alice@EXAMPLE.COM";
+  private static final String YARN = "yarn@FOO.BAR";
+  private static final String GCS = "https://www.googleapis.com/auth/devstorage.read_write";
+  private static final String MOCK_BUCKET = "//storage.googleapis.com/projects/_/buckets/example";
 
-    // TODO: testToMap
+  // TODO: testToMap
 
-    @Test
-    public void testFromMap() {
-        HashMap<String, Object> values = new HashMap<String, Object>();
-        values.put("id", "123456789");
-        values.put("owner", ALICE);
-        values.put("renewer", YARN);
-        values.put("target", MOCK_BUCKET);
-        values.put("scopes", GCS);
-        values.put("creationTime", 11111111111111L);
-        values.put("expiresAt", 2222222222222L);
+  @Test
+  public void testFromMap() {
+    HashMap<String, Object> values = new HashMap<String, Object>();
+    values.put("id", "123456789");
+    values.put("owner", ALICE);
+    values.put("renewer", YARN);
+    values.put("target", MOCK_BUCKET);
+    values.put("scopes", GCS);
+    values.put("creationTime", 11111111111111L);
+    values.put("expiresAt", 2222222222222L);
 
-        Session session = (Session) Model.fromMap(Session.class, values);
-        assertEquals("123456789", session.getId());
-        assertEquals(ALICE, session.getOwner());
-        assertEquals(YARN, session.getRenewer());
-        assertEquals(MOCK_BUCKET, session.getTarget());
-        assertEquals(GCS, session.getScopes());
-        assertEquals(11111111111111L, session.getCreationTime().longValue());
-        assertEquals(2222222222222L, session.getExpiresAt().longValue());
-    }
-
+    Session session = (Session) Model.fromMap(Session.class, values);
+    assertEquals("123456789", session.getId());
+    assertEquals(ALICE, session.getOwner());
+    assertEquals(YARN, session.getRenewer());
+    assertEquals(MOCK_BUCKET, session.getTarget());
+    assertEquals(GCS, session.getScopes());
+    assertEquals(11111111111111L, session.getCreationTime().longValue());
+    assertEquals(2222222222222L, session.getExpiresAt().longValue());
+  }
 }

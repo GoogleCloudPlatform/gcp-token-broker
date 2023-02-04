@@ -16,48 +16,40 @@
 
 package com.google.cloud.broker.encryption.backends.keyset;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import com.google.crypto.tink.JsonKeysetReader;
 import com.google.crypto.tink.JsonKeysetWriter;
 import com.google.crypto.tink.proto.EncryptedKeyset;
 import com.google.crypto.tink.proto.Keyset;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-/**
- * KeysetManager that reads and writes DEKs from the local filesystem.
- */
+/** KeysetManager that reads and writes DEKs from the local filesystem. */
 public class FilesystemKeysetManager extends KeysetManager {
 
-    private Path dekUri;
+  private Path dekUri;
 
-    FilesystemKeysetManager(String dekUri) {
-        this.dekUri = Paths.get(dekUri);
-    }
+  FilesystemKeysetManager(String dekUri) {
+    this.dekUri = Paths.get(dekUri);
+  }
 
-    @Override
-    public Keyset read() throws IOException {
-        throw new UnsupportedOperationException();
-    }
+  @Override
+  public Keyset read() throws IOException {
+    throw new UnsupportedOperationException();
+  }
 
-    @Override
-    public EncryptedKeyset readEncrypted() throws IOException {
-        return JsonKeysetReader
-            .withPath(dekUri)
-            .readEncrypted();
-    }
+  @Override
+  public EncryptedKeyset readEncrypted() throws IOException {
+    return JsonKeysetReader.withPath(dekUri).readEncrypted();
+  }
 
-    @Override
-    public void write(Keyset keyset) throws IOException {
-        throw new UnsupportedOperationException();
-    }
+  @Override
+  public void write(Keyset keyset) throws IOException {
+    throw new UnsupportedOperationException();
+  }
 
-    @Override
-    public void write(EncryptedKeyset keyset) throws IOException {
-        JsonKeysetWriter
-            .withPath(dekUri)
-            .write(keyset);
-    }
-
+  @Override
+  public void write(EncryptedKeyset keyset) throws IOException {
+    JsonKeysetWriter.withPath(dekUri).write(keyset);
+  }
 }

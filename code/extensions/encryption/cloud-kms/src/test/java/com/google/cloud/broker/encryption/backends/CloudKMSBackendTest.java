@@ -16,40 +16,37 @@
 
 package com.google.cloud.broker.encryption.backends;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-
-import java.util.Arrays;
-import java.util.Map;
+import static org.junit.Assert.*;
 
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.settings.SettingsOverride;
-
-import static org.junit.Assert.*;
+import java.util.Arrays;
+import java.util.Map;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 public class CloudKMSBackendTest {
 
-    private static String projectId = AppSettings.getInstance().getString(AppSettings.GCP_PROJECT);
+  private static String projectId = AppSettings.getInstance().getString(AppSettings.GCP_PROJECT);
 
-    @ClassRule
-    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
-        AppSettings.ENCRYPTION_KEK_URI, "projects/" + projectId + "/locations/global/keyRings/testkeyring/cryptoKeys/testkey",
-        AppSettings.ENCRYPTION_DEK_URI, "gs://" + projectId + "-testbucket/testkey.json"
-    ));
+  @ClassRule
+  public static SettingsOverride settingsOverride =
+      new SettingsOverride(
+          Map.of(
+              AppSettings.ENCRYPTION_KEK_URI,
+                  "projects/"
+                      + projectId
+                      + "/locations/global/keyRings/testkeyring/cryptoKeys/testkey",
+              AppSettings.ENCRYPTION_DEK_URI, "gs://" + projectId + "-testbucket/testkey.json"));
 
-    /**
-     * Encryption backend shall encrypt and correctly decrypt a given plaintext
-     */
-    @Test
-    public void testEncryptAndDecrypt() {
-        CloudKMSBackend aead = new CloudKMSBackend();
-        byte[] plainText = "test string".getBytes();
-        byte[] cipherText = aead.encrypt(plainText);
-        assertFalse(Arrays.equals(plainText, cipherText));
-        byte[] decrypted = aead.decrypt(cipherText);
-        assertArrayEquals(plainText, decrypted);
-    }
-
+  /** Encryption backend shall encrypt and correctly decrypt a given plaintext */
+  @Test
+  public void testEncryptAndDecrypt() {
+    CloudKMSBackend aead = new CloudKMSBackend();
+    byte[] plainText = "test string".getBytes();
+    byte[] cipherText = aead.encrypt(plainText);
+    assertFalse(Arrays.equals(plainText, cipherText));
+    byte[] decrypted = aead.decrypt(cipherText);
+    assertArrayEquals(plainText, decrypted);
+  }
 }

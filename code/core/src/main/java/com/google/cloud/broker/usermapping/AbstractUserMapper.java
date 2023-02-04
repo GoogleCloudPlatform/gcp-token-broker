@@ -11,23 +11,20 @@
 
 package com.google.cloud.broker.usermapping;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
 
 public abstract class AbstractUserMapper {
 
-    private static AbstractUserMapper instance;
+  private static AbstractUserMapper instance;
 
-    public static AbstractUserMapper getInstance() {
-        String className = AppSettings.getInstance().getString(AppSettings.USER_MAPPER);
-        if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
-            instance = (AbstractUserMapper) InstanceUtils.invokeConstructor(className);
-        }
-        return instance;
+  public static AbstractUserMapper getInstance() {
+    String className = AppSettings.getInstance().getString(AppSettings.USER_MAPPER);
+    if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
+      instance = (AbstractUserMapper) InstanceUtils.invokeConstructor(className);
     }
+    return instance;
+  }
 
-    abstract public String map(String name) throws IllegalArgumentException;
+  public abstract String map(String name) throws IllegalArgumentException;
 }

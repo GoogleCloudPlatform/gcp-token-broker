@@ -11,53 +11,57 @@
 
 package com.google.cloud.broker.client.hadoop.fs;
 
-import java.io.IOException;
-import java.security.PrivilegedAction;
-
+import com.google.cloud.broker.client.connect.BrokerServerInfo;
 import com.google.cloud.broker.client.endpoints.CancelSessionToken;
 import com.google.cloud.broker.client.endpoints.RenewSessionToken;
-import com.google.cloud.broker.client.connect.BrokerServerInfo;
+import com.google.cloud.hadoop.fs.gcs.auth.GcsDelegationTokens;
+import java.io.IOException;
+import java.security.PrivilegedAction;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenRenewer;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.conf.Configuration;
-import com.google.cloud.hadoop.fs.gcs.auth.GcsDelegationTokens;
-
 
 public class BrokerTokenRenewer extends TokenRenewer {
 
-    @Override
-    public boolean handleKind(Text kind) {
-        return BrokerTokenIdentifier.KIND.equals(kind);
-    }
+  @Override
+  public boolean handleKind(Text kind) {
+    return BrokerTokenIdentifier.KIND.equals(kind);
+  }
 
-    @Override
-    public long renew(Token<?> t, Configuration config) throws IOException {
-        Token<BrokerTokenIdentifier> token = (Token<BrokerTokenIdentifier>) t;
-        BrokerTokenIdentifier tokenIdentifier = (BrokerTokenIdentifier) GcsDelegationTokens.extractIdentifier(token);
-        UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
-        BrokerServerInfo serverInfo = Utils.getBrokerDetailsFromConfig(config);
-        return loginUser.doAs((PrivilegedAction<Long>) () -> {
-            return RenewSessionToken.submit(serverInfo, tokenIdentifier.getSessionToken());
-        });
-    }
+  @Override
+  public long renew(Token<?> t, Configuration config) throws IOException {
+    Token<BrokerTokenIdentifier> token = (Token<BrokerTokenIdentifier>) t;
+    BrokerTokenIdentifier tokenIdentifier =
+        (BrokerTokenIdentifier) GcsDelegationTokens.extractIdentifier(token);
+    UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
+    BrokerServerInfo serverInfo = Utils.getBrokerDetailsFromConfig(config);
+    return loginUser.doAs(
+        (PrivilegedAction<Long>)
+            () -> {
+              return RenewSessionToken.submit(serverInfo, tokenIdentifier.getSessionToken());
+            });
+  }
 
-    @Override
-    public void cancel(Token<?> t, Configuration config) throws IOException {
-        Token<BrokerTokenIdentifier> token = (Token<BrokerTokenIdentifier>) t;
-        BrokerTokenIdentifier tokenIdentifier = (BrokerTokenIdentifier) GcsDelegationTokens.extractIdentifier(token);
-        UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
-        BrokerServerInfo serverInfo = Utils.getBrokerDetailsFromConfig(config);
-        loginUser.doAs((PrivilegedAction<Void>) () -> {
-            CancelSessionToken.submit(serverInfo, tokenIdentifier.getSessionToken());
-            return null;
-        });
-    }
+  @Override
+  public void cancel(Token<?> t, Configuration config) throws IOException {
+    Token<BrokerTokenIdentifier> token = (Token<BrokerTokenIdentifier>) t;
+    BrokerTokenIdentifier tokenIdentifier =
+        (BrokerTokenIdentifier) GcsDelegationTokens.extractIdentifier(token);
+    UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
+    BrokerServerInfo serverInfo = Utils.getBrokerDetailsFromConfig(config);
+    loginUser.doAs(
+        (PrivilegedAction<Void>)
+            () -> {
+              CancelSessionToken.submit(serverInfo, tokenIdentifier.getSessionToken());
+              return null;
+            });
+  }
 
-    @Override
-    public boolean isManaged(Token<?> token) throws IOException {
-        // Return true to indicate that tokens can be renewed and cancelled
-        return true;
-    }
+  @Override
+  public boolean isManaged(Token<?> token) throws IOException {
+    // Return true to indicate that tokens can be renewed and cancelled
+    return true;
+  }
 }

@@ -21,76 +21,83 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-@Command(
-    name = "GetAccessToken",
-    description = "Retrieves an Oauth2 access token"
-)
+@Command(name = "GetAccessToken", description = "Retrieves an Oauth2 access token")
 public class GetAccessToken implements Runnable {
 
-    @Option(names = {"-u", "--uri"}, required = true, description = "GCS URI for the access token")
-    private String uri;
+  @Option(
+      names = {"-u", "--uri"},
+      required = true,
+      description = "GCS URI for the access token")
+  private String uri;
 
-    @Option(names = {"-i", "--impersonate"}, description = "(Optional) Impersonated user")
-    private String impersonate;
+  @Option(
+      names = {"-i", "--impersonate"},
+      description = "(Optional) Impersonated user")
+  private String impersonate;
 
-    @Option(names = {"-f", "--session-token-file"}, description = "File that contains a session token for delegated authentication")
-    private String file;
+  @Option(
+      names = {"-f", "--session-token-file"},
+      description = "File that contains a session token for delegated authentication")
+  private String file;
 
-    @Option(names = {"-h", "--help"}, usageHelp = true, description = "Display this help")
-    boolean help;
+  @Option(
+      names = {"-h", "--help"},
+      usageHelp = true,
+      description = "Display this help")
+  boolean help;
 
-    private void sendRequest(Configuration config, String sessionToken) {
-        String bucket = CommandUtils.extractBucketNameFromGcsUri(uri);
-        Text service = new Text(bucket);
-        BrokerAccessTokenProvider provider;
-        if (sessionToken == null) {
-            // Direct authentication
-            provider = new BrokerAccessTokenProvider(service);
-        }
-        else {
-            // Delegated authentication
-            provider = new BrokerAccessTokenProvider(service, CommandUtils.getBTI(sessionToken));
-        }
-        provider.setConf(config);
-        provider.refresh();
-        System.out.println("\n> Access token:\n");
-        System.out.println(provider.getAccessToken().getToken());
+  private void sendRequest(Configuration config, String sessionToken) {
+    String bucket = CommandUtils.extractBucketNameFromGcsUri(uri);
+    Text service = new Text(bucket);
+    BrokerAccessTokenProvider provider;
+    if (sessionToken == null) {
+      // Direct authentication
+      provider = new BrokerAccessTokenProvider(service);
+    } else {
+      // Delegated authentication
+      provider = new BrokerAccessTokenProvider(service, CommandUtils.getBTI(sessionToken));
     }
+    provider.setConf(config);
+    provider.refresh();
+    System.out.println("\n> Access token:\n");
+    System.out.println(provider.getAccessToken().getToken());
+  }
 
-    @Override
-    public void run() {
-        Configuration config = new Configuration();
-        CommandUtils.showConfig(config);
-        if (impersonate == null) {
-            if (file == null) {
-                // Using direct authentication
-                sendRequest(config, null);
-            }
-            else {
-                // Using a session token for delegated authentication
-                String sessionToken = CommandUtils.readSessionToken(file);
-                sendRequest(config, sessionToken);
-            }
-        }
-        else {
-            if (file != null) {
-                throw new RuntimeException("You cannot provide both a session token and an impersonated user");
-            }
-            // Impersonation via a proxy user
-            try {
-                UserGroupInformation ugi = UserGroupInformation.createProxyUser(impersonate, UserGroupInformation.getLoginUser());
-                ugi.doAs((PrivilegedExceptionAction<Void>) () -> {
-                    sendRequest(config, null);
-                    return null;
+  @Override
+  public void run() {
+    Configuration config = new Configuration();
+    CommandUtils.showConfig(config);
+    if (impersonate == null) {
+      if (file == null) {
+        // Using direct authentication
+        sendRequest(config, null);
+      } else {
+        // Using a session token for delegated authentication
+        String sessionToken = CommandUtils.readSessionToken(file);
+        sendRequest(config, sessionToken);
+      }
+    } else {
+      if (file != null) {
+        throw new RuntimeException(
+            "You cannot provide both a session token and an impersonated user");
+      }
+      // Impersonation via a proxy user
+      try {
+        UserGroupInformation ugi =
+            UserGroupInformation.createProxyUser(impersonate, UserGroupInformation.getLoginUser());
+        ugi.doAs(
+            (PrivilegedExceptionAction<Void>)
+                () -> {
+                  sendRequest(config, null);
+                  return null;
                 });
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
+      } catch (IOException | InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
+  }
 
-    public static void main(String[] args) {
-        CommandLine.run(new GetAccessToken(), args);
-    }
-
+  public static void main(String[] args) {
+    CommandLine.run(new GetAccessToken(), args);
+  }
 }

@@ -11,64 +11,69 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
-import java.io.IOException;
-import java.util.List;
-
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import io.grpc.Status;
-
-import com.google.cloud.broker.oauth.OauthClientSecretsLoader;
 import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
-import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
 import com.google.cloud.broker.database.DatabaseObjectNotFound;
 import com.google.cloud.broker.database.backends.AbstractDatabaseBackend;
+import com.google.cloud.broker.encryption.backends.AbstractEncryptionBackend;
+import com.google.cloud.broker.oauth.OauthClientSecretsLoader;
 import com.google.cloud.broker.oauth.RefreshToken;
 import com.google.cloud.broker.utils.TimeUtils;
-
+import io.grpc.Status;
+import java.io.IOException;
+import java.util.List;
 
 public class RefreshTokenProvider extends AbstractUserProvider {
 
-    private static String AUTHZ_ERROR_MESSAGE = "GCP Token Broker authorization is invalid or has expired for identity: %s";
+  private static String AUTHZ_ERROR_MESSAGE =
+      "GCP Token Broker authorization is invalid or has expired for identity: %s";
 
-    @Override
-    public AccessToken getAccessToken(String googleIdentity, List<String> scopes) {
-        // Fetch refresh token from the database
-        RefreshToken refreshToken = null;
-        try {
-            refreshToken = (RefreshToken) AbstractDatabaseBackend.getInstance().get(RefreshToken.class, googleIdentity);
-        }
-        catch (DatabaseObjectNotFound e) {
-            throw Status.PERMISSION_DENIED.withDescription(String.format(AUTHZ_ERROR_MESSAGE, googleIdentity)).asRuntimeException();
-        }
-
-        // Decrypt the refresh token's value
-        byte[] encryptedValue = refreshToken.getValue();
-        String decryptedValue = new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
-
-        // Load OAuth client secret
-        GoogleClientSecrets clientSecrets = OauthClientSecretsLoader.getSecrets();
-
-        // Generate a new access token
-        TokenResponse response = null;
-        try {
-            response = new GoogleRefreshTokenRequest(
-                new NetHttpTransport(),
-                new JacksonFactory(),
-                decryptedValue,
-                clientSecrets.getDetails().getClientId(),
-                clientSecrets.getDetails().getClientSecret()
-            ).setScopes(scopes).execute();
-        } catch (IOException e) {
-            throw Status.PERMISSION_DENIED.withDescription(String.format(AUTHZ_ERROR_MESSAGE, googleIdentity)).asRuntimeException();
-        }
-
-        return new AccessToken(
-            response.getAccessToken(),
-                TimeUtils.currentTimeMillis() + response.getExpiresInSeconds() * 1000);
+  @Override
+  public AccessToken getAccessToken(String googleIdentity, List<String> scopes) {
+    // Fetch refresh token from the database
+    RefreshToken refreshToken = null;
+    try {
+      refreshToken =
+          (RefreshToken)
+              AbstractDatabaseBackend.getInstance().get(RefreshToken.class, googleIdentity);
+    } catch (DatabaseObjectNotFound e) {
+      throw Status.PERMISSION_DENIED
+          .withDescription(String.format(AUTHZ_ERROR_MESSAGE, googleIdentity))
+          .asRuntimeException();
     }
 
+    // Decrypt the refresh token's value
+    byte[] encryptedValue = refreshToken.getValue();
+    String decryptedValue =
+        new String(AbstractEncryptionBackend.getInstance().decrypt(encryptedValue));
+
+    // Load OAuth client secret
+    GoogleClientSecrets clientSecrets = OauthClientSecretsLoader.getSecrets();
+
+    // Generate a new access token
+    TokenResponse response = null;
+    try {
+      response =
+          new GoogleRefreshTokenRequest(
+                  new NetHttpTransport(),
+                  new JacksonFactory(),
+                  decryptedValue,
+                  clientSecrets.getDetails().getClientId(),
+                  clientSecrets.getDetails().getClientSecret())
+              .setScopes(scopes)
+              .execute();
+    } catch (IOException e) {
+      throw Status.PERMISSION_DENIED
+          .withDescription(String.format(AUTHZ_ERROR_MESSAGE, googleIdentity))
+          .asRuntimeException();
+    }
+
+    return new AccessToken(
+        response.getAccessToken(),
+        TimeUtils.currentTimeMillis() + response.getExpiresInSeconds() * 1000);
+  }
 }

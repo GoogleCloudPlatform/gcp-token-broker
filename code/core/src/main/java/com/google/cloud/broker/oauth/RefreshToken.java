@@ -11,77 +11,71 @@
 
 package com.google.cloud.broker.oauth;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.cloud.broker.database.models.Model;
+import com.google.cloud.broker.utils.TimeUtils;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import com.google.cloud.broker.database.models.Model;
-import com.google.cloud.broker.utils.TimeUtils;
-
 public class RefreshToken extends Model {
 
-    private String id;          // GSuite email address (e.g. alice@example.com)
-    private byte[] value;       // The actual OAuth refresh token (Recommendation: encrypt this value)
-    private Long creationTime;  // The time when the object was created (in milliseconds)
+  private String id; // GSuite email address (e.g. alice@example.com)
+  private byte[] value; // The actual OAuth refresh token (Recommendation: encrypt this value)
+  private Long creationTime; // The time when the object was created (in milliseconds)
 
-    public RefreshToken(@JsonProperty("id") String id,
-                        @JsonProperty("value") byte[] value,
-                        @JsonProperty("creationTime") Long creationTime) {
-        setId(id);
-        setValue(value);
-        setCreationTime(
-            (creationTime==null) ? Long.valueOf(TimeUtils.currentTimeMillis()) : creationTime
-        );
-    }
+  public RefreshToken(
+      @JsonProperty("id") String id,
+      @JsonProperty("value") byte[] value,
+      @JsonProperty("creationTime") Long creationTime) {
+    setId(id);
+    setValue(value);
+    setCreationTime(
+        (creationTime == null) ? Long.valueOf(TimeUtils.currentTimeMillis()) : creationTime);
+  }
 
-    @Override
-    public Map<String, Object> toMap() {
-        HashMap<String, Object> map = new HashMap<String, Object>();
-        map.put("id", id);
-        map.put("value", value);
-        map.put("creationTime", creationTime);
-        return map;
-    }
+  @Override
+  public Map<String, Object> toMap() {
+    HashMap<String, Object> map = new HashMap<String, Object>();
+    map.put("id", id);
+    map.put("value", value);
+    map.put("creationTime", creationTime);
+    return map;
+  }
 
-    public static Model fromMap(Map<String, Object> map) {
-        return new RefreshToken(
-            (String) map.get("id"),
-            (byte[]) map.get("value"),
-            (Long) map.get("creationTime")
-        );
-    }
+  public static Model fromMap(Map<String, Object> map) {
+    return new RefreshToken(
+        (String) map.get("id"), (byte[]) map.get("value"), (Long) map.get("creationTime"));
+  }
 
-    public void setDBId(String id) {
-        setId(id);
-    }
+  public void setDBId(String id) {
+    setId(id);
+  }
 
-    public String getDBId() {
-        return getId();
-    }
+  public String getDBId() {
+    return getId();
+  }
 
-    public String getId() {
-        return id;
-    }
+  public String getId() {
+    return id;
+  }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+  public void setId(String id) {
+    this.id = id;
+  }
 
-    public byte[] getValue() {
-        return value;
-    }
+  public byte[] getValue() {
+    return value;
+  }
 
-    public void setValue(byte[] value) {
-        this.value = value;
-    }
+  public void setValue(byte[] value) {
+    this.value = value;
+  }
 
-    public Long getCreationTime() {
-        return creationTime;
-    }
+  public Long getCreationTime() {
+    return creationTime;
+  }
 
-    public void setCreationTime(Long creationTime) {
-        this.creationTime = creationTime;
-    }
-
+  public void setCreationTime(Long creationTime) {
+    this.creationTime = creationTime;
+  }
 }

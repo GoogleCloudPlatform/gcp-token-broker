@@ -11,32 +11,31 @@
 
 package com.google.cloud.broker.authentication.backends;
 
-import org.slf4j.MDC;
-
 import com.google.cloud.broker.authentication.AuthorizationHeaderServerInterceptor;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
-
+import org.slf4j.MDC;
 
 public abstract class AbstractAuthenticationBackend {
 
-    private static AbstractAuthenticationBackend instance;
-    public static final String AUTHENTICATED_USER = "authenticatedUser";
+  private static AbstractAuthenticationBackend instance;
+  public static final String AUTHENTICATED_USER = "authenticatedUser";
 
-    public static AbstractAuthenticationBackend getInstance() {
-        String className = AppSettings.getInstance().getString(AppSettings.AUTHENTICATION_BACKEND);
-        if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
-            instance = (AbstractAuthenticationBackend) InstanceUtils.invokeConstructor(className);
-        }
-        return instance;
+  public static AbstractAuthenticationBackend getInstance() {
+    String className = AppSettings.getInstance().getString(AppSettings.AUTHENTICATION_BACKEND);
+    if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
+      instance = (AbstractAuthenticationBackend) InstanceUtils.invokeConstructor(className);
     }
+    return instance;
+  }
 
-    public String authenticateUser() {
-        String authorizationHeader = AuthorizationHeaderServerInterceptor.BROKER_AUTHORIZATION_CONTEXT_KEY.get();
-        String authenticatedUser = authenticateUser(authorizationHeader);
-        MDC.put(AUTHENTICATED_USER, authenticatedUser);
-        return authenticatedUser;
-    }
+  public String authenticateUser() {
+    String authorizationHeader =
+        AuthorizationHeaderServerInterceptor.BROKER_AUTHORIZATION_CONTEXT_KEY.get();
+    String authenticatedUser = authenticateUser(authorizationHeader);
+    MDC.put(AUTHENTICATED_USER, authenticatedUser);
+    return authenticatedUser;
+  }
 
-    public abstract String authenticateUser(String authorizationHeader);
+  public abstract String authenticateUser(String authorizationHeader);
 }

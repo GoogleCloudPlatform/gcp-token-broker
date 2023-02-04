@@ -47,5 +47,4 @@ public class OAuthUtils {
       throw new RuntimeException(e);
     }
   }
-
 }

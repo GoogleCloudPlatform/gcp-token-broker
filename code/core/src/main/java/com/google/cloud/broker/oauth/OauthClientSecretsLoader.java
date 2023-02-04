@@ -16,50 +16,49 @@
 
 package com.google.cloud.broker.oauth;
 
-import java.io.*;
-
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.cloud.broker.settings.AppSettings;
 import com.typesafe.config.ConfigException;
+import java.io.*;
 
 public class OauthClientSecretsLoader {
 
-    public static GoogleClientSecrets getSecrets() {
-        try {
-            String jsonPath = AppSettings.getInstance().getString(AppSettings.OAUTH_CLIENT_SECRET_JSON_PATH);
-            // Load the JSON file if provided
-            File secretJson = new java.io.File(jsonPath);
-            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-            try {
-                InputStream in = new FileInputStream(secretJson);
-                return GoogleClientSecrets.load(jsonFactory, new InputStreamReader(in));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } catch (ConfigException.Missing e) {
-            // The JSON path setting was not provided, so we try with other settings
-            try {
-                String clientId = AppSettings.getInstance().getString(AppSettings.OAUTH_CLIENT_ID);
-                String clientSecret = AppSettings.getInstance().getString(AppSettings.OAUTH_CLIENT_SECRET);
+  public static GoogleClientSecrets getSecrets() {
+    try {
+      String jsonPath =
+          AppSettings.getInstance().getString(AppSettings.OAUTH_CLIENT_SECRET_JSON_PATH);
+      // Load the JSON file if provided
+      File secretJson = new java.io.File(jsonPath);
+      JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+      try {
+        InputStream in = new FileInputStream(secretJson);
+        return GoogleClientSecrets.load(jsonFactory, new InputStreamReader(in));
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    } catch (ConfigException.Missing e) {
+      // The JSON path setting was not provided, so we try with other settings
+      try {
+        String clientId = AppSettings.getInstance().getString(AppSettings.OAUTH_CLIENT_ID);
+        String clientSecret = AppSettings.getInstance().getString(AppSettings.OAUTH_CLIENT_SECRET);
 
-                // Fall back to using the provided ID and secret
-                GoogleClientSecrets.Details details = new GoogleClientSecrets.Details();
-                details.setClientId(clientId);
-                details.setClientSecret(clientSecret);
-                GoogleClientSecrets clientSecrets = new GoogleClientSecrets();
-                clientSecrets.setWeb(details);
-                return clientSecrets;
-            } catch (ConfigException.Missing ex) {
-                throw new RuntimeException(String.format(
-                    "OAuth misconfigured. Please provide settings `%s` or `%s` and `%s`",
-                    AppSettings.OAUTH_CLIENT_SECRET_JSON_PATH,
-                    AppSettings.OAUTH_CLIENT_ID,
-                    AppSettings.OAUTH_CLIENT_SECRET
-                ));
-            }
-        }
+        // Fall back to using the provided ID and secret
+        GoogleClientSecrets.Details details = new GoogleClientSecrets.Details();
+        details.setClientId(clientId);
+        details.setClientSecret(clientSecret);
+        GoogleClientSecrets clientSecrets = new GoogleClientSecrets();
+        clientSecrets.setWeb(details);
+        return clientSecrets;
+      } catch (ConfigException.Missing ex) {
+        throw new RuntimeException(
+            String.format(
+                "OAuth misconfigured. Please provide settings `%s` or `%s` and `%s`",
+                AppSettings.OAUTH_CLIENT_SECRET_JSON_PATH,
+                AppSettings.OAUTH_CLIENT_ID,
+                AppSettings.OAUTH_CLIENT_SECRET));
+      }
     }
-
+  }
 }

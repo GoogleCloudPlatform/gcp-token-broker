@@ -21,44 +21,49 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-@Command(
-    name = "CancelSessionToken",
-    description = "Retrieves an Oauth2 access token"
-)
+@Command(name = "CancelSessionToken", description = "Retrieves an Oauth2 access token")
 public class CancelSessionToken implements Runnable {
 
-    @Option(names = {"-u", "--uri"}, required = true, description = "GCS URI for the access token")
-    private String uri;
+  @Option(
+      names = {"-u", "--uri"},
+      required = true,
+      description = "GCS URI for the access token")
+  private String uri;
 
-    @Option(names = {"-f", "--session-token-file"}, required = true, description = "File that contains the session token to be canceled")
-    private String file;
+  @Option(
+      names = {"-f", "--session-token-file"},
+      required = true,
+      description = "File that contains the session token to be canceled")
+  private String file;
 
-    @Option(names = {"-h", "--help"}, usageHelp = true, description = "Display this help")
-    boolean help;
+  @Option(
+      names = {"-h", "--help"},
+      usageHelp = true,
+      description = "Display this help")
+  boolean help;
 
-    private void sendRequest(Configuration config, String sessionToken) {
-        String bucket = CommandUtils.extractBucketNameFromGcsUri(uri);
-        Text service = new Text(bucket);
-        Token<BrokerTokenIdentifier> token = CommandUtils.getTokenBTI(sessionToken, service);
-        BrokerTokenRenewer renewer = new BrokerTokenRenewer();
-        try {
-            renewer.cancel(token, config);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("\n> Session token successfully canceled\n");
+  private void sendRequest(Configuration config, String sessionToken) {
+    String bucket = CommandUtils.extractBucketNameFromGcsUri(uri);
+    Text service = new Text(bucket);
+    Token<BrokerTokenIdentifier> token = CommandUtils.getTokenBTI(sessionToken, service);
+    BrokerTokenRenewer renewer = new BrokerTokenRenewer();
+    try {
+      renewer.cancel(token, config);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
+    System.out.println("\n> Session token successfully canceled\n");
+  }
 
-    @Override
-    public void run() {
-        Configuration config = new Configuration();
-        CommandUtils.showConfig(config);
-        String sessionToken = CommandUtils.readSessionToken(file);
-        sendRequest(config, sessionToken);
-    }
+  @Override
+  public void run() {
+    Configuration config = new Configuration();
+    CommandUtils.showConfig(config);
+    String sessionToken = CommandUtils.readSessionToken(file);
+    sendRequest(config, sessionToken);
+  }
 
-    public static void main(String[] args) {
-        CommandLine.run(new CancelSessionToken(), args);
-    }
-
+  public static void main(String[] args) {
+    CommandLine.run(new CancelSessionToken(), args);
+  }
 }

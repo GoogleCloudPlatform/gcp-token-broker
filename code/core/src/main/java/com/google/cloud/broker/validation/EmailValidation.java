@@ -21,12 +21,11 @@ import java.util.regex.Pattern;
 
 public class EmailValidation {
 
-    public static void validateEmail(String email) {
-        Pattern parser = Pattern.compile("([a-zA-Z0-9\\.-]+)@([a-zA-Z0-9\\.-]+)");
-        Matcher match = parser.matcher(email);
-        if (!match.matches()) {
-            throw new IllegalArgumentException("Invalid email: " + email);
-        }
+  public static void validateEmail(String email) {
+    Pattern parser = Pattern.compile("([a-zA-Z0-9\\.-]+)@([a-zA-Z0-9\\.-]+)");
+    Matcher match = parser.matcher(email);
+    if (!match.matches()) {
+      throw new IllegalArgumentException("Invalid email: " + email);
     }
-
+  }
 }

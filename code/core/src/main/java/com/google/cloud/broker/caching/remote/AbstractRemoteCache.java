@@ -11,30 +11,32 @@
 
 package com.google.cloud.broker.caching.remote;
 
-import java.util.concurrent.locks.Lock;
-
+import com.google.cloud.broker.checks.CheckResult;
 import com.google.cloud.broker.settings.AppSettings;
 import com.google.cloud.broker.utils.InstanceUtils;
-import com.google.cloud.broker.checks.CheckResult;
+import java.util.concurrent.locks.Lock;
 
 public abstract class AbstractRemoteCache {
 
-    private static AbstractRemoteCache instance;
+  private static AbstractRemoteCache instance;
 
-    public abstract byte[] get(String key);
-    public abstract void set(String key, byte[] value);
-    public abstract void set(String key, byte[] value, int expireIn);  // "expireIn" in seconds
-    public abstract void delete(String key);
-    public abstract Lock acquireLock(String lockName);
-    public abstract CheckResult checkConnection();
+  public abstract byte[] get(String key);
 
+  public abstract void set(String key, byte[] value);
 
-    public static AbstractRemoteCache getInstance() {
-        String className = AppSettings.getInstance().getString(AppSettings.REMOTE_CACHE);
-        if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
-            instance = (AbstractRemoteCache) InstanceUtils.invokeConstructor(className);
-        }
-        return instance;
+  public abstract void set(String key, byte[] value, int expireIn); // "expireIn" in seconds
+
+  public abstract void delete(String key);
+
+  public abstract Lock acquireLock(String lockName);
+
+  public abstract CheckResult checkConnection();
+
+  public static AbstractRemoteCache getInstance() {
+    String className = AppSettings.getInstance().getString(AppSettings.REMOTE_CACHE);
+    if (instance == null || !className.equals(instance.getClass().getCanonicalName())) {
+      instance = (AbstractRemoteCache) InstanceUtils.invokeConstructor(className);
     }
-
+    return instance;
+  }
 }

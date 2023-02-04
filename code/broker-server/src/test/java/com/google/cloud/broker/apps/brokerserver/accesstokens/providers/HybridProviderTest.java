@@ -11,57 +11,58 @@
 
 package com.google.cloud.broker.apps.brokerserver.accesstokens.providers;
 
+import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+
+import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
+import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
+import com.google.cloud.broker.settings.AppSettings;
+import com.google.cloud.broker.settings.SettingsOverride;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
-
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertTrue;
-import com.google.cloud.broker.apps.brokerserver.accesstokens.AccessToken;
-import com.google.cloud.broker.database.backends.DummyDatabaseBackend;
-import com.google.common.base.CharMatcher;
 import org.junit.*;
-
-import com.google.cloud.broker.settings.AppSettings;
-import com.google.cloud.broker.settings.SettingsOverride;
 
 public class HybridProviderTest {
 
-    // TODO: Still needs tests:
-    // - Happy path.
+  // TODO: Still needs tests:
+  // - Happy path.
 
-    private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/devstorage.read_write");
-    private final static String projectId = AppSettings.getInstance().getString(AppSettings.GCP_PROJECT);
+  private static final List<String> SCOPES =
+      List.of("https://www.googleapis.com/auth/devstorage.read_write");
+  private static final String projectId =
+      AppSettings.getInstance().getString(AppSettings.GCP_PROJECT);
 
-    @ClassRule
-    public static SettingsOverride settingsOverride = new SettingsOverride(Map.of(
-        AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper",
-        AppSettings.HYBRID_USER_PROVIDER, "com.google.cloud.broker.apps.brokerserver.accesstokens.providers.MockProvider"
-    ));
+  @ClassRule
+  public static SettingsOverride settingsOverride =
+      new SettingsOverride(
+          Map.of(
+              AppSettings.USER_MAPPER, "com.google.cloud.broker.usermapping.MockUserMapper",
+              AppSettings.HYBRID_USER_PROVIDER,
+                  "com.google.cloud.broker.apps.brokerserver.accesstokens.providers.MockProvider"));
 
-    @After
-    public void teardown() {
-        // Clear the database
-        DummyDatabaseBackend.getCache().clear();
-    }
+  @After
+  public void teardown() {
+    // Clear the database
+    DummyDatabaseBackend.getCache().clear();
+  }
 
-    @Test
-    public void testUser() {
-        HybridProvider provider = new HybridProvider();
-        AccessToken accessToken = provider.getAccessToken("alice@example.com", SCOPES);
-        assertEquals(
-            "FakeAccessToken/GoogleIdentity=alice@example.com;Scopes=" + String.join(",", SCOPES),
-            accessToken.getValue());
-    }
+  @Test
+  public void testUser() {
+    HybridProvider provider = new HybridProvider();
+    AccessToken accessToken = provider.getAccessToken("alice@example.com", SCOPES);
+    assertEquals(
+        "FakeAccessToken/GoogleIdentity=alice@example.com;Scopes=" + String.join(",", SCOPES),
+        accessToken.getValue());
+  }
 
-    @Test
-    public void testServiceAccount() {
-        HybridProvider provider = new HybridProvider();
-        AccessToken accessToken = provider.getAccessToken("alice-shadow@" + projectId + ".iam.gserviceaccount.com", SCOPES);
-        assertTrue(accessToken.getValue().startsWith("ya29."));
-        assertEquals(1024, accessToken.getValue().getBytes(StandardCharsets.UTF_8).length);
-        assertTrue(accessToken.getExpiresAt() > 0);
-    }
-
+  @Test
+  public void testServiceAccount() {
+    HybridProvider provider = new HybridProvider();
+    AccessToken accessToken =
+        provider.getAccessToken("alice-shadow@" + projectId + ".iam.gserviceaccount.com", SCOPES);
+    assertTrue(accessToken.getValue().startsWith("ya29."));
+    assertEquals(1024, accessToken.getValue().getBytes(StandardCharsets.UTF_8).length);
+    assertTrue(accessToken.getExpiresAt() > 0);
+  }
 }
