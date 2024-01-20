@@ -135,7 +135,7 @@ tokens for those users, although only for the specified API scopes.
 
 ## Access boundary
 
-The broker can restrict the scope of an access token to a specific resource (e.g. a GCS bucket) by applying a
+The broker can restrict the scope of an access token to a specific resource (namely, a GCS bucket) by applying a
 [Credential Access Boundary](https://cloud.google.com/iam/docs/restricting-short-lived-credentials) (CAB) on the tokens
 that are returned by the providers. To enable this feature, the client can pass a `target` attribute when it sends a
 request to the broker.
@@ -146,6 +146,8 @@ example `//storage.googleapis.com/projects/_/buckets/mybucket` for a bucket name
 In the Hadoop use case, Hadoop systematically passes the target bucket to the broker [connector](connector.md). To let
 the broker connector relay the target bucket to the broker service and apply CAB on the returned access token, set
 the `gcp.token.broker.access.boundary.enabled` property to `true`.
+
+Note: Currently GCS bucket is the only GCP resource supported by this feature.
 
 Note: To use CAB with a Cloud Storage bucket, you must set [Uniform bucket-level access](https://cloud.google.com/storage/docs/uniform-bucket-level-access)
 on the bucket. Otherwise, you'll receive the error `The operation requires that Uniform Bucket Level Access be enabled`
