@@ -135,7 +135,7 @@ tokens for those users, although only for the specified API scopes.
 
 ## Access boundary
 
-The broker can restrict the scope of an access token to a specific resource (e.g. a GCS bucket) by applying a
+The broker can restrict the scope of an access token to a specific resource (namely, a GCS bucket) by applying a
 [Credential Access Boundary](https://cloud.google.com/iam/docs/restricting-short-lived-credentials) (CAB) on the tokens
 that are returned by the providers. To enable this feature, the client can pass a `target` attribute when it sends a
 request to the broker.
